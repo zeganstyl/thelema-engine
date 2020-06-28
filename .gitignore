@@ -1,0 +1,5 @@
+/thelema-lwjgl3/build/
+/thelema-jvm/build/
+/thelema-core-tests/build/
+/thelema-core/build/
+/.gradle/
