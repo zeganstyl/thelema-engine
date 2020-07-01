@@ -10,4 +10,7 @@ Thelema - 3d graphics engine, written on Kotlin. Based on source code of LibGDX.
 
 [Thelema vs LibGDX](https://github.com/zeganstyl/thelema-engine/wiki/Thelema-vs-LibGDX)
 
-Some very important features, like glTF loading, GLSL nodes and others, are not published yet to repository. Support project on [Patreon](https://www.patreon.com/thelema_engine) and they will appear.
+Some very important features, like glTF loading, GLSL nodes and others, are not published yet to repository. Support project on [Patreon](https://www.patreon.com/thelema_engine) and they will appear. You can see some demos:
+- [TeaVM](https://youtu.be/zwzgfWRGM14)
+- [Editor](https://youtu.be/6cdl7Ai_MYQ)
+- [Emission Bloom](https://youtu.be/AWrP4f0RNqg)

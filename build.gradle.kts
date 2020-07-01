@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-        mavenCentral()
         jcenter()
     }
 
@@ -8,7 +7,6 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72")
         classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
-
     }
 }
 
@@ -18,7 +16,6 @@ val gitRepositoryUrl by extra("https://github.com/zeganstyl/thelema-engine")
 
 allprojects {
     repositories {
-        mavenCentral()
         mavenLocal()
         jcenter()
     }
