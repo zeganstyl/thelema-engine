@@ -21,7 +21,7 @@ import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.texture.TextureRegion
+import org.ksdfv.thelema.utils.Color
 
 
 /** A Batch is used to draw 2D rectangles that reference a texture (region). The class will batch the drawing commands and optimize
@@ -46,7 +46,7 @@ import org.ksdfv.thelema.texture.TextureRegion
  *
  *
  * A Batch works with OpenGL ES 2.0. It will use its own custom shader to draw all provided
- * sprites. You can set your own custom shader via [.setShader].
+ * sprites. You can set your own custom shader via [shader].
  *
  *
  * A Batch has to be disposed if it is no longer used.
@@ -57,18 +57,16 @@ interface Batch {
     /** Sets up the Batch for drawing. This will disable depth buffer writing. It enables blending and texturing. If you have more
      * texture units enabled than the first one you have to disable them before calling this. Uses a screen coordinate system by
      * default where everything is given in pixels. You can specify your own projection and modelview matrices via
-     * [.setProjectionMatrix] and [.setTransformMatrix].  */
+     * [projectionMatrix] and [transformMatrix].  */
     fun begin()
 
     /** Finishes off rendering. Enables depth writes, disables blending and texturing. Must always be called after a call to
-     * [.begin]  */
+     * [begin]  */
     fun end()
 
-    /** @see .setColor
-     */
     fun setColor(r: Float, g: Float, b: Float, a: Float)
 
-    /** @return the rendering color of this Batch. If the returned instance is manipulated, [.setColor] must be called
+    /** @return the rendering color of this Batch. If the returned instance is manipulated, [setColor] must be called
      * afterward.
      */
     /** Sets the color used to tint images when they are added to the Batch. Default is [Color.WHITE].  */
@@ -76,12 +74,8 @@ interface Batch {
         get() = IVec4.One
         set(_) = Unit
 
-    /** @return the rendering color of this Batch in vertex format (alpha compressed to 0-254)
-     * @see Color.toFloatBits
-     */
-    /** Sets the rendering color of this Batch, expanding the alpha from 0-254 to 0-255.
-     * @see .setColor
-     * @see Color.toFloatBits
+    /** Rendering color of this Batch in vertex format (alpha compressed to 0-254)
+     * See [Color.toFloatBits]
      */
     var packedColor: Float
 
@@ -139,7 +133,7 @@ interface Batch {
 
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The portion of the
      * [Texture2D] given by u, v and u2, v2 are used. These coordinates and sizes are given in texture size percentage. The
-     * rectangle will have the given tint [Color].
+     * rectangle will have the given tint color.
      * @param x the x-coordinate in screen space
      * @param y the y-coordinate in screen space
      * @param width the width in pixels
@@ -151,7 +145,7 @@ interface Batch {
     fun draw(texture: Texture2D, x: Float, y: Float, width: Float = texture.width.toFloat(), height: Float = texture.height.toFloat())
 
     /** Draws a rectangle using the given vertices. There must be 4 vertices, each made up of 5 elements in this order: x, y, color,
-     * u, v. The [.getColor] from the Batch is not applied.  */
+     * u, v. [color] is not applied.  */
     fun draw(texture: Texture2D, spriteVertices: FloatArray, offset: Int, count: Int)
 
     /** Draws a rectangle with the bottom left corner at x,y and stretching the region to cover the given width and height.  */
@@ -180,10 +174,10 @@ interface Batch {
     /** Causes any pending sprites to be rendered, without ending the Batch.  */
     fun flush()
 
-    /** Disables blending for drawing sprites. Calling this within [.begin]/[.end] will flush the batch.  */
+    /** Disables blending for drawing sprites. Calling this within [begin]/[end] will flush the batch.  */
     fun disableBlending()
 
-    /** Enables blending for drawing sprites. Calling this within [.begin]/[.end] will flush the batch.  */
+    /** Enables blending for drawing sprites. Calling this within [begin]/[end] will flush the batch.  */
     fun enableBlending()
 
     /** Sets the blending function to be used when rendering sprites.
@@ -204,20 +198,17 @@ interface Batch {
     val blendDstFunc: Int
     val blendSrcFuncAlpha: Int
     val blendDstFuncAlpha: Int
-    /** Returns the current projection matrix. Changing this within [.begin]/[.end] results in undefined behaviour.  */
-    /** Sets the projection matrix to be used by this Batch. If this is called inside a [.begin]/[.end] block, the
+    /** Returns the current projection matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
+    /** Sets the projection matrix to be used by this Batch. If this is called inside a [begin]/[end] block, the
      * current batch is flushed to the gpu.  */
     var projectionMatrix: IMat4
 
-    /** Returns the current transform matrix. Changing this within [.begin]/[.end] results in undefined behaviour.  */
+    /** Returns the current transform matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
     /** Sets the transform matrix to be used by this Batch.  */
     var transformMatrix: IMat4
 
-    /** @return the current [Shader] set by [.setShader] or the defaultShader
-     */
-    /** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "a_position", the texture
-     * coordinates attribute is called "a_texCoord0", the color attribute is called "a_color". See
-     * [Shader.POSITION_ATTRIBUTE], [Shader.COLOR_ATTRIBUTE] and [Shader.TEXCOORD_ATTRIBUTE]
+    /** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "aPosition", the texture
+     * coordinates attribute is called "aUV", the color attribute is called "aColor".
      * which gets "0" appended to indicate the use of the first texture unit. The combined transform and projection matrx is
      * uploaded via a mat4 uniform called "u_projTrans". The texture sampler is passed via a uniform called "u_texture".
      *
@@ -225,9 +216,7 @@ interface Batch {
      * Call this method with a null argument to use the default shader.
      *
      *
-     * This method will flush the batch before setting the new shader, you can call it in between [.begin] and
-     * [.end].
-     * @param shader the [Shader] or null to use the default shader.
+     * This method will flush the batch before setting the new shader, you can call it in between [begin] and [end].
      */
     var shader: Shader
 

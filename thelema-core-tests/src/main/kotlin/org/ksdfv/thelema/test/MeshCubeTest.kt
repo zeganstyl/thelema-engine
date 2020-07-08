@@ -16,9 +16,10 @@
 
 package org.ksdfv.thelema.test
 
-import org.ksdfv.thelema.ActiveCamera
-import org.ksdfv.thelema.Camera
+import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.data.DATA
+import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -28,7 +29,6 @@ import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.*
 import org.ksdfv.thelema.shader.Shader
-import org.intellij.lang.annotations.Language
 
 /** @author zeganstyl */
 object MeshCubeTest: Test("Mesh Cube") {
@@ -50,7 +50,7 @@ object MeshCubeTest: Test("Mesh Cube") {
                         -1f,  1f, -1f
                 )
             }
-        }, VertexAttributes(VertexAttribute.Position))
+        }, VertexInputs(IVertexInput.Position()))
 
         mesh.indices = IndexBufferObject(DATA.bytes(6 * 6 * 2).apply {
             shortView().apply {
@@ -80,13 +80,13 @@ object MeshCubeTest: Test("Mesh Cube") {
         @Language("GLSL")
         val shader = Shader(
                 vertCode = """
-attribute vec3 a_position;
+attribute vec3 aPosition;
 varying vec3 vPosition;
 uniform mat4 projViewModelTrans;
 
 void main() {
-    vPosition = a_position.xyz;
-    gl_Position = projViewModelTrans * vec4(a_position, 1.0);
+    vPosition = aPosition.xyz;
+    gl_Position = projViewModelTrans * vec4(aPosition, 1.0);
 }""",
                 fragCode = """
 varying vec3 vPosition;

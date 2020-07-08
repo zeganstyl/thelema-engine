@@ -20,7 +20,6 @@ import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.*
-import org.ksdfv.thelema.mesh.VertexAttribute
 
 /** @author zeganstyl */
 open class Shader(
@@ -30,14 +29,10 @@ open class Shader(
     compile: Boolean = true,
 
     /** Precision will be added as first line */
-    var defaultPrecision: String = if (APP.platformType != APP.Desktop) "precision mediump float;\n" else ""
+    var defaultPrecision: String = if (APP.platformType != APP.Desktop) "precision mediump float;\n" else "",
+    override var version: Int = 110,
+    override var profile: String = ""
 ): IShader {
-    /** For post processing */
-    constructor(fragmentShader: String): this(
-        RenderTextureVertexShader,
-        fragmentShader
-    )
-
     /** the log  */
     protected var logInternal = ""
     override val log
@@ -54,7 +49,7 @@ open class Shader(
     val attributes = HashMap<String, Int>()
 
     /** Key - vertex attribute id, value - location */
-    override val attributeLocations = HashMap<Int, Int>()
+    override val attributeLocations = HashMap<String, Int>()
 
     override var vertexShaderHandle: Int = 0
     override var fragmentShaderHandle: Int = 0
@@ -67,8 +62,14 @@ open class Shader(
     }
 
     fun load(vertexShader: String, fragmentShader: String) {
-        vertCode = defaultPrecision + vertexShader
-        fragCode = defaultPrecision + fragmentShader
+        val ver = if (version != 110) {
+            if (profile.isNotEmpty()) {
+                "#version $version $profile\n"
+            } else "#version $version\n"
+        } else ""
+
+        vertCode = ver + defaultPrecision + vertexShader
+        fragCode = ver + defaultPrecision + fragmentShader
 
         compileShaders(vertCode, fragCode)
         if (isCompiled) {
@@ -89,12 +90,7 @@ open class Shader(
                 attributes[name] = location
                 attributeNames[i] = name
 
-                val attribute = VertexAttribute.builders.values.firstOrNull { it.name == name }
-                if (attribute != null) {
-                    attributeLocations[attribute.id] = location
-                } else {
-                    println("Unknown vertex attribute with name \"$name\" declared in shader \"${this.name}\"")
-                }
+                attributeLocations[name] = location
             }
 
             // uniforms
@@ -203,7 +199,8 @@ open class Shader(
         return location
     }
 
-    fun fetchUniformLocation(name: String, pedantic: Boolean = Companion.pedantic): Int {
+    /** @param pedantic flag indicating whether attributes & uniforms must be present at all times */
+    fun fetchUniformLocation(name: String, pedantic: Boolean = false): Int {
         // -1 == not found
         var location = uniforms[name]
         if (location == null) {
@@ -325,35 +322,5 @@ open class Shader(
         val value = uniforms[name] ?: uniforms["$name[0]"]
         if (errorIfNotFound && value == null) println("uniform \"$name\" is not found in shader \"$name\"")
         return value ?: -1
-    }
-
-
-    companion object {
-        /** flag indicating whether attributes & uniforms must be present at all times  */
-        var pedantic = false
-
-        val RenderTextureVertexShader
-            get() = """
-                attribute vec4 a_position;
-                attribute vec2 a_texCoord0;
-                
-                varying vec2 v_texCoords;
-                
-                void main() {
-                    v_texCoords = a_texCoord0;
-                    gl_Position = a_position;
-                }
-            """.trimIndent()
-
-        val RenderTextureFragmentShader
-            get() = """            
-                varying vec2 v_texCoords;
-                
-                uniform sampler2D tex;
-                
-                void main() {
-                    gl_FragColor = texture2D(tex, v_texCoords);
-                }
-            """.trimIndent()
     }
 }

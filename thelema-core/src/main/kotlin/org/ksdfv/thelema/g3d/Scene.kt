@@ -16,7 +16,6 @@
 
 package org.ksdfv.thelema.g3d
 
-import org.ksdfv.thelema.ActiveCamera
 import org.ksdfv.thelema.g3d.light.ILight
 import org.ksdfv.thelema.g3d.node.ITransformNode
 import org.ksdfv.thelema.g3d.node.Node
@@ -60,18 +59,30 @@ open class Scene(
 
     override var shaderChannel: Int = -1
 
+    override fun updatePreviousTransform() {
+        objects.forEach {
+            it.updatePreviousTransform()
+            it.armature?.updatePreviousTransform()
+        }
+
+        scenes.forEach { it.updatePreviousTransform() }
+    }
+
     override fun update(delta: Float) {
         nodes.forEach { it.updateTransform() }
 
-        armaturesToPrepare.clear()
         val objects = objects
+
+        objectsToUpdate.clear()
+        armaturesToUpdate.clear()
         for (i in objects.indices) {
             val obj = objects[i]
+            objectsToUpdate.add(obj)
             val armature = obj.armature
-            if (armature != null) armaturesToPrepare.add(armature)
+            if (armature != null) armaturesToUpdate.add(armature)
         }
-
-        armaturesToPrepare.forEach { it.update(delta) }
+        objectsToUpdate.forEach { it.update(delta) }
+        armaturesToUpdate.forEach { it.update(delta) }
 
         scenes.forEach { it.update(delta) }
     }
@@ -84,7 +95,7 @@ open class Scene(
                 val meshes = obj.meshes
                 for (j in 0 until meshes.size) {
                     val shader = meshes[j].material.shader
-                    if (shader != null) shadersToPrepare.add(shader)
+                    if (shader != null) shadersToUpdate.add(shader)
                 }
             }
         } else {
@@ -93,16 +104,16 @@ open class Scene(
                 val meshes = obj.meshes
                 for (j in 0 until meshes.size) {
                     val shader = meshes[j].material.shaderChannels[shaderChannel]
-                    if (shader != null) shadersToPrepare.add(shader)
+                    if (shader != null) shadersToUpdate.add(shader)
                 }
             }
         }
-        shadersToPrepare.forEach { it.prepareSceneData(this) }
+        shadersToUpdate.forEach { it.prepareSceneData(this) }
     }
 
     override fun render() {
         // Get all unique shaders
-        shadersToPrepare.clear()
+        shadersToUpdate.clear()
 
         opaque.clear()
         translucent.clear()
@@ -187,8 +198,9 @@ open class Scene(
         val tmpV1 = Vec3()
         val tmpV2 = Vec3()
 
-        private val armaturesToPrepare = HashSet<IArmature>()
-        private val shadersToPrepare = HashSet<IShader>()
+        private val objectsToUpdate = HashSet<IObject3D>()
+        private val armaturesToUpdate = HashSet<IArmature>()
+        private val shadersToUpdate = HashSet<IShader>()
 
         private val opaque = ArrayList<IObject3D>()
         private val translucent = ArrayList<IObject3D>()

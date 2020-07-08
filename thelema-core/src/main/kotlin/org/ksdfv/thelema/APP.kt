@@ -68,9 +68,10 @@ object APP: IApp {
     /** See [mainLoopIteration] */
     var maxMainLoopIterationCounter: Int = 1
 
-    override var cache: String
-        get() = api.cache
-        set(value) { api.cache = value }
+
+    override fun loadPreferences(name: String): String = api.loadPreferences(name)
+
+    override fun savePreferences(name: String, text: String) = api.savePreferences(name, text)
 
     override fun destroy() = api.destroy()
 

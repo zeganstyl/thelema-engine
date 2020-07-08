@@ -17,7 +17,6 @@
 package org.ksdfv.thelema.texture
 
 import org.ksdfv.thelema.gl.*
-import kotlin.math.min
 
 /**
  * @author zeganstyl
@@ -81,7 +80,7 @@ abstract class Texture(
                     field = 1f
                 } else {
                     val oldValue = field
-                    field = min(value, max)
+                    field = if (value > max) max else value
                     if (field != oldValue) {
                         GL.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, field)
                     }

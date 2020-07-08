@@ -83,25 +83,25 @@ class CatmullRomSpline(var controlPoints: List<IVec>, var continuous: Boolean = 
         val next = controlPoints[(n + 1) % spanCount]
         val dstPrev2 = `in`!!.dst2(previous)
         val dstNext2 = `in`.dst2(next)
-        val P1: IVec
-        val P2: IVec
-        val P3: IVec?
+        val p1: IVec
+        val p2: IVec
+        val p3: IVec?
         if (dstNext2 < dstPrev2) {
-            P1 = nearest
-            P2 = next
-            P3 = `in`
+            p1 = nearest
+            p2 = next
+            p3 = `in`
         } else {
-            P1 = previous
-            P2 = nearest
-            P3 = `in`
+            p1 = previous
+            p2 = nearest
+            p3 = `in`
             n = if (n > 0) n - 1 else spanCount - 1
         }
-        val L1Sqr = P1.dst2(P2)
-        val L2Sqr = P3.dst2(P2)
-        val L3Sqr = P3.dst2(P1)
-        val L1 = sqrt(L1Sqr.toDouble()).toFloat()
-        val s = (L2Sqr + L1Sqr - L3Sqr) / (2f * L1)
-        val u = MATH.clamp((L1 - s) / L1, 0f, 1f)
+        val l1Sqr = p1.dst2(p2)
+        val l2Sqr = p3.dst2(p2)
+        val l3Sqr = p3.dst2(p1)
+        val l1 = sqrt(l1Sqr.toDouble()).toFloat()
+        val s = (l2Sqr + l1Sqr - l3Sqr) / (2f * l1)
+        val u = MATH.clamp((l1 - s) / l1, 0f, 1f)
         return (n + u) / spanCount
     }
 

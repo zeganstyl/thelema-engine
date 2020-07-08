@@ -142,7 +142,7 @@ object MATH {
         return fromValue + (toValue - fromValue) * progress
     }
 
-    /** Linearly normalizes value from a range. Range must not be empty. This is the inverse of [.lerp].
+    /** Linearly normalizes value from a range. Range must not be empty. This is the inverse of [lerp].
      * @param rangeStart Range start normalized to 0
      * @param rangeEnd Range end normalized to 1
      * @param value Value to normalize
@@ -153,7 +153,7 @@ object MATH {
     }
 
     /** Linearly map a value from one range to another. Input range must not be empty. This is the same as chaining
-     * [.norm] from input range and [.lerp] to output range.
+     * [norm] from input range and [lerp] to output range.
      * @param inRangeStart Input range start
      * @param inRangeEnd Input range end
      * @param outRangeStart Output range start
@@ -170,8 +170,8 @@ object MATH {
      *
      * @param fromRadians start angle in radians
      * @param toRadians target angle in radians
-     * @param progress interpolation value in the range [0, 1]
-     * @return the interpolated angle in the range [0, PI2[
+     * @param progress interpolation value in the range `[0, 1]`
+     * @return the interpolated angle in the range `[0, PI2]`
      */
     fun lerpAngle(fromRadians: Float, toRadians: Float, progress: Float): Float {
         val delta = (toRadians - fromRadians + PI2 + PI) % PI2 - PI
@@ -183,8 +183,8 @@ object MATH {
      *
      * @param fromDegrees start angle in degrees
      * @param toDegrees target angle in degrees
-     * @param progress interpolation value in the range [0, 1]
-     * @return the interpolated angle in the range [0, 360[
+     * @param progress interpolation value in the range `[0, 1]`
+     * @return the interpolated angle in the range `[0, 360]`
      */
     fun lerpAngleDeg(fromDegrees: Float, toDegrees: Float, progress: Float): Float {
         val delta = (toDegrees - fromDegrees + 360 + 180) % 360 - 180
@@ -235,6 +235,10 @@ object MATH {
     /** Returns true if the value is zero (using the default tolerance as upper bound)  */
     fun isZero(value: Float): Boolean {
         return abs(value) <= FLOAT_ROUNDING_ERROR
+    }
+
+    fun isNotZero(value: Float): Boolean {
+        return abs(value) > FLOAT_ROUNDING_ERROR
     }
 
     /** Returns true if the value is zero.

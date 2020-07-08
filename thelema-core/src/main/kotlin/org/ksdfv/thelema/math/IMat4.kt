@@ -90,7 +90,6 @@ interface IMat4 {
         get() = getCellValue(M12)
         set(value) { setCellValue(M12, value) }
 
-    /** @see [M13] */
     var m13
         get() = getCellValue(M13)
         set(value) { setCellValue(M13, value) }
@@ -558,24 +557,24 @@ interface IMat4 {
      */
     fun setToProjection(near: Float, far: Float, fovy: Float, aspectRatio: Float): IMat4 {
         idt()
-        val l_fd = (1.0 / tan(fovy * (Math.PI / 180) / 2.0)).toFloat()
-        val l_a1 = (far + near) / (near - far)
-        val l_a2 = 2 * far * near / (near - far)
-        values[M00] = l_fd / aspectRatio
+        val fd = (1.0 / tan(fovy * (Math.PI / 180) / 2.0)).toFloat()
+        val a1 = (far + near) / (near - far)
+        val a2 = 2 * far * near / (near - far)
+        values[M00] = fd / aspectRatio
         values[M10] = 0f
         values[M20] = 0f
         values[M30] = 0f
         values[M01] = 0f
-        values[M11] = l_fd
+        values[M11] = fd
         values[M21] = 0f
         values[M31] = 0f
         values[M02] = 0f
         values[M12] = 0f
-        values[M22] = l_a1
+        values[M22] = a1
         values[M32] = -1f
         values[M03] = 0f
         values[M13] = 0f
-        values[M23] = l_a2
+        values[M23] = a2
         values[M33] = 0f
         return this
     }
@@ -597,8 +596,8 @@ interface IMat4 {
         val y = 2.0f * near / (top - bottom)
         val a = (right + left) / (right - left)
         val b = (top + bottom) / (top - bottom)
-        val l_a1 = (far + near) / (near - far)
-        val l_a2 = 2 * far * near / (near - far)
+        val a1 = (far + near) / (near - far)
+        val a2 = 2 * far * near / (near - far)
         values[M00] = x
         values[M10] = 0f
         values[M20] = 0f
@@ -609,11 +608,11 @@ interface IMat4 {
         values[M31] = 0f
         values[M02] = a
         values[M12] = b
-        values[M22] = l_a1
+        values[M22] = a1
         values[M32] = -1f
         values[M03] = 0f
         values[M13] = 0f
-        values[M23] = l_a2
+        values[M23] = a2
         values[M33] = 0f
         return this
     }
@@ -631,23 +630,23 @@ interface IMat4 {
      */
     fun setToOrtho(left: Float, right: Float, bottom: Float, top: Float, near: Float = 0f, far: Float = 1f): IMat4 {
         idt()
-        val x_orth = 2f / (right - left)
-        val y_orth = 2f / (top - bottom)
-        val z_orth = -2f / (far - near)
+        val xOrth = 2f / (right - left)
+        val yOrth = 2f / (top - bottom)
+        val zOrth = -2f / (far - near)
         val tx = -(right + left) / (right - left)
         val ty = -(top + bottom) / (top - bottom)
         val tz = -(far + near) / (far - near)
-        values[M00] = x_orth
+        values[M00] = xOrth
         values[M10] = 0f
         values[M20] = 0f
         values[M30] = 0f
         values[M01] = 0f
-        values[M11] = y_orth
+        values[M11] = yOrth
         values[M21] = 0f
         values[M31] = 0f
         values[M02] = 0f
         values[M12] = 0f
-        values[M22] = z_orth
+        values[M22] = zOrth
         values[M32] = 0f
         values[M03] = tx
         values[M13] = ty
@@ -875,7 +874,7 @@ interface IMat4 {
 
     /** Linearly interpolates between this matrix and the given matrix mixing by alpha
      * @param mat the matrix
-     * @param alpha the alpha value in the range [0,1]
+     * @param alpha the alpha value in the range `[0,1]`
      * @return This matrix for the purpose of chaining methods together.
      */
     fun lerp(mat: IMat4, alpha: Float): IMat4 {
@@ -1224,7 +1223,8 @@ interface IMat4 {
     }
 
     companion object {
-        val Default = Mat4()
+        /** It may be used to set unused variables */
+        val Cap = Mat4()
         
         var Build: () -> IMat4 = { Mat4() }
 
@@ -1284,7 +1284,7 @@ interface IMat4 {
         val tmpV4Up = Vec3()
 
         /** Multiplies the matrix mata with matrix matb, storing the result in mata. The arrays are assumed to hold 4x4 column major
-         * matrices as you can get from [Ival]. This is the same as [Imul].
+         * matrices as you can get from [IMat4.values].
          *
          * @param mata the first matrix.
          * @param matb the second matrix.
@@ -1397,14 +1397,13 @@ interface IMat4 {
         }
 
         fun matrix4_proj(mat: FloatArray, vec: FloatArray, offset: Int) {
-            val index0 = offset
             val index1 = offset+1
             val index2 = offset+2
-            val inv_w = 1.0f / (vec[index0] * mat[M30] + vec[index1] * mat[M31] + vec[index2] * mat[M32] + mat[M33])
-            val x = (vec[index0] * mat[M00] + vec[index1] * mat[M01] + vec[index2] * mat[M02] + mat[M03]) * inv_w
-            val y = (vec[index0] * mat[M10] + vec[index1] * mat[M11] + vec[index2] * mat[M12] + mat[M13]) * inv_w
-            val z = (vec[index0] * mat[M20] + vec[index1] * mat[M21] + vec[index2] * mat[M22] + mat[M23]) * inv_w
-            vec[index0] = x
+            val invW = 1.0f / (vec[offset] * mat[M30] + vec[index1] * mat[M31] + vec[index2] * mat[M32] + mat[M33])
+            val x = (vec[offset] * mat[M00] + vec[index1] * mat[M01] + vec[index2] * mat[M02] + mat[M03]) * invW
+            val y = (vec[offset] * mat[M10] + vec[index1] * mat[M11] + vec[index2] * mat[M12] + mat[M13]) * invW
+            val z = (vec[offset] * mat[M20] + vec[index1] * mat[M21] + vec[index2] * mat[M22] + mat[M23]) * invW
+            vec[offset] = x
             vec[index1] = y
             vec[index2] = z
         }

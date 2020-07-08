@@ -39,12 +39,12 @@ interface IApp {
 
     var clipboardString: String
 
-    /** Local cache. For desktop, it is file content in user directory, for HTML it is browser cache. */
-    var cache: String
-
     /** Current cursor */
     var cursor: Int
     var defaultCursor: Int
+
+    fun loadPreferences(name: String): String
+    fun savePreferences(name: String, text: String)
 
     fun destroy()
 

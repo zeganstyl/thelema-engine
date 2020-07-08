@@ -26,7 +26,7 @@ import org.ksdfv.thelema.shader.IShader
 /** @author zeganstyl */
 class InstanceBufferObject(
     byteBuffer: IByteData,
-    override var attributes: VertexAttributes,
+    override var attributes: IVertexInputs,
     usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true
 ) : IVertexBuffer {
@@ -54,11 +54,10 @@ class InstanceBufferObject(
 
     /** Constructs a new interleaved VertexBufferObject.
      *
-     * @param isStatic whether the vertex data is static.
      * @param numVertices the maximum number of vertices
-     * @param attributes the [VertexAttributes].
+     * @param attributes the [VertexInputs].
      */
-    constructor(numVertices: Int, attributes: VertexAttributes, usage: Int = GL_STATIC_DRAW):
+    constructor(numVertices: Int, attributes: VertexInputs, usage: Int = GL_STATIC_DRAW):
             this(DATA.bytes(attributes.bytesPerVertex * numVertices), attributes, usage)
 
     init {
@@ -86,8 +85,8 @@ class InstanceBufferObject(
         if (isBufferNeedReload) loadBufferToGpu()
 
 
-        attributes.values.forEach {
-            val location = shader?.attributeLocations?.get(it.id)
+        attributes.forEach {
+            val location = shader?.attributeLocations?.get(it.name)
             if (location != null) {
                 GL.glEnableVertexAttribArray(location)
                 GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, attributes.bytesPerVertex, it.byteOffset)
@@ -97,8 +96,8 @@ class InstanceBufferObject(
     }
 
     override fun unbind(shader: IShader?) {
-        attributes.values.forEach {
-            val location = shader?.attributeLocations?.get(it.id)
+        attributes.forEach {
+            val location = shader?.attributeLocations?.get(it.name)
             if (location != null) {
                 GL.glDisableVertexAttribArray(location)
             }

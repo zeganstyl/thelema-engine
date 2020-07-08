@@ -16,8 +16,8 @@
 
 package org.ksdfv.thelema.test
 
-import org.ksdfv.thelema.ActiveCamera
-import org.ksdfv.thelema.Camera
+import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.Camera
 import org.ksdfv.thelema.g3d.Object3D
 import org.ksdfv.thelema.g3d.Scene
 import org.ksdfv.thelema.math.Mat4
@@ -70,13 +70,13 @@ class CubeModel(val shader: Shader? = defaultShader()) {
         @Language("GLSL")
         fun defaultShader() = Shader(
             vertCode = """            
-attribute vec4 a_position;
+attribute vec4 aPosition;
 varying vec3 vPosition;
 uniform mat4 projViewModelTrans;
 
 void main() {
-    vPosition = a_position.xyz;
-    gl_Position = projViewModelTrans * a_position;
+    vPosition = aPosition.xyz;
+    gl_Position = projViewModelTrans * aPosition;
 }""",
             fragCode = """
 varying vec3 vPosition;

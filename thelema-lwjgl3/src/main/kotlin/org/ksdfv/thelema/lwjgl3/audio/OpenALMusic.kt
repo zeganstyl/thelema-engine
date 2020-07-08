@@ -16,8 +16,8 @@
 
 package org.ksdfv.thelema.lwjgl3.audio
 
+import org.ksdfv.thelema.audio.IMusic
 import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.audio.Music
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL10
 import org.lwjgl.openal.AL11
@@ -31,7 +31,7 @@ import kotlin.math.sin
 
 /** @author Nathan Sweet
  */
-abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile) : Music {
+abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile) : IMusic {
     private val renderedSecondsQueue = Stack<Float>()
     private var buffers: IntBuffer? = null
     var sourceId = -1
@@ -60,7 +60,7 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
     private var pan = 0f
     private var renderedSeconds = 0f
     private var maxSecondsPerBuffer = 0f
-    override var onCompletionListener: Music.OnCompletionListener? = null
+    override var onCompletionListener: IMusic.OnCompletionListener? = null
 
     var removeRequest = false
         set(value) {

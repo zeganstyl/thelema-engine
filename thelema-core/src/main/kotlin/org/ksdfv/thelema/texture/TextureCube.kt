@@ -21,7 +21,6 @@ import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.net.NET
 
-
 /**
  * @author zeganstyl */
 class TextureCube: Texture(GL_TEXTURE_CUBE_MAP) {

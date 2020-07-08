@@ -20,7 +20,7 @@ import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.mesh.IMesh
 
 /** @author zeganstyl */
-class PlaneMeshBuilder(
+class PlaneMeshBuilder (
     var width: Float = 1f,
     var height: Float = 1f,
     var xDivisions: Int = 1,
@@ -28,49 +28,64 @@ class PlaneMeshBuilder(
     var normal: IVec3 = IVec3.Y
 ): MeshBuilder() {
     override fun build(out: IMesh): IMesh {
-        out.vertices = createVerticesFloat((xDivisions + 1) * (yDivisions + 1)) {
-            val halfWidth = width/2f
-            val halfHeight = height/2f
+        val xNum = xDivisions + 1
+        val yNum = yDivisions + 1
 
-            var yi = 0
-            while (yi < yDivisions + 1) {
-                val yPercent = yi/yDivisions.toFloat()
-                val yTexCoord = yPercent * textureCoordinatesScale
-                val y = yPercent*height - halfHeight
+        out.vertices = createVerticesFloat(xNum * yNum) {
+            val uv = uv
+            val normals = normals
+            val halfWidth = width * 0.5f
+            val halfHeight = height * 0.5f
+            val normalX = normal.x
+            val normalY = normal.y
+            val normalZ = normal.z
 
-                var xi = 0
-                while (xi < xDivisions + 1) {
-                    val xPercent = xi/xDivisions.toFloat()
-                    val xTexCoord = xPercent * textureCoordinatesScale
-                    val x = xPercent*width - halfWidth
+            val xStart = -halfWidth
+            val xStep = width / xDivisions
+            val uStep = uvScale * xStep / height
 
+            val yStart = -halfHeight
+            val yStep = height / yDivisions
+            val vStep = uvScale * yStep / height
+
+            var y = yStart
+            var v = 0f
+            while (y <= halfHeight) {
+
+                var x = xStart
+                var u = 0f
+                while (x <= halfWidth) {
                     put(x, 0f, y)
-                    if (textureCoordinates) put(xTexCoord, yTexCoord)
-                    if (normals) put(normal.x, normal.y, normal.z)
+                    //println("$x, 0f, $y")
+                    if (uv) put(u, v)
+                    if (normals) put(normalX, normalY, normalZ)
 
-                    xi++
+                    u += uStep
+                    x += xStep
                 }
 
-                yi++
+                v += vStep
+                y += yStep
             }
         }
 
-        out.indices = createIndicesShort(6 * (xDivisions + 1) * (yDivisions + 1)) {
-            var ri = 1
-            val rows = yDivisions + 1
-            val columns = xDivisions
+        out.indices = createIndicesShort(6 * xNum * yNum) {
+            val xQuads = xDivisions
+            val yQuads = yDivisions
 
             var v0 = 0
-            var v1 = columns + 1
+            var v1 = xQuads + 1
             var v2 = v0 + 1
             var v3 = v1 + 1
 
-            while (ri < rows) {
+            var ri = 0
+            while (ri < yQuads) {
+
                 var ci = 0
-                while (ci < columns) {
+                while (ci < xQuads) {
                     put(
                         v0.toShort(), v1.toShort(), v2.toShort(),
-                        v2.toShort(), v1.toShort(), v3.toShort()
+                        v1.toShort(), v3.toShort(), v2.toShort()
                     )
 
                     v0 += 1

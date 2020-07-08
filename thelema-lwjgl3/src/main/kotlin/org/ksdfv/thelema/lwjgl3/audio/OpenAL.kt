@@ -16,10 +16,10 @@
 
 package org.ksdfv.thelema.lwjgl3.audio
 
-import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.audio.IAL
 import org.ksdfv.thelema.audio.IAudioDevice
 import org.ksdfv.thelema.audio.IAudioRecorder
+import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.math.MATH
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL
@@ -39,43 +39,24 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     private val soundIdToSource = HashMap<Long, Int>()
     private val sourceToSoundId = HashMap<Int, Long>()
     private var nextSoundId: Long = 0
-    private val extensionToSoundClass: MutableMap<String, Class<out OpenALSound>> =
-        HashMap()
-    private val extensionToMusicClass: MutableMap<String, Class<out OpenALMusic>> =
-        HashMap()
     private val recentSounds = ArrayList<OpenALSound?>()
     private var mostRecentSound = -1
     var music: ArrayList<OpenALMusic> = ArrayList()
-    var device: Long
+    val device: Long = ALC10.alcOpenDevice(null as ByteBuffer?)
     var context: Long
     var noDevice = false
     var checkAndValidatePlayingMusic = false
-    fun registerSound(extension: String, soundClass: Class<out OpenALSound>) {
-        extensionToSoundClass[extension] = soundClass
-    }
-
-    fun registerMusic(extension: String, musicClass: Class<out OpenALMusic>) {
-        extensionToMusicClass[extension] = musicClass
-    }
 
     override fun newSound(file: IFile): OpenALSound {
-        val soundClass = extensionToSoundClass[file.extension.toLowerCase()]
-                ?: throw RuntimeException("Unknown file extension for sound: $file")
-        return try {
-            soundClass.getConstructor(OpenAL::class.java, IFile::class.java).newInstance(this, file)
-        } catch (ex: Exception) {
-            throw RuntimeException("Error creating sound " + soundClass.name + " for file: " + file, ex)
-        }
+        val builder = OpenALCodecs.sound[file.extension.toLowerCase()] ?:
+        throw IllegalArgumentException("Sound file extension is unknown")
+        return builder.invoke(this, file)
     }
 
     override fun newMusic(file: IFile): OpenALMusic {
-        val musicClass = extensionToMusicClass[file.extension.toLowerCase()]
-                ?: throw RuntimeException("Unknown file extension for music: $file")
-        return try {
-            musicClass.getConstructor(OpenAL::class.java, IFile::class.java).newInstance(this, file)
-        } catch (ex: Exception) {
-            throw RuntimeException("Error creating music " + musicClass.name + " for file: " + file, ex)
-        }
+        val builder = OpenALCodecs.music[file.extension.toLowerCase()] ?:
+        throw IllegalArgumentException("Music file extension is unknown")
+        return builder.invoke(this, file)
     }
 
     fun obtainSource(isMusic: Boolean): Int {
@@ -306,9 +287,6 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     }
 
     init {
-        registerSound("wav", Wav.Sound::class.java)
-        registerMusic("wav", Wav.Music::class.java)
-        device = ALC10.alcOpenDevice(null as ByteBuffer?)
         if (device == 0L) {
             noDevice = true
         }

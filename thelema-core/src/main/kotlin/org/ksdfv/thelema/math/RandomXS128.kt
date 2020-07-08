@@ -79,7 +79,7 @@ class RandomXS128 : Random {
     /** Returns the next pseudo-random, uniformly distributed `int` value from this random number generator's sequence.
      *
      *
-     * This implementation uses [.nextLong] internally.  */
+     * This implementation uses [nextLong] internally.  */
     override fun nextInt(): Int {
         return nextLong().toInt()
     }
@@ -88,7 +88,7 @@ class RandomXS128 : Random {
      * drawn from this random number generator's sequence.
      *
      *
-     * This implementation uses [.nextLong] internally.
+     * This implementation uses [nextLong] internally.
      * @param n the positive bound on the random number to be returned.
      * @return the next pseudo-random `int` value between `0` (inclusive) and `n` (exclusive).
      */
@@ -101,7 +101,7 @@ class RandomXS128 : Random {
      * uniform, provided that the sequence of 64-bit values produced by this generator is.
      *
      *
-     * This implementation uses [.nextLong] internally.
+     * This implementation uses [nextLong] internally.
      * @param n the positive bound on the random number to be returned.
      * @return the next pseudo-random `long` value between `0` (inclusive) and `n` (exclusive).
      */
@@ -118,7 +118,7 @@ class RandomXS128 : Random {
      * sequence.
      *
      *
-     * This implementation uses [.nextLong] internally.  */
+     * This implementation uses [nextLong] internally.  */
     override fun nextDouble(): Double {
         return (nextLong() ushr 11) * NORM_DOUBLE
     }
@@ -127,7 +127,7 @@ class RandomXS128 : Random {
      * sequence.
      *
      *
-     * This implementation uses [.nextLong] internally.  */
+     * This implementation uses [nextLong] internally.  */
     override fun nextFloat(): Float {
         return ((nextLong() ushr 40) * NORM_FLOAT).toFloat()
     }
@@ -135,7 +135,7 @@ class RandomXS128 : Random {
     /** Returns a pseudo-random, uniformly distributed `boolean ` value from this random number generator's sequence.
      *
      *
-     * This implementation uses [.nextLong] internally.  */
+     * This implementation uses [nextLong] internally.  */
     override fun nextBoolean(): Boolean {
         return nextLong() and 1 != 0L
     }
@@ -144,7 +144,7 @@ class RandomXS128 : Random {
      * length of the byte array.
      *
      *
-     * This implementation uses [.nextLong] internally.  */
+     * This implementation uses [nextLong] internally.  */
     override fun nextBytes(bytes: ByteArray) {
         var n = 0
         var i = bytes.size

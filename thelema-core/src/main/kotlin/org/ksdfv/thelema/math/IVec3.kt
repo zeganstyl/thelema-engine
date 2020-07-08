@@ -266,7 +266,7 @@ interface IVec3 : IVec {
     }
 
     /** Multiplies this vector by the transpose of the first three columns of the matrix. Note: only works for translation and
-     * rotation, does not work for scaling. For those, use [.rot] with [IMat4.inv].
+     * rotation, does not work for scaling. For those, use [rot] with [IMat4.inv].
      * @param mat The transformation matrix
      * @return The vector for chaining
      */
@@ -278,7 +278,7 @@ interface IVec3 : IVec {
 
     /** Translates this vector in the direction opposite to the translation of the matrix and the multiplies this vector by the
      * transpose of the first three columns of the matrix. Note: only works for translation and rotation, does not work for
-     * scaling. For those, use [.mul] with [IMat4.inv].
+     * scaling. For those, use [mul] with [IMat4.inv].
      * @param mat The transformation matrix
      * @return The vector for chaining
      */
@@ -319,7 +319,7 @@ interface IVec3 : IVec {
         return this
     }
 
-    /** Spherically interpolates between this vector and the target vector by alpha which is in the range [0,1]. The result is
+    /** Spherically interpolates between this vector and the target vector by alpha which is in the range `[0,1]`. The result is
      * stored in this vector.
      *
      * @param target The target vector
@@ -396,7 +396,7 @@ interface IVec3 : IVec {
 
         var Build: () -> IVec3 = { Vec3() }
 
-        val Pool = org.ksdfv.thelema.Pool { Build() }
+        val Pool = org.ksdfv.thelema.utils.Pool { Build() }
 
         val X: IVec3 = Vec3(1f, 0f, 0f)
         val Y: IVec3 = Vec3(0f, 1f, 0f)

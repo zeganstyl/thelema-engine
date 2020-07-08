@@ -95,9 +95,7 @@ interface IVec4: IVec {
     val yaw: Float
         get() = if (gimbalPole == 0) MATH.atan2(2f * (y * w + x * z), 1f - 2f * (y * y + x * x)) else 0f
 
-    /** Get the angle in radians of the rotation this quaternion represents. Does not normalize the quaternion. Use
-     * [.getAxisAngleRad] to get both the axis and the angle of this rotation. Use
-     * [.getAngleAroundRad] to get the angle around a specific axis.
+    /** Get the angle in radians of the rotation this quaternion represents. Does not normalize the quaternion.
      * @return the angle in radians of the rotation
      */
     val angle: Float
@@ -409,8 +407,18 @@ interface IVec4: IVec {
      * @param zy z-axis y-coordinate
      * @param zz z-axis z-coordinate
      */
-    fun setQuaternionFromAxes(normalizeAxes: Boolean, xx: Float, xy: Float, xz: Float, yx: Float, yy: Float, yz: Float, zx: Float,
-                              zy: Float, zz: Float): IVec4 {
+    fun setQuaternionFromAxes(
+        normalizeAxes: Boolean,
+        xx: Float,
+        xy: Float,
+        xz: Float,
+        yx: Float,
+        yy: Float,
+        yz: Float,
+        zx: Float,
+        zy: Float,
+        zz: Float
+    ): IVec4 {
         var xx = xx
         var xy = xy
         var xz = xz
@@ -497,7 +505,7 @@ interface IVec4: IVec {
     }
 
     /** Spherical linear interpolation between this quaternion and the other quaternion, based on the alpha value in the range
-     * [0,1]. Taken from Bones framework for JPCT, see http://www.aptalkarga.com/bones/
+     * `[0,1]`. Taken from Bones framework for JPCT, see http://www.aptalkarga.com/bones/
      * @param end the end quaternion
      * @param alpha alpha in the range [0,1]
      * @return this quaternion for chaining
@@ -589,11 +597,12 @@ interface IVec4: IVec {
      * received axis is a unit vector. However, if this is an identity quaternion (no rotation), then the length of the axis may be
      * zero.
      *
+     * See [wikipedia](http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation)
+     *
+     * See [calculation](http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle)
+     *
      * @param axis vector which will receive the axis
      * @return the angle in radians
-     * @see [wikipedia](http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation)
-     *
-     * @see [calculation](http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle)
      */
     fun getQuaternionAxisAngle(axis: IVec3): Float {
         if (w > 1) nor() // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
@@ -638,14 +647,14 @@ interface IVec4: IVec {
         val hy = yaw * 0.5f
         val shy = sin(hy)
         val chy = cos(hy)
-        val chy_shp = chy * shp
-        val shy_chp = shy * chp
-        val chy_chp = chy * chp
-        val shy_shp = shy * shp
-        x = chy_shp * chr + shy_chp * shr // cos(yaw/2) * sin(pitch/2) * cos(roll/2) + sin(yaw/2) * cos(pitch/2) * sin(roll/2)
-        y = shy_chp * chr - chy_shp * shr // sin(yaw/2) * cos(pitch/2) * cos(roll/2) - cos(yaw/2) * sin(pitch/2) * sin(roll/2)
-        z = chy_chp * shr - shy_shp * chr // cos(yaw/2) * cos(pitch/2) * sin(roll/2) - sin(yaw/2) * sin(pitch/2) * cos(roll/2)
-        w = chy_chp * chr + shy_shp * shr // cos(yaw/2) * cos(pitch/2) * cos(roll/2) + sin(yaw/2) * sin(pitch/2) * sin(roll/2)
+        val chyShp = chy * shp
+        val shyChp = shy * chp
+        val chyChp = chy * chp
+        val shyShp = shy * shp
+        x = chyShp * chr + shyChp * shr // cos(yaw/2) * sin(pitch/2) * cos(roll/2) + sin(yaw/2) * cos(pitch/2) * sin(roll/2)
+        y = shyChp * chr - chyShp * shr // sin(yaw/2) * cos(pitch/2) * cos(roll/2) - cos(yaw/2) * sin(pitch/2) * sin(roll/2)
+        z = chyChp * shr - shyShp * chr // cos(yaw/2) * cos(pitch/2) * sin(roll/2) - sin(yaw/2) * sin(pitch/2) * cos(roll/2)
+        w = chyChp * chr + shyShp * shr // cos(yaw/2) * cos(pitch/2) * cos(roll/2) + sin(yaw/2) * sin(pitch/2) * sin(roll/2)
         return this
     }
 
@@ -654,12 +663,13 @@ interface IVec4: IVec {
      * axis perpendicular to the specified axis.  The swing and twist rotation can be used to reconstruct the original
      * quaternion: this = swing * twist
      *
+     * See [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
+     *
      * @param axisX the X component of the normalized axis for which to get the swing and twist rotation
      * @param axisY the Y component of the normalized axis for which to get the swing and twist rotation
      * @param axisZ the Z component of the normalized axis for which to get the swing and twist rotation
      * @param swing will receive the swing rotation: the rotation around an axis perpendicular to the specified axis
      * @param twist will receive the twist rotation: the rotation around the specified axis
-     * @see [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
      */
     fun getSwingTwist(axisX: Float, axisY: Float, axisZ: Float, swing: IVec4, twist: IVec4) {
         val d = dot(x, y, z, axisX, axisY, axisZ)
@@ -673,10 +683,11 @@ interface IVec4: IVec {
      * axis perpendicular to the specified axis.  The swing and twist rotation can be used to reconstruct the original
      * quaternion: this = swing * twist
      *
+     * See [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
+     *
      * @param axis the normalized axis for which to get the swing and twist rotation
      * @param swing will receive the swing rotation: the rotation around an axis perpendicular to the specified axis
      * @param twist will receive the twist rotation: the rotation around the specified axis
-     * @see [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
      */
     fun getSwingTwist(axis: IVec3, swing: IVec4, twist: IVec4) {
         getSwingTwist(axis.x, axis.y, axis.z, swing, twist)

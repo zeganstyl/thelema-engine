@@ -16,10 +16,10 @@
 
 package org.ksdfv.thelema.gl
 
-import org.ksdfv.thelema.img.IImage
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
+import org.ksdfv.thelema.img.IImage
 
 /**
  * OpenGL API
@@ -1020,5 +1020,14 @@ interface IGL {
 
     fun glVertexAttribPointer(indx: Int, size: Int, type: Int, normalized: Boolean, stride: Int, ptr: Int) {
         throw NotImplementedError()
+    }
+
+    fun getErrorString(error: Int = GL.glGetError()) = when (error) {
+        GL_NO_ERROR -> "GL_NO_ERROR"
+        GL_INVALID_ENUM -> "GL_INVALID_ENUM"
+        GL_INVALID_OPERATION -> "GL_INVALID_OPERATION"
+        GL_INVALID_FRAMEBUFFER_OPERATION -> "GL_INVALID_FRAMEBUFFER_OPERATION"
+        GL_OUT_OF_MEMORY -> "GL_OUT_OF_MEMORY"
+        else -> "Unknown GL error"
     }
 }

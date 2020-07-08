@@ -10,7 +10,7 @@ group = thelemaGroup
 
 val gitRepositoryUrl: String by project
 
-val verName = "0.1.0"
+val verName = "0.2.0"
 version = verName
 
 dependencies {

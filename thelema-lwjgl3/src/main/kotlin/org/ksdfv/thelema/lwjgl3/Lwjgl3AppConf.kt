@@ -16,12 +16,9 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.Color
-import org.ksdfv.thelema.Graphics
-import org.ksdfv.thelema.HdpiMode
-import org.ksdfv.thelema.HdpiUtils
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.math.IVec4
+import org.ksdfv.thelema.utils.Color
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import java.io.PrintStream
@@ -39,12 +36,12 @@ class Lwjgl3AppConf(
     windowResizable: Boolean = true,
     windowDecorated: Boolean = true,
     windowMaximized: Boolean = false,
-    maximizedMonitor: Lwjgl3Graphics.Lwjgl3Monitor? = null,
+    maximizedMonitor: Lwjgl3Monitor? = null,
     autoIconify: Boolean = false,
     windowIconFileLocation: Int? = null,
     windowIconPaths: Array<String>? = null,
     windowListener: Lwjgl3WindowListener? = null,
-    fullscreenMode: Lwjgl3Graphics.Lwjgl3DisplayMode? = null,
+    fullscreenMode: Lwjgl3DisplayMode? = null,
     title: String = "",
     initialBackgroundColor: IVec4 = Color.BLACK,
     initialVisible: Boolean = true,
@@ -64,18 +61,15 @@ class Lwjgl3AppConf(
     var stencil: Int = 0,
     var samples: Int = 0,
 
-    /**
-     * Set transparent window hint
-     * @param transparentFramebuffer
-     */
+    /** Set transparent window hint */
     var transparentFramebuffer: Boolean = false,
 
     /**Sets the polling rate during idle time in non-continuous rendering mode. Must be positive.
      * Default is 60.  */
     var idleFPS: Int = 60,
 
-    var preferencesDirectory: String = ".prefs/",
-    var preferencesFileLocation: Int = FileLocation.External,
+    var cacheDirectory: String = ".prefs/",
+    var cacheFileLocation: Int = FileLocation.External,
 
     /**
      * Defines how HDPI monitors are handled. Operating systems may have a
@@ -83,13 +77,9 @@ class Lwjgl3AppConf(
      * width/height and mouse coordinates in a logical coordinate system at a
      * lower resolution than the actual physical resolution. This setting allows
      * you to specify whether you want to work in logical or raw pixel units.
-     * See [HdpiMode] for more information. Note that some OpenGL
-     * functions like [GL20.glViewport] and
-     * [GL20.glScissor] require raw pixel units. Use
-     * [HdpiUtils] to help with the conversion if HdpiMode is set to
-     * [HdpiMode.Logical]. Defaults to [HdpiMode.Logical].
+     * Note that some OpenGL functions like glViewport and glScissor require raw pixel units.
      */
-    var hdpiMode: HdpiMode = HdpiMode.Logical,
+    var useLogicalCoordinates: Boolean = true,
 
     var debug: Boolean = false,
     var debugStream: PrintStream = System.err
@@ -131,20 +121,11 @@ class Lwjgl3AppConf(
         samples = config.samples
         transparentFramebuffer = config.transparentFramebuffer
         idleFPS = config.idleFPS
-        preferencesDirectory = config.preferencesDirectory
-        preferencesFileLocation = config.preferencesFileLocation
-        hdpiMode = config.hdpiMode
+        cacheDirectory = config.cacheDirectory
+        cacheFileLocation = config.cacheFileLocation
+        useLogicalCoordinates = config.useLogicalCoordinates
         debug = config.debug
         debugStream = config.debugStream
-    }
-
-    /**
-     * Whether to disable audio or not. If set to false, the returned audio
-     * class instances like [Audio] or [Music] will be mock
-     * implementations.
-     */
-    fun disableAudio(disableAudio: Boolean) {
-        this.disableAudio = disableAudio
     }
 
     /**
@@ -194,16 +175,6 @@ class Lwjgl3AppConf(
     }
 
     /**
-     * Sets the directory where [Preferences] will be stored, as well as
-     * the file type to be used to store them. Defaults to "$USER_HOME/.prefs/"
-     * and [FileLocation.External].
-     */
-    fun setPreferencesConfig(preferencesDirectory: String, preferencesFileLocation: Int) {
-        this.preferencesDirectory = preferencesDirectory
-        this.preferencesFileLocation = preferencesFileLocation
-    }
-
-    /**
      * Enables use of OpenGL debug message callbacks. If not supported by the core GL driver
      * (since GL 4.3), this uses the KHR_debug, ARB_debug_output or AMD_debug_output extension
      * if available. By default, debug messages with NOTIFICATION severity are disabled to
@@ -229,36 +200,42 @@ class Lwjgl3AppConf(
         /**
          * @return the currently active [DisplayMode] of the primary monitor
          */
-        val displayMode: Graphics.DisplayMode
+        val displayMode: DisplayMode
             get() {
                 Lwjgl3App.initializeGlfw()
                 val videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())
-                return Lwjgl3Graphics.Lwjgl3DisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode!!.width(), videoMode.height(), videoMode.refreshRate(),
-                        videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits())
+                return Lwjgl3DisplayMode(
+                    GLFW.glfwGetPrimaryMonitor(), videoMode!!.width(), videoMode.height(), videoMode.refreshRate(),
+                    videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits()
+                )
             }
 
         /**
          * @return the currently active [DisplayMode] of the given monitor
          */
-        fun getDisplayMode(monitor: Graphics.Monitor): Graphics.DisplayMode {
+        fun getDisplayMode(monitor: Monitor): DisplayMode {
             Lwjgl3App.initializeGlfw()
-            val videoMode = GLFW.glfwGetVideoMode((monitor as Lwjgl3Graphics.Lwjgl3Monitor).monitorHandle)
-            return Lwjgl3Graphics.Lwjgl3DisplayMode(monitor.monitorHandle, videoMode!!.width(), videoMode.height(), videoMode.refreshRate(),
-                    videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits())
+            val videoMode = GLFW.glfwGetVideoMode((monitor as Lwjgl3Monitor).monitorHandle)
+            return Lwjgl3DisplayMode(
+                monitor.monitorHandle, videoMode!!.width(), videoMode.height(), videoMode.refreshRate(),
+                videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits()
+            )
         }
 
         /**
          * @return the available [DisplayMode]s of the primary monitor
          */
-        val displayModes: Array<Graphics.DisplayMode?>
+        val displayModes: Array<DisplayMode?>
             get() {
                 Lwjgl3App.initializeGlfw()
                 val videoModes = GLFW.glfwGetVideoModes(GLFW.glfwGetPrimaryMonitor())
-                val result = arrayOfNulls<Graphics.DisplayMode>(videoModes!!.limit())
+                val result = arrayOfNulls<DisplayMode>(videoModes!!.limit())
                 for (i in result.indices) {
                     val videoMode = videoModes[i]
-                    result[i] = Lwjgl3Graphics.Lwjgl3DisplayMode(GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
-                            videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits())
+                    result[i] = Lwjgl3DisplayMode(
+                        GLFW.glfwGetPrimaryMonitor(), videoMode.width(), videoMode.height(),
+                        videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits()
+                    )
                 }
                 return result
             }
@@ -266,20 +243,22 @@ class Lwjgl3AppConf(
         /**
          * @return the available [DisplayMode]s of the given [Monitor]
          */
-        fun getDisplayModes(monitor: Graphics.Monitor): Array<Graphics.DisplayMode> {
+        fun getDisplayModes(monitor: Monitor): Array<DisplayMode> {
             Lwjgl3App.initializeGlfw()
-            val videoModes = GLFW.glfwGetVideoModes((monitor as Lwjgl3Graphics.Lwjgl3Monitor).monitorHandle)
+            val videoModes = GLFW.glfwGetVideoModes((monitor as Lwjgl3Monitor).monitorHandle)
             return Array(videoModes!!.limit()) {
                 val videoMode = videoModes[it]
-                Lwjgl3Graphics.Lwjgl3DisplayMode(monitor.monitorHandle, videoMode.width(), videoMode.height(),
-                        videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits())
+                Lwjgl3DisplayMode(
+                    monitor.monitorHandle, videoMode.width(), videoMode.height(),
+                    videoMode.refreshRate(), videoMode.redBits() + videoMode.greenBits() + videoMode.blueBits()
+                )
             }
         }
 
         /**
          * @return the primary [Monitor]
          */
-        val primaryMonitor: Graphics.Monitor
+        val primaryMonitor: Monitor
             get() {
                 Lwjgl3App.initializeGlfw()
                 return toLwjgl3Monitor(GLFW.glfwGetPrimaryMonitor())
@@ -288,25 +267,25 @@ class Lwjgl3AppConf(
         /**
          * @return the connected [Monitor]s
          */
-        val monitors: Array<Graphics.Monitor?>
+        val monitors: Array<Monitor?>
             get() {
                 Lwjgl3App.initializeGlfw()
                 val glfwMonitors = GLFW.glfwGetMonitors()
-                val monitors = arrayOfNulls<Graphics.Monitor>(glfwMonitors!!.limit())
+                val monitors = arrayOfNulls<Monitor>(glfwMonitors!!.limit())
                 for (i in 0 until glfwMonitors.limit()) {
                     monitors[i] = toLwjgl3Monitor(glfwMonitors[i])
                 }
                 return monitors
             }
 
-        fun toLwjgl3Monitor(glfwMonitor: Long): Lwjgl3Graphics.Lwjgl3Monitor {
+        fun toLwjgl3Monitor(glfwMonitor: Long): Lwjgl3Monitor {
             val tmp = BufferUtils.createIntBuffer(1)
             val tmp2 = BufferUtils.createIntBuffer(1)
             GLFW.glfwGetMonitorPos(glfwMonitor, tmp, tmp2)
             val virtualX = tmp[0]
             val virtualY = tmp2[0]
             val name = GLFW.glfwGetMonitorName(glfwMonitor)!!
-            return Lwjgl3Graphics.Lwjgl3Monitor(glfwMonitor, virtualX, virtualY, name)
+            return Lwjgl3Monitor(glfwMonitor, virtualX, virtualY, name)
         }
     }
 }

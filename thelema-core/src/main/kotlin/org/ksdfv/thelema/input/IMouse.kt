@@ -32,10 +32,8 @@ interface IMouse {
     /** the different between the current pointer location and the last pointer location on the y-axis. */
     val deltaY: Int
 
-    /** Only viable on the desktop. Will confine the mouse cursor location to the window and hide the mouse cursor. X and y
-     * coordinates are still reported as if the mouse was not catched.
-     * @param catched whether to catch or not to catch the mouse cursor
-     */
+    /** Only viable on the desktop. Will confine the mouse cursor location to the window and hide the mouse cursor.
+     * X and y coordinates are still reported as if the mouse was enabled. */
     var isCursorEnabled: Boolean
 
     /** Returns the x coordinate in screen coordinates of the given pointer. Pointers are indexed from 0 to n. The pointer id

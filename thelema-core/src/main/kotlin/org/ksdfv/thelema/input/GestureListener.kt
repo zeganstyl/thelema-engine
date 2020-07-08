@@ -16,378 +16,56 @@
 
 package org.ksdfv.thelema.input
 
-import org.ksdfv.thelema.input.GestureDetector.GestureListener
 import org.ksdfv.thelema.math.IVec2
-import org.ksdfv.thelema.math.Vec2
 
-
-/** [InputProcessor] implementation that detects gestures (tap, long press, fling, pan, zoom, pinch) and hands them to a
- * [GestureListener].
+/** Register an instance of this class with a [GestureDetector] to receive gestures such as taps, long presses, flings,
+ * panning or pinch zooming. Each method returns a boolean indicating if the event should be handed to the next listener (false
+ * to hand it to the next listener, true otherwise).
  * @author mzechner
  */
-open class GestureDetector(halfTapRectangleWidth: Float, halfTapRectangleHeight: Float, tapCountInterval: Float, longPressDuration: Float, maxFlingDelay: Float,
-                           listener: GestureListener?) : InputProcessor {
-    val listener: GestureListener?
-    private var tapRectangleWidth: Float
-    private var tapRectangleHeight: Float
-    private var tapCountInterval: Long
-    private var longPressSeconds: Float
-    private var maxFlingDelay: Long
-    private var inTapRectangle = false
-    private var tapCount = 0
-    private var lastTapTime: Long = 0
-    private var lastTapX = 0f
-    private var lastTapY = 0f
-    private var lastTapButton = 0
-    private var lastTapPointer = 0
-    var longPressFired = false
-    private var pinching = false
-    var isPanning = false
-        private set
-    private val tracker = VelocityTracker()
-    private var tapRectangleCenterX = 0f
-    private var tapRectangleCenterY = 0f
-    private var gestureStartTime: Long = 0
-    var pointer1 = Vec2()
-    private val pointer2 = Vec2()
-    private val initialPointer1 = Vec2()
-    private val initialPointer2 = Vec2()
+interface GestureListener {
+    fun touchDown(x: Float, y: Float, pointer: Int, button: Int): Boolean = false
 
-    /** Creates a new GestureDetector with default values: halfTapSquareSize=20, tapCountInterval=0.4f, longPressDuration=1.1f,
-     * maxFlingDelay=0.15f.  */
-    constructor(listener: GestureListener?) : this(20f, 0.4f, 1.1f, 0.15f, listener)
-
-    /** @param halfTapSquareSize half width in pixels of the square around an initial touch event, see
-     * [GestureListener.tap].
-     * @param tapCountInterval time in seconds that must pass for two touch down/up sequences to be detected as consecutive taps.
-     * @param longPressDuration time in seconds that must pass for the detector to fire a
-     * [GestureListener.longPress] event.
-     * @param maxFlingDelay time in seconds the finger must have been dragged for a fling event to be fired, see
-     * [GestureListener.fling]
+    /** Called when a tap occured. A tap happens if a touch went down on the screen and was lifted again without moving outside
+     * of the tap square. The tap square is a rectangular area around the initial touch position as specified on construction
+     * time of the [GestureDetector].
+     * @param count the number of taps.
      */
-    constructor(halfTapSquareSize: Float, tapCountInterval: Float, longPressDuration: Float, maxFlingDelay: Float,
-                listener: GestureListener?) : this(halfTapSquareSize, halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, listener)
+    fun tap(x: Float, y: Float, count: Int, button: Int): Boolean = false
 
-    override fun touchDown(x: Int, y: Int, pointer: Int, button: Int) {
-        touchDown(x.toFloat(), y.toFloat(), pointer, button)
-    }
-
-    fun touchDown(x: Float, y: Float, pointer: Int, button: Int): Boolean {
-        if (pointer > 1) return false
-        if (pointer == 0) {
-            pointer1.set(x, y)
-            gestureStartTime = 0
-            tracker.start(x, y, gestureStartTime)
-            if (MOUSE.isButtonPressed(MOUSE.LEFT)) { // Start pinch.
-                inTapRectangle = false
-                pinching = true
-                initialPointer1.set(pointer1)
-                initialPointer2.set(pointer2)
-            } else { // Normal touch down.
-                inTapRectangle = true
-                pinching = false
-                longPressFired = false
-                tapRectangleCenterX = x
-                tapRectangleCenterY = y
-            }
-        } else { // Start pinch.
-            pointer2.set(x, y)
-            inTapRectangle = false
-            pinching = true
-            initialPointer1.set(pointer1)
-            initialPointer2.set(pointer2)
-        }
-        return listener!!.touchDown(x, y, pointer, button)
-    }
-
-    override fun touchDragged(x: Int, y: Int, pointer: Int) {
-        touchDragged(x.toFloat(), y.toFloat(), pointer)
-    }
-
-    fun touchDragged(x: Float, y: Float, pointer: Int): Boolean {
-        if (pointer > 1) return false
-        if (longPressFired) return false
-        if (pointer == 0) pointer1.set(x, y) else pointer2.set(x, y)
-        // handle pinch zoom
-        if (pinching) {
-            if (listener != null) {
-                val result = listener.pinch(initialPointer1, initialPointer2, pointer1, pointer2)
-                return listener.zoom(initialPointer1.dst(initialPointer2), pointer1.dst(pointer2)) || result
-            }
-            return false
-        }
-        // update tracker
-        tracker.update(x, y, 0)
-        // check if we are still tapping.
-        if (inTapRectangle && !isWithinTapRectangle(x, y, tapRectangleCenterX, tapRectangleCenterY)) {
-            inTapRectangle = false
-        }
-        // if we have left the tap square, we are panning
-        if (!inTapRectangle) {
-            isPanning = true
-            return listener!!.pan(x, y, tracker.deltaX, tracker.deltaY)
-        }
-        return false
-    }
-
-    override fun touchUp(x: Int, y: Int, pointer: Int, button: Int) {
-        touchUp(x.toFloat(), y.toFloat(), pointer, button)
-    }
-
-    fun touchUp(x: Float, y: Float, pointer: Int, button: Int): Boolean {
-        if (pointer > 1) return false
-        // check if we are still tapping.
-        if (inTapRectangle && !isWithinTapRectangle(x, y, tapRectangleCenterX, tapRectangleCenterY)) inTapRectangle = false
-        val wasPanning = isPanning
-        isPanning = false
-        if (longPressFired) return false
-        if (inTapRectangle) { // handle taps
-            if (lastTapButton != button || lastTapPointer != pointer || System.nanoTime() - lastTapTime > tapCountInterval || !isWithinTapRectangle(x, y, lastTapX, lastTapY)) tapCount = 0
-            tapCount++
-            lastTapTime = System.nanoTime()
-            lastTapX = x
-            lastTapY = y
-            lastTapButton = button
-            lastTapPointer = pointer
-            gestureStartTime = 0
-            return listener!!.tap(x, y, tapCount, button)
-        }
-        if (pinching) { // handle pinch end
-            pinching = false
-            listener!!.pinchStop()
-            isPanning = true
-            // we are in pan mode again, reset velocity tracker
-            if (pointer == 0) { // first pointer has lifted off, set up panning to use the second pointer...
-                tracker.start(pointer2.x, pointer2.y, 0)
-            } else { // second pointer has lifted off, set up panning to use the first pointer...
-                tracker.start(pointer1.x, pointer1.y, 0)
-            }
-            return false
-        }
-        // handle no longer panning
-        var handled = false
-        if (wasPanning && !isPanning) handled = listener!!.panStop(x, y, pointer, button)
-        // handle fling
-        gestureStartTime = 0
-        val time = 0L
-        if (time - tracker.lastTime < maxFlingDelay) {
-            tracker.update(x, y, time)
-            handled = listener!!.fling(tracker.velocityX, tracker.velocityY, button) || handled
-        }
-        return handled
-    }
-
-    /** No further gesture events will be triggered for the current touch, if any.  */
-    fun cancel() {
-        longPressFired = true
-    }
-
-    /** @return whether the user touched the screen long enough to trigger a long press event.
+    fun longPress(x: Float, y: Float): Boolean = false
+    /** Called when the user dragged a finger over the screen and lifted it. Reports the last known velocity of the finger in
+     * pixels per second.
+     * @param velocityX velocity on x in seconds
+     * @param velocityY velocity on y in seconds
      */
-    val isLongPressed: Boolean
-        get() = isLongPressed(longPressSeconds)
+    fun fling(velocityX: Float, velocityY: Float, button: Int): Boolean = false
 
-    /** @param duration
-     * @return whether the user touched the screen for as much or more than the given duration.
+    /** Called when the user drags a finger over the screen.
+     * @param deltaX the difference in pixels to the last drag event on x.
+     * @param deltaY the difference in pixels to the last drag event on y.
      */
-    fun isLongPressed(duration: Float): Boolean {
-        return if (gestureStartTime == 0L) false else System.nanoTime() - gestureStartTime > (duration * 1000000000L).toLong()
-    }
+    fun pan(x: Float, y: Float, deltaX: Float, deltaY: Float): Boolean = false
 
-    open fun reset() {
-        gestureStartTime = 0
-        isPanning = false
-        inTapRectangle = false
-        tracker.lastTime = 0
-    }
+    /** Called when no longer panning.  */
+    fun panStop(x: Float, y: Float, pointer: Int, button: Int): Boolean = false
 
-    private fun isWithinTapRectangle(x: Float, y: Float, centerX: Float, centerY: Float): Boolean {
-        return Math.abs(x - centerX) < tapRectangleWidth && Math.abs(y - centerY) < tapRectangleHeight
-    }
-
-    /** The tap square will not longer be used for the current touch.  */
-    fun invalidateTapSquare() {
-        inTapRectangle = false
-    }
-
-    fun setTapSquareSize(halfTapSquareSize: Float) {
-        setTapRectangleSize(halfTapSquareSize, halfTapSquareSize)
-    }
-
-    fun setTapRectangleSize(halfTapRectangleWidth: Float, halfTapRectangleHeight: Float) {
-        tapRectangleWidth = halfTapRectangleWidth
-        tapRectangleHeight = halfTapRectangleHeight
-    }
-
-    /** @param tapCountInterval time in seconds that must pass for two touch down/up sequences to be detected as consecutive taps.
+    /** Called when the user performs a pinch zoom gesture. The original distance is the distance in pixels when the gesture
+     * started.
+     * @param initialDistance distance between fingers when the gesture started.
+     * @param distance current distance between fingers.
      */
-    fun setTapCountInterval(tapCountInterval: Float) {
-        this.tapCountInterval = (tapCountInterval * 1000000000L).toLong()
-    }
+    fun zoom(initialDistance: Float, distance: Float): Boolean = false
 
-    fun setLongPressSeconds(longPressSeconds: Float) {
-        this.longPressSeconds = longPressSeconds
-    }
-
-    fun setMaxFlingDelay(maxFlingDelay: Long) {
-        this.maxFlingDelay = maxFlingDelay
-    }
-
-    /** Register an instance of this class with a [GestureDetector] to receive gestures such as taps, long presses, flings,
-     * panning or pinch zooming. Each method returns a boolean indicating if the event should be handed to the next listener (false
-     * to hand it to the next listener, true otherwise).
-     * @author mzechner
+    /** Called when a user performs a pinch zoom gesture. Reports the initial positions of the two involved fingers and their
+     * current positions.
+     * @param initialPointer1
+     * @param initialPointer2
+     * @param pointer1
+     * @param pointer2
      */
-    interface GestureListener {
-        /** @see InputProcessor.touchDown
-         */
-        fun touchDown(x: Float, y: Float, pointer: Int, button: Int): Boolean = false
+    fun pinch(initialPointer1: IVec2, initialPointer2: IVec2, pointer1: IVec2, pointer2: IVec2): Boolean = false
 
-        /** Called when a tap occured. A tap happens if a touch went down on the screen and was lifted again without moving outside
-         * of the tap square. The tap square is a rectangular area around the initial touch position as specified on construction
-         * time of the [GestureDetector].
-         * @param count the number of taps.
-         */
-        fun tap(x: Float, y: Float, count: Int, button: Int): Boolean = false
-
-        fun longPress(x: Float, y: Float): Boolean = false
-        /** Called when the user dragged a finger over the screen and lifted it. Reports the last known velocity of the finger in
-         * pixels per second.
-         * @param velocityX velocity on x in seconds
-         * @param velocityY velocity on y in seconds
-         */
-        fun fling(velocityX: Float, velocityY: Float, button: Int): Boolean = false
-
-        /** Called when the user drags a finger over the screen.
-         * @param deltaX the difference in pixels to the last drag event on x.
-         * @param deltaY the difference in pixels to the last drag event on y.
-         */
-        fun pan(x: Float, y: Float, deltaX: Float, deltaY: Float): Boolean = false
-
-        /** Called when no longer panning.  */
-        fun panStop(x: Float, y: Float, pointer: Int, button: Int): Boolean = false
-
-        /** Called when the user performs a pinch zoom gesture. The original distance is the distance in pixels when the gesture
-         * started.
-         * @param initialDistance distance between fingers when the gesture started.
-         * @param distance current distance between fingers.
-         */
-        fun zoom(initialDistance: Float, distance: Float): Boolean = false
-
-        /** Called when a user performs a pinch zoom gesture. Reports the initial positions of the two involved fingers and their
-         * current positions.
-         * @param initialPointer1
-         * @param initialPointer2
-         * @param pointer1
-         * @param pointer2
-         */
-        fun pinch(initialPointer1: IVec2, initialPointer2: IVec2, pointer1: IVec2, pointer2: IVec2): Boolean = false
-
-        /** Called when no longer pinching.  */
-        fun pinchStop() = Unit
-    }
-
-    internal class VelocityTracker {
-        var sampleSize = 10
-        var lastX = 0f
-        var lastY = 0f
-        var deltaX = 0f
-        var deltaY = 0f
-        var lastTime: Long = 0
-        var numSamples = 0
-        var meanX = FloatArray(sampleSize)
-        var meanY = FloatArray(sampleSize)
-        var meanTime = LongArray(sampleSize)
-        fun start(x: Float, y: Float, timeStamp: Long) {
-            lastX = x
-            lastY = y
-            deltaX = 0f
-            deltaY = 0f
-            numSamples = 0
-            for (i in 0 until sampleSize) {
-                meanX[i] = 0f
-                meanY[i] = 0f
-                meanTime[i] = 0
-            }
-            lastTime = timeStamp
-        }
-
-        fun update(x: Float, y: Float, currTime: Long) {
-            deltaX = x - lastX
-            deltaY = y - lastY
-            lastX = x
-            lastY = y
-            val deltaTime = currTime - lastTime
-            lastTime = currTime
-            val index = numSamples % sampleSize
-            meanX[index] = deltaX
-            meanY[index] = deltaY
-            meanTime[index] = deltaTime
-            numSamples++
-        }
-
-        val velocityX: Float
-            get() {
-                val meanX = getAverage(meanX, numSamples)
-                val meanTime = getAverage(meanTime, numSamples) / 1000000000.0f
-                return if (meanTime == 0f) 0f else meanX / meanTime
-            }
-
-        val velocityY: Float
-            get() {
-                val meanY = getAverage(meanY, numSamples)
-                val meanTime = getAverage(meanTime, numSamples) / 1000000000.0f
-                return if (meanTime == 0f) 0f else meanY / meanTime
-            }
-
-        private fun getAverage(values: FloatArray, numSamples: Int): Float {
-            var numSamples = numSamples
-            numSamples = Math.min(sampleSize, numSamples)
-            var sum = 0f
-            for (i in 0 until numSamples) {
-                sum += values[i]
-            }
-            return sum / numSamples
-        }
-
-        private fun getAverage(values: LongArray, numSamples: Int): Long {
-            var numSamples = numSamples
-            numSamples = Math.min(sampleSize, numSamples)
-            var sum: Long = 0
-            for (i in 0 until numSamples) {
-                sum += values[i]
-            }
-            return if (numSamples == 0) 0 else sum / numSamples
-        }
-
-        private fun getSum(values: FloatArray, numSamples: Int): Float {
-            var numSamples = numSamples
-            numSamples = Math.min(sampleSize, numSamples)
-            var sum = 0f
-            for (i in 0 until numSamples) {
-                sum += values[i]
-            }
-            return if (numSamples == 0) 0f else sum
-        }
-    }
-
-    /** @param halfTapRectangleWidth half width in pixels of the rectangle around an initial touch event, see
-     * [GestureListener.tap].
-     * @param halfTapRectangleHeight half height in pixels of the rectangle around an initial touch event, see
-     * [GestureListener.tap].
-     * @param tapCountInterval time in seconds that must pass for two touch down/up sequences to be detected as consecutive taps.
-     * @param longPressDuration time in seconds that must pass for the detector to fire a
-     * [GestureListener.longPress] event.
-     * @param maxFlingDelay time in seconds the finger must have been dragged for a fling event to be fired, see
-     * [GestureListener.fling]
-     */
-    init {
-        requireNotNull(listener) { "listener cannot be null." }
-        tapRectangleWidth = halfTapRectangleWidth
-        tapRectangleHeight = halfTapRectangleHeight
-        this.tapCountInterval = (tapCountInterval * 1000000000L).toLong()
-        longPressSeconds = longPressDuration
-        this.maxFlingDelay = (maxFlingDelay * 1000000000L).toLong()
-        this.listener = listener
-    }
+    /** Called when no longer pinching.  */
+    fun pinchStop() = Unit
 }

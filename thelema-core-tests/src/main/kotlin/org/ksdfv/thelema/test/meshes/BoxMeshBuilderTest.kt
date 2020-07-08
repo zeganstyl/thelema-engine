@@ -16,43 +16,43 @@
 
 package org.ksdfv.thelema.test.meshes
 
-import org.ksdfv.thelema.ActiveCamera
-import org.ksdfv.thelema.Camera
+import org.intellij.lang.annotations.Language
+import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.math.Vec3
-import org.ksdfv.thelema.mesh.VertexAttribute
+import org.ksdfv.thelema.mesh.IVertexInput
 import org.ksdfv.thelema.mesh.build.BoxMeshBuilder
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
-import org.intellij.lang.annotations.Language
 
 /** @author zeganstyl */
 object BoxMeshBuilderTest: Test("Box Mesh Builder") {
     override fun testMain() {
-        val uvName = VertexAttribute.UVName + "0"
-        val posName = VertexAttribute.PositionName
+        val uvName = IVertexInput.UVName
+        val posName = IVertexInput.PositionName
 
         @Language("GLSL")
         val shader = Shader(
                 vertCode = """
 attribute vec3 $posName;
 attribute vec2 $uvName;
-varying vec2 vUV;
+varying vec2 uv;
 uniform mat4 projViewModelTrans;
 
 void main() {
-    vUV = $uvName;
+    uv = $uvName;
     gl_Position = projViewModelTrans * vec4($posName, 1.0);
 }""",
                 fragCode = """
-varying vec2 vUV;
+varying vec2 uv;
 
 void main() {
-    gl_FragColor = vec4(vUV, 0.0, 1.0);
+    gl_FragColor = vec4(uv, 0.0, 1.0);
 }""")
 
         println(shader.sourceCode())

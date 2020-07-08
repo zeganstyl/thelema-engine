@@ -16,13 +16,13 @@
 
 package org.ksdfv.thelema.test.shaders
 
-import org.ksdfv.thelema.FrameBuffer
+import org.ksdfv.thelema.texture.FrameBuffer
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_RGB
 import org.ksdfv.thelema.mesh.ScreenQuad
-import org.ksdfv.thelema.shader.Threshold
+import org.ksdfv.thelema.shader.post.Threshold
 import org.ksdfv.thelema.test.CubeModel
 import org.ksdfv.thelema.test.Test
 
@@ -31,7 +31,11 @@ object ThresholdTest: Test("Threshold Filter") {
     override fun testMain() {
         val model = CubeModel()
 
-        val frameBuffer = FrameBuffer(GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGB)
+        val frameBuffer = FrameBuffer(
+            GL.mainFrameBufferWidth,
+            GL.mainFrameBufferHeight,
+            GL_RGB
+        )
 
         val threshold = Threshold()
 

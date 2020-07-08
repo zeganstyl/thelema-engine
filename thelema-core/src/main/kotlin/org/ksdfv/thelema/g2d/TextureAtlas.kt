@@ -15,19 +15,17 @@
  */
 
 package org.ksdfv.thelema.g2d
-import org.ksdfv.thelema.StreamUtils
-import org.ksdfv.thelema.fs.FS
+
 import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.img.Pixmap
 import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.texture.TextureRegion
+import org.ksdfv.thelema.utils.StreamUtils
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.LinkedHashSet
-
 
 /** Loads images from texture atlases created by TexturePacker.<br></br>
  * <br></br>
@@ -35,9 +33,9 @@ import kotlin.collections.LinkedHashSet
  * @author Nathan Sweet
  */
 class TextureAtlas {
-    /** @return the textures of the pages, unordered
-     */
+    /** Textures of the pages, unordered */
     val textures: LinkedHashSet<Texture2D> = LinkedHashSet(4)
+
     /** Returns all regions in the atlas.  */
     val regions: ArrayList<AtlasRegion> = ArrayList()
 
@@ -188,17 +186,11 @@ class TextureAtlas {
     /** Creates an empty atlas to which regions can be added.  */
     constructor()
 
-    /** Loads the specified pack file using [FileType.Internal], using the parent directory of the pack file to find the page
-     * images.  */
-    constructor(internalPackFile: String) : this(FS.internal(internalPackFile))
-
-    /** @param flip If true, all regions loaded will be flipped for use with a perspective where 0,0 is the upper left corner.
-     * @see .TextureAtlas
-     */
+    /** @param flip If true, all regions loaded will be flipped for use with a perspective where 0,0 is the upper left corner.  */
     constructor(packFile: IFile, flip: Boolean) : this(packFile, packFile.parent(), flip)
-    /** @param flip If true, all regions loaded will be flipped for use with a perspective where 0,0 is the upper left corner.
-     */
-    /** Loads the specified pack file, using the parent directory of the pack file to find the page images.  */
+
+    /** Loads the specified pack file, using the parent directory of the pack file to find the page images.
+     * @param flip If true, all regions loaded will be flipped for use with a perspective where 0,0 is the upper left corner. */
     @JvmOverloads
     constructor(packFile: IFile, imagesDir: IFile = packFile.parent(), flip: Boolean = false) : this(TextureAtlasData(packFile, imagesDir, flip))
 
@@ -231,8 +223,10 @@ class TextureAtlas {
         for (region in data.regions) {
             val width = region.width
             val height = region.height
-            val atlasRegion = AtlasRegion(pageToTexture[region.page]!!, region.left, region.top,
-                    if (region.rotate) height else width, if (region.rotate) width else height)
+            val atlasRegion = AtlasRegion(
+                pageToTexture[region.page]!!, region.left, region.top,
+                if (region.rotate) height else width, if (region.rotate) width else height
+            )
             atlasRegion.index = region.index
             atlasRegion.name = region.name
             atlasRegion.offsetX = region.offsetX
@@ -321,7 +315,7 @@ class TextureAtlas {
 
     /** Returns all regions in the atlas as sprites. This method creates a new sprite for each region, so the result should be
      * stored rather than calling this method multiple times.
-     * @see .createSprite
+     * See [createSprite]
      */
     fun createSprites(): ArrayList<Sprite> {
         val sprites = ArrayList<Sprite>()
@@ -352,7 +346,7 @@ class TextureAtlas {
     /** Returns the first region found with the specified name and index as a sprite. This method uses string comparison to find the
      * region and constructs a new sprite, so the result should be cached rather than calling this method multiple times.
      * @return The sprite, or null.
-     * @see .createSprite
+     * See [createSprite]
      */
     fun createSprite(name: String, index: Int): Sprite? {
         var i = 0
@@ -375,7 +369,7 @@ class TextureAtlas {
     /** Returns all regions with the specified name as sprites, ordered by smallest to largest [index][AtlasRegion.index]. This
      * method uses string comparison to find the regions and constructs new sprites, so the result should be cached rather than
      * calling this method multiple times.
-     * @see .createSprite
+     * See [createSprite]
      */
     fun createSprites(name: String): ArrayList<Sprite> {
         val matched: ArrayList<Sprite> = ArrayList()
@@ -429,229 +423,6 @@ class TextureAtlas {
     fun dispose() {
         for (texture in textures) texture.destroy()
         textures.clear()
-    }
-
-    /** Describes the region of a packed image and provides information about the original image before it was packed.  */
-    class AtlasRegion : TextureRegion {
-        /** The number at the end of the original image file name, or -1 if none.<br></br>
-         * <br></br>
-         * When sprites are packed, if the original file name ends with a number, it is stored as the index and is not considered as
-         * part of the sprite's name. This is useful for keeping animation frames in order.
-         * @see TextureAtlas.findRegions
-         */
-        var index = 0
-        /** The name of the original image file, without the file's extension.<br></br>
-         * If the name ends with an underscore followed by only numbers, that part is excluded:
-         * underscores denote special instructions to the texture packer.  */
-        var name: String? = null
-        /** The offset from the left of the original image to the left of the packed image, after whitespace was removed for packing.  */
-        var offsetX = 0f
-        /** The offset from the bottom of the original image to the bottom of the packed image, after whitespace was removed for
-         * packing.  */
-        var offsetY = 0f
-        /** The width of the image, after whitespace was removed for packing.  */
-        var packedWidth: Int
-        /** The height of the image, after whitespace was removed for packing.  */
-        var packedHeight: Int
-        /** The width of the image, before whitespace was removed and rotation was applied for packing.  */
-        var originalWidth: Int
-        /** The height of the image, before whitespace was removed for packing.  */
-        var originalHeight: Int
-        /** If true, the region has been rotated 90 degrees counter clockwise.  */
-        var rotate = false
-        /** The degrees the region has been rotated, counter clockwise between 0 and 359. Most atlas region handling deals only with
-         * 0 or 90 degree rotation (enough to handle rectangles). More advanced texture packing may support other rotations (eg, for
-         * tightly packing polygons).  */
-        var degrees = 0
-        /** The ninepatch splits, or null if not a ninepatch. Has 4 elements: left, right, top, bottom.  */
-        var splits: IntArray? = null
-        /** The ninepatch pads, or null if not a ninepatch or the has no padding. Has 4 elements: left, right, top, bottom.  */
-        var pads: IntArray? = null
-
-        constructor(texture: Texture2D, x: Int, y: Int, width: Int, height: Int) : super(texture, x, y, width, height) {
-            originalWidth = width
-            originalHeight = height
-            packedWidth = width
-            packedHeight = height
-        }
-
-        constructor(region: AtlasRegion) {
-            setRegion(region)
-            index = region.index
-            name = region.name
-            offsetX = region.offsetX
-            offsetY = region.offsetY
-            packedWidth = region.packedWidth
-            packedHeight = region.packedHeight
-            originalWidth = region.originalWidth
-            originalHeight = region.originalHeight
-            rotate = region.rotate
-            degrees = region.degrees
-            splits = region.splits
-        }
-
-        constructor(region: TextureRegion) {
-            setRegion(region)
-            packedWidth = region.regionWidth
-            packedHeight = region.regionHeight
-            originalWidth = packedWidth
-            originalHeight = packedHeight
-        }
-
-        /** Flips the region, adjusting the offset so the image appears to be flip as if no whitespace has been removed for packing.  */
-        override fun flip(x: Boolean, y: Boolean) {
-            super.flip(x, y)
-            if (x) offsetX = originalWidth - offsetX - rotatedPackedWidth
-            if (y) offsetY = originalHeight - offsetY - rotatedPackedHeight
-        }
-
-        /** Returns the packed width considering the [.rotate] value, if it is true then it returns the packedHeight,
-         * otherwise it returns the packedWidth.  */
-        val rotatedPackedWidth: Float
-            get() = if (rotate) packedHeight.toFloat() else packedWidth.toFloat()
-
-        /** Returns the packed height considering the [.rotate] value, if it is true then it returns the packedWidth,
-         * otherwise it returns the packedHeight.  */
-        val rotatedPackedHeight: Float
-            get() = if (rotate) packedWidth.toFloat() else packedHeight.toFloat()
-
-        override fun toString(): String {
-            return name!!
-        }
-    }
-
-    /** A sprite that, if whitespace was stripped from the region when it was packed, is automatically positioned as if whitespace
-     * had not been stripped.  */
-    class AtlasSprite : Sprite {
-        val atlasRegion: AtlasRegion
-        var originalOffsetX: Float
-        var originalOffsetY: Float
-
-        constructor(region: AtlasRegion) {
-            atlasRegion = AtlasRegion(region)
-            originalOffsetX = region.offsetX
-            originalOffsetY = region.offsetY
-            setRegion(region)
-            setOrigin(region.originalWidth / 0.5f, region.originalHeight * 0.5f)
-            val width = region.regionWidth
-            val height = region.regionHeight
-            if (region.rotate) {
-                super.rotate90(true)
-                super.setBounds(region.offsetX, region.offsetY, height.toFloat(), width.toFloat())
-            } else super.setBounds(region.offsetX, region.offsetY, width.toFloat(), height.toFloat())
-            setColor(1f, 1f, 1f, 1f)
-        }
-
-        constructor(sprite: AtlasSprite) {
-            atlasRegion = sprite.atlasRegion
-            originalOffsetX = sprite.originalOffsetX
-            originalOffsetY = sprite.originalOffsetY
-            set(sprite)
-        }
-
-        override fun setPosition(x: Float, y: Float) {
-            super.setPosition(x + atlasRegion.offsetX, y + atlasRegion.offsetY)
-        }
-
-        override var x: Float
-            get() = super.x - atlasRegion.offsetX
-            set(value) {
-                super.x = value + atlasRegion.offsetX
-            }
-
-        override var y: Float
-            get() = super.y - atlasRegion.offsetY
-            set(_) {
-                super.y = y + atlasRegion.offsetY
-            }
-
-        override fun setBounds(x: Float, y: Float, width: Float, height: Float) {
-            val widthRatio = width / atlasRegion.originalWidth
-            val heightRatio = height / atlasRegion.originalHeight
-            atlasRegion.offsetX = originalOffsetX * widthRatio
-            atlasRegion.offsetY = originalOffsetY * heightRatio
-            val packedWidth = if (atlasRegion.rotate) atlasRegion.packedHeight else atlasRegion.packedWidth
-            val packedHeight = if (atlasRegion.rotate) atlasRegion.packedWidth else atlasRegion.packedHeight
-            super.setBounds(x + atlasRegion.offsetX, y + atlasRegion.offsetY, packedWidth * widthRatio, packedHeight * heightRatio)
-        }
-
-        override fun setSize(width: Float, height: Float) {
-            setBounds(x, y, width, height)
-        }
-
-        override fun setOrigin(originX: Float, originY: Float) {
-            super.setOrigin(originX - atlasRegion.offsetX, originY - atlasRegion.offsetY)
-        }
-
-        override fun setOriginCenter() {
-            super.setOrigin(width * 0.5f - atlasRegion.offsetX, height * 0.5f - atlasRegion.offsetY)
-        }
-
-        override fun flip(x: Boolean, y: Boolean) { // Flip texture.
-            if (atlasRegion.rotate) super.flip(y, x) else super.flip(x, y)
-            val oldOriginX = originX
-            val oldOriginY = originY
-            val oldOffsetX = atlasRegion.offsetX
-            val oldOffsetY = atlasRegion.offsetY
-            val widthRatio = widthRatio
-            val heightRatio = heightRatio
-            atlasRegion.offsetX = originalOffsetX
-            atlasRegion.offsetY = originalOffsetY
-            atlasRegion.flip(x, y) // Updates x and y offsets.
-            originalOffsetX = atlasRegion.offsetX
-            originalOffsetY = atlasRegion.offsetY
-            atlasRegion.offsetX *= widthRatio
-            atlasRegion.offsetY *= heightRatio
-            // Update position and origin with new offsets.
-            translate(atlasRegion.offsetX - oldOffsetX, atlasRegion.offsetY - oldOffsetY)
-            setOrigin(oldOriginX, oldOriginY)
-        }
-
-        override fun rotate90(clockwise: Boolean) { // Rotate texture.
-            super.rotate90(clockwise)
-            val oldOriginX = originX
-            val oldOriginY = originY
-            val oldOffsetX = atlasRegion.offsetX
-            val oldOffsetY = atlasRegion.offsetY
-            val widthRatio = widthRatio
-            val heightRatio = heightRatio
-            if (clockwise) {
-                atlasRegion.offsetX = oldOffsetY
-                atlasRegion.offsetY = atlasRegion.originalHeight * heightRatio - oldOffsetX - atlasRegion.packedWidth * widthRatio
-            } else {
-                atlasRegion.offsetX = atlasRegion.originalWidth * widthRatio - oldOffsetY - atlasRegion.packedHeight * heightRatio
-                atlasRegion.offsetY = oldOffsetX
-            }
-            // Update position and origin with new offsets.
-            translate(atlasRegion.offsetX - oldOffsetX, atlasRegion.offsetY - oldOffsetY)
-            setOrigin(oldOriginX, oldOriginY)
-        }
-
-        override var originX: Float
-            get() = super.originX + atlasRegion.offsetX
-            set(_) = Unit
-
-        override var originY: Float
-            get() = super.originY + atlasRegion.offsetY
-            set(_) = Unit
-
-        override var width: Float
-            get() = super.width / atlasRegion.rotatedPackedWidth * atlasRegion.originalWidth
-            set(_) = Unit
-
-        override var height: Float
-            get() = super.height / atlasRegion.rotatedPackedHeight * atlasRegion.originalHeight
-            set(_) = Unit
-
-        val widthRatio: Float
-            get() = super.width / atlasRegion.rotatedPackedWidth
-
-        val heightRatio: Float
-            get() = super.height / atlasRegion.rotatedPackedHeight
-
-        override fun toString(): String {
-            return atlasRegion.toString()
-        }
     }
 
     companion object {

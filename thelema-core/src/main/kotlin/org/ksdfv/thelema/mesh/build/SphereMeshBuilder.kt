@@ -51,7 +51,7 @@ class SphereMeshBuilder() : MeshBuilder() {
                     if (normals) normal.set(x, y, z).nor()
 
                     put(x, y, z)
-                    if (textureCoordinates) put(azimuthPercent * textureCoordinatesScale, zenithPercent * textureCoordinatesScale)
+                    if (uv) put(azimuthPercent * uvScale, zenithPercent * uvScale)
                     if (normals) put(normal.x, normal.y, normal.z)
                 }
             }

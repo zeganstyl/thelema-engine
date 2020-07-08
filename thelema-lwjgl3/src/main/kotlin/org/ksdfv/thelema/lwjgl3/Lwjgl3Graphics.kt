@@ -16,7 +16,6 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.Graphics
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.IGL
 import org.lwjgl.BufferUtils
@@ -38,10 +37,10 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
     @Volatile
     var logicalHeight = 0
         private set
-    override var bufferFormat: Graphics.BufferFormat? = null
+    override var bufferFormat: BufferFormat? = null
     private var windowPosXBeforeFullscreen = 0
     private var windowPosYBeforeFullscreen = 0
-    private var displayModeBeforeFullscreen: Graphics.DisplayMode? = null
+    private var displayModeBeforeFullscreen: DisplayMode? = null
 
     override val safeInsetLeft: Int
         get() = 0
@@ -85,10 +84,10 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
     override val density: Float
         get() = ppiX / 160f
 
-    override val primaryMonitor: Graphics.Monitor?
+    override val primaryMonitor: Monitor?
         get() = Lwjgl3AppConf.toLwjgl3Monitor(GLFW.glfwGetPrimaryMonitor())
 
-    override val monitor: Graphics.Monitor
+    override val monitor: Monitor
         get() {
             val monitors = monitors
             var result = monitors[0]
@@ -115,16 +114,16 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
             return result
         }
 
-    override val displayMode: Graphics.DisplayMode
+    override val displayMode: DisplayMode
         get() = Lwjgl3AppConf.getDisplayMode(monitor)
 
-    override val monitors: Array<Graphics.Monitor>
+    override val monitors: Array<Monitor>
         get() {
             val glfwMonitors = GLFW.glfwGetMonitors()
             return Array(glfwMonitors!!.limit()) { Lwjgl3AppConf.toLwjgl3Monitor(glfwMonitors[it]) }
         }
 
-    override val displayModes: Array<Graphics.DisplayMode>
+    override val displayModes: Array<DisplayMode>
         get() = Lwjgl3AppConf.getDisplayModes(monitor)
 
     var tmpBuffer = BufferUtils.createIntBuffer(1)
@@ -151,23 +150,25 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
         logicalWidth = tmpBuffer[0]
         logicalHeight = tmpBuffer2[0]
         val config = window.config
-        bufferFormat = Graphics.BufferFormat(config.r, config.g, config.b, config.a, config.depth, config.stencil,
-                config.samples, false)
+        bufferFormat = BufferFormat(
+            config.r, config.g, config.b, config.a, config.depth, config.stencil,
+            config.samples, false
+        )
     }
 
     override fun supportsDisplayModeChange(): Boolean {
         return true
     }
 
-    override fun getDisplayModes(monitor: Graphics.Monitor): Array<Graphics.DisplayMode> {
+    override fun getDisplayModes(monitor: Monitor): Array<DisplayMode> {
         return Lwjgl3AppConf.getDisplayModes(monitor)
     }
 
-    override fun getDisplayMode(monitor: Graphics.Monitor): Graphics.DisplayMode {
+    override fun getDisplayMode(monitor: Monitor): DisplayMode {
         return Lwjgl3AppConf.getDisplayMode(monitor)
     }
 
-    override fun setFullscreenMode(displayMode: Graphics.DisplayMode): Boolean {
+    override fun setFullscreenMode(displayMode: DisplayMode): Boolean {
         val newMode = displayMode as Lwjgl3DisplayMode
         if (isFullscreen) {
             val currentMode = getDisplayMode(monitor) as Lwjgl3DisplayMode
@@ -239,10 +240,6 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
     fun dispose() {
         resizeCallback.free()
     }
-
-    class Lwjgl3DisplayMode (val monitor: Long, width: Int, height: Int, refreshRate: Int, bitsPerPixel: Int) : Graphics.DisplayMode(width, height, refreshRate, bitsPerPixel)
-
-    class Lwjgl3Monitor (val monitorHandle: Long, virtualX: Int, virtualY: Int, name: String) : Graphics.Monitor(virtualX, virtualY, name)
 
     init {
         updateFramebufferInfo()

@@ -16,7 +16,7 @@
 
 package org.ksdfv.thelema.jvm
 
-import org.ksdfv.thelema.StreamUtils
+import org.ksdfv.thelema.utils.StreamUtils
 import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.fs.IFile

@@ -24,7 +24,7 @@ import org.ksdfv.thelema.shader.IShader
 
 /** @author zeganstyl */
 class VertexBufferObject(
-    override var attributes: VertexAttributes,
+    override var attributes: IVertexInputs,
     override var bytes: IByteData,
     usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true
@@ -71,8 +71,8 @@ class VertexBufferObject(
 
     override fun unbind(shader: IShader?) {
         if (shader != null) {
-            attributes.values.forEach {
-                val location = shader.attributeLocations[it.id]
+            attributes.forEach {
+                val location = shader.attributeLocations[it.name]
                 if (location != null) GL.glDisableVertexAttribArray(location)
             }
         }

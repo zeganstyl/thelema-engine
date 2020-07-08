@@ -16,11 +16,11 @@
 
 package org.ksdfv.thelema.gl
 
-import org.ksdfv.thelema.img.IImage
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
 import org.ksdfv.thelema.ext.traverseSafe
+import org.ksdfv.thelema.img.IImage
 
 /** @author zeganstyl */
 object GL: IGL {

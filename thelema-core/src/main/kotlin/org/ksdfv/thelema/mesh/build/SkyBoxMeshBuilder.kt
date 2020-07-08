@@ -20,7 +20,7 @@ import org.ksdfv.thelema.mesh.IMesh
 import kotlin.math.sqrt
 
 class SkyBoxMeshBuilder: MeshBuilder() {
-    override var textureCoordinates: Boolean
+    override var uv: Boolean
         get() = false
         set(_) {}
 
@@ -28,7 +28,7 @@ class SkyBoxMeshBuilder: MeshBuilder() {
         get() = false
         set(_) {}
 
-    override var textureCoordinatesScale: Float
+    override var uvScale: Float
         get() = 0f
         set(_) {}
 

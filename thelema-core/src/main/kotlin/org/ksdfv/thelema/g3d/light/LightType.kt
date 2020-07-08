@@ -20,5 +20,5 @@ object LightType {
     const val None = 0
     const val Directional = 1
     const val Point = 2
-    const val Spot = 2
+    const val Spot = 3
 }

@@ -16,7 +16,6 @@
 
 package org.ksdfv.thelema.g3d
 
-import org.ksdfv.thelema.Blending
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.shader.IShader
 import org.ksdfv.thelema.shader.Shader
@@ -50,6 +49,7 @@ interface IMaterial {
 
     var roughness: Float
 
+    /** Channels may be used to store additional shaders, like velocity and etc */
     val shaderChannels: MutableMap<Int, IShader>
 
     fun set(other: IMaterial): IMaterial {

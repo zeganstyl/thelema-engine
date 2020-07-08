@@ -20,17 +20,15 @@ import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Vec3
 
 /** @author zeganstyl */
-class DirectionalLight: ILight {
-    override var name: String = ""
-
+class DirectionalLight(
+    override var intensity: Float = 1f,
+    override var color: IVec3 = Vec3(1f),
+    var direction: IVec3 = Vec3(-1f, -1f, -1f).nor(),
+    override var name: String = "",
+    override var isEnabled: Boolean = true
+): ILight {
     override val lightType: Int
         get() = LightType.Directional
-
-    override var isEnabled: Boolean = true
-    override var intensity: Float = 1f
-    override var color: IVec3 = Vec3(1f)
-
-    var direction: IVec3 = Vec3(-1f, -1f, -1f).nor()
 
     override fun set(other: ILight): DirectionalLight {
         super.set(other)

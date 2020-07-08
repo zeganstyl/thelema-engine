@@ -16,7 +16,8 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.*
+import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.IApp
 import org.ksdfv.thelema.audio.AL
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.fs.FS
@@ -26,6 +27,7 @@ import org.ksdfv.thelema.json.JSON
 import org.ksdfv.thelema.json.jsonsimple3.JsonSimple3Api
 import org.ksdfv.thelema.jvm.JvmFS
 import org.ksdfv.thelema.lwjgl3.audio.OpenAL
+import org.ksdfv.thelema.utils.LOG
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.*
@@ -40,7 +42,7 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
         startLoop()
     }
 
-    val config: Lwjgl3AppConf
+    val conf: Lwjgl3AppConf
     val windows = ArrayList<Lwjgl3Window>()
     lateinit var currentWindow: Lwjgl3Window
     val mainWindow: Lwjgl3Window
@@ -63,29 +65,36 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
             GLFW.glfwSetClipboardString(mainWindow.windowHandle, value)
         }
 
-    override var cache: String
-        get() = ""
-        set(value) {}
-
     override var defaultCursor: Int = APP.ArrowCursor
     override var cursor: Int = defaultCursor
         set(value) {
             field = value
 
             val glfwCursor: Long = when (value) {
-                APP.ArrowCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
-                APP.CrosshairCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
-                APP.HandCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR)
-                APP.HorizontalResizeCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR)
-                APP.VerticalResizeCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR)
-                APP.IBeamCursor -> GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR)
-                else -> cursorMapping[cursor]!!
+                APP.ArrowCursor -> getOrCreateSystemCursor(GLFW.GLFW_ARROW_CURSOR)
+                APP.CrosshairCursor -> getOrCreateSystemCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
+                APP.HandCursor -> getOrCreateSystemCursor(GLFW.GLFW_HAND_CURSOR)
+                APP.HorizontalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_HRESIZE_CURSOR)
+                APP.VerticalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_VRESIZE_CURSOR)
+                APP.IBeamCursor -> getOrCreateSystemCursor(GLFW.GLFW_IBEAM_CURSOR)
+                else -> cursorMapping[value]!!
             }
 
             GLFW.glfwSetCursor(mainWindow.windowHandle, glfwCursor)
         }
 
     val cursorMapping = HashMap<Int, Long>()
+
+    private fun getOrCreateSystemCursor(shape: Int): Long {
+        var cursor = cursorMapping[shape]
+        if (cursor == null) {
+            cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
+        }
+        return cursor
+    }
+    private fun destroySystemCursor(glfwCursor: Long?) {
+        if (glfwCursor != null) GLFW.glfwDestroyCursor(glfwCursor)
+    }
 
     private fun loop() {
         val closedWindows = ArrayList<Lwjgl3Window>()
@@ -102,7 +111,6 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
             if (audio is OpenAL) {
                 audio.update()
             }
-            var haveWindowsRendered = false
             closedWindows.clear()
             for (window in windows) {
                 window.makeCurrent()
@@ -120,12 +128,9 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
                 windows.remove(closedWindow)
             }
 
-            if (!haveWindowsRendered) { // Sleep a few milliseconds in case no rendering was requested
-// with continuous rendering disabled.
-                try {
-                    Thread.sleep(1000 / config.idleFPS.toLong())
-                } catch (e: InterruptedException) { // ignore
-                }
+            try {
+                Thread.sleep(1000 / conf.idleFPS.toLong())
+            } catch (e: InterruptedException) { // ignore
             }
         }
     }
@@ -144,7 +149,7 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
      * is postponed with GL.call until after all existing windows are updated.
      */
     fun newWindow(config: Lwjgl3WindowConfiguration): Lwjgl3Window {
-        val appConfig = Lwjgl3AppConf.copy(this.config)
+        val appConfig = Lwjgl3AppConf.copy(this.conf)
         appConfig.setWindowConfiguration(config)
         return createWindow(appConfig, windows[0].windowHandle)
     }
@@ -279,10 +284,10 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
             GLFW.glfwSwapInterval(if (config.vSyncEnabled) 1 else 0)
             org.lwjgl.opengl.GL.createCapabilities()
 //            initiateGL()
-//            if (!glVersion!!.isVersionEqualToOrHigher(2, 0)) throw GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+//            if (!glVersion!!.isVersionEqualToOrHigher(2, 0)) throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
 //                    + GL11.glGetString(GL11.GL_VERSION) + "\n" + glVersion!!.debugVersionString)
 //            if (!supportsFBO()) {
-//                throw GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+//                throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
 //                        + GL11.glGetString(GL11.GL_VERSION) + ", FBO extension: false\n" + glVersion!!.debugVersionString)
 //            }
             if (config.debug) {
@@ -305,21 +310,21 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
          */
         fun setGLDebugMessageControl(severity: GLDebugMessageSeverity, enabled: Boolean): Boolean {
             val caps = org.lwjgl.opengl.GL.getCapabilities()
-            val GL_DONT_CARE = 0x1100 // not defined anywhere yet
+            val doNotCare = 0x1100 // not defined anywhere yet
             if (caps.OpenGL43) {
-                GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, severity.gl43, null as IntBuffer?, enabled)
+                GL43.glDebugMessageControl(doNotCare, doNotCare, severity.gl43, null as IntBuffer?, enabled)
                 return true
             }
             if (caps.GL_KHR_debug) {
-                KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, severity.khr, null as IntBuffer?, enabled)
+                KHRDebug.glDebugMessageControl(doNotCare, doNotCare, severity.khr, null as IntBuffer?, enabled)
                 return true
             }
             if (caps.GL_ARB_debug_output && severity.arb != -1) {
-                ARBDebugOutput.glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, severity.arb, null as IntBuffer?, enabled)
+                ARBDebugOutput.glDebugMessageControlARB(doNotCare, doNotCare, severity.arb, null as IntBuffer?, enabled)
                 return true
             }
             if (caps.GL_AMD_debug_output && severity.amd != -1) {
-                AMDDebugOutput.glDebugMessageEnableAMD(GL_DONT_CARE, severity.amd, null as IntBuffer?, enabled)
+                AMDDebugOutput.glDebugMessageEnableAMD(doNotCare, severity.amd, null as IntBuffer?, enabled)
                 return true
             }
             return false
@@ -342,7 +347,13 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
 
         running = false
 
-        Lwjgl3Cursor.disposeSystemCursors()
+        destroySystemCursor(cursorMapping[APP.ArrowCursor])
+        destroySystemCursor(cursorMapping[APP.CrosshairCursor])
+        destroySystemCursor(cursorMapping[APP.HandCursor])
+        destroySystemCursor(cursorMapping[APP.HorizontalResizeCursor])
+        destroySystemCursor(cursorMapping[APP.VerticalResizeCursor])
+        destroySystemCursor(cursorMapping[APP.IBeamCursor])
+
         val audio = AL.api
         if (audio is OpenAL) {
             audio.destroy()
@@ -365,7 +376,7 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
 
         initializeGlfw()
 
-        this.config = Lwjgl3AppConf.copy(config)
+        this.conf = Lwjgl3AppConf.copy(config)
         if (!config.disableAudio) {
             try {
                 AL.api = OpenAL(config.audioDeviceSimultaneousSources,
@@ -385,5 +396,16 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
         GL.initGL()
 
         GL.doSingleCalls()
+    }
+
+    override fun loadPreferences(name: String): String {
+        var cacheText = ""
+        val file = FS.file(conf.cacheDirectory + name, conf.cacheFileLocation)
+        if (file.exists()) file.readText { _, text -> cacheText = text }
+        return cacheText
+    }
+
+    override fun savePreferences(name: String, text: String) {
+        FS.file(conf.cacheDirectory + name, conf.cacheFileLocation).writeText(text, false, "UTF8")
     }
 }

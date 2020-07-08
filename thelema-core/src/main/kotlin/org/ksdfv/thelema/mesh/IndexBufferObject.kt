@@ -26,11 +26,9 @@ import org.ksdfv.thelema.gl.*
  *
  * Uses indirect Buffers on Android 1.5/1.6 to fix GC invocation due to leaking PlatformAddress instances.
  *
- * You can also use this to store indices for vertex arrays. Do not call [.bind] or [.unbind] in this case but
- * rather use [.getBuffer] to use the buffer directly with glDrawElements. You must also create the IndexBufferObject with
+ * You can also use this to store indices for vertex arrays. Do not call [bind] or [unbind] in this case but
+ * rather use [bytes] to use the buffer directly with glDrawElements. You must also create the IndexBufferObject with
  * the second constructor and specify isDirect as true as glDrawElements in conjunction with vertex arrays needs direct buffers.
- *
- * VertexBufferObjects must be disposed via the [.dispose] method when no longer needed
  *
  * @author mzechner, Thorsten Schleinzer, zeganstyl
  */
@@ -42,7 +40,7 @@ class IndexBufferObject constructor(
 ): IIndexBufferObject {
     override var handle: Int = 0
 
-    internal var isDirty = true
+    private var isBufferNeedReload = true
 
     override var numBytesPerIndex: Int = 0
 
@@ -89,9 +87,9 @@ class IndexBufferObject constructor(
     override fun bind() {
         if (handle != 0) {
             GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle)
-            if (isDirty) {
+            if (isBufferNeedReload) {
                 GL.glBufferData(GL_ELEMENT_ARRAY_BUFFER, bytes.size, bytes, usage)
-                isDirty = false
+                isBufferNeedReload = false
             }
         } else {
             unbind()
@@ -106,7 +104,7 @@ class IndexBufferObject constructor(
     /** Invalidates the IndexBufferObject so a new OpenGL buffer handle is created. Use this in case of a context loss.  */
     override fun invalidate() {
         handle = GL.glGenBuffer()
-        isDirty = true
+        isBufferNeedReload = true
     }
 
     /** Disposes this IndexBufferObject and all its associated OpenGL resources.  */

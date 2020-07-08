@@ -27,7 +27,7 @@ class FrustumMeshBuilder(): MeshBuilder() {
     lateinit var frustum: Frustum
 
     override fun build(out: IMesh): IMesh {
-        textureCoordinates = false
+        uv = false
         normals = false
 
         out.primitiveType = GL_LINES

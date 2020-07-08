@@ -16,13 +16,12 @@
 
 package org.ksdfv.thelema.g2d
 
-import org.ksdfv.thelema.Color
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Rectangle
 import org.ksdfv.thelema.math.Vec4
 import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.texture.TextureRegion
+import org.ksdfv.thelema.utils.Color
 import kotlin.math.abs
 
 
@@ -35,7 +34,7 @@ import kotlin.math.abs
  * @author mzechner, Nathan Sweet
  */
 open class Sprite : TextureRegion {
-    /** Returns the color of this sprite. If the returned instance is manipulated, [.setColor] must be called
+    /** Returns the color of this sprite. If the returned instance is manipulated, [setColor] must be called
      * afterward.
      * Sets the color used to tint this sprite. */
     var color: IVec4 = Vec4(1f, 1f, 1f, 1f)
@@ -59,7 +58,7 @@ open class Sprite : TextureRegion {
 
     /** Sets the x position where the sprite will be drawn. If origin, rotation, or scale are changed, it is slightly more efficient
      * to set the position after those operations. If both position and size are to be changed, it is better to use
-     * [.setBounds].  */
+     * [setBounds].  */
     open var x = 0f
         set(value) {
             val diff = value - field
@@ -72,7 +71,7 @@ open class Sprite : TextureRegion {
 
     /** Sets the y position where the sprite will be drawn. If origin, rotation, or scale are changed, it is slightly more efficient
      * to set the position after those operations. If both position and size are to be changed, it is better to use
-     * [.setBounds].  */
+     * [setBounds].  */
     open var y = 0f
         set(value) {
             val diff = value - field
@@ -88,23 +87,23 @@ open class Sprite : TextureRegion {
     /** @return the height of the sprite, not accounting for scale.
      */
     open var height = 0f
-    /** The origin influences [.setPosition], [.setRotation] and the expansion direction of scaling
-     * [.setScale]  */
+    /** The origin influences [setPosition], [rotation] and the expansion direction of scaling
+     * [setScale]  */
     open var originX = 0f
-    /** The origin influences [.setPosition], [.setRotation] and the expansion direction of scaling
-     * [.setScale]  */
+    /** The origin influences [setPosition], [rotation] and the expansion direction of scaling
+     * [setScale]  */
     open var originY = 0f
     /** the rotation of the sprite in degrees.
-     * Sets the rotation of the sprite in degrees. Rotation is centered on the origin set in [.setOrigin] */
+     * Sets the rotation of the sprite in degrees. Rotation is centered on the origin set in [setOrigin] */
     var rotation = 0f
         set(value) {
             field = value
             dirty = true
         }
-    /** X scale of the sprite, independent of size set by [.setSize]  */
+    /** X scale of the sprite, independent of size set by [setSize]  */
     var scaleX = 1f
         private set
-    /** Y scale of the sprite, independent of size set by [.setSize]  */
+    /** Y scale of the sprite, independent of size set by [setSize]  */
     var scaleY = 1f
         private set
     private var dirty = true
@@ -119,7 +118,6 @@ open class Sprite : TextureRegion {
      * @param srcWidth The width of the texture region. May be negative to flip the sprite when drawn.
      * @param srcHeight The height of the texture region. May be negative to flip the sprite when drawn.
      */
-    /** Creates a sprite with width, height, and texture region equal to the size of the texture.  */
     @JvmOverloads
     constructor(texture: Texture2D, srcX: Int = 0, srcY: Int = 0, srcWidth: Int = texture.width, srcHeight: Int = texture.height) {
         this.texture = texture
@@ -202,7 +200,7 @@ open class Sprite : TextureRegion {
 
     /** Sets the size of the sprite when drawn, before scaling and rotation are applied. If origin, rotation, or scale are changed,
      * it is slightly more efficient to set the size after those operations. If both position and size are to be changed, it is
-     * better to use [.setBounds].  */
+     * better to use [setBounds].  */
     open fun setSize(width: Float, height: Float) {
         this.width = width
         this.height = height
@@ -223,7 +221,7 @@ open class Sprite : TextureRegion {
 
     /** Sets the position where the sprite will be drawn. If origin, rotation, or scale are changed, it is slightly more efficient
      * to set the position after those operations. If both position and size are to be changed, it is better to use
-     * [.setBounds].  */
+     * [setBounds].  */
     open fun setPosition(x: Float, y: Float) {
         translate(x - this.x, y - this.y)
     }
@@ -276,8 +274,6 @@ open class Sprite : TextureRegion {
         verts[Batch.C4] = color
     }
 
-    /** @see .setColor
-     */
     fun setColor(r: Float, g: Float, b: Float, a: Float) {
         color.set(r, g, b, a)
         val color = Color.toFloatBits(color)
@@ -289,8 +285,7 @@ open class Sprite : TextureRegion {
     }
 
     /** Sets the color of this sprite, expanding the alpha from 0-254 to 0-255.
-     * @see Color.toFloatBits
-     */
+     * See [Color.toFloatBits] */
     fun setPackedColor(packedColor: Float) {
         Color.abgr8888ToColor(color, packedColor)
         val vertices = verts
@@ -315,7 +310,7 @@ open class Sprite : TextureRegion {
     }
 
     /** Sets the sprite's rotation in degrees relative to the current rotation. Rotation is centered on the origin set in
-     * [.setOrigin]  */
+     * [setOrigin]  */
     fun rotate(degrees: Float) {
         if (degrees == 0f) return
         rotation += degrees
@@ -323,7 +318,7 @@ open class Sprite : TextureRegion {
     }
 
     /** Rotates this sprite 90 degrees in-place by rotating the texture coordinates. This rotation is unaffected by
-     * [.setRotation] and [.rotate].  */
+     * [rotation] and [rotate].  */
     open fun rotate90(clockwise: Boolean) {
         val vertices = verts
         if (clockwise) {
@@ -351,16 +346,16 @@ open class Sprite : TextureRegion {
         }
     }
 
-    /** Sets the sprite's scale for both X and Y uniformly. The sprite scales out from the origin. This will not affect the values
-     * returned by [.getWidth] and [.getHeight]  */
+    /** Sets the sprite's scale for both X and Y uniformly. The sprite scales out from the origin.
+     * This will not affect the values returned by [width] and [height] */
     fun setScale(scaleXY: Float) {
         scaleX = scaleXY
         scaleY = scaleXY
         dirty = true
     }
 
-    /** Sets the sprite's scale for both X and Y. The sprite scales out from the origin. This will not affect the values returned by
-     * [.getWidth] and [.getHeight]  */
+    /** Sets the sprite's scale for both X and Y. The sprite scales out from the origin.
+     * This will not affect the values returned by [width] and [height] */
     fun setScale(scaleX: Float, scaleY: Float) {
         this.scaleX = scaleX
         this.scaleY = scaleY
@@ -368,8 +363,7 @@ open class Sprite : TextureRegion {
     }
 
     /** Sets the sprite's scale relative to the current scale. for example: original scale 2 -> sprite.scale(4) -> final scale 6.
-     * The sprite scales out from the origin. This will not affect the values returned by [.getWidth] and
-     * [.getHeight]  */
+     * The sprite scales out from the origin. This will not affect the values returned by [width] and [height] */
     fun scale(amount: Float) {
         scaleX += amount
         scaleY += amount

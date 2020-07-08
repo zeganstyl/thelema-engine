@@ -31,20 +31,15 @@ interface Lwjgl3WindowListener {
      * unsafe to use any [Lwjgl3Window] member functions which, for their part,
      * involve calling GLFW functions.
      *
-     * For the main window, this is an immediate callback from inside
-     * [Lwjgl3App.Lwjgl3Application].
-     *
      * @param window the window instance
      *
-     * @see Lwjgl3App.newWindow
+     * See [Lwjgl3App.newWindow]
      */
     fun created(window: Lwjgl3Window) = Unit
 
     /**
      * Called when the window is iconified (i.e. its minimize button
-     * was clicked), or when restored from the iconified state. When a window becomes
-     * iconified, its [ApplicationListener] will be paused, and when restored
-     * it will be resumed.
+     * was clicked), or when restored from the iconified state.
      *
      * @param isIconified True if window is iconified, false if it leaves the iconified state
      */
@@ -57,11 +52,7 @@ interface Lwjgl3WindowListener {
      */
     fun maximized(isMaximized: Boolean) = Unit
 
-    /**
-     * Called when the window lost focus to another window. The
-     * window's [ApplicationListener] will continue to be
-     * called.
-     */
+    /** Called when the window lost focus to another window. */
     fun focusLost() = Unit
 
     /**

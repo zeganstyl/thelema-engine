@@ -44,7 +44,7 @@ import org.ksdfv.thelema.shader.IShader
  * @author mzechner, Dave Clayton <contact@redskyforge.com>, Nate Austin <nate.austin gmail>, zeganstyl
  */
 class VertexArrayObject(
-    override var attributes: VertexAttributes,
+    override var attributes: IVertexInputs,
     byteBuffer: IByteData,
     override var usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true,
@@ -67,7 +67,7 @@ class VertexArrayObject(
     override var isBound = false
 
     /** Key - vertex attribute id, value - location id */
-    private var cachedAttributeToLocation = HashMap<Int, Int>()
+    private var cachedAttributeToLocation = HashMap<String, Int>()
 
     override var instancesToRenderCount: Int = 0
 
@@ -106,7 +106,7 @@ class VertexArrayObject(
 
         if (stillValid) {
             stillValid = shader.attributeLocations.size == cachedAttributeToLocation.size &&
-                    attributes.values.firstOrNull { shader.attributeLocations[it.id] == cachedAttributeToLocation[it.id] } == null
+                    attributes.firstOrNull { shader.attributeLocations[it.name] == cachedAttributeToLocation[it.name] } == null
         }
 
         if (!stillValid) {
@@ -114,10 +114,10 @@ class VertexArrayObject(
             unbindAttributes(shader)
             cachedAttributeToLocation.clear()
 
-            attributes.values.forEach {
-                val location = shader.attributeLocations[it.id]
+            attributes.forEach {
+                val location = shader.attributeLocations[it.name]
                 if (location != null) {
-                    cachedAttributeToLocation[it.id] = location
+                    cachedAttributeToLocation[it.name] = location
 
                     shader.setVertexAttributes(attributes)
                 }
@@ -130,8 +130,8 @@ class VertexArrayObject(
             return
         }
 
-        attributes.values.forEach {
-            val location = cachedAttributeToLocation[it.id]
+        attributes.forEach {
+            val location = cachedAttributeToLocation[it.name]
             if (location != null) {
                 GL.glDisableVertexAttribArray(location)
             }

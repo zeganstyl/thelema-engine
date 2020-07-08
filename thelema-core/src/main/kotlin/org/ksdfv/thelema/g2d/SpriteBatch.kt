@@ -16,8 +16,9 @@
 
 package org.ksdfv.thelema.g2d
 
+import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.Color
+import org.ksdfv.thelema.g2d.SpriteBatch.Companion.createDefaultShader
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_BLEND
 import org.ksdfv.thelema.gl.GL_ONE_MINUS_SRC_ALPHA
@@ -26,8 +27,7 @@ import org.ksdfv.thelema.math.*
 import org.ksdfv.thelema.mesh.*
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.texture.TextureRegion
-import org.intellij.lang.annotations.Language
+import org.ksdfv.thelema.utils.Color
 import kotlin.math.min
 
 /** Draws batched quads using indices.
@@ -38,11 +38,9 @@ import kotlin.math.min
  *
  *
  * The defaultShader specifies the shader to use. Note that the names for uniforms for this default shader are different than
- * the ones expect for shaders set with [.setShader]. See [.createDefaultShader].
+ * the ones expect for shaders set with [shader]. See [createDefaultShader].
  * @param size The max number of sprites in a single batch. Max of 8191.
  * @param defaultShader The default shader to use. This is not owned by the SpriteBatch and must be disposed separately.
- *
- * @see Batch
  *
  * @author mzechner
  * @author Nathan Sweet
@@ -50,10 +48,10 @@ import kotlin.math.min
 open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
     val verts = IVertexBuffer.build(
         size,
-        VertexAttributes(
-            VertexAttribute.Position2d,
-            VertexAttribute.ColorPacked,
-            VertexAttribute.UV[0]
+        VertexInputs(
+            IVertexInput.Position2d(),
+            IVertexInput.ColorPacked(),
+            IVertexInput.UV(0)
         )
     ) {}
 
@@ -122,7 +120,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
             colorPacked = value
         }
 
-    /** Number of render calls since the last [.begin].  */
+    /** Number of render calls since the last [begin].  */
     var renderCalls = 0
     /** Number of rendering calls, ever. Will not be reset unless set manually.  */
     var totalRenderCalls = 0
@@ -826,18 +824,18 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         fun createDefaultShader(): Shader {
             @Language("GLSL")
             val vertexShader = """
-attribute vec2 ${VertexAttribute.Position2dName};
-attribute vec4 ${VertexAttribute.ColorPackedName};
-attribute vec2 ${VertexAttribute.UVName}0;
+attribute vec2 ${IVertexInput.Position2dName};
+attribute vec4 ${IVertexInput.ColorPackedName};
+attribute vec2 ${IVertexInput.UVName};
 uniform mat4 u_projTrans;
 varying vec4 v_color;
-varying vec2 v_texCoords;
+varying vec2 uv;
 
 void main() {
-    v_color = ${VertexAttribute.ColorPackedName};
+    v_color = ${IVertexInput.ColorPackedName};
     v_color.a = v_color.a * (255.0/254.0);
-    v_texCoords = ${VertexAttribute.UVName}0;
-    gl_Position =  u_projTrans * vec4(${VertexAttribute.Position2dName}, 0.0, 1.0);
+    uv = ${IVertexInput.UVName};
+    gl_Position =  u_projTrans * vec4(${IVertexInput.Position2dName}, 0.0, 1.0);
 }"""
 
             @Language("GLSL")
@@ -850,16 +848,13 @@ void main() {
 #endif
 
 varying LOWP vec4 v_color;
-varying vec2 v_texCoords;
+varying vec2 uv;
 uniform sampler2D u_texture;
 
 void main() {
-    gl_FragColor = v_color * texture2D(u_texture, v_texCoords);
+    gl_FragColor = v_color * texture2D(u_texture, uv);
 }"""
-
-            val shader = Shader(vertexShader, fragmentShader)
-            //require(shader.isCompiled) { "Error compiling shader: " + shader.log }
-            return shader
+            return Shader(vertexShader, fragmentShader)
         }
     }
 }

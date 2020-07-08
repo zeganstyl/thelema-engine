@@ -16,20 +16,18 @@
 
 package org.ksdfv.thelema.g3d.anim
 
-import org.ksdfv.thelema.Pool
 import org.ksdfv.thelema.g3d.node.ITransformNode
-import org.ksdfv.thelema.g3d.node.TransformNodeType
 import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.utils.Pool
 import kotlin.math.abs
 
 // TODO: implement https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#appendix-c-spline-interpolation
 class AnimPlayer {
-    val transforms = HashMap<ITransformNode, Transform>()
     var applying = false
 
     /** The animation currently playing. Do not alter this value.  */
     var current: AnimationDesc? = null
-    /** The animation queued to be played when the [.current] animation is completed. Do not alter this value.  */
+    /** The animation queued to be played when the [current] animation is completed. Do not alter this value.  */
     var queued: AnimationDesc? = null
     /** The transition time which should be applied to the queued animation. Do not alter this value.  */
     var queuedTransitionTime = 0f
@@ -41,18 +39,19 @@ class AnimPlayer {
     var transitionTargetTime = 0f
     /** Whether an action is being performed. Do not alter this value.  */
     var inAction: Boolean = false
-    /** When true a call to [.update] will not be processed.  */
+    /** When true a call to [update] will not be processed.  */
     var paused: Boolean = false
     /** Whether to allow the same animation to be played while playing that animation.  */
     var allowSameAnimation: Boolean = false
 
     private var justChangedAnimation = false
 
-    var rootNodeToUpdate: ITransformNode? = null
-
+    val blendingPosition = HashMap<ITransformNode, IVec3>()
+    val blendingRotation = HashMap<ITransformNode, IVec4>()
+    val blendingScale = HashMap<ITransformNode, IVec3>()
     var nodes: List<ITransformNode> = ArrayList()
 
-    private fun obtain(anim: IAnim?, offset: Float, duration: Float, loopCount: Int, speed: Float, listener: Listener?): AnimationDesc? {
+    private fun obtain(anim: IAnim?, offset: Float, duration: Float, loopCount: Int, speed: Float, listener: AnimListener?): AnimationDesc? {
         if (anim == null) return null
         val result = animationPool.get()
         result.animation = anim
@@ -60,7 +59,7 @@ class AnimPlayer {
         result.loopCount = loopCount
         result.speed = speed
         result.offset = offset
-        result.duration = if (duration < 0) anim.duration - offset else duration
+        result.duration = duration
         result.time = if (speed < 0) result.duration else 0f
         return result
     }
@@ -86,7 +85,6 @@ class AnimPlayer {
         }
 
         if (justChangedAnimation) {
-            rootNodeToUpdate?.updateTransform()
             justChangedAnimation = false
         }
 
@@ -124,7 +122,6 @@ class AnimPlayer {
     }
 
     /** Set the active animation, replacing any current animation.
-     * @param id The ID of the [IAnim].
      * @param offset The offset in seconds to the start of the animation.
      * @param duration The duration in seconds of the animation (or negative to play till the end of the animation).
      * @param loopCount The number of times to loop the animation, zero to play the animation only once, negative to continuously
@@ -132,7 +129,7 @@ class AnimPlayer {
      * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play the animation at
      * twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc. This value can be
      * negative, causing the animation to played in reverse. This value cannot be zero.
-     * @param listener The [Listener] which will be informed when the animation is looped or completed.
+     * @param listener The [AnimListener] which will be informed when the animation is looped or completed.
      * @return The [AnimationDesc] which can be read to get the progress of the animation. Will be invalid when the animation
      * is completed.
      */
@@ -142,7 +139,7 @@ class AnimPlayer {
         speed: Float = 1f,
         duration: Float = -1f,
         offset: Float = 0f,
-        listener: Listener? = null
+        listener: AnimListener? = null
     ) = setAnimation(obtain(animation, offset, duration, loopCount, speed, listener))
 
     /** Set the active animation, replacing any current animation.  */
@@ -162,7 +159,6 @@ class AnimPlayer {
     }
 
     /** Changes the current animation by blending the new on top of the old during the transition time.
-     * @param id The ID of the [IAnim].
      * @param offset The offset in seconds to the start of the animation.
      * @param duration The duration in seconds of the animation (or negative to play till the end of the animation).
      * @param loopCount The number of times to loop the animation, zero to play the animation only once, negative to continuously
@@ -170,7 +166,7 @@ class AnimPlayer {
      * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play the animation at
      * twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc. This value can be
      * negative, causing the animation to played in reverse. This value cannot be zero.
-     * @param listener The [Listener] which will be informed when the animation is looped or completed.
+     * @param listener The [AnimListener] which will be informed when the animation is looped or completed.
      * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
      * @return The [AnimationDesc] which can be read to get the progress of the animation. Will be invalid when the animation
      * is completed.
@@ -182,7 +178,7 @@ class AnimPlayer {
         duration: Float = -1f,
         loopCount: Int = 1,
         speed: Float = 1f,
-        listener: Listener? = null
+        listener: AnimListener? = null
     ) = animate(obtain(animation, offset, duration, loopCount, speed, listener), transitionTime)
 
     /** Changes the current animation by blending the new on top of the old during the transition time.  */
@@ -208,9 +204,8 @@ class AnimPlayer {
         return anim
     }
 
-    /** Queue an animation to be applied when the [.current] animation is finished. If the current animation is continuously
+    /** Queue an animation to be applied when the [current] animation is finished. If the current animation is continuously
      * looping it will be synchronized on next loop.
-     * @param id The name of the animation.
      * @param offset The offset in seconds to the start of the animation.
      * @param duration The duration in seconds of the animation (or negative to play till the end of the animation).
      * @param loopCount The number of times to loop the animation, zero to play the animation only once, negative to continuously
@@ -218,7 +213,7 @@ class AnimPlayer {
      * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play the animation at
      * twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc. This value can be
      * negative, causing the animation to played in reverse. This value cannot be zero.
-     * @param listener The [Listener] which will be informed when the animation is looped or completed.
+     * @param listener The [AnimListener] which will be informed when the animation is looped or completed.
      * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
      * @return The [AnimationDesc] which can be read to get the progress of the animation. Will be invalid when the animation
      * is completed.
@@ -230,7 +225,7 @@ class AnimPlayer {
         duration: Float = -1f,
         loopCount: Int = 1,
         speed: Float = 1f,
-        listener: Listener? = null
+        listener: AnimListener? = null
     ) = queue(obtain(animation, offset, duration, loopCount, speed, listener), transitionTime)
 
     /** Queue an animation to be applied when the current is finished. If current is continuous it will be synced on next loop.  */
@@ -247,7 +242,6 @@ class AnimPlayer {
     }
 
     /** Apply an action animation on top of the current animation.
-     * @param id name of the animation.
      * @param offset The offset in seconds to the start of the animation.
      * @param duration The duration in seconds of the animation (or negative to play till the end of the animation).
      * @param loopCount The number of times to loop the animation, zero to play the animation only once, negative to continuously
@@ -255,7 +249,7 @@ class AnimPlayer {
      * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play the animation at
      * twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc. This value can be
      * negative, causing the animation to played in reverse. This value cannot be zero.
-     * @param listener The [Listener] which will be informed when the animation is looped or completed.
+     * @param listener The [AnimListener] which will be informed when the animation is looped or completed.
      * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
      * @return The [AnimationDesc] which can be read to get the progress of the animation. Will be invalid when the animation
      * is completed.
@@ -267,7 +261,7 @@ class AnimPlayer {
         duration: Float = -1f,
         loopCount: Int = 1,
         speed: Float = 1f,
-        listener: Listener? = null
+        listener: AnimListener? = null
     ) = action(obtain(animation, offset, duration, loopCount, speed, listener)!!, transitionTime)
 
     /** Apply an action animation on top of the current animation.  */
@@ -288,13 +282,13 @@ class AnimPlayer {
 
 
     /** Begin applying multiple animations to the instance, must followed by one or more calls to {
-     * [.apply] and finally {[.end].  */
+     * [apply] and finally {[end].  */
     private fun begin() {
         if (applying) throw RuntimeException("You must call end() after each call to being()")
         applying = true
     }
 
-    /** Apply an animation, must be called between {[.begin] and {[.end].
+    /** Apply an animation, must be called between {[begin] and {[end].
      * @param weight The blend weight of this animation relative to the previous applied animations.
      */
     private fun apply(animation: IAnim, time: Float, weight: Float) {
@@ -305,33 +299,38 @@ class AnimPlayer {
     /** End applying multiple animations to the instance and update it to reflect the changes.  */
     private fun end() {
         if (!applying) throw RuntimeException("You must call render() first")
-        transforms.forEach { key, value ->
-            when (key.nodeType) {
-                TransformNodeType.TRS -> {
-                    key.position.set(value.position)
-                    key.position.set(value.rotation)
-                    key.scale.set(value.scale)
-                }
-            }
+        blendingPosition.entries.forEach {
+            it.key.position.set(it.value)
+            vec3Pool.free(it.value)
         }
+        blendingPosition.clear()
 
-        transforms.clear()
-        rootNodeToUpdate?.updateTransform()
+        blendingRotation.entries.forEach {
+            it.key.rotation.set(it.value)
+            vec4Pool.free(it.value)
+        }
+        blendingRotation.clear()
+
+        blendingScale.entries.forEach {
+            it.key.scale.set(it.value)
+            vec3Pool.free(it.value)
+        }
+        blendingScale.clear()
+
         applying = false
     }
 
     /** Apply a single animation to the Model and update the it to reflect the changes.  */
-    private fun applyAnimation(animation: IAnim?, time: Float) {
+    private fun applyAnimation(animation: IAnim, time: Float) {
         if (applying) throw RuntimeException("Call end() first")
         applyAnimation(false, 1f, animation, time)
-        rootNodeToUpdate?.updateTransform()
     }
 
     /** Apply two animations, blending the second onto to first using weight.  */
     private fun applyAnimations(anim1: IAnim?, time1: Float, anim2: IAnim?, time2: Float,
                                 weight: Float) {
         if (anim2 == null || weight == 0f)
-            applyAnimation(anim1, time1)
+            applyAnimation(anim1!!, time1)
         else if (anim1 == null || weight == 1f)
             applyAnimation(anim2, time2)
         else if (applying)
@@ -345,60 +344,108 @@ class AnimPlayer {
     }
 
     /** Helper method to apply one animation to either an objectmap for blending or directly to the bones.  */
-    private fun applyAnimation(blending: Boolean, alpha: Float, animation: IAnim?, time: Float) {
+    private fun applyAnimation(blending: Boolean, alpha: Float, animation: IAnim, time: Float) {
+        val translationTracks = animation.translationTracks
+        val rotationTracks = animation.rotationTracks
+        val scaleTracks = animation.scaleTracks
+
         if (!blending) {
             // apply directly
-            val translationTracks = animation!!.translationTracks
             val nodes = nodes
             for (i in translationTracks.indices) {
                 val track = translationTracks[i]
                 getTranslationAtTime(track, time, nodes[track.nodeIndex].position)
             }
-            val rotationTracks = animation.rotationTracks
             for (i in translationTracks.indices) {
                 val track = rotationTracks[i]
                 getRotationAtTime(track, time, nodes[track.nodeIndex].rotation)
             }
-            val scaleTracks = animation.scaleTracks
             for (i in translationTracks.indices) {
                 val track = scaleTracks[i]
                 getScalingAtTime(track, time, nodes[track.nodeIndex].scale)
             }
         } else {
             // apply blending
-            // TODO
-            for (i in animation!!.translationTracks.indices) {
+            for (i in translationTracks.indices) {
+                val track = translationTracks[i]
+                val node = nodes[track.nodeIndex]
+                val target = tmpPosition
+                getTranslationAtTime(track, time, target)
 
-//                val node = animation.nodes[nodeIndex]
-//                val transform = tmpT
-//                getTranslationAtTime(animation.translationTracks[i], time, transform.position)
-//                getRotationAtTime(animation.rotationTracks[i], time, transform.rotation)
-//                getScalingAtTime(animation.scaleTracks[i], time, transform.scale)
-//                //getMorphTargetAtTime(animation.weightsTracks[i], time, transform.weights)
-//
-//                val t = transforms[node]
-//                if (t != null) {
-//                    if (alpha > 0.999999f)
-//                        t.set(transform)
-//                    else {
-//                        t.lerp(transform, alpha)
-//                    }
-//                } else {
-//                    if (alpha > 0.999999f) {
-//                        node.position.set(transform.position)
-//                        node.rotation.set(transform.rotation)
-//                        node.scale.set(transform.scale)
-//                    } else {
-//                        node.position.lerp(transform.position, alpha)
-//                        node.rotation.slerp(transform.rotation, alpha)
-//                        node.scale.lerp(transform.scale, alpha)
-//                    }
-//                }
+                val t = blendingPosition[node]
+                if (t != null) {
+                    if (alpha > 0.999999f) {
+                        t.set(target)
+                    } else {
+                        t.lerp(target, alpha)
+                    }
+                } else {
+                    if (alpha > 0.999999f) {
+                        blendingPosition[node] = vec3Pool.get().set(target)
+                    } else {
+                        blendingPosition[node] = vec3Pool.get().apply {
+                            set(node.position)
+                            lerp(target, alpha)
+                        }
+                    }
+                }
+            }
+
+            for (i in rotationTracks.indices) {
+                val track = rotationTracks[i]
+                val node = nodes[track.nodeIndex]
+                val target = tmpRotation
+                getRotationAtTime(track, time, target)
+
+                val t = blendingRotation[node]
+                if (t != null) {
+                    if (alpha > 0.999999f)
+                        t.set(target)
+                    else {
+                        t.lerp(target, alpha)
+                    }
+                } else {
+                    if (alpha > 0.999999f) {
+                        blendingRotation[node] = vec4Pool.get().set(target)
+                    } else {
+                        blendingRotation[node] = vec4Pool.get().apply {
+                            set(node.rotation)
+                            lerp(target, alpha)
+                        }
+                    }
+                }
+            }
+
+            for (i in scaleTracks.indices) {
+                val track = scaleTracks[i]
+                val node = nodes[track.nodeIndex]
+                val target = tmpScale
+                getScalingAtTime(track, time, target)
+
+                val t = blendingScale[node]
+                if (t != null) {
+                    if (alpha > 0.999999f) {
+                        t.set(target)
+                    } else {
+                        t.lerp(target, alpha)
+                    }
+                } else {
+                    if (alpha > 0.999999f) {
+                        blendingScale[node] = vec3Pool.get().set(target)
+                    } else {
+                        blendingScale[node] = vec3Pool.get().apply {
+                            set(node.scale)
+                            lerp(target, alpha)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private val tmpT = Transform()
+    private val tmpPosition = Vec3()
+    private val tmpRotation = Vec4()
+    private val tmpScale = Vec3()
 
     /** Find first key frame index just before a given time
      * @param arr Key frames ordered by time ascending
@@ -471,6 +518,8 @@ class AnimPlayer {
             val value2 = frames[index]
             val time2 = track.times[index]
             val t = (time - time1) / (time2 - time1)
+            //println("($time - $time1) / ($time2 - $time1) = $t")
+
             out.slerp(value2, t)
         }
 
@@ -500,58 +549,13 @@ class AnimPlayer {
      * prior to applyAnimation(s).  */
     private fun removeAnimation(animation: IAnim) {}
 
-    class Transform {
-        val position = Vec3()
-        val rotation = Vec4()
-        val scale = Vec3(1f, 1f, 1f)
-        val weights = VecN(1)
-
-        operator fun set(t: IVec3, r: IVec4, s: IVec3, w: IVec?): Transform {
-            position.set(t)
-            rotation.set(r)
-            scale.set(s)
-            if (w != null) weights.set(w)
-            return this
-        }
-
-        fun set(other: Transform) = set(other.position, other.rotation, other.scale, other.weights)
-
-        fun lerp(target: Transform, alpha: Float) = lerp(target.position, target.rotation, target.scale, target.weights, alpha)
-
-        fun lerp(targetT: IVec3, targetR: IVec4, targetS: IVec3, targetW: IVec?, alpha: Float): Transform {
-            position.lerp(targetT, alpha)
-            rotation.slerp(targetR, alpha)
-            scale.lerp(targetS, alpha)
-            if (targetW != null) weights.lerp(targetW, alpha)
-            return this
-        }
-
-        override fun toString() = "$position - $rotation - $scale - $weights"
-    }
-
-    /** Listener that will be informed when an animation is looped or completed.
-     * @author Xoppa
-     */
-    interface Listener {
-        /** Gets called when an animation is completed.
-         * @param animation The animation which just completed.
-         */
-        fun onEnd(animation: AnimationDesc) {}
-
-        /** Gets called when an animation is looped. The [AnimationDesc.loopCount] is updated prior to this call and can be
-         * read or written to alter the number of remaining loops.
-         * @param animation The animation which just looped.
-         */
-        fun onLoop(animation: AnimationDesc) {}
-    }
-
     /** Class describing how to play animation. You can read the values within this class to get the progress of the
      * animation. Do not change the values. Only valid when the animation is currently played.
      * @author Xoppa
      */
     class AnimationDesc {
         /** Listener which will be informed when the animation is looped or ended.  */
-        var listener: Listener? = null
+        var listener: AnimListener? = null
         /** The animation to be applied.  */
         var animation: IAnim? = null
         /** The speed at which to play the animation (can be negative), 1.0 for normal speed.  */
@@ -562,6 +566,12 @@ class AnimPlayer {
         var offset = 0f
         /** The duration of the animation  */
         var duration = 0f
+            get() {
+                return if (field < 0f) {
+                    val anim = animation
+                    if (anim != null) anim.duration - offset else 0f
+                } else field
+            }
         /** The number of remaining loops, negative for continuous, zero if stopped.  */
         var loopCount = 0
 
@@ -578,24 +588,29 @@ class AnimPlayer {
                 var loops: Int
                 val diff = speed * delta
 
-                if (!MATH.isZero(duration)) {
+                val duration = duration
+                if (MATH.isNotZero(duration)) {
                     time += diff
                     loops = abs(time / duration).toInt()
                     if (time < 0f) {
                         loops++
-                        while (time < 0f)
+                        while (time < 0f) {
                             time += duration
+                        }
                     }
                     time = abs(time % duration)
-                } else
+                } else {
                     loops = 1
+                }
+
                 for (i in 0 until loops) {
                     if (loopCount > 0) loopCount--
-                    if (loopCount != 0 && listener != null) listener!!.onLoop(this)
+                    val listener = listener
+                    if (loopCount != 0 && listener != null) listener.onLoop(this)
                     if (loopCount == 0) {
                         val result = (loops - 1 - i) * duration + if (diff < 0f) duration - time else time
                         time = if (diff < 0f) 0f else duration
-                        if (listener != null) listener!!.onEnd(this)
+                        listener?.onEnd(this)
                         return result
                     }
                 }
@@ -607,6 +622,10 @@ class AnimPlayer {
     }
 
     companion object {
-        private val animationPool = Pool({ AnimationDesc() }, {})
+        private val animationPool = Pool { AnimationDesc() }
+        private val vec3Pool: Pool<IVec3> =
+            Pool { Vec3() }
+        private val vec4Pool: Pool<IVec4> =
+            Pool { Vec4() }
     }
 }

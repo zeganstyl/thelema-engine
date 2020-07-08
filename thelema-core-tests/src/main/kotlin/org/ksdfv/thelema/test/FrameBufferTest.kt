@@ -16,7 +16,7 @@
 
 package org.ksdfv.thelema.test
 
-import org.ksdfv.thelema.FrameBuffer
+import org.ksdfv.thelema.texture.FrameBuffer
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -30,7 +30,12 @@ object FrameBufferTest: Test("Frame Buffer") {
 
         val model = CubeModel()
 
-        val frameBuffer = FrameBuffer(GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGBA, hasDepth = true)
+        val frameBuffer = FrameBuffer(
+            GL.mainFrameBufferWidth,
+            GL.mainFrameBufferHeight,
+            GL_RGBA,
+            hasDepth = true
+        )
         frameBuffer.bind { checkErrors() }
 
         GL.isDepthTestEnabled = true

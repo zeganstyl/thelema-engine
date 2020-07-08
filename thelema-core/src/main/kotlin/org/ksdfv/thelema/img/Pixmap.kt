@@ -16,13 +16,11 @@
 
 package org.ksdfv.thelema.img
 
-import org.ksdfv.thelema.Color
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
-import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.IVec4
-import java.io.InputStream
+import org.ksdfv.thelema.utils.Color
 
 
 typealias get_pixel_func = (pixel_addr: IByteData, byteIndex: Int) -> Long
@@ -35,7 +33,7 @@ typealias set_pixel_func = (pixel_addr: IByteData, byteIndex: Int, color: Long) 
  * the image, with the x-axis pointing to the right and the y-axis pointing downwards.
  *
  *
- * By default all methods use blending. You can disable blending with [Pixmap.setBlending], which may reduce
+ * By default all methods use blending. You can disable blending with [Pixmap.blending], which may reduce
  * blitting time by ~30%. The [Pixmap.drawPixmap] method will scale and
  * stretch the source image to a target image. There either nearest neighbour or bilinear filtering can be used.
  *
@@ -81,24 +79,20 @@ class Pixmap(
 
     override var name: String = ""
 
-    /** Returns the OpenGL ES format of this Pixmap. Used as the seventh parameter to
-     * [GL20.glTexImage2D].
+    /** Returns the OpenGL ES format of this Pixmap.
      * @return one of GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE, or GL_LUMINANCE_ALPHA.
      */
     override var glPixelFormat: Int
         set(_) = Unit
         get() = toGlFormat(format)
 
-    /** Returns the OpenGL ES format of this Pixmap. Used as the third parameter to
-     * [GL20.glTexImage2D].
-     * @return one of GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE, or GL_LUMINANCE_ALPHA.
-     */
+    /** Returns the OpenGL ES format of this Pixmap.
+     * @return one of GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE, or GL_LUMINANCE_ALPHA. */
     override var glInternalFormat: Int
         set(_) = Unit
         get() = toGlFormat(format)
 
-    /** Returns the OpenGL ES type of this Pixmap. Used as the eighth parameter to
-     * [GL20.glTexImage2D].
+    /** Returns the OpenGL ES type of this Pixmap.
      * @return one of GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4
      */
     override var glType: Int
@@ -119,54 +113,54 @@ class Pixmap(
     var blend = NoneBlend
     var scale = NearestScale
 
-    val get_pixel_alpha: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelAlpha: get_pixel_func = { pixel_addr, byteIndex ->
         pixel_addr[byteIndex].toLong()
     }
 
-    val get_pixel_luminance_alpha: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelLuminanceAlpha: get_pixel_func = { pixel_addr, byteIndex ->
         (pixel_addr[byteIndex].toLong() shl 8) or
                 pixel_addr[byteIndex+1].toLong()
     }
 
-    val get_pixel_RGB888: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelRgb888: get_pixel_func = { pixel_addr, byteIndex ->
         (pixel_addr[byteIndex].toLong() shl 16) or
                 (pixel_addr[byteIndex+1].toLong() shl 8) or
                 pixel_addr[byteIndex+2].toLong()
     }
 
-    val get_pixel_RGBA8888: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelRgba8888: get_pixel_func = { pixel_addr, byteIndex ->
         (pixel_addr[byteIndex].toLong() shl 24) or
                 (pixel_addr[byteIndex+1].toLong() shl 16) or
                 (pixel_addr[byteIndex+2].toLong() shl 8) or
                 pixel_addr[byteIndex+3].toLong()
     }
 
-    val get_pixel_RGB565: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelRgb565: get_pixel_func = { pixel_addr, byteIndex ->
         (pixel_addr[byteIndex].toLong() shl 8) or
                 pixel_addr[byteIndex+1].toLong()
     }
 
-    val get_pixel_RGBA4444: get_pixel_func = { pixel_addr, byteIndex ->
+    val getPixelRgba4444: get_pixel_func = { pixel_addr, byteIndex ->
         (pixel_addr[byteIndex].toLong() shl 8) or
                 pixel_addr[byteIndex+1].toLong()
     }
 
     fun getPixelFuncPtr(format: Int): get_pixel_func =
             when (format) {
-                AlphaFormat -> get_pixel_alpha
-                LuminanceAlphaFormat -> get_pixel_luminance_alpha
-                RGB888Format -> get_pixel_RGB888
-                RGBA8888Format -> get_pixel_RGBA8888
-                RGB565Format -> get_pixel_RGB565
-                RGBA4444Format -> get_pixel_RGBA4444
-                else -> get_pixel_alpha
+                AlphaFormat -> getPixelAlpha
+                LuminanceAlphaFormat -> getPixelLuminanceAlpha
+                RGB888Format -> getPixelRgb888
+                RGBA8888Format -> getPixelRgba8888
+                RGB565Format -> getPixelRgb565
+                RGBA4444Format -> getPixelRgba4444
+                else -> getPixelAlpha
             }
 
     fun toRGBA8888(format: Int, color: Long): Long {
-        var r: Long
-        var g: Long
-        var b: Long
-        var a: Long
+        val r: Long
+        val g: Long
+        val b: Long
+        val a: Long
 
         return when (format) {
             AlphaFormat -> (color and 0xff) or 0xffffff00
@@ -190,7 +184,7 @@ class Pixmap(
         }
     }
 
-    fun to_format(format: Int, color: Long): Long {
+    fun toFormat(format: Int, color: Long): Long {
         val r: Long
         val g: Long
         val b: Long
@@ -227,26 +221,26 @@ class Pixmap(
     }
 
     fun blend(src: Long, dst: Long): Long {
-        val src_a = src and 0xff
-        if (src_a == 0L) return dst
-        val src_b = (src shr 8) and 0xff
-        val src_g = (src shr 16) and 0xff
-        val src_r = (src shr 24) and 0xff
+        val sa = src and 0xff
+        if (sa == 0L) return dst
+        val sb = (src shr 8) and 0xff
+        val sg = (src shr 16) and 0xff
+        val sr = (src shr 24) and 0xff
 
-        var dst_a = dst and 0xff
-        var dst_b = (dst shr 8) and 0xff
-        var dst_g = (dst shr 16) and 0xff
-        var dst_r = (dst shr 24) and 0xff
+        var da = dst and 0xff
+        var db = (dst shr 8) and 0xff
+        var dg = (dst shr 16) and 0xff
+        var dr = (dst shr 24) and 0xff
 
-        dst_a -= (dst_a * src_a) / 255
-        val a = dst_a + src_a
-        dst_r = (dst_r * dst_a + src_r * src_a) / a
-        dst_g = (dst_g * dst_a + src_g * src_a) / a
-        dst_b = (dst_b * dst_a + src_b * src_a) / a
-        return ((dst_r shl 24) or (dst_g shl 16) or (dst_b shl 8) or a)
+        da -= (da * sa) / 255
+        val a = da + sa
+        dr = (dr * da + sr * sa) / a
+        dg = (dg * da + sg * sa) / a
+        db = (db * da + sb * sa) / a
+        return ((dr shl 24) or (dg shl 16) or (db shl 8) or a)
     }
 
-    fun blit_linear(
+    fun blitLinear(
             src_pixmap: Pixmap,
             dst_pixmap: Pixmap,
             src_x: Int,
@@ -258,7 +252,7 @@ class Pixmap(
             dst_width: Int,
             dst_height: Int
     ) {
-        val pset = set_pixel_func_ptr(dst_pixmap.format)
+        val pset = setPixelFuncPtr(dst_pixmap.format)
         val pget = getPixelFuncPtr(src_pixmap.format)
         val dpget = getPixelFuncPtr(dst_pixmap.format)
         val sbpp = gdx2d_bytes_per_pixel(src_pixmap.format)
@@ -266,8 +260,8 @@ class Pixmap(
         val spitch = sbpp * src_pixmap.width
         val dpitch = dbpp * dst_pixmap.width
 
-        val x_ratio = (src_width shl 16) / dst_width + 1
-        val y_ratio = (src_height shl 16) / dst_height + 1
+        val xRatio = (src_width shl 16) / dst_width + 1
+        val yRatio = (src_height shl 16) / dst_height + 1
 
         var dx: Int
         var dy: Int
@@ -277,30 +271,30 @@ class Pixmap(
         var j: Int
 
         while (i < dst_height) {
-            sy = ((i * y_ratio) ushr 16) + src_y
+            sy = ((i * yRatio) ushr 16) + src_y
             dy = i + dst_y
             if(sy < 0 || dy < 0) continue
             if(sy >= src_pixmap.height || dy >= dst_pixmap.height) break
 
             j = 0
             while (j < dst_width) {
-                sx = ((j * x_ratio) ushr 16) + src_x
+                sx = ((j * xRatio) ushr 16) + src_x
                 dx = j + dst_x
                 if(sx < 0 || dx < 0) continue
                 if(sx >= src_pixmap.width || dx >= dst_pixmap.width) break
 
                 val srcPtr = 0 + sx * sbpp + sy * spitch
-                val dst_ptr = 0 + dx * dbpp + dy * dpitch
-                var src_col = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, srcPtr))
+                val dstPtr = 0 + dx * dbpp + dy * dpitch
+                var srcCol = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, srcPtr))
 
-                if (dst_pixmap.blend == SrcOverBlend) {
-                    val dst_col = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dst_ptr))
-                    src_col = to_format(dst_pixmap.format, blend(src_col, dst_col))
+                srcCol = if (dst_pixmap.blend == SrcOverBlend) {
+                    val dstCol = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dstPtr))
+                    toFormat(dst_pixmap.format, blend(srcCol, dstCol))
                 } else {
-                    src_col = to_format(dst_pixmap.format, src_col)
+                    toFormat(dst_pixmap.format, srcCol)
                 }
 
-                pset(dst_pixmap.bytes, dst_ptr, src_col)
+                pset(dst_pixmap.bytes, dstPtr, srcCol)
 
                 j++
             }
@@ -309,49 +303,49 @@ class Pixmap(
         }
     }
 
-    fun set_pixel_func_ptr(format: Int): set_pixel_func =
+    fun setPixelFuncPtr(format: Int): set_pixel_func =
             when (format) {
-                AlphaFormat -> set_pixel_alpha
-                LuminanceAlphaFormat -> set_pixel_luminance_alpha
-                RGB888Format -> set_pixel_RGB888
-                RGBA8888Format -> set_pixel_RGBA8888
-                RGB565Format -> set_pixel_RGB565
-                RGBA4444Format -> set_pixel_RGBA4444
-                else -> set_pixel_alpha
+                AlphaFormat -> setPixelAlpha
+                LuminanceAlphaFormat -> setPixelLuminanceAlpha
+                RGB888Format -> setPixelRgb888
+                RGBA8888Format -> setPixelRgba8888
+                RGB565Format -> setPixelRgb565
+                RGBA4444Format -> setPixelRgba4444
+                else -> setPixelAlpha
             }
 
-    val set_pixel_alpha: set_pixel_func =
+    val setPixelAlpha: set_pixel_func =
             { pixel_addr, byteIndex, color -> pixel_addr[byteIndex] = (color and 0xff).toByte() }
 
-    val set_pixel_luminance_alpha: set_pixel_func = { pixel_addr, byteIndex, color ->
+    val setPixelLuminanceAlpha: set_pixel_func = { pixel_addr, byteIndex, color ->
         pixel_addr[byteIndex] = (color and 0xff).toByte()
         pixel_addr[byteIndex + 1] = ((color and 0xff00) ushr 8).toByte()
     }
 
-    val set_pixel_RGB888: set_pixel_func = { pixel_addr, byteIndex, color ->
+    val setPixelRgb888: set_pixel_func = { pixel_addr, byteIndex, color ->
         pixel_addr[byteIndex] = ((color and 0xff0000) ushr 16).toByte()
         pixel_addr[byteIndex + 1] = ((color and 0xff00) ushr 8).toByte()
         pixel_addr[byteIndex + 2] = (color and 0xff).toByte()
     }
 
-    val set_pixel_RGBA8888: set_pixel_func = { pixel_addr, byteIndex, color ->
+    val setPixelRgba8888: set_pixel_func = { pixel_addr, byteIndex, color ->
         pixel_addr[byteIndex] = ((color and 0xff000000) shr 24).toByte()
         pixel_addr[byteIndex + 1] = ((color and 0xff0000) shr 16).toByte()
         pixel_addr[byteIndex + 2] = ((color and 0xff00) shr 8).toByte()
         pixel_addr[byteIndex + 3] = (color and 0xff).toByte()
     }
 
-    val set_pixel_RGB565: set_pixel_func = { pixel_addr, byteIndex, color ->
+    val setPixelRgb565: set_pixel_func = { pixel_addr, byteIndex, color ->
         pixel_addr[byteIndex] = (color and 0xff).toByte()
         pixel_addr[byteIndex + 1] = ((color and 0xff00) ushr 8).toByte()
     }
 
-    val set_pixel_RGBA4444: set_pixel_func = { pixel_addr, byteIndex, color ->
+    val setPixelRgba4444: set_pixel_func = { pixel_addr, byteIndex, color ->
         pixel_addr[byteIndex] = (color and 0xff).toByte()
         pixel_addr[byteIndex + 1] = ((color and 0xff00) ushr 8).toByte()
     }
 
-    fun blit_bilinear(
+    fun blitBilinear(
             src_pixmap: Pixmap,
             dst_pixmap: Pixmap,
             src_x: Int,
@@ -363,7 +357,7 @@ class Pixmap(
             dst_width: Int,
             dst_height: Int
     ) {
-        val pset = set_pixel_func_ptr(dst_pixmap.format)
+        val pset = setPixelFuncPtr(dst_pixmap.format)
         val pget = getPixelFuncPtr(src_pixmap.format)
         val dpget = getPixelFuncPtr(dst_pixmap.format)
         val sbpp = gdx2d_bytes_per_pixel(src_pixmap.format)
@@ -371,48 +365,50 @@ class Pixmap(
         val spitch = sbpp * src_pixmap.width
         val dpitch = dbpp * dst_pixmap.width
 
-        val x_ratio = (src_width.toFloat() - 1)/ dst_width
-        val y_ratio = (src_height.toFloat() - 1) / dst_height
-        var x_diff = 0
-        var y_diff = 0
+        val xRatio = (src_width.toFloat() - 1)/ dst_width
+        val yRatio = (src_height.toFloat() - 1) / dst_height
+        var xDiff: Int
+        var yDiff: Int
 
-        var dx = dst_x
-        var dy = dst_y
-        var sx = src_x
-        var sy = src_y
+        var dx: Int
+        var dy: Int
+        var sx: Int
+        var sy: Int
         var i = 0
-        var j = 0
+        var j: Int
 
         while (i < dst_height) {
-            sy = ((i * y_ratio) + src_y).toInt()
+            sy = ((i * yRatio) + src_y).toInt()
             dy = i + dst_y
-            y_diff = ((y_ratio * i + src_y) - sy).toInt()
+            yDiff = ((yRatio * i + src_y) - sy).toInt()
             if(sy < 0 || dy < 0) continue
             if(sy >= src_pixmap.height || dy >= dst_pixmap.height) break
 
             j = 0
             while (j < dst_width) {
-                sx = ((j * x_ratio) + src_x).toInt()
+                sx = ((j * xRatio) + src_x).toInt()
                 dx = j + dst_x
-                x_diff = ((x_ratio * j + src_x) - sx).toInt()
+                xDiff = ((xRatio * j + src_x) - sx).toInt()
                 if(sx < 0 || dx < 0) continue
                 if(sx >= src_pixmap.width || dx >= dst_pixmap.width) break
 
-                val dst_ptr = 0 + dx * dbpp + dy * dpitch
-                val src_ptr = 0 + sx * sbpp + sy * spitch
+                val dstPtr = 0 + dx * dbpp + dy * dpitch
+                val srcPtr = 0 + sx * sbpp + sy * spitch
                 var c1 = 0L
                 var c2 = 0L
                 var c3 = 0L
                 var c4 = 0L
-                c1 = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, src_ptr))
-                if (sx + 1 < src_width) c2 = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (src_ptr + sbpp))); else c2 = c1
-                if (sy + 1 < src_height) c3 = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (src_ptr + spitch))); else c3 = c1
-                if (sx + 1 < src_width && sy + 1 < src_height) c4 = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (src_ptr + spitch + sbpp))) else c4 = c1
+                c1 = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, srcPtr))
+                c2 =
+                    if (sx + 1 < src_width) toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (srcPtr + sbpp))); else c1
+                c3 =
+                    if (sy + 1 < src_height) toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (srcPtr + spitch))); else c1
+                c4 = if (sx + 1 < src_width && sy + 1 < src_height) toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, (srcPtr + spitch + sbpp))) else c1
 
-                val ta: Float = (1f - x_diff) * (1f - y_diff)
-                val tb: Float = (x_diff) * (1f - y_diff)
-                val tc: Float = (1f - x_diff) * (y_diff)
-                val td: Float = (x_diff) * (y_diff).toFloat()
+                val ta: Float = (1f - xDiff) * (1f - yDiff)
+                val tb: Float = (xDiff) * (1f - yDiff)
+                val tc: Float = (1f - xDiff) * (yDiff)
+                val td: Float = (xDiff) * (yDiff).toFloat()
 
                 val r = (((c1 and 0xff000000) shr 24) * ta +
                 ((c2 and 0xff000000) shr 24) * tb +
@@ -431,16 +427,16 @@ class Pixmap(
                 (c3 and 0xff) * tc +
                 (c4 and 0xff) * td).toLong() and 0xff
 
-                var src_col = (r shl 24) or (g shl 16) or (b shl 8) or a
+                var srcCol = (r shl 24) or (g shl 16) or (b shl 8) or a
 
-                if (dst_pixmap.blend == SrcOverBlend) {
-                    val dst_col = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dst_ptr))
-                    src_col = to_format(dst_pixmap.format, blend(src_col, dst_col))
+                srcCol = if (dst_pixmap.blend == SrcOverBlend) {
+                    val dstCol = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dstPtr))
+                    toFormat(dst_pixmap.format, blend(srcCol, dstCol))
                 } else {
-                    src_col = to_format(dst_pixmap.format, src_col)
+                    toFormat(dst_pixmap.format, srcCol)
                 }
 
-                pset(dst_pixmap.bytes, dst_ptr, src_col)
+                pset(dst_pixmap.bytes, dstPtr, srcCol)
 
                 j++
             }
@@ -449,7 +445,7 @@ class Pixmap(
         }
     }
 
-    fun blit_same_size(
+    fun blitSameSize(
             src_pixmap: Pixmap,
             dst_pixmap: Pixmap,
             src_x: Int,
@@ -459,7 +455,7 @@ class Pixmap(
             width: Int,
             height: Int
     ) {
-        val pset = set_pixel_func_ptr(dst_pixmap.format)
+        val pset = setPixelFuncPtr(dst_pixmap.format)
         val pget = getPixelFuncPtr(src_pixmap.format)
         val dpget = getPixelFuncPtr(dst_pixmap.format)
         val sbpp = gdx2d_bytes_per_pixel(src_pixmap.format)
@@ -467,9 +463,9 @@ class Pixmap(
         val spitch = sbpp * src_pixmap.width
         val dpitch = dbpp * dst_pixmap.width
 
-        var sx = src_x
+        var sx: Int
         var sy = src_y
-        var dx = dst_x
+        var dx: Int
         var dy = dst_y
 
         while (sy < src_y + height) {
@@ -482,18 +478,18 @@ class Pixmap(
                 if(sx < 0 || dx < 0) continue
                 if(sx >= src_pixmap.width || dx >= dst_pixmap.width) break
 
-                val src_ptr = 0 + sx * sbpp + sy * spitch
-                val dst_ptr = 0 + dx * dbpp + dy * dpitch
-                var src_col = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, src_ptr))
+                val srcPtr = 0 + sx * sbpp + sy * spitch
+                val dstPtr = 0 + dx * dbpp + dy * dpitch
+                var srcCol = toRGBA8888(src_pixmap.format, pget(src_pixmap.bytes, srcPtr))
 
-                if (dst_pixmap.blend == SrcOverBlend) {
-                    val dst_col = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dst_ptr))
-                    src_col = to_format(dst_pixmap.format, blend(src_col, dst_col))
+                srcCol = if (dst_pixmap.blend == SrcOverBlend) {
+                    val dstCol = toRGBA8888(dst_pixmap.format, dpget(dst_pixmap.bytes, dstPtr))
+                    toFormat(dst_pixmap.format, blend(srcCol, dstCol))
                 } else {
-                    src_col = to_format(dst_pixmap.format, src_col)
+                    toFormat(dst_pixmap.format, srcCol)
                 }
 
-                pset(dst_pixmap.bytes, dst_ptr, src_col)
+                pset(dst_pixmap.bytes, dstPtr, srcCol)
 
                 sx++
                 dx++
@@ -517,9 +513,9 @@ class Pixmap(
             dst_height: Int
     ) {
         if(dst_pixmap.scale == NearestScale)
-        blit_linear(src_pixmap, dst_pixmap, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height)
+        blitLinear(src_pixmap, dst_pixmap, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height)
         if(dst_pixmap.scale == BilinearScale)
-        blit_bilinear(src_pixmap, dst_pixmap, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height)
+        blitBilinear(src_pixmap, dst_pixmap, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height)
     }
 
     fun gdx2d_draw_pixmap(
@@ -535,7 +531,7 @@ class Pixmap(
             dst_height: Int
     ) {
         if(src_width == dst_width && src_height == dst_height) {
-            blit_same_size(src_pixmap, dst_pixmap, src_x, src_y, dst_x, dst_y, src_width, src_height)
+            blitSameSize(src_pixmap, dst_pixmap, src_x, src_y, dst_x, dst_y, src_width, src_height)
         } else {
             blit(src_pixmap, dst_pixmap, src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height)
         }
@@ -649,11 +645,11 @@ class Pixmap(
         if (pixmap.blend == SrcOverBlend) {
             val dst = gdx2d_get_pixel(pixmap, x, y)
             var col = blend(col, dst)
-            col = to_format(pixmap.format, col)
-            set_pixel(pixmap.bytes, pixmap.width, pixmap.height, gdx2d_bytes_per_pixel(pixmap.format), set_pixel_func_ptr(pixmap.format), x, y, col)
+            col = toFormat(pixmap.format, col)
+            set_pixel(pixmap.bytes, pixmap.width, pixmap.height, gdx2d_bytes_per_pixel(pixmap.format), setPixelFuncPtr(pixmap.format), x, y, col)
         } else {
-            val col = to_format(pixmap.format, col)
-            set_pixel(pixmap.bytes, pixmap.width, pixmap.height, gdx2d_bytes_per_pixel(pixmap.format), set_pixel_func_ptr(pixmap.format), x, y, col)
+            val col = toFormat(pixmap.format, col)
+            set_pixel(pixmap.bytes, pixmap.width, pixmap.height, gdx2d_bytes_per_pixel(pixmap.format), setPixelFuncPtr(pixmap.format), x, y, col)
         }
     }
 
@@ -712,19 +708,13 @@ class Pixmap(
      * @param srcWidth The width of the area from the other Pixmap in pixels
      * @param srcHeight The height of the area from the other Pixmap in pixels
      */
-    /** Draws an area from another Pixmap to this Pixmap.
-     *
-     * @param pixmap The other Pixmap
-     * @param x The target x-coordinate (top left corner)
-     * @param y The target y-coordinate (top left corner)
-     */
     @JvmOverloads
     fun drawPixmap(pixmap: Pixmap, x: Int, y: Int, srcx: Int = 0, srcy: Int = 0, srcWidth: Int = pixmap.width, srcHeight: Int = pixmap.height) {
         gdx2d_draw_pixmap(pixmap, this, srcx, srcy, srcWidth, srcHeight, x, y, srcWidth, srcHeight)
     }
 
     /** Draws an area from another Pixmap to this Pixmap. This will automatically scale and stretch the source image to the
-     * specified target rectangle. Use [Pixmap.setFilter] to specify the type of filtering to be used (nearest
+     * specified target rectangle. Use [Pixmap.filter] to specify the type of filtering to be used (nearest
      * neighbour or bilinear).
      *
      * @param pixmap The other Pixmap
@@ -781,10 +771,6 @@ class Pixmap(
 
 
     companion object {
-        val JPEG_HEADER = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-
-        //val temp = ByteArray(PNGDecoder.SIGNATURE.size)
-
         const val AlphaFormat = GL_R8
         const val LuminanceAlphaFormat = GL_RG8
         const val RGB888Format = GL_RGB8
@@ -836,78 +822,6 @@ class Pixmap(
                 RGBA4444Format -> GL_UNSIGNED_SHORT_4_4_4_4
                 else -> throw RuntimeException("unknown format: $format")
             }
-        }
-
-        fun png(stream: InputStream): Pixmap {
-            throw NotImplementedError()
-//            //initialize the decoder
-//            val dec = PNGDecoder(stream)
-//
-//            //read image dimensions from PNG header
-//            val width = dec.width
-//            val height = dec.height
-//
-//            //we will decode to RGBA format, i.e. 4 components or "bytes per pixel"
-//            val bpp = 4
-//
-//            //create a new byte buffer which will hold our pixel data
-//            val byteBuffer = APP.byteData(bpp * width * height)
-//
-//            //decode the image into the byte buffer, in RGBA format
-//            //dec.decode(byteBuffer, width * bpp, PNGDecoder.Format.RGBA)
-//
-//            //flip the buffer into "read mode" for OpenGL
-//            //byteBuffer.flip()
-//
-//            return Pixmap(byteBuffer, width, height)
-        }
-
-        fun jpeg(stream: InputStream): Pixmap {
-            throw NotImplementedError()
-//            //initialize the decoder
-//            val dec = JPEGDecoder(stream)
-//
-//            dec.decodeHeader()
-//
-//            //read image dimensions from PNG header
-//            val width = dec.imageWidth
-//            val height = dec.imageHeight
-//
-//            //we will decode to RGBA format, i.e. 4 components or "bytes per pixel"
-//            val bpp = 4
-//
-//            //create a new byte buffer which will hold our pixel data
-//            val byteBuffer = APP.byteData(bpp * width * height)
-//            //decode the image into the byte buffer, in RGBA format
-//            dec.startDecode()
-//            //dec.decodeRGB(byteBuffer, width * bpp, dec.numMCURows)
-//
-//            //flip the buffer into "read mode" for OpenGL
-//            //byteBuffer.flip()
-//
-//            return Pixmap(byteBuffer, width, height)
-        }
-
-        /** It will check header and automatically choose format */
-        fun fromFile(file: IFile): Pixmap {
-            throw NotImplementedError()
-//            val stream = file.read()
-//
-//            stream.read(temp)
-//
-//            var b = PNGDecoder.checkSignature(temp)
-//
-//            return if (b) {
-//                png(file.read())
-//            } else {
-//                b = false
-//
-//                for (i in JPEG_HEADER.indices) {
-//                    if (JPEG_HEADER[i] != temp[i]) b = false
-//                }
-//
-//                jpeg(file.read())
-//            }
         }
 
         fun gdx2d_bytes_per_pixel(format: Int): Int = when (format) {

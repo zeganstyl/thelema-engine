@@ -16,11 +16,11 @@
 
 package org.ksdfv.thelema.mesh
 
-import org.ksdfv.thelema.IFrameBuffer
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.shader.Shader
+import org.ksdfv.thelema.texture.IFrameBuffer
 
 /** @author zeganstyl */
 interface IScreenQuad {

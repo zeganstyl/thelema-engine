@@ -30,20 +30,20 @@ interface ITexture {
     /** The OpenGL handle for this texture. You can specify for example 0 if don't want to call opengl function */
     var glHandle: Int
 
-    /** Texture filter minification.
-     * By default is GL_NEAREST_MIPMAP_LINEAR (https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
+    /** Texture filter minification. By default is GL_NEAREST_MIPMAP_LINEAR.
+     * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
     var minFilter: Int
 
-    /** Texture filter magnification.
-     * By default is GL_LINEAR (https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
+    /** Texture filter magnification. By default is GL_LINEAR.
+     * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
     var magFilter: Int
 
-    /** used for horizontal (U) texture coordinates.
-     * By default is GL_REPEAT (https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
+    /** used for horizontal (U) texture coordinates. By default is GL_REPEAT.
+     * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
     var sWrap: Int
 
-    /** used for vertical (V) texture coordinates.
-     * By default is GL_REPEAT (https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
+    /** used for vertical (V) texture coordinates. By default is GL_REPEAT.
+     * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
     var tWrap: Int
 
     var rWrap: Int
@@ -58,12 +58,6 @@ interface ITexture {
     /** Binds this texture. The texture will be bound to the currently active texture unit. */
     fun bind() {
         GL.glBindTexture(glTarget, glHandle)
-    }
-
-    /** May be used to set texture parameters such as [minFilter], [sWrap] and etc */
-    fun bind(block: ITexture.() -> Unit) {
-        bind()
-        block(this)
     }
 
     /** Sets active texture unit and binds texture to the given unit.

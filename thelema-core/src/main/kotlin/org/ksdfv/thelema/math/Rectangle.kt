@@ -317,7 +317,6 @@ open class Rectangle {
      * other rectangle (e.g. Having a camera translate and scale to show a given area)
      * @param rect the other rectangle to fit this rectangle around
      * @return this rectangle for chaining
-     * @see Scaling
      */
     fun fitOutside(rect: Rectangle): Rectangle {
         val ratio = aspectRatio
@@ -334,7 +333,6 @@ open class Rectangle {
      * other rectangle (e.g. Scaling a texture within a arbitrary cell without squeezing)
      * @param rect the other rectangle to fit this rectangle inside
      * @return this rectangle for chaining
-     * @see Scaling
      */
     fun fitInside(rect: Rectangle): Rectangle {
         val ratio = aspectRatio

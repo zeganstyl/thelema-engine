@@ -20,7 +20,6 @@ import org.ksdfv.thelema.g3d.IMaterial
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_TRIANGLES
 import org.ksdfv.thelema.shader.IShader
-import org.ksdfv.thelema.shader.Shader
 
 /** Mesh is vertex buffer (+ index buffer) (+ instanced buffer) + material
  *
@@ -55,7 +54,6 @@ interface IMesh {
      * ES 2.0 and when auto-bind is disabled.
      *
      * @param shader the shader (does not bind the shader)
-     * @param locations array containing the attribute locations.
      */
     fun bind(shader: IShader) {
         vertices?.bind(shader)
@@ -67,8 +65,7 @@ interface IMesh {
      * ES 1.x and when auto-bind is disabled.
      *
      * @param shader the shader (does not unbind the shader)
-     * @param locations array containing the attribute locations.
-     */
+     * */
     fun unbind(shader: IShader) {
         vertices?.unbind(shader)
         instances?.unbind(shader)
@@ -79,10 +76,8 @@ interface IMesh {
      * Renders the mesh using the given primitive type. offset specifies the offset into either the vertex buffer or the index
      * buffer depending on whether indices are defined. count specifies the number of vertices or indices to use thus count /
      * #vertices per primitive primitives are rendered.
-     * This method will automatically bind each vertex attribute as specified at construction time via [VertexAttributes] to
-     * the respective shader attributes. The binding is based on the alias defined for each VertexAttribute.
-     * This method must only be called after the [Shader.begin] method has been called!
-     * This method is intended for use with OpenGL ES 2.0 and will throw an IllegalStateException when OpenGL ES 1.x is used.
+     * This method will automatically bind each vertex attribute as specified at construction time via [VertexInputs] to
+     * the respective shader attributes. The binding is based on the alias defined for each [IVertexInput].
      *
      * @param shader the shader to be used
      * @param primitiveType the primitive type

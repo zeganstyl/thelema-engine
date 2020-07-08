@@ -16,15 +16,16 @@
 
 package org.ksdfv.thelema.g3d
 
+import org.ksdfv.thelema.g3d.node.IDelegateTransformNode
 import org.ksdfv.thelema.g3d.node.ITransformNode
 import org.ksdfv.thelema.mesh.IMesh
 import org.ksdfv.thelema.shader.Shader
 
-/** @author zeganstyl */
-interface IObject3D {
-    var name: String
-
-    var node: ITransformNode
+/** Visible transformable 3d object
+ * @author zeganstyl */
+interface IObject3D: IDelegateTransformNode {
+    /** If previous transform data is not used, it must be linked to [ITransformNode.Cap] */
+    var previousTransform: ITransformNode
 
     var isVisible: Boolean
 
@@ -33,6 +34,7 @@ interface IObject3D {
     var armature: IArmature?
 
     fun set(other: IObject3D): IObject3D {
+        node.set(other)
         name = other.name
         isVisible = other.isVisible
         node = other.node
@@ -41,7 +43,20 @@ interface IObject3D {
         return this
     }
 
-    fun copy(): IObject3D
+    override fun copy(): IObject3D {
+        return this
+    }
+
+    override fun set(other: ITransformNode): IObject3D {
+        super.set(other)
+        return this
+    }
+
+    fun updatePreviousTransform() {
+        if (previousTransform !== ITransformNode.Cap) {
+            previousTransform.set(node)
+        }
+    }
 
     fun update(delta: Float) {}
 
@@ -83,9 +98,11 @@ interface IObject3D {
         }
     }
 
-    fun clear() {
+    override fun clear() {
+        super.clear()
         meshes.clear()
-        node = ITransformNode.Default
+        node = ITransformNode.Cap
+        previousTransform = ITransformNode.Cap
         armature = null
     }
 

@@ -29,11 +29,10 @@ import java.nio.ByteBuffer
 import java.nio.IntBuffer
 
 class StbIMG: IImg {
-    val stack = MemoryStack.create()
-
-    val w: IntBuffer = stack.mallocInt(1)
-    val h: IntBuffer = stack.mallocInt(1)
-    val comp: IntBuffer = stack.mallocInt(1)
+    private val stack: MemoryStack = MemoryStack.create()
+    private val w: IntBuffer = stack.mallocInt(1)
+    private val h: IntBuffer = stack.mallocInt(1)
+    private val comp: IntBuffer = stack.mallocInt(1)
 
     override fun load(data: IByteData, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage {
         val pixels = STBImage.stbi_load_from_memory(data.sourceObject as ByteBuffer, w, h, comp, 0)

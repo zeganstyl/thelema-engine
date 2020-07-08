@@ -21,13 +21,11 @@ import org.ksdfv.thelema.g3d.node.Node
 import org.ksdfv.thelema.mesh.IMesh
 
 /** @author zeganstyl */
-open class Object3D(override var node: ITransformNode = Node()): IObject3D {
-    override var name: String = ""
-
-    override var isVisible: Boolean = true
-
-    override var meshes: MutableList<IMesh> = ArrayList()
+open class Object3D(
+    override var node: ITransformNode = Node(),
+    override var previousTransform: ITransformNode = ITransformNode.Cap,
+    override var name: String = "",
+    override var isVisible: Boolean = true,
+    override var meshes: MutableList<IMesh> = ArrayList(),
     override var armature: IArmature? = null
-
-    override fun copy(): IObject3D = IObject3D.Build().set(this)
-}
+): IObject3D

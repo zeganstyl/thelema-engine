@@ -20,9 +20,7 @@ package org.ksdfv.thelema.fs
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 object FileLocation {
-    /** Path relative to the root of the classpath. Classpath files are always readonly. Note that classpath files are not
-     * compatible with some functionality on Android, such as [Audio.newSound] and
-     * [Audio.newMusic].  */
+    /** Path relative to the root of the classpath. Classpath files are always readonly. */
     const val Classpath = 0
     /** Path relative to the asset directory on Android and to the application's root directory on the desktop. On the desktop,
      * if the file is not found, then the classpath is checked. This enables files to be found when using JWS or applets.

@@ -23,13 +23,13 @@ class Vec4Track(
     /** Use [AnimInterpolation] */
     var interpolation: Int = 0,
 
-    /** Node index in [IAnim.nodes] */
-    var nodeIndex: Int = 0
-): IAnimTrack {
-    override var times: MutableList<Float> = ArrayList()
-    var values: MutableList<IVec4> = ArrayList()
-    var inTangents: MutableList<IVec4> = ArrayList()
-    var outTangents: MutableList<IVec4> = ArrayList()
+    /** Node index in [AnimPlayer.nodes] */
+    var nodeIndex: Int = 0,
+
+    override var times: MutableList<Float> = ArrayList(),
+    var values: MutableList<IVec4> = ArrayList(),
+    var inTangents: MutableList<IVec4> = ArrayList(),
+    var outTangents: MutableList<IVec4> = ArrayList(),
 
     override var duration: Float = 0f
-}
+): IAnimTrack

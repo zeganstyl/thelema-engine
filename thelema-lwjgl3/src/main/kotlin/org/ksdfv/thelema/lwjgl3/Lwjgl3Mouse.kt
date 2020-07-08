@@ -16,10 +16,14 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.HdpiMode
 import org.ksdfv.thelema.ext.traverseSafe
-import org.ksdfv.thelema.input.*
-import org.lwjgl.glfw.*
+import org.ksdfv.thelema.input.IMouse
+import org.ksdfv.thelema.input.IMouseListener
+import org.ksdfv.thelema.input.MOUSE
+import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFWCursorPosCallback
+import org.lwjgl.glfw.GLFWMouseButtonCallback
+import org.lwjgl.glfw.GLFWScrollCallback
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sign
@@ -88,7 +92,7 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
             mouseX = logicalMouseX
             logicalMouseY = y.toInt()
             mouseY = logicalMouseY
-            if (window.config.hdpiMode == HdpiMode.Pixels) {
+            if (!window.config.useLogicalCoordinates) {
                 val xScale = window.graphics.backBufferWidth / window.graphics.logicalWidth.toFloat()
                 val yScale = window.graphics.backBufferHeight / window.graphics.logicalHeight.toFloat()
                 deltaX = (deltaX * xScale).toInt()
@@ -165,7 +169,7 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
     override fun setCursorPosition(x: Int, y: Int) {
         var x = x
         var y = y
-        if (window.config.hdpiMode == HdpiMode.Pixels) {
+        if (!window.config.useLogicalCoordinates) {
             val xScale = window.graphics.logicalWidth / window.graphics.backBufferWidth.toFloat()
             val yScale = window.graphics.logicalHeight / window.graphics.backBufferHeight.toFloat()
             x = (x * xScale).toInt()

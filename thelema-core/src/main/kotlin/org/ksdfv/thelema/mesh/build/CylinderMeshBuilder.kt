@@ -46,7 +46,7 @@ class CylinderMeshBuilder() : MeshBuilder() {
             yAlign -> out.put(x, y, z)
             zAlign -> out.put(x, z, y)
         }
-        if (textureCoordinates) out.put(u, v)
+        if (uv) out.put(u, v)
         if (normals) out.put(normal.x, normal.y, normal.z)
     }
 

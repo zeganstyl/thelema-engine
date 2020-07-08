@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.math
 
+import org.ksdfv.thelema.utils.Pool
 import kotlin.math.*
 
 /**
@@ -336,7 +337,7 @@ interface IVec2: IVec {
     override fun copy(): IVec = cpy()
 
     companion object {
-        val Pool = org.ksdfv.thelema.Pool<IVec2>({ Vec2() }) {}
+        val Pool = Pool<IVec2>({ Vec2() }) {}
 
         val Zero = Vec2(0f, 0f)
         val AllOne = Vec2(1f, 1f)

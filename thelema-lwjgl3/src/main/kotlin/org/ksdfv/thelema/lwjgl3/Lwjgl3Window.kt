@@ -17,9 +17,9 @@
 package org.ksdfv.thelema.lwjgl3
 
 import org.ksdfv.thelema.fs.FS
+import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.img.IImage
 import org.ksdfv.thelema.img.IMG
-import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.input.KB
 import org.ksdfv.thelema.input.MOUSE
 import org.lwjgl.BufferUtils
@@ -291,7 +291,6 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
     }
 
     fun destroy() {
-        Lwjgl3Cursor.dispose(this)
         graphics.dispose()
         mouse.dispose()
         kb.dispose()

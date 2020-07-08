@@ -21,31 +21,32 @@ import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IShortData
 import org.ksdfv.thelema.g3d.IMaterial
+import org.ksdfv.thelema.g3d.Material
 import org.ksdfv.thelema.gl.GL_UNSIGNED_SHORT
 import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.*
 
 /** @author zeganstyl */
 open class MeshBuilder {
-    open var textureCoordinates: Boolean = true
+    open var uv: Boolean = true
     open var normals: Boolean = true
 
-    open var textureCoordinatesScale: Float = 1f
+    open var uvScale: Float = 1f
 
-    var material: IMaterial = IMaterial.Default
+    var material: IMaterial = Material()
 
     lateinit var currentFloatBuffer: IFloatData
 
-    fun createAttributes(): VertexAttributes {
-        val attributes = VertexAttributes(VertexAttribute.Position)
-        if (textureCoordinates) attributes.add(VertexAttribute.UV[0])
-        if (normals) attributes.add(VertexAttribute.Normal)
+    fun createAttributes(): VertexInputs {
+        val attributes = VertexInputs(IVertexInput.Position())
+        if (uv) attributes.add(IVertexInput.UV(0))
+        if (normals) attributes.add(IVertexInput.Normal())
         return attributes
     }
 
     fun createVertices(verticesNum: Int, block: IByteData.() -> Unit): IVertexBuffer {
         val attributes = createAttributes()
-        return VertexArrayObject(
+        return VertexBufferObject(
             attributes,
             DATA.bytes(verticesNum * attributes.bytesPerVertex).apply(block)
         )

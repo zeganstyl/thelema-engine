@@ -16,9 +16,9 @@
 
 package org.ksdfv.thelema.audio
 
-/** Encapsulates an audio device in mono or stereo mode. Use the [.writeSamples] and
- * [.writeSamples] methods to write float or 16-bit signed short PCM data directly to the audio device.
- * Stereo samples are interleaved in the order left channel sample, right channel sample. The [.dispose] method must be
+/** Encapsulates an audio device in mono or stereo mode. Use the [writeSamples] and
+ * [writeSamples] methods to write float or 16-bit signed short PCM data directly to the audio device.
+ * Stereo samples are interleaved in the order left channel sample, right channel sample. The [dispose] method must be
  * called when this AudioDevice is no longer needed.
  *
  * @author badlogicgames@gmail.com
@@ -53,6 +53,6 @@ interface IAudioDevice {
     /** Frees all resources associated with this AudioDevice. Needs to be called when the device is no longer needed.  */
     fun dispose()
 
-    /** Sets the volume in the range [0,1].  */
+    /** Sets the volume in the range `[0,1]`.  */
     fun setVolume(volume: Float)
 }

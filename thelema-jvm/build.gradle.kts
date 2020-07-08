@@ -10,7 +10,7 @@ group = thelemaGroup
 
 val gitRepositoryUrl: String by project
 
-val verName = "0.1.0"
+val verName = "0.2.0"
 version = verName
 
 dependencies {
@@ -51,6 +51,7 @@ bintray {
         name = "thelema-jvm"
         setLicenses("Apache-2.0")
         vcsUrl = gitRepositoryUrl
+        githubRepo = gitRepositoryUrl
 
         version.apply {
             name = verName

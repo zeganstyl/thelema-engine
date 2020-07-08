@@ -16,8 +16,7 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.Color
-import org.ksdfv.thelema.Graphics
+import org.ksdfv.thelema.utils.Color
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.math.IVec4
 import java.util.*
@@ -35,12 +34,12 @@ open class Lwjgl3WindowConfiguration(
     var windowResizable: Boolean = true,
     var windowDecorated: Boolean = true,
     var windowMaximized: Boolean = false,
-    var maximizedMonitor: Lwjgl3Graphics.Lwjgl3Monitor? = null,
+    var maximizedMonitor: Lwjgl3Monitor? = null,
     var autoIconify: Boolean = false,
     var windowIconFileLocation: Int? = null,
     var windowIconPaths: Array<String>? = null,
     var windowListener: Lwjgl3WindowListener? = null,
-    var fullscreenMode: Lwjgl3Graphics.Lwjgl3DisplayMode? = null,
+    var fullscreenMode: Lwjgl3DisplayMode? = null,
     var title: String = "",
     var initialBackgroundColor: IVec4 = Color.BLACK,
     var initialVisible: Boolean = true,
@@ -107,8 +106,8 @@ open class Lwjgl3WindowConfiguration(
     /**
      * @param monitor what monitor the window should maximize to
      */
-    fun setMaximizedMonitor(monitor: Graphics.Monitor?) {
-        maximizedMonitor = monitor as Lwjgl3Graphics.Lwjgl3Monitor?
+    fun setMaximizedMonitor(monitor: Monitor?) {
+        maximizedMonitor = monitor as Lwjgl3Monitor?
     }
 
     /**
@@ -147,8 +146,8 @@ open class Lwjgl3WindowConfiguration(
      * [Lwjgl3AppConf.getDisplayMode] on this class to enumerate connected monitors
      * and their fullscreen display modes.
      */
-    fun setFullscreenMode(mode: Graphics.DisplayMode?) {
-        fullscreenMode = mode as Lwjgl3Graphics.Lwjgl3DisplayMode?
+    fun setFullscreenMode(mode: DisplayMode?) {
+        fullscreenMode = mode as Lwjgl3DisplayMode?
     }
 
     /**

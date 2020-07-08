@@ -17,14 +17,12 @@
 package org.ksdfv.thelema.g3d
 
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.Blending
 import org.ksdfv.thelema.g3d.light.ILight
+import org.ksdfv.thelema.g3d.node.IDelegateTransformNode
 import org.ksdfv.thelema.g3d.node.ITransformNode
 
 /** @author zeganstyl */
-interface IScene {
-    var name: String
-
+interface IScene: IDelegateTransformNode {
     val lights: MutableList<ILight>
 
     val objects: MutableList<IObject3D>
@@ -36,9 +34,6 @@ interface IScene {
     val scenes: MutableList<IScene>
 
     var shaderChannel: Int
-
-    /** Root node of this scene */
-    var node: ITransformNode
 
     var world: IWorld
 
@@ -80,13 +75,23 @@ interface IScene {
         }
     }
 
+    fun updatePreviousTransform()
+
     fun update(delta: Float = APP.deltaTime)
 
     fun render()
 
-    fun copy(): IScene
+    override fun copy(): IScene = Build().set(this)
+
+    override fun set(other: ITransformNode): IScene {
+        return this
+    }
 
     fun destroy() {
         objects.clear()
+    }
+
+    companion object {
+        var Build: () -> IScene = { Scene() }
     }
 }

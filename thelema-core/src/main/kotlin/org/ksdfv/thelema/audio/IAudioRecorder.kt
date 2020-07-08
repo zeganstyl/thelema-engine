@@ -18,7 +18,7 @@ package org.ksdfv.thelema.audio
 
 /** An AudioRecorder allows to record input from an audio device. It has a sampling rate and is either stereo or mono. Samples are
  * returned in signed 16-bit PCM format. Stereo samples are interleaved in the order left channel, right channel. The
- * AudioRecorder has to be disposed if no longer needed via the [.dispose].
+ * AudioRecorder has to be disposed if no longer needed via the [dispose].
  *
  * @author mzechner
  */

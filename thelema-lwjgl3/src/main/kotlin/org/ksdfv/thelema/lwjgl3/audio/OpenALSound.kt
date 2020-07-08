@@ -24,9 +24,10 @@ import java.nio.ByteOrder
 
 /** @author Nathan Sweet
  */
-open class OpenALSound(private val audio: OpenAL) : ISound {
+abstract class OpenALSound(private val audio: OpenAL) : ISound {
     private var bufferID = -1
     private var duration = 0f
+
     fun setup(pcm: ByteArray, channels: Int, sampleRate: Int) {
         val bytes = pcm.size - pcm.size % if (channels > 1) 4 else 2
         val samples = bytes / (2 * channels)

@@ -16,13 +16,12 @@
 
 package org.ksdfv.thelema.g2d
 
-import org.ksdfv.thelema.Color
 import org.ksdfv.thelema.gl.GL_LINEAR
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Vec4
 import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.texture.TextureRegion
+import org.ksdfv.thelema.utils.Color
 import kotlin.math.max
 
 
@@ -34,8 +33,8 @@ import kotlin.math.max
  * **NOTE**: This class expects a "post-processed" nine-patch, and not a raw ".9.png" texture. That is, the textures given to
  * this class should *not* include the meta-data pixels from a ".9.png" that describe the layout of the ninepatch over the
  * interior of the graphic. That information should be passed into the constructor either implicitly as the size of the individual
- * patch textures, or via the `left, right, top, bottom` parameters to [.NinePatch]
- * or [.NinePatch].
+ * patch textures, or via the `left, right, top, bottom` parameters to [NinePatch]
+ * or [NinePatch].
  *
  *
  * [TextureAtlas] is one way to generate a post-processed nine-patch from a ".9.png" file.  */
@@ -56,10 +55,10 @@ class NinePatch {
     /** Set the draw-time width of the three right edge patches  */
     var rightWidth = 0f
     /** Set the width of the middle column of the patch. At render time, this is implicitly the requested render-width of the
-     * entire nine patch, minus the left and right width. This value is only used for computing the [default][.getTotalWidth].  */
+     * entire nine patch, minus the left and right width. This value is only used for computing the [default][totalWidth].  */
     var middleWidth = 0f
     /** Set the height of the middle row of the patch. At render time, this is implicitly the requested render-height of the entire
-     * nine patch, minus the top and bottom height. This value is only used for computing the [default][.getTotalHeight].  */
+     * nine patch, minus the top and bottom height. This value is only used for computing the [default][totalHeight].  */
     var middleHeight = 0f
     /** Set the draw-time height of the three top edge patches  */
     var topHeight = 0f
@@ -75,13 +74,13 @@ class NinePatch {
             field.set(value)
         }
 
-    /** Returns the left padding if set, else returns [.getLeftWidth].  */
+    /** Returns the left padding if set, else returns [leftWidth].  */
     var padLeft = -1f
         get() = if (field == -1f) leftWidth else field
-    /** Returns the right padding if set, else returns [.getRightWidth].  */
+    /** Returns the right padding if set, else returns [rightWidth].  */
     var padRight = -1f
         get() = if (field == -1f) rightWidth else field
-    /** Returns the top padding if set, else returns [.getTopHeight].  */
+    /** Returns the top padding if set, else returns [topHeight].  */
     var padTop = -1f
         get() = if (field == -1f) topHeight else field
     var padBottom = -1f
@@ -171,7 +170,7 @@ class NinePatch {
 
     /** Construct a nine patch from the given nine texture regions. The provided patches must be consistently sized (e.g., any left
      * edge textures must have the same width, etc). Patches may be `null`. Patch indices are specified via the public
-     * members [.TOP_LEFT], [.TOP_CENTER], etc.  */
+     * members [TOP_LEFT], [TOP_CENTER], etc.  */
     constructor(vararg patches: TextureRegion?) {
         require(patches.size == 9) { "NinePatch needs nine TextureRegions" }
         load(arrayOf(*patches))
@@ -428,7 +427,7 @@ class NinePatch {
         const val MIDDLE_CENTER = 4
         const val MIDDLE_RIGHT = 5
         const val BOTTOM_LEFT = 6
-        /** Indices for [.NinePatch] constructor  */
+        /** Indices for [NinePatch] constructor  */
         const val BOTTOM_CENTER = 7 // alphabetically first in javadoc
         const val BOTTOM_RIGHT = 8
         private val tmpDrawColor = Vec4()

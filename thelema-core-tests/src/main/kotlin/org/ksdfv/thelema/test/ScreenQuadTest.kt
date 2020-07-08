@@ -16,27 +16,35 @@
 
 package org.ksdfv.thelema.test
 
+import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.shader.Shader
-import org.intellij.lang.annotations.Language
 
 /** @author zeganstyl */
 object ScreenQuadTest: Test("Screen Quad") {
     override fun testMain() {
         @Language("GLSL")
         val shader = Shader(
-                vertCode = Shader.RenderTextureVertexShader,
-                fragCode = """
-varying vec2 v_texCoords;
+                vertCode = """
+attribute vec2 aPosition;
+attribute vec2 aUV;
+varying vec2 uv;
 
 void main() {
-    gl_FragColor = vec4(v_texCoords, 1.0, 1.0);
+    uv = aUV;
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+}""",
+                fragCode = """
+varying vec2 uv;
+
+void main() {
+    gl_FragColor = vec4(uv, 1.0, 1.0);
 }""")
 
         println(shader.sourceCode())
 
-        val screenQuad = ScreenQuad()
+        val screenQuad = ScreenQuad(aPositionName = "aPosition", aUVName = "aUV")
 
         GL.render {
             shader.bind()

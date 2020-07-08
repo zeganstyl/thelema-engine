@@ -32,15 +32,10 @@ interface IVertexBuffer {
         get() = if (attributes.bytesPerVertex > 0) bytes.size / attributes.bytesPerVertex else 0
         set(_) {}
 
-    /** @return the [VertexAttributes] as specified during construction.
-     */
-    var attributes: VertexAttributes
+    /** @return the [IVertexInput] as specified during construction. */
+    var attributes: IVertexInputs
 
-    /** Returns the underlying FloatBuffer and marks it as dirty, causing the buffer contents to be uploaded on the next call to
-     * bind. If you need immediate uploading use [.setVertices]; Any modifications made to the Buffer
-     * *after* the call to bind will not automatically be uploaded.
-     * @return the underlying FloatBuffer holding the vertex data.
-     */
+    /** Float buffer view of [bytes] */
     var floatBuffer: IFloatData
 
     var bytes: IByteData
@@ -61,7 +56,7 @@ interface IVertexBuffer {
 
     /** Sets the vertices of this VertexData, discarding the old vertex data. The count must equal the number of floats per vertex
      * times the number of vertices to be copied to this VertexData. The order of the vertex attributes must be the same as
-     * specified at construction time via [VertexAttributes].
+     * specified at construction time via [VertexInputs].
      *
      *
      * This can be called in between calls to bind and unbind. The vertex data will be updated instantly.
@@ -91,7 +86,7 @@ interface IVertexBuffer {
         /** Wrapper for [Build] */
         fun build(
             byteBuffer: IByteData,
-            attributes: VertexAttributes,
+            attributes: IVertexInputs,
             usage: Int = GL_STATIC_DRAW,
             initGpuObjects: Boolean = true
         ) = Build(byteBuffer, attributes, usage, initGpuObjects)
@@ -100,7 +95,7 @@ interface IVertexBuffer {
         @Deprecated("")
         fun build(
             data: FloatArray,
-            attributes: VertexAttributes,
+            attributes: IVertexInputs,
             usage: Int = GL_STATIC_DRAW,
             initGpuObjects: Boolean = true
         ): IVertexBuffer {
@@ -112,7 +107,7 @@ interface IVertexBuffer {
         /** Wrapper for [Build] */
         fun build(
             verticesNum: Int,
-            attributes: VertexAttributes,
+            attributes: IVertexInputs,
             usage: Int = GL_STATIC_DRAW,
             initGpuObjects: Boolean = true,
             context: IFloatData.() -> Unit
@@ -129,7 +124,7 @@ interface IVertexBuffer {
             initGpuObjects: Boolean = true,
             context: IFloatData.() -> Unit
         ): IVertexBuffer {
-            val attributes = VertexAttributes(VertexAttribute.Position)
+            val attributes = VertexInputs(IVertexInput.Position())
             val bytes = DATA.bytes(verticesNum * attributes.bytesPerVertex)
             context(bytes.floatView())
             return Build(bytes, attributes, usage, initGpuObjects)
@@ -142,10 +137,10 @@ interface IVertexBuffer {
             initGpuObjects: Boolean = true,
             context: IFloatData.() -> Unit
         ): IVertexBuffer {
-            val attributes = VertexAttributes(
-                VertexAttribute.Position,
-                VertexAttribute.UV[0],
-                VertexAttribute.Normal
+            val attributes = VertexInputs(
+                IVertexInput.Position(),
+                IVertexInput.UV(0),
+                IVertexInput.Normal()
             )
             val bytes = DATA.bytes(verticesNum * attributes.bytesPerVertex)
             context(bytes.floatView())
@@ -155,11 +150,11 @@ interface IVertexBuffer {
         /** Default builder */
         var Build: (
             data: IByteData,
-            attributes: VertexAttributes,
+            attributes: IVertexInputs,
             usage: Int,
             initGpuObjects: Boolean
         ) -> IVertexBuffer = { data, attributes, usage, initGpuObjects ->
-            VertexArrayObject(attributes, data, usage, initGpuObjects)
+            VertexBufferObject(attributes, data, usage, initGpuObjects)
         }
     }
 }

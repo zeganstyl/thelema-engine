@@ -100,7 +100,7 @@ class BoxMeshBuilder(
 
     private fun putV2(out: IFloatData, x: Float, y: Float, z: Float, u: Float, v: Float) {
         out.put(x * halfSizeX,  y * halfSizeY,  z * halfSizeZ)
-        if (textureCoordinates) out.put(u * textureCoordinatesScale, v * textureCoordinatesScale)
+        if (uv) out.put(u * uvScale, v * uvScale)
         if (normals) out.put(normal.x, normal.y, normal.z)
     }
 }

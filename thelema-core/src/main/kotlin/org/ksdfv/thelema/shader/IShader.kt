@@ -21,10 +21,18 @@ import org.ksdfv.thelema.g3d.IScene
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.math.*
 import org.ksdfv.thelema.mesh.IMesh
-import org.ksdfv.thelema.mesh.VertexAttributes
+import org.ksdfv.thelema.mesh.IVertexInputs
 
 /** @author zeganstyl */
 interface IShader {
+    /** GLSL version, by default is 110
+     * [OpenGL documentation](https://www.khronos.org/opengl/wiki/Core_Language_(GLSL)#Version) */
+    var version: Int
+
+    /** If profile is empty, Core profile will be used.
+     * [OpenGL documentation](https://www.khronos.org/opengl/wiki/OpenGL_Context#Context_types) */
+    var profile: String
+
     val vertCode: String
     val fragCode: String
 
@@ -39,7 +47,7 @@ interface IShader {
     val isCompiled: Boolean
 
     /** Key - vertex attribute id, value - location */
-    val attributeLocations: MutableMap<Int, Int>
+    val attributeLocations: MutableMap<String, Int>
 
     fun prepareSceneData(scene: IScene) {
         bind()
@@ -53,9 +61,9 @@ interface IShader {
         bind()
     }
 
-    fun setVertexAttributes(attributes: VertexAttributes) {
-        attributes.values.forEach {
-            val location = attributeLocations[it.id]
+    fun setVertexAttributes(attributes: IVertexInputs) {
+        attributes.forEach {
+            val location = attributeLocations[it.name]
             if (location != null) {
                 GL.glEnableVertexAttribArray(location)
                 GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, attributes.bytesPerVertex, it.byteOffset)

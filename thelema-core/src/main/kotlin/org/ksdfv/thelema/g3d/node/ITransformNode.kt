@@ -16,11 +16,11 @@
 
 package org.ksdfv.thelema.g3d.node
 
-import org.ksdfv.thelema.IPath
 import org.ksdfv.thelema.ext.traverseSafe
 import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.utils.IPath
 
-/** Spatial transform node. Node may contain children and form a hierarchy tree of nodes.
+/** Spatial transform node. Node may contain children and forms a tree of nodes.
  * Node may contain any transform data, depended on [nodeType].
  * Nodes with less data, may be more optimal in calculations and memory consumption.
  * @author zeganstyl */
@@ -92,7 +92,7 @@ interface ITransformNode: IPath {
 
     fun getPosition(out: IVec3 = tmp, isLocal: Boolean = false): IVec3 = out.set(position)
     
-    fun getWorldMatrix(out: IMat4 = tmpM, isLocal: Boolean = false): IMat4 = out
+    fun getWorldMatrix(out: IMat4 = tmpM, isLocal: Boolean = false): IMat4 = out.set(worldMatrix)
 
     /** Squared distance to position. By default in global world space */
     fun dst2(node: ITransformNode, isLocal: Boolean = false): Float = getPosition(
@@ -127,7 +127,8 @@ interface ITransformNode: IPath {
         /** Default implementation for this interface */
         var Build: () -> ITransformNode = { Node() }
 
-        val Default = Node().apply { name = "Default" }
+        /** It may be used to set unused variables */
+        val Cap = AdapterTransformNode()
 
         private val tmp = Vec3()
         private val tmp2 = Vec3()

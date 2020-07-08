@@ -16,47 +16,78 @@
 
 package org.ksdfv.thelema.mesh
 
-import org.ksdfv.thelema.IFrameBuffer
+import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.data.DATA
-import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_TRIANGLE_FAN
+import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.shader.Shader
+import org.ksdfv.thelema.texture.IFrameBuffer
 import org.ksdfv.thelema.texture.ITexture
 
 /** @author zeganstyl */
 open class ScreenQuad(
-        x: Float = 0f,
-        y: Float = 0f,
-        width: Float = 1f,
-        height: Float = 1f): IScreenQuad {
+    x: Float = 0f,
+    y: Float = 0f,
+    width: Float = 1f,
+    height: Float = 1f,
+    aPositionName: String = "aPosition",
+    aUVName: String = "aUV"
+): IScreenQuad {
     override val mesh: IMesh = IMesh.Build().apply {
         primitiveType = GL_TRIANGLE_FAN
-        vertices = IVertexBuffer.build(
-            DATA.bytes(20 * 4).apply {
+
+        val vertexInputs = VertexInputs(
+            VertexInput(2, aPositionName, GL_FLOAT, true),
+            VertexInput(2, aUVName, GL_FLOAT, true)
+        )
+
+        vertices = IVertexBuffer.Build(
+            DATA.bytes(16 * 4).apply {
                 floatView().apply {
                     // x, y, z,   u, v
-                    put(x + -width, y + -height, 0f, 0f, 0f)
-                    put(x + width, y + -height, 0f, 1f, 0f)
-                    put(x + width, y + height, 0f, 1f, 1f)
-                    put(x + -width, y + height, 0f, 0f, 1f)
+                    put(x + -width, y + -height,  0f, 0f)
+                    put(x + width, y + -height,  1f, 0f)
+                    put(x + width, y + height,  1f, 1f)
+                    put(x + -width, y + height,  0f, 1f)
                 }
             },
-            VertexAttributes(VertexAttribute.Position, VertexAttribute.UV[0])
+            vertexInputs,
+            GL_STATIC_DRAW,
+            true
         )
     }
 
     /** Shader just repeats all texture */
     class TextureRenderer(
-            x: Float = 0f,
-            y: Float = 0f,
-            width: Float = 1f,
-            height: Float = 1f
-    ) : ScreenQuad(x, y, width, height) {
+        x: Float = 0f,
+        y: Float = 0f,
+        width: Float = 1f,
+        height: Float = 1f,
+        aPositionName: String = "aPosition",
+        aUVName: String = "aUV"
+    ) : ScreenQuad(x, y, width, height, aPositionName, aUVName) {
+
+        @Language("GLSL")
         val shader = Shader(
-                vertCode = RenderTextureOnScreenPartVertexShader,
-                fragCode = Shader.RenderTextureFragmentShader)
+                vertCode = """
+attribute vec2 $aPositionName;
+attribute vec2 $aUVName;
+
+uniform vec2 translation;
+uniform vec2 scale;
+varying vec2 uv;
+
+void main() {
+    uv = $aUVName;
+    gl_Position = vec4(translation.x + $aPositionName.x * scale.x, translation.y + $aPositionName.y * scale.y, 0.0, 1.0);
+}""",
+                fragCode = """            
+varying vec2 uv;
+uniform sampler2D tex;
+
+void main() {
+    gl_FragColor = texture2D(tex, uv);
+}""")
+
         var textureUnit = GL.grabTextureUnit()
             set(value) {
                 field = value
@@ -89,22 +120,6 @@ open class ScreenQuad(
         ) {
             texture.bind(textureUnit)
             render(shader, out, clearMask, set as IScreenQuad.() -> Unit)
-        }
-
-        companion object {
-            val RenderTextureOnScreenPartVertexShader = """
-                attribute vec4 a_position;
-                attribute vec2 a_texCoord0;
-                
-                uniform vec2 translation;
-                uniform vec2 scale;
-                varying vec2 v_texCoords;
-                
-                void main() {
-                    v_texCoords = a_texCoord0;
-                    gl_Position = vec4(translation.x + a_position.x * scale.x, translation.y + a_position.y * scale.y, a_position.z, a_position.w);
-                }
-            """.trimIndent()
         }
     }
 }

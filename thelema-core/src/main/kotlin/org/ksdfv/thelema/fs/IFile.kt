@@ -16,21 +16,17 @@
 
 package org.ksdfv.thelema.fs
 
-import org.ksdfv.thelema.StreamUtils
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.net.NET
+import org.ksdfv.thelema.utils.StreamUtils
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
 
-/** Represents a file or directory on the filesystem, classpath, Android SD card, or Android assets directory. FileHandles are
- * created via a [IFS] instance.
- *
- * Because some of the file types are backed by composite files and may be compressed (for example, if they are in an Android .apk
- * or are found via the classpath), the methods for extracting a [.path] or [.file] may not be appropriate for all
- * types. Use the Reader or Stream methods here to hide these dependencies from your platform independent code.
+/** Represents a file or directory on the filesystem, classpath, Android SD card, or Android assets directory.
+ * File may be created via [FS].
  *
  * @author mzechner, Nathan Sweet, zeganstyl
  */
@@ -121,7 +117,7 @@ interface IFile {
     /** Reads the entire file into the byte array. The byte array must be big enough to hold the file's data.
      * @param out the array to load the file into
      * @param offset the offset to start writing bytes
-     * @param size the number of bytes to read, see [.length]
+     * @param size the number of bytes to read, see [length]
      * @return the number of read bytes
      */
     fun readBytes(out: ByteArray, size: Int = out.size, offset: Int = 0, response: (status: Int, bytes: ByteArray) -> Unit = {_,_->}): Int {
@@ -239,10 +235,10 @@ interface IFile {
 
     /** Copies this file or directory to the specified file or directory. If this handle is a file, then 1) if the destination is a
      * file, it is overwritten, or 2) if the destination is a directory, this file is copied into it, or 3) if the destination
-     * doesn't exist, [.mkdirs] is called on the destination's parent and this file is copied into it with a new name. If
-     * this handle is a directory, then 1) if the destination is a file, GdxRuntimeException is thrown, or 2) if the destination is
+     * doesn't exist, [mkdirs] is called on the destination's parent and this file is copied into it with a new name. If
+     * this handle is a directory, then 1) if the destination is a file, RuntimeException is thrown, or 2) if the destination is
      * a directory, this directory is copied into it recursively, overwriting existing files, or 3) if the destination doesn't
-     * exist, [.mkdirs] is called on the destination and this directory is copied into it recursively.
+     * exist, [mkdirs] is called on the destination and this directory is copied into it recursively.
      * @throws RuntimeException if the destination file handle is a [FileLocation.Classpath] or [FileLocation.Internal]
      * file, or copying failed.
      */

@@ -197,22 +197,22 @@ object KB: IKB {
     const val F12 = 255
 
     val isLeftShiftPressed
-        get() = isKeyPressed(KB.SHIFT_LEFT)
+        get() = isKeyPressed(SHIFT_LEFT)
 
     val isShiftPressed
-        get() = isKeyPressed(KB.SHIFT_LEFT) || isKeyPressed(KB.SHIFT_RIGHT)
+        get() = isKeyPressed(SHIFT_LEFT) || isKeyPressed(SHIFT_RIGHT)
 
     val isLeftCtrlPressed
-        get() = isKeyPressed(KB.CONTROL_LEFT)
+        get() = isKeyPressed(CONTROL_LEFT)
 
     val isCtrlPressed
-        get() = isKeyPressed(KB.CONTROL_LEFT) || isKeyPressed(KB.CONTROL_RIGHT)
+        get() = isKeyPressed(CONTROL_LEFT) || isKeyPressed(CONTROL_RIGHT)
 
     val isLeftAltPressed
-        get() = isKeyPressed(KB.ALT_LEFT)
+        get() = isKeyPressed(ALT_LEFT)
 
     val isAltPressed
-        get() = isKeyPressed(KB.ALT_LEFT) || isKeyPressed(KB.ALT_RIGHT)
+        get() = isKeyPressed(ALT_LEFT) || isKeyPressed(ALT_RIGHT)
 
     fun toString(keycode: Int): String {
         require(keycode >= 0) { "keycode cannot be negative, keycode: $keycode" }

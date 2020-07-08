@@ -16,7 +16,6 @@
 
 package org.ksdfv.thelema.g3d
 
-import org.ksdfv.thelema.Blending
 import org.ksdfv.thelema.gl.GL_BACK
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.Vec4
@@ -24,26 +23,24 @@ import org.ksdfv.thelema.shader.IShader
 import org.ksdfv.thelema.shader.Shader
 
 /** @author zeganstyl */
-open class Material: IMaterial {
-    override var alphaCutoff = 0.5f
-    override var alphaMode: Int = Blending.Clip
-    override var cullFaceMode: Int = GL_BACK
+open class Material(
+    override var shader: Shader? = null,
 
-    override var translucentPriority: Int = 0
+    override var baseColor: IVec4 = Vec4(1f),
+    override var metallic: Float = 0f,
+    override var roughness: Float = 1f,
 
-    override var depthMask: Boolean = true
+    override var alphaCutoff: Float = 0.5f,
+    override var alphaMode: Int = Blending.Clip,
+    override var cullFaceMode: Int = GL_BACK,
 
-    override var name: String = ""
+    override var translucentPriority: Int = 0,
 
-    override var shader: Shader? = null
+    override var depthMask: Boolean = true,
 
-    override var metallic: Float = 0f
-
-    override var roughness: Float = 1f
-
-    override var baseColor: IVec4 = Vec4(1f)
+    override var name: String = "",
 
     override val shaderChannels: MutableMap<Int, IShader> = HashMap()
-
+): IMaterial {
     override fun copy(): IMaterial = Material().set(this)
 }

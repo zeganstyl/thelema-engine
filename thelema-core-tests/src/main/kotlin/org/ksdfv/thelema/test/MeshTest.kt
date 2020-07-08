@@ -16,19 +16,25 @@
 
 package org.ksdfv.thelema.test
 
+import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.gl.GL
+import org.ksdfv.thelema.gl.GL_FLOAT
 import org.ksdfv.thelema.gl.GL_UNSIGNED_SHORT
 import org.ksdfv.thelema.mesh.*
 import org.ksdfv.thelema.shader.Shader
-import org.intellij.lang.annotations.Language
 
 /** @author zeganstyl */
 object MeshTest: Test("Mesh") {
     override fun testMain() {
         val mesh = Mesh()
 
-        mesh.vertices = IVertexBuffer.build(DATA.bytes(20 * 4).apply {
+        val vertexInputs = VertexInputs(
+            VertexInput(3, "aPosition", GL_FLOAT, true),
+            VertexInput(2, "aUV", GL_FLOAT, true)
+        )
+
+        mesh.vertices = VertexBufferObject(vertexInputs, DATA.bytes(20 * 4).apply {
             floatView().apply {
                 // x, y, z,   u, v
                 put(-1f, -1f, 0f,   0f, 0f)
@@ -36,7 +42,7 @@ object MeshTest: Test("Mesh") {
                 put(1f, 1f, 0f,   1f, 1f)
                 put(-1f, 1f, 0f,   0f, 1f)
             }
-        }, VertexAttributes(VertexAttribute.Position, VertexAttribute.UV[0]))
+        })
 
         mesh.indices = IndexBufferObject(DATA.bytes(12).apply {
             shortView().apply {
@@ -48,19 +54,19 @@ object MeshTest: Test("Mesh") {
         @Language("GLSL")
         val shader = Shader(
                 vertCode = """          
-attribute vec4 a_position;
-attribute vec2 a_texCoord0;
-varying vec2 v_texCoords;
+attribute vec4 aPosition;
+attribute vec2 aUV;
+varying vec2 uv;
 
 void main() {
-    v_texCoords = a_texCoord0;
-    gl_Position = a_position;
+    uv = aUV;
+    gl_Position = aPosition;
 }""",
                 fragCode = """                
-varying vec2 v_texCoords;
+varying vec2 uv;
 
 void main() {
-    gl_FragColor = vec4(v_texCoords, 1, 1);
+    gl_FragColor = vec4(uv, 1, 1);
 }""")
 
         println(shader.sourceCode())

@@ -343,8 +343,7 @@ class Affine2 {
 
     /** Inverts this matrix given that the determinant is != 0.
      * @return This matrix for the purpose of chaining operations.
-     * @throws GdxRuntimeException if the matrix is singular (not invertible)
-     */
+     * @throws RuntimeException if the matrix is singular (not invertible) */
     fun inv(): Affine2 {
         val det = det()
         if (det == 0f) throw RuntimeException("Can't invert a singular affine matrix")

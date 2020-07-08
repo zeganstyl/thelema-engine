@@ -24,7 +24,6 @@ open class Vec2(
     override var y: Float = 0f
 ) : IVec2 {
     constructor(x: Double, y: Double): this(x.toFloat(), y.toFloat())
-    constructor(x: Float = 0f, y: Float = 0f, block: IVec2.() -> Unit): this(x, y) { block(this) }
 
     /** Constructs a vector from the given vector */
     constructor(other: IVec2): this(other.x, other.y)
