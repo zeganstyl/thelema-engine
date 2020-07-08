@@ -11,12 +11,12 @@ buildscript {
 }
 
 val thelemaGroup by extra("org.ksdfv.thelema")
-val thelemaVersion by extra("0.1.0")
+val thelemaVersion by extra("0.2.0")
 val gitRepositoryUrl by extra("https://github.com/zeganstyl/thelema-engine")
 
 allprojects {
     repositories {
-        mavenLocal()
         jcenter()
+        mavenLocal()
     }
 }
