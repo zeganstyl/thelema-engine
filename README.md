@@ -1,4 +1,4 @@
-![logo](images/thelema-logo-256.png)
+![logo](images/thelema-logo-128.png)
 ### Thelema Engine
 
 [ ![Download](https://api.bintray.com/packages/zeganstyl/thelema-engine/thelema-lwjgl3/images/download.svg) ](https://bintray.com/zeganstyl/thelema-engine/thelema-lwjgl3/_latestVersion)
