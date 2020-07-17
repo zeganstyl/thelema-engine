@@ -29,4 +29,5 @@ object ShaderChannel {
 
     val Default = newId()
     val Velocity = newId()
+    val Depth = newId()
 }

@@ -44,44 +44,12 @@ package org.ksdfv.thelema.audio
  */
 interface ISound {
     /** Plays the sound. If the sound is already playing, it will be played again, concurrently.
-     * @return the id of the sound instance if successful, or -1 on failure.
-     */
-    fun play(): Long
-
-    /** Plays the sound. If the sound is already playing, it will be played again, concurrently.
-     * @param volume the volume in the range `[0,1]`
-     * @return the id of the sound instance if successful, or -1 on failure.
-     */
-    fun play(volume: Float): Long
-
-    /** Plays the sound. If the sound is already playing, it will be played again, concurrently.
      * @param volume the volume in the range `[0,1]`
      * @param pitch the pitch multiplier, 1 == default, >1 == faster, <1 == slower, the value has to be between 0.5 and 2.0
      * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
      * @return the id of the sound instance if successful, or -1 on failure.
      */
-    fun play(volume: Float, pitch: Float, pan: Float): Long
-
-    /** Plays the sound, looping. If the sound is already playing, it will be played again, concurrently.
-     * @return the id of the sound instance if successful, or -1 on failure.
-     */
-    fun loop(): Long
-
-    /** Plays the sound, looping. If the sound is already playing, it will be played again, concurrently. You need to stop the sound
-     * via a call to [stop] using the returned id.
-     * @param volume the volume in the range `[0, 1]`
-     * @return the id of the sound instance if successful, or -1 on failure.
-     */
-    fun loop(volume: Float): Long
-
-    /** Plays the sound, looping. If the sound is already playing, it will be played again, concurrently. You need to stop the sound
-     * via a call to [stop] using the returned id.
-     * @param volume the volume in the range `[0,1]`
-     * @param pitch the pitch multiplier, 1 == default, >1 == faster, <1 == slower, the value has to be between 0.5 and 2.0
-     * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
-     * @return the id of the sound instance if successful, or -1 on failure.
-     */
-    fun loop(volume: Float, pitch: Float, pan: Float): Long
+    fun play(volume: Float = 1f, pitch: Float = 0f, pan: Float = 0f, loop: Boolean = false): Int
 
     /** Stops playing all instances of this sound.  */
     fun stop()
@@ -92,51 +60,52 @@ interface ISound {
     /** Resumes all paused instances of this sound.  */
     fun resume()
 
-    /** Stops the sound instance with the given id as returned by [play] or [play]. If the sound is no longer
-     * playing, this has no effect.
+    /** Stops the sound instance with the given id.
+     * If the sound is no longer playing, this has no effect.
      * @param soundId the sound id
      */
-    fun stop(soundId: Long)
+    fun stop(soundId: Int)
 
-    /** Pauses the sound instance with the given id as returned by [play] or [play]. If the sound is no
-     * longer playing, this has no effect.
+    /** Pauses the sound instance with the given id.
+     * If the sound is no longer playing, this has no effect.
      * @param soundId the sound id
      */
-    fun pause(soundId: Long)
+    fun pause(soundId: Int)
 
-    /** Resumes the sound instance with the given id as returned by [play] or [play]. If the sound is not
-     * paused, this has no effect.
+    /** Resumes the sound instance with the given id.
+     * If the sound is not paused, this has no effect.
      * @param soundId the sound id
      */
-    fun resume(soundId: Long)
+    fun resume(soundId: Int)
 
-    /** Sets the sound instance with the given id to be looping. If the sound is no longer playing this has no effect.s
+    /** Sets the sound instance with the given id to be looping.
+     * If the sound is no longer playing this has no effect.s
      * @param soundId the sound id
      * @param looping whether to loop or not.
      */
-    fun setLooping(soundId: Long, looping: Boolean)
+    fun setLooping(soundId: Int, looping: Boolean)
 
-    /** Changes the pitch multiplier of the sound instance with the given id as returned by [play] or [play].
+    /** Changes the pitch multiplier of the sound instance with the given id.
      * If the sound is no longer playing, this has no effect.
      * @param soundId the sound id
      * @param pitch the pitch multiplier, 1 == default, >1 == faster, <1 == slower, the value has to be between 0.5 and 2.0
      */
-    fun setPitch(soundId: Long, pitch: Float)
+    fun setPitch(soundId: Int, pitch: Float)
 
-    /** Changes the volume of the sound instance with the given id as returned by [play] or [play]. If the
-     * sound is no longer playing, this has no effect.
+    /** Changes the volume of the sound instance with the given id.
+     * If the sound is no longer playing, this has no effect.
      * @param soundId the sound id
      * @param volume the volume in the range 0 (silent) to 1 (max volume).
      */
-    fun setVolume(soundId: Long, volume: Float)
+    fun setVolume(soundId: Int, volume: Float)
 
-    /** Sets the panning and volume of the sound instance with the given id as returned by [play] or [play].
-     * If the sound is no longer playing, this has no effect. Note that panning only works for mono sounds, not for stereo sounds!
+    /** Sets the panning and volume of the sound instance with the given id.
+     * If the sound is no longer playing, this has no effect.
+     * Note that panning only works for mono sounds, not for stereo sounds!
      * @param soundId the sound id
      * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
-     * @param volume the volume in the range `[0,1]`.
      */
-    fun setPan(soundId: Long, pan: Float, volume: Float)
+    fun setPan(soundId: Int, pan: Float)
 
-    fun dispose()
+    fun destroy()
 }

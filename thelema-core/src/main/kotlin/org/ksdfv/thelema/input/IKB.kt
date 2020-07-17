@@ -18,8 +18,22 @@ package org.ksdfv.thelema.input
 
 /** @author zeganstyl */
 interface IKB {
+    /** Is left or right shift key pressed */
+    val shift
+        get() = KB.isKeyPressed(KB.SHIFT_LEFT) || KB.isKeyPressed(KB.SHIFT_RIGHT)
+
+    /** Is left or right ctrl key pressed */
+    val ctrl
+        get() = KB.isKeyPressed(KB.CONTROL_LEFT) || KB.isKeyPressed(KB.CONTROL_RIGHT)
+
+    /** Is left or right alt key pressed */
+    val alt
+        get() = KB.isKeyPressed(KB.ALT_LEFT) || KB.isKeyPressed(KB.ALT_RIGHT)
+
     fun isKeyPressed(keycode: Int): Boolean
 
     fun addListener(listener: IKeyListener)
     fun removeListener(listener: IKeyListener)
+
+    fun clear()
 }

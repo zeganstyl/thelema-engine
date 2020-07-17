@@ -53,6 +53,9 @@ object ActiveCamera: ICamera {
     override val inverseViewProjectionMatrix: IMat4
         get() = api.inverseViewProjectionMatrix
 
+    override val frustum: Frustum
+        get() = api.frustum
+
     override var zoom: Float
         get() = api.zoom
         set(value) { api.zoom = value }
@@ -93,9 +96,9 @@ object ActiveCamera: ICamera {
         get() = api.isOrthographic
         set(value) { api.isOrthographic = value }
 
-    override var isCenterInPosition: Boolean
-        get() = api.isCenterInPosition
-        set(value) { api.isCenterInPosition = value }
+    override var isCentered: Boolean
+        get() = api.isCentered
+        set(value) { api.isCentered = value }
 
     override val worldMatrix: IMat4
         get() = api.worldMatrix

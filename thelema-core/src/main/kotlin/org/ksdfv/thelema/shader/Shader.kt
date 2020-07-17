@@ -20,6 +20,7 @@ import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
 open class Shader(
@@ -42,14 +43,8 @@ open class Shader(
     override val isCompiled: Boolean
         get() = isCompiledInternal
 
-    /** uniform lookup  */
-    val uniforms = HashMap<String, Int>()
-
-    /** attribute lookup  */
-    val attributes = HashMap<String, Int>()
-
-    /** Key - vertex attribute id, value - location */
-    override val attributeLocations = HashMap<String, Int>()
+    override val uniforms = HashMap<String, Int>()
+    override val attributes = HashMap<String, Int>()
 
     override var vertexShaderHandle: Int = 0
     override var fragmentShaderHandle: Int = 0
@@ -61,17 +56,29 @@ open class Shader(
         }
     }
 
+    override fun vertSourceCode(title: String, pad: Int): String =
+        numerateLines(title, getVersionStr() + defaultPrecision + vertCode, pad)
+
+    override fun fragSourceCode(title: String, pad: Int): String =
+        numerateLines(title, getVersionStr() + defaultPrecision + fragCode, pad)
+
+    private fun getVersionStr(): String = if (APP.platformType == APP.Desktop) {
+        if (profile.isNotEmpty()) {
+            "#version $version $profile\n"
+        } else {
+            "#version $version\n"
+        }
+    } else {
+        if (version < 330) "#version 100\n" else "#version 300 es\n"
+    }
+
     fun load(vertexShader: String, fragmentShader: String) {
-        val ver = if (version != 110) {
-            if (profile.isNotEmpty()) {
-                "#version $version $profile\n"
-            } else "#version $version\n"
-        } else ""
+        val ver = getVersionStr()
 
-        vertCode = ver + defaultPrecision + vertexShader
-        fragCode = ver + defaultPrecision + fragmentShader
+        val fullVertCode = ver + defaultPrecision + vertexShader
+        val fullFragCode = ver + defaultPrecision + fragmentShader
 
-        compileShaders(vertCode, fragCode)
+        compileShaders(fullVertCode, fullFragCode)
         if (isCompiled) {
             val params = IntArray(1)
             val type = IntArray(1)
@@ -80,17 +87,12 @@ open class Shader(
             GL.glGetProgramiv(this.handle, GL_ACTIVE_ATTRIBUTES, params)
             val numAttributes = params[0]
 
-            val attributeNames = Array(numAttributes) { "" }
-
             for (i in 0 until numAttributes) {
                 params[0] = 1
                 type[0] = 0
                 val name = GL.glGetActiveAttrib(this.handle, i, params, type)
                 val location = GL.glGetAttribLocation(this.handle, name)
                 attributes[name] = location
-                attributeNames[i] = name
-
-                attributeLocations[name] = location
             }
 
             // uniforms
@@ -106,8 +108,13 @@ open class Shader(
                 uniforms[name] = location
             }
         } else {
-            println("==== Errors in shader \"$name\" ====")
-            println(log)
+            if (name.isNotEmpty()) {
+                LOG.info("==== Errors in shader \"$name\" ====")
+            } else {
+                LOG.info("==== Errors in shader ====")
+            }
+            LOG.info(log)
+            LOG.info(sourceCode())
         }
     }
 
@@ -135,26 +142,35 @@ open class Shader(
     }
 
     private fun loadShader(type: Int, source: String): Int {
-        val gl = GL
         val intbuf = IntArray(1)
 
-        val shader = gl.glCreateShader(type)
+        val shader = GL.glCreateShader(type)
+        // FIXME sometimes appear an error GL_INVALID_OPERATION
+        // println(GL.getErrorString(GL.glGetError()))
         if (shader == 0) return -1
 
-        gl.glShaderSource(shader, source)
-        gl.glCompileShader(shader)
-        gl.glGetShaderiv(shader, GL_COMPILE_STATUS, intbuf)
+        GL.glShaderSource(shader, source)
+        GL.glCompileShader(shader)
+        GL.glGetShaderiv(shader, GL_COMPILE_STATUS, intbuf)
 
         val compiled = intbuf[0]
         if (compiled == 0) {
             // gl.glGetShaderiv(shader, GL_INFO_LOG_LENGTH, intbuf);
             // int infoLogLength = intbuf.get(0);
             // if (infoLogLength > 1) {
-            val infoLog = gl.glGetShaderInfoLog(shader)
+            val infoLog = GL.glGetShaderInfoLog(shader)
             logInternal += if (type == GL_VERTEX_SHADER) "Vertex shader:\n" else "Fragment shader:\n"
             logInternal += infoLog
             // }
             return -1
+        }
+
+        if (showLogs) {
+            val logs = GL.glGetShaderInfoLog(shader)
+            if (logs.isNotEmpty()) {
+                LOG.info(if (type == GL_VERTEX_SHADER) "Vertex shader:\n" else "Fragment shader:\n")
+                LOG.info(logs)
+            }
         }
 
         return shader
@@ -172,6 +188,10 @@ open class Shader(
         GL.glAttachShader(program, fragmentShaderHandle)
         GL.glLinkProgram(program)
 
+        // https://www.khronos.org/opengl/wiki/Shader_Compilation#Cleanup
+        GL.glDetachShader(program, vertexShaderHandle)
+        GL.glDetachShader(program, fragmentShaderHandle)
+
         val tmp = IntArray(1)
 
         GL.glGetProgramiv(program, GL_LINK_STATUS, tmp)
@@ -186,6 +206,15 @@ open class Shader(
         }
 
         return program
+    }
+
+    override fun destroy() {
+        isCompiledInternal = false
+        logInternal = ""
+        vertexShaderHandle = 0
+        fragmentShaderHandle = 0
+        handle = 0
+        super.destroy()
     }
 
     private fun fetchAttributeLocation(name: String): Int {
@@ -320,7 +349,11 @@ open class Shader(
     /** Some cards/drivers have different behavior */
     fun getUniformArrayLocation(name: String, errorIfNotFound: Boolean = false): Int {
         val value = uniforms[name] ?: uniforms["$name[0]"]
-        if (errorIfNotFound && value == null) println("uniform \"$name\" is not found in shader \"$name\"")
+        if (errorIfNotFound && value == null) LOG.info("uniform \"$name\" is not found in shader \"$name\"")
         return value ?: -1
+    }
+
+    companion object {
+        var showLogs = false
     }
 }

@@ -1208,11 +1208,12 @@ interface IMat4 {
 
     fun project(vec: IVec3, out: IVec3): IVec3 {
         val invW = 1.0f / (vec.x * m30 + vec.y * m31 + vec.z * m32 + m33)
-        return out.set(
+        tmpV1.set(
             (vec.x * m00 + vec.y * m01 + vec.z * m02 + m03) * invW,
             (vec.x * m10 + vec.y * m11 + vec.z * m12 + m13) * invW,
             (vec.x * m20 + vec.y * m21 + vec.z * m22 + m23) * invW
         )
+        return out.set(tmpV1)
     }
 
     /** @return True if this matrix has any rotation or scaling, false otherwise */
@@ -1374,38 +1375,6 @@ interface IMat4 {
             values[M32] = tmp2[M32] * invDet
             values[M33] = tmp2[M33] * invDet
             return true
-        }
-
-        /** Multiplies the vectors with the given matrix, , performing a division by w. The matrix array is assumed to hold a 4x4 column
-         * major matrix. The vectors array is assumed to hold 3-component vectors. Offset
-         * specifies the offset into the array where the x-component of the first vector is located. The numVecs parameter specifies
-         * the number of vectors stored in the vectors array. The stride parameter specifies the number of floats between subsequent
-         * vectors and must be >= 3. This is the same as [IVec3.prj] applied to multiple vectors.
-         *
-         * @param mat the matrix
-         * @param vecs the vectors
-         * @param offset the offset into the vectors array
-         * @param numVecs the number of vectors
-         * @param stride the stride between vectors in floats
-         */
-        fun prj(mat: FloatArray, vecs: FloatArray, offset: Int, numVecs: Int, stride: Int = 3) {
-            var vecPtr = offset
-            for (i in 0 until numVecs) {
-                matrix4_proj(mat, vecs, vecPtr)
-                vecPtr += stride
-            }
-        }
-
-        fun matrix4_proj(mat: FloatArray, vec: FloatArray, offset: Int) {
-            val index1 = offset+1
-            val index2 = offset+2
-            val invW = 1.0f / (vec[offset] * mat[M30] + vec[index1] * mat[M31] + vec[index2] * mat[M32] + mat[M33])
-            val x = (vec[offset] * mat[M00] + vec[index1] * mat[M01] + vec[index2] * mat[M02] + mat[M03]) * invW
-            val y = (vec[offset] * mat[M10] + vec[index1] * mat[M11] + vec[index2] * mat[M12] + mat[M13]) * invW
-            val z = (vec[offset] * mat[M20] + vec[index1] * mat[M21] + vec[index2] * mat[M22] + mat[M23]) * invW
-            vec[offset] = x
-            vec[index1] = y
-            vec[index2] = z
         }
     }
 }

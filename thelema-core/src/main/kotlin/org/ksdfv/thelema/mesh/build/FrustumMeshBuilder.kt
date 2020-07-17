@@ -18,13 +18,13 @@ package org.ksdfv.thelema.mesh.build
 
 import org.ksdfv.thelema.gl.GL_LINES
 import org.ksdfv.thelema.math.Frustum
+import org.ksdfv.thelema.math.IMat4
+import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.mesh.IMesh
 
 /** @author zeganstyl */
-class FrustumMeshBuilder(): MeshBuilder() {
-    constructor(block: FrustumMeshBuilder.() -> Unit): this() { block(this) }
-
-    lateinit var frustum: Frustum
+class FrustumMeshBuilder(var frustumPoints: List<IVec3>): MeshBuilder() {
+    constructor(inverseProjectionView: IMat4): this(Frustum(inverseProjectionView).points)
 
     override fun build(out: IMesh): IMesh {
         uv = false
@@ -35,10 +35,7 @@ class FrustumMeshBuilder(): MeshBuilder() {
         out.vertices = createVerticesFloat(8) {}
         out.indices = createIndicesShort(24) {}
 
-        updateMesh(
-            out,
-            frustum.nearFarPointsArray
-        )
+        updateMesh(out, frustumPoints)
 
         return super.build(out)
     }
@@ -47,11 +44,15 @@ class FrustumMeshBuilder(): MeshBuilder() {
         /** Mesh must have only position attribute,
          * vertices buffer with size = 8 and
          * short indices buffer with size = 24 */
-        fun updateMesh(out: IMesh, nearFarPointsArray: FloatArray) {
+        fun updateMesh(out: IMesh, frustumPoints: List<IVec3>) {
             out.vertices?.apply {
                 bytes.floatView().apply {
-                    for (i in nearFarPointsArray.indices) {
-                        put(i, nearFarPointsArray[i])
+                    position = 0
+                    for (i in frustumPoints.indices) {
+                        val p = frustumPoints[i]
+                        put(p.x)
+                        put(p.y)
+                        put(p.z)
                     }
                 }
             }

@@ -38,13 +38,13 @@ class MockMusic : IMusic {
         get() = 0f
         set(_) = Unit
 
-    override fun setPan(pan: Float, volume: Float) {}
+    override fun setPan(pan: Float) {}
 
     override var position: Float
         get() = 0f
         set(_) = Unit
 
-    override fun dispose() {}
+    override fun destroy() {}
 
     override var onCompletionListener: IMusic.OnCompletionListener?
         get() = null

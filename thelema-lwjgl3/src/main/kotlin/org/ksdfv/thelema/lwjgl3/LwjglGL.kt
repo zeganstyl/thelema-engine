@@ -19,10 +19,8 @@ package org.ksdfv.thelema.lwjgl3
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
-import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
-import org.ksdfv.thelema.gl.GL_UNSIGNED_INT
-import org.ksdfv.thelema.gl.GL_UNSIGNED_SHORT
-import org.ksdfv.thelema.gl.IGL
+import org.ksdfv.thelema.gl.*
+import org.ksdfv.thelema.gl.GL
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.*
@@ -31,9 +29,34 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 class LwjglGL: IGL {
+    override var mainFrameBufferWidth: Int = 0
+    override var mainFrameBufferHeight: Int = 0
+
     private var buffer: ByteBuffer? = null
     private var floatBuffer: FloatBuffer? = null
     private var intBuffer: IntBuffer? = null
+
+    override val mainFrameBufferHandle: Int
+        get() = 0
+    override var majVer: Int = 0
+    override var minVer: Int = 0
+    override var relVer: Int = 0
+    override var glslVer: Int = 0
+
+    override fun initGL() {
+        val verStr = GL.glGetString(GL_VERSION)!!
+        val spaceSplit = verStr.split("\\s+".toRegex())
+        val dotSplit = spaceSplit[0].split('.')
+        majVer = dotSplit[0].toInt()
+        minVer = dotSplit[1].toInt()
+        relVer = dotSplit.getOrNull(2)?.toInt() ?: 0
+
+        val glslVerStr = GL.glGetString(GL_SHADING_LANGUAGE_VERSION)!!
+        val glslSpaceSplit = glslVerStr.split("\\s+".toRegex())
+        val glslDotSplit = glslSpaceSplit[0].split('.')
+        glslVer = glslDotSplit[0].toInt() * 100 + glslDotSplit[1].toInt()
+    }
+
     private fun ensureBufferCapacity(numBytes: Int) {
         var buffer = buffer
         if (buffer == null || buffer.capacity() < numBytes) {
@@ -63,6 +86,11 @@ class LwjglGL: IGL {
     }
 
     override fun isExtensionSupported(extension: String) = GLFW.glfwExtensionSupported(extension)
+
+    override fun enableExtension(extension: String): Boolean {
+        // TODO
+        return true
+    }
 
     override fun glActiveTexture(texture: Int) {
         GL13.glActiveTexture(texture)

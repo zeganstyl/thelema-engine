@@ -36,9 +36,9 @@ import java.nio.IntBuffer
 class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int = 9, private val deviceBufferSize: Int = 512) : IAL {
     private val idleSources = ArrayList<Int>()
     private val allSources = ArrayList<Int>()
-    private val soundIdToSource = HashMap<Long, Int>()
-    private val sourceToSoundId = HashMap<Int, Long>()
-    private var nextSoundId: Long = 0
+    private val soundIdToSource = HashMap<Int, Int>()
+    private val sourceToSoundId = HashMap<Int, Int>()
+    private var nextSoundId: Int = 0
     private val recentSounds = ArrayList<OpenALSound?>()
     private var mostRecentSound = -1
     var music: ArrayList<OpenALMusic> = ArrayList()
@@ -177,52 +177,51 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         for (i in 0 until music.size) music[i].update()
     }
 
-    fun getSoundId(sourceId: Int): Long {
+    fun getSoundId(sourceId: Int): Int {
         return if (!sourceToSoundId.containsKey(sourceId)) -1 else sourceToSoundId[sourceId]!!
     }
 
-    fun stopSound(soundId: Long) {
+    fun stopSound(soundId: Int) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]!!
         AL10.alSourceStop(sourceId)
     }
 
-    fun pauseSound(soundId: Long) {
+    fun pauseSound(soundId: Int) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]!!
         AL10.alSourcePause(sourceId)
     }
 
-    fun resumeSound(soundId: Long) {
+    fun resumeSound(soundId: Int) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]
         if (AL10.alGetSourcei(sourceId!!, AL10.AL_SOURCE_STATE) == AL10.AL_PAUSED) AL10.alSourcePlay(sourceId)
     }
 
-    fun setSoundGain(soundId: Long, volume: Float) {
+    fun setSoundGain(soundId: Int, volume: Float) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]
         AL10.alSourcef(sourceId!!, AL10.AL_GAIN, volume)
     }
 
-    fun setSoundLooping(soundId: Long, looping: Boolean) {
+    fun setSoundLooping(soundId: Int, looping: Boolean) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]
         AL10.alSourcei(sourceId!!, AL10.AL_LOOPING, if (looping) AL10.AL_TRUE else AL10.AL_FALSE)
     }
 
-    fun setSoundPitch(soundId: Long, pitch: Float) {
+    fun setSoundPitch(soundId: Int, pitch: Float) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]
         AL10.alSourcef(sourceId!!, AL10.AL_PITCH, pitch)
     }
 
-    fun setSoundPan(soundId: Long, pan: Float, volume: Float) {
+    fun setSoundPan(soundId: Int, pan: Float) {
         if (!soundIdToSource.containsKey(soundId)) return
         val sourceId = soundIdToSource[soundId]
         AL10.alSource3f(sourceId!!, AL10.AL_POSITION, MATH.cos((pan - 1) * MATH.PI / 2), 0f,
                 MATH.sin((pan + 1) * MATH.PI / 2))
-        AL10.alSourcef(sourceId, AL10.AL_GAIN, volume)
     }
 
     override fun destroy() {
@@ -242,20 +241,17 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         ALC10.alcCloseDevice(device)
     }
 
-    override fun newAudioDevice(samplingRate: Int, isMono: Boolean): IAudioDevice {
+    override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice {
         return if (noDevice) object : IAudioDevice {
+            override val channelsNum: Int
+                get() = channelsNum
+
             override fun writeSamples(samples: FloatArray, offset: Int, numSamples: Int) {}
             override fun writeSamples(samples: ShortArray, offset: Int, numSamples: Int) {}
             override fun setVolume(volume: Float) {}
 
-            override val isMono: Boolean
-                get() = isMono
-
-            override val latency: Int
-                get() = 0
-
-            override fun dispose() {}
-        } else OpenALAudioDevice(this, samplingRate, isMono, deviceBufferSize, deviceBufferCount)
+            override fun destroy() {}
+        } else OpenALAudioDevice(this, samplingRate, channelsNum, deviceBufferSize, deviceBufferCount)
     }
 
     override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder {

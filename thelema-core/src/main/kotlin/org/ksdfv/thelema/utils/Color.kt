@@ -20,100 +20,67 @@ import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.Vec4
 
 object Color {
-    private val tmp = Vec4()
-
     fun int(rgba8888: Int): IVec4 {
-        tmp.r = (rgba8888 and -0x1000000 ushr 24) / 255f
-        tmp.g = (rgba8888 and 0x00ff0000 ushr 16) / 255f
-        tmp.b = (rgba8888 and 0x0000ff00 ushr 8) / 255f
-        tmp.a = (rgba8888 and 0x000000ff) / 255f
-        return tmp
+        val newVec = Vec4()
+        newVec.r = (rgba8888 and -0x1000000 ushr 24) / 255f
+        newVec.g = (rgba8888 and 0x00ff0000 ushr 16) / 255f
+        newVec.b = (rgba8888 and 0x0000ff00 ushr 8) / 255f
+        newVec.a = (rgba8888 and 0x000000ff) / 255f
+        return newVec
     }
 
     fun int(r: Int, g: Int, b: Int, a: Int = 255): IVec4 =
-        tmp.set(r.toFloat() / 255, g.toFloat() / 255, b.toFloat() / 255, a.toFloat() / 255)
+        Vec4(r.toFloat() / 255, g.toFloat() / 255, b.toFloat() / 255, a.toFloat() / 255)
 
-    fun float(r: Float, g: Float, b: Float, a: Float = 1f): IVec4 = tmp.set(r, g, b, a)
+    fun float(r: Float, g: Float, b: Float, a: Float = 1f): IVec4 = Vec4(r, g, b, a)
 
     /** Returns color from a hex string with the format RRGGBBAA. */
     fun hex(hex: String): IVec4 {
         var hex = hex
         hex = if (hex[0] == '#') hex.substring(1) else hex
-        tmp.r = hex.substring(0, 2).toInt(16) / 255f
-        tmp.g = hex.substring(2, 4).toInt(16) / 255f
-        tmp.b = hex.substring(4, 6).toInt(16) / 255f
-        tmp.a = if (hex.length != 8) 1f else hex.substring(6, 8).toInt(16) / 255f
-        return tmp
+        val newVec = Vec4()
+        newVec.r = hex.substring(0, 2).toInt(16) / 255f
+        newVec.g = hex.substring(2, 4).toInt(16) / 255f
+        newVec.b = hex.substring(4, 6).toInt(16) / 255f
+        newVec.a = if (hex.length != 8) 1f else hex.substring(6, 8).toInt(16) / 255f
+        return newVec
     }
 
     val WHITE
         get() = IVec4.One
-    val LIGHT_GRAY
-        get() = int(-0x40404001)
-    val GRAY
-        get() = int(0x7f7f7fff)
-    val DARK_GRAY
-        get() = int(0x3f3f3fff)
-    val BLACK
-        get() = float(0f, 0f, 0f, 1f)
-    val CLEAR
-        get() = IVec4.Zero
-    val BLUE
-        get() = int(0, 0, 255)
-    val NAVY
-        get() = int(0, 0, 128)
-    val ROYAL
-        get() = int(0x4169e1ff)
-    val SLATE
-        get() = int(0x708090ff)
-    val SKY
-        get() = int(-0x78311401)
-    val CYAN
-        get() = Vec4(0f, 1f, 1f, 1f)
-    val TEAL
-        get() = Vec4(0f, 0.5f, 0.5f, 1f)
-    val GREEN
-        get() = int(0x00ff00ff)
-    val CHARTREUSE
-        get() = float(0.5f, 1f, 0f)
-    val LIME
-        get() = int(0x32cd32ff)
-    val FOREST
-        get() = int(0x228b22ff)
-    val OLIVE
-        get() = int(0x6b8e23ff)
-    val YELLOW
-        get() = int(-0xff01)
-    val GOLD
-        get() = int(-0x28ff01)
-    val GOLDENROD
-        get() = int(-0x255adf01)
-    val ORANGE
-        get() = int(255, 128, 0)
-    val BROWN
-        get() = int(-0x74baec01)
-    val TAN
-        get() = int(-0x2d4b7301)
-    val FIREBRICK
-        get() = int(-0x4ddddd01)
-    val RED
-        get() = int(255, 0, 0)
-    val SCARLET
-        get() = int(255, 36, 0)
-    val CORAL
-        get() = int(-0x80af01)
-    val SALMON
-        get() = int(-0x57f8d01)
-    val PINK
-        get() = int(-0x964b01)
-    val MAGENTA
-        get() = Vec4(1f, 0f, 1f, 1f)
-    val PURPLE
-        get() = int(-0x5fdf0f01)
-    val VIOLET
-        get() = int(-0x117d1101)
-    val MAROON
-        get() = int(-0x4fcf9f01)
+    val LIGHT_GRAY = int(-0x40404001)
+    val GRAY = int(0x7f7f7fff)
+    val DARK_GRAY = int(0x3f3f3fff)
+    val BLACK = float(0f, 0f, 0f, 1f)
+    val CLEAR = IVec4.Zero
+    val BLUE = int(0, 0, 255)
+    val NAVY = int(0, 0, 128)
+    val ROYAL = int(0x4169e1ff)
+    val SLATE = int(0x708090ff)
+    val SKY = int(-0x78311401)
+    val CYAN = Vec4(0f, 1f, 1f, 1f)
+    val TEAL = Vec4(0f, 0.5f, 0.5f, 1f)
+    val GREEN = int(0x00ff00ff)
+    val CHARTREUSE = float(0.5f, 1f, 0f)
+    val LIME = int(0x32cd32ff)
+    val FOREST = int(0x228b22ff)
+    val OLIVE = int(0x6b8e23ff)
+    val YELLOW = int(-0xff01)
+    val GOLD = int(-0x28ff01)
+    val GOLDENROD = int(-0x255adf01)
+    val ORANGE = int(255, 128, 0)
+    val BROWN = int(-0x74baec01)
+    val TAN = int(-0x2d4b7301)
+    val FIREBRICK = int(-0x4ddddd01)
+    val RED = int(255, 0, 0)
+    val SCARLET = int(255, 36, 0)
+    val CORAL = int(-0x80af01)
+    val SALMON = int(-0x57f8d01)
+    val PINK = int(-0x964b01)
+    val MAGENTA = Vec4(1f, 0f, 1f, 1f)
+    val PURPLE = int(-0x5fdf0f01)
+    val VIOLET = int(-0x117d1101)
+    val MAROON = int(-0x4fcf9f01)
 
     /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float. Note that no range
      * checking is performed for higher performance.

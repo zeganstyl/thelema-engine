@@ -16,14 +16,15 @@
 
 package org.ksdfv.thelema.texture
 
+import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.img.IImage
 import org.ksdfv.thelema.img.IMG
-import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.net.NET
+import org.ksdfv.thelema.utils.LOG
 
 /**
  * @author zeganstyl */
-class TextureCube: Texture(GL_TEXTURE_CUBE_MAP) {
+class TextureCube(override var glHandle: Int = GL.glGenTexture()): Texture(GL_TEXTURE_CUBE_MAP) {
     override var width: Int = 0
 
     override var height: Int = 0
@@ -122,7 +123,7 @@ class TextureCube: Texture(GL_TEXTURE_CUBE_MAP) {
                     image
                 )
             } else {
-                println("can't read $url, status $status")
+                LOG.info("can't read $url, status $status")
             }
         }
     }

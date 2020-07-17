@@ -17,15 +17,20 @@
 package org.ksdfv.thelema.test
 
 import org.ksdfv.thelema.gl.GL
+import org.ksdfv.thelema.gl.GL_LINEAR
 import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.texture.Texture2D
 
 /** @author zeganstyl */
-object Texture2DTest: Test("Texture 2D") {
+class Texture2DTest: Test("Texture 2D") {
     override fun testMain() {
         val screenQuad = ScreenQuad.TextureRenderer()
 
-        val texture = Texture2D("engineIcon.png")
+        val texture = Texture2D(
+            url = "thelema-logo.png",
+            minFilter = GL_LINEAR,
+            magFilter = GL_LINEAR
+        )
 
         GL.render {
             screenQuad.render(texture)

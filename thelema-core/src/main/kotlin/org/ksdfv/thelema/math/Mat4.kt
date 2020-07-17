@@ -28,23 +28,11 @@ open class Mat4: IMat4 {
         m33 = 1f
     }
 
-    /** Copies values from other matrix. */
-    constructor(other: IMat4) {
-        this.set(other)
-    }
-
     /** Constructs a matrix from the given float array. The array must have at least 16 elements; the first 16 will be copied.
      * @param values The float array to copy. Remember that this matrix is in [column major](http://en.wikipedia.org/wiki/Row-major_order) order. (The float array is not modified)
      */
     constructor(values: FloatArray) {
         set(values)
-    }
-
-    /** Constructs a rotation matrix from the given [IVec4].
-     * @param quaternion The quaternion to be copied. (The quaternion is not modified)
-     */
-    constructor(quaternion: IVec4) {
-        setFromQuaternion(quaternion)
     }
 
     /** Construct a matrix from the given translation, rotation and scale.

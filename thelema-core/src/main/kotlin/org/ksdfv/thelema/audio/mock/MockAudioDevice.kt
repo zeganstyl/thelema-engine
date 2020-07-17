@@ -23,15 +23,12 @@ import org.ksdfv.thelema.audio.IAudioDevice
  * server and client as simple as possible.
  */
 class MockAudioDevice : IAudioDevice {
-    override val isMono: Boolean
-        get() = false
+    override val channelsNum: Int
+        get() = 0
 
     override fun writeSamples(samples: ShortArray, offset: Int, numSamples: Int) = Unit
     override fun writeSamples(samples: FloatArray, offset: Int, numSamples: Int) = Unit
 
-    override val latency: Int
-        get() = 0
-
-    override fun dispose() = Unit
+    override fun destroy() = Unit
     override fun setVolume(volume: Float) = Unit
 }

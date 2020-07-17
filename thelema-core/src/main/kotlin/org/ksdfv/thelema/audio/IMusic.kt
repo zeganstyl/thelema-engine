@@ -20,7 +20,7 @@ package org.ksdfv.thelema.audio
  *
  *
  * A Music instance represents a streamed audio file. The interface supports pausing, resuming
- * and so on. When you are done with using the Music instance you have to dispose it via the [dispose] method.
+ * and so on. When you are done with using the Music instance you have to dispose it via the [destroy] method.
  *
  * Music instances are created via [AL.newMusic].
  *
@@ -54,16 +54,15 @@ interface IMusic {
 
     /** Sets the panning and volume of this music stream.
      * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
-     * @param volume the volume in the range `[0,1]`.
      */
-    fun setPan(pan: Float, volume: Float)
+    fun setPan(pan: Float)
 
     /** Returns the playback position in seconds.  */
     /** Set the playback position in seconds.  */
     var position: Float
 
     /** Needs to be called when the Music is no longer needed.  */
-    fun dispose()
+    fun destroy()
 
     /** Register a callback to be invoked when the end of a music stream has been reached during playback. */
     var onCompletionListener: OnCompletionListener?

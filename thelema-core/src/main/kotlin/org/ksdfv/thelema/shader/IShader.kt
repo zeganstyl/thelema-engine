@@ -33,7 +33,10 @@ interface IShader {
      * [OpenGL documentation](https://www.khronos.org/opengl/wiki/OpenGL_Context#Context_types) */
     var profile: String
 
+    /** User's vertex shader code. It must not include version directive. */
     val vertCode: String
+
+    /** User's fragment shader code. It must not include version directive. */
     val fragCode: String
 
     var vertexShaderHandle: Int
@@ -46,8 +49,11 @@ interface IShader {
     /** whether this program compiled successfully  */
     val isCompiled: Boolean
 
-    /** Key - vertex attribute id, value - location */
-    val attributeLocations: MutableMap<String, Int>
+    /** Uniform lookup. Key - uniform name, value - location */
+    val uniforms: MutableMap<String, Int>
+
+    /** Attribute lookup. Key - vertex attribute name, value - location */
+    val attributes: MutableMap<String, Int>
 
     fun prepareSceneData(scene: IScene) {
         bind()
@@ -63,7 +69,7 @@ interface IShader {
 
     fun setVertexAttributes(attributes: IVertexInputs) {
         attributes.forEach {
-            val location = attributeLocations[it.name]
+            val location = this.attributes[it.name]
             if (location != null) {
                 GL.glEnableVertexAttribArray(location)
                 GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, attributes.bytesPerVertex, it.byteOffset)
@@ -167,5 +173,8 @@ interface IShader {
         GL.glDeleteShader(vertexShaderHandle)
         GL.glDeleteShader(fragmentShaderHandle)
         GL.glDeleteProgram(this.handle)
+
+        attributes.clear()
+        uniforms.clear()
     }
 }

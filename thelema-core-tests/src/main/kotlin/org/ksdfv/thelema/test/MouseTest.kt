@@ -18,29 +18,30 @@ package org.ksdfv.thelema.test
 
 import org.ksdfv.thelema.input.IMouseListener
 import org.ksdfv.thelema.input.MOUSE
+import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-object MouseTest: Test("Mouse") {
+class MouseTest: Test("Mouse") {
     override fun testMain() {
         MOUSE.addListener(object: IMouseListener {
             override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-                println("buttonDown: $button")
+                LOG.info("buttonDown: $button")
             }
 
             override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-                println("buttonUp: $button")
+                LOG.info("buttonUp: $button")
             }
 
             override fun dragged(screenX: Int, screenY: Int, pointer: Int) {
-                println("dragged: $screenX, $screenY")
+                LOG.info("dragged: $screenX, $screenY")
             }
 
             override fun moved(screenX: Int, screenY: Int) {
-                println("moved: $screenX, $screenY")
+                LOG.info("moved: $screenX, $screenY")
             }
 
             override fun scrolled(amount: Int) {
-                println("scrolled: $amount")
+                LOG.info("scrolled: $amount")
             }
         })
     }

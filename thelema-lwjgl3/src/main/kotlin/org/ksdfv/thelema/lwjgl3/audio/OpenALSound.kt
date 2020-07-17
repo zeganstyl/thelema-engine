@@ -26,7 +26,8 @@ import java.nio.ByteOrder
  */
 abstract class OpenALSound(private val audio: OpenAL) : ISound {
     private var bufferID = -1
-    private var duration = 0f
+    var duration = 0f
+        private set
 
     fun setup(pcm: ByteArray, channels: Int, sampleRate: Int) {
         val bytes = pcm.size - pcm.size % if (channels > 1) 4 else 2
@@ -42,11 +43,7 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         }
     }
 
-    override fun play(): Long {
-        return play(1f)
-    }
-
-    override fun play(volume: Float): Long {
+    override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int {
         if (audio.noDevice) return 0
         var sourceID = audio.obtainSource(false)
         if (sourceID == -1) { // Attempt to recover by stopping the least recently played sound
@@ -57,24 +54,10 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         if (sourceID == -1) return -1
         val soundId = audio.getSoundId(sourceID)
         AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
-        AL10.alSourcei(sourceID, AL10.AL_LOOPING, AL10.AL_FALSE)
+        AL10.alSourcei(sourceID, AL10.AL_LOOPING, if (loop) AL10.AL_TRUE else AL10.AL_FALSE)
         AL10.alSourcef(sourceID, AL10.AL_GAIN, volume)
-        AL10.alSourcePlay(sourceID)
-        return soundId
-    }
-
-    override fun loop(): Long {
-        return loop(1f)
-    }
-
-    override fun loop(volume: Float): Long {
-        if (audio.noDevice) return 0
-        val sourceID = audio.obtainSource(false)
-        if (sourceID == -1) return -1
-        val soundId = audio.getSoundId(sourceID)
-        AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
-        AL10.alSourcei(sourceID, AL10.AL_LOOPING, AL10.AL_TRUE)
-        AL10.alSourcef(sourceID, AL10.AL_GAIN, volume)
+        setPitch(soundId, pitch)
+        setPan(soundId, pan)
         AL10.alSourcePlay(sourceID)
         return soundId
     }
@@ -84,7 +67,7 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         audio.stopSourcesWithBuffer(bufferID)
     }
 
-    override fun dispose() {
+    override fun destroy() {
         if (audio.noDevice) return
         if (bufferID == -1) return
         audio.freeBuffer(bufferID)
@@ -93,7 +76,7 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         audio.forget(this)
     }
 
-    override fun stop(soundId: Long) {
+    override fun stop(soundId: Int) {
         if (audio.noDevice) return
         audio.stopSound(soundId)
     }
@@ -103,7 +86,7 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         audio.pauseSourcesWithBuffer(bufferID)
     }
 
-    override fun pause(soundId: Long) {
+    override fun pause(soundId: Int) {
         if (audio.noDevice) return
         audio.pauseSound(soundId)
     }
@@ -113,48 +96,28 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         audio.resumeSourcesWithBuffer(bufferID)
     }
 
-    override fun resume(soundId: Long) {
+    override fun resume(soundId: Int) {
         if (audio.noDevice) return
         audio.resumeSound(soundId)
     }
 
-    override fun setPitch(soundId: Long, pitch: Float) {
+    override fun setPitch(soundId: Int, pitch: Float) {
         if (audio.noDevice) return
         audio.setSoundPitch(soundId, pitch)
     }
 
-    override fun setVolume(soundId: Long, volume: Float) {
+    override fun setVolume(soundId: Int, volume: Float) {
         if (audio.noDevice) return
         audio.setSoundGain(soundId, volume)
     }
 
-    override fun setLooping(soundId: Long, looping: Boolean) {
+    override fun setLooping(soundId: Int, looping: Boolean) {
         if (audio.noDevice) return
         audio.setSoundLooping(soundId, looping)
     }
 
-    override fun setPan(soundId: Long, pan: Float, volume: Float) {
+    override fun setPan(soundId: Int, pan: Float) {
         if (audio.noDevice) return
-        audio.setSoundPan(soundId, pan, volume)
+        audio.setSoundPan(soundId, pan)
     }
-
-    override fun play(volume: Float, pitch: Float, pan: Float): Long {
-        val id = play()
-        setPitch(id, pitch)
-        setPan(id, pan, volume)
-        return id
-    }
-
-    override fun loop(volume: Float, pitch: Float, pan: Float): Long {
-        val id = loop()
-        setPitch(id, pitch)
-        setPan(id, pan, volume)
-        return id
-    }
-
-    /** Returns the length of the sound in seconds.  */
-    fun duration(): Float {
-        return duration
-    }
-
 }

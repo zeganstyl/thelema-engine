@@ -17,13 +17,14 @@
 package org.ksdfv.thelema.texture
 
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.img.IImage
-import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
+import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.gl.*
+import org.ksdfv.thelema.img.IImage
+import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.net.NET
+import org.ksdfv.thelema.utils.LOG
 
 /** 2D texture object
  * @author zeganstyl */
@@ -44,7 +45,9 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         tWrap: Int = GL_REPEAT,
         anisotropicFilter: Float = 1f,
         generateMipmaps: Boolean = false
-    ) : this(IMG.load(url), minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
+    ) : this() {
+        load(url, minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
+    }
 
     constructor(
         file: IFile,
@@ -56,18 +59,6 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         generateMipmaps: Boolean = false
     ) : this() {
         load(file, minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
-    }
-
-    constructor(
-        image: IImage,
-        minFilter: Int = GL_LINEAR,
-        magFilter: Int = GL_LINEAR,
-        sWrap: Int = GL_REPEAT,
-        tWrap: Int = GL_REPEAT,
-        anisotropicFilter: Float = 1f,
-        generateMipmaps: Boolean = false
-    ) : this() {
-        load(image, minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
     }
 
     fun load(
@@ -89,7 +80,7 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
                 if (generateMipmaps) generateMipmapsGPU()
                 GL.glBindTexture(glTarget, 0)
             } else {
-                println("can't read $url, status $status")
+                LOG.info("can't read $url, status $status")
             }
         }
     }
@@ -113,7 +104,7 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
                 if (generateMipmaps) generateMipmapsGPU()
                 GL.glBindTexture(glTarget, 0)
             } else {
-                println("can't read ${file.path}, status $status")
+                LOG.info("can't read ${file.path}, status $status")
             }
         }
     }
@@ -142,7 +133,7 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         height: Int,
         pixels: IByteData? = null,
         mipmapLevel: Int = 0,
-        internalformat: Int = GL_RGBA,
+        internalFormat: Int = GL_RGBA,
         pixelFormat: Int = GL_RGBA,
         type: Int = GL_UNSIGNED_BYTE,
         minFilter: Int = this.minFilter,
@@ -153,7 +144,7 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         generateMipmaps: Boolean = false
     ) {
         beforeGlTexImage2D(width, height, minFilter, magFilter, sWrap, tWrap, anisotropicFilter)
-        GL.glTexImage2D(glTarget, mipmapLevel, internalformat, width, height, 0, pixelFormat, type, pixels)
+        GL.glTexImage2D(glTarget, mipmapLevel, internalFormat, width, height, 0, pixelFormat, type, pixels)
         if (generateMipmaps) generateMipmapsGPU()
         GL.glBindTexture(glTarget, 0)
     }

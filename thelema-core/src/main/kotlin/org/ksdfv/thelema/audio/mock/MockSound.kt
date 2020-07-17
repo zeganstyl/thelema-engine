@@ -23,21 +23,16 @@ import org.ksdfv.thelema.audio.ISound
  * server and client as simple as possible.
  */
 class MockSound : ISound {
-    override fun play(): Long = 0
-    override fun play(volume: Float): Long = 0
-    override fun play(volume: Float, pitch: Float, pan: Float): Long = 0
-    override fun loop(): Long = 0
-    override fun loop(volume: Float): Long = 0
-    override fun loop(volume: Float, pitch: Float, pan: Float): Long = 0
+    override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int = 0
     override fun stop() = Unit
     override fun pause() = Unit
     override fun resume() = Unit
-    override fun dispose() = Unit
-    override fun stop(soundId: Long) = Unit
-    override fun pause(soundId: Long) = Unit
-    override fun resume(soundId: Long) = Unit
-    override fun setLooping(soundId: Long, looping: Boolean) = Unit
-    override fun setPitch(soundId: Long, pitch: Float) = Unit
-    override fun setVolume(soundId: Long, volume: Float) = Unit
-    override fun setPan(soundId: Long, pan: Float, volume: Float) = Unit
+    override fun destroy() = Unit
+    override fun stop(soundId: Int) = Unit
+    override fun pause(soundId: Int) = Unit
+    override fun resume(soundId: Int) = Unit
+    override fun setLooping(soundId: Int, looping: Boolean) = Unit
+    override fun setPitch(soundId: Int, pitch: Float) = Unit
+    override fun setVolume(soundId: Int, volume: Float) = Unit
+    override fun setPan(soundId: Int, pan: Float) = Unit
 }

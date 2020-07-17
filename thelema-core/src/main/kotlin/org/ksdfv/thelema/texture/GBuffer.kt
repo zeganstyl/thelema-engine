@@ -28,7 +28,17 @@ class GBuffer(
     internalFormat: Int = GL_RGBA16F,
     pixelFormat: Int = GL_RGBA,
     type: Int = GL_FLOAT
-): FrameBuffer(width, height) {
+): IFrameBuffer {
+    override var width: Int = width
+        private set
+
+    override var height: Int = height
+        private set
+
+    override val attachments: MutableList<IFrameBufferAttachment> = ArrayList()
+    override var glHandle: Int = GL.glGenFramebuffer()
+    override var isBound: Boolean = false
+
     val colorMap: ITexture
         get() = attachments[0].texture!!
 
@@ -42,10 +52,16 @@ class GBuffer(
         get() = attachments[3].texture!!
 
     init {
-        attachments.add(IFrameBufferAttachment.colorAttachment(0, internalFormat, pixelFormat, type))
-        attachments.add(IFrameBufferAttachment.colorAttachment(1, internalFormat, pixelFormat, type))
-        attachments.add(IFrameBufferAttachment.colorAttachment(2, internalFormat, pixelFormat, type))
-        attachments.add(IFrameBufferAttachment.depthAttachment())
+        attachments.add(Attachments.color(index = 0, internalFormat = internalFormat, pixelFormat = pixelFormat, type = type))
+        attachments.add(Attachments.color(index = 1, internalFormat = internalFormat, pixelFormat = pixelFormat, type = type))
+        attachments.add(Attachments.color(index = 2, internalFormat = internalFormat, pixelFormat = pixelFormat, type = type))
+        attachments.add(Attachments.depth())
         buildAttachments()
+    }
+
+    override fun setResolution(width: Int, height: Int) {
+        this.width = width
+        this.height = height
+        super.setResolution(width, height)
     }
 }

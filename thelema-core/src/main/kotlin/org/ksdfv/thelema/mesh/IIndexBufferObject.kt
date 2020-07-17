@@ -44,6 +44,8 @@ interface IIndexBufferObject {
 
     fun initGpuObjects()
 
+    fun loadBufferToGpu()
+
     /** Update (a portion of) the indices.
      * @param targetOffset offset in indices buffer
      * @param indices the index data

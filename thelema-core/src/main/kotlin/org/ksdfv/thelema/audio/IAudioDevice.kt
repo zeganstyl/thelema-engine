@@ -24,9 +24,7 @@ package org.ksdfv.thelema.audio
  * @author badlogicgames@gmail.com
  */
 interface IAudioDevice {
-    /** @return whether this AudioDevice is in mono or stereo mode.
-     */
-    val isMono: Boolean
+    val channelsNum: Int
 
     /** Writes the array of 16-bit signed PCM samples to the audio device and blocks until they have been processed.
      *
@@ -46,12 +44,8 @@ interface IAudioDevice {
     fun writeSamples(samples: FloatArray, offset: Int, numSamples: Int)
     fun writeSamples(samples: FloatArray) = writeSamples(samples, 0, samples.size)
 
-    /** @return the latency in samples.
-     */
-    val latency: Int
-
     /** Frees all resources associated with this AudioDevice. Needs to be called when the device is no longer needed.  */
-    fun dispose()
+    fun destroy()
 
     /** Sets the volume in the range `[0,1]`.  */
     fun setVolume(volume: Float)

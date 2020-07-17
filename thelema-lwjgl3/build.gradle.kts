@@ -10,11 +10,15 @@ group = thelemaGroup
 
 val gitRepositoryUrl: String by project
 
-val verName = "0.2.0"
+val thelemaVersion: String by project
+val verName = thelemaVersion
 version = verName
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://www.beatunes.com/repo/maven2/")
+    }
 }
 
 dependencies {
@@ -27,6 +31,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.7")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
+
+    // https://mvnrepository.com/artifact/com.jcraft/jogg
+    api("com.jcraft", "jogg", "0.0.7")
+
+    // https://mvnrepository.com/artifact/com.jcraft/jorbis
+    api("com.jcraft", "jorbis", "0.0.17")
 
     val lwjglVersion = "3.2.3"
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
@@ -90,13 +100,14 @@ bintray {
     // user and key properties must be saved in user home (by default ~/.gradle/gradle.properties)
     user = project.property("BINTRAY_USER") as String
     key = project.property("BINTRAY_KEY") as String
+    override = true
+    publish = true
     setPublications("mavenJava")
     pkg.apply {
         repo = "thelema-engine"
         name = "thelema-lwjgl3"
         setLicenses("Apache-2.0")
         vcsUrl = gitRepositoryUrl
-        githubRepo = gitRepositoryUrl
 
         version.apply {
             name = verName

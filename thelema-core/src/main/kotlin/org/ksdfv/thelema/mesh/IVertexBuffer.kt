@@ -29,11 +29,11 @@ interface IVertexBuffer {
 
     /** @return the number of vertices this VertexData stores */
     var size
-        get() = if (attributes.bytesPerVertex > 0) bytes.size / attributes.bytesPerVertex else 0
+        get() = if (vertexInputs.bytesPerVertex > 0) bytes.size / vertexInputs.bytesPerVertex else 0
         set(_) {}
 
     /** @return the [IVertexInput] as specified during construction. */
-    var attributes: IVertexInputs
+    var vertexInputs: IVertexInputs
 
     /** Float buffer view of [bytes] */
     var floatBuffer: IFloatData
@@ -46,7 +46,7 @@ interface IVertexBuffer {
 
     /** Number of instances for instanced buffers or particle system buffers.
      * For simple vertex buffers it is unused */
-    var instancesToRenderCount: Int
+    var instancesToRender: Int
 
     /** Initialize handles */
     fun initGpuObjects()

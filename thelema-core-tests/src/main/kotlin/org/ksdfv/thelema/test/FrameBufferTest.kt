@@ -16,29 +16,30 @@
 
 package org.ksdfv.thelema.test
 
-import org.ksdfv.thelema.texture.FrameBuffer
+import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_RGBA
 import org.ksdfv.thelema.mesh.ScreenQuad
+import org.ksdfv.thelema.texture.Attachments
+import org.ksdfv.thelema.texture.FrameBuffer
 
 /** @author zeganstyl */
-object FrameBufferTest: Test("Frame Buffer") {
+class FrameBufferTest: Test("Frame buffer") {
     override fun testMain() {
         val screenQuad = ScreenQuad.TextureRenderer()
 
         val model = CubeModel()
 
-        val frameBuffer = FrameBuffer(
-            GL.mainFrameBufferWidth,
-            GL.mainFrameBufferHeight,
-            GL_RGBA,
-            hasDepth = true
-        )
-        frameBuffer.bind { checkErrors() }
+        val frameBuffer = FrameBuffer(width = APP.width, height = APP.height)
+        frameBuffer.attachments.add(Attachments.color())
+        frameBuffer.attachments.add(Attachments.depthRenderBuffer())
+        frameBuffer.buildAttachments()
+        frameBuffer.checkErrors()
 
         GL.isDepthTestEnabled = true
+
+        GL.glClearColor(0f, 0f, 0f, 1f)
 
         GL.render {
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)

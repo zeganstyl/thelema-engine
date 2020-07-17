@@ -32,11 +32,10 @@ import kotlin.math.min
 class OpenALAudioDevice(
     private val audio: OpenAL,
     sampleRate: Int,
-    isMono: Boolean,
+    override val channelsNum: Int,
     private val bufferSize: Int,
     private val bufferCount: Int
 ) : IAudioDevice {
-    private val channels: Int = if (isMono) 1 else 2
     private var buffers: IntBuffer? = null
     private var sourceID = -1
     private val format: Int
@@ -179,7 +178,7 @@ class OpenALAudioDevice(
         return if (format == AL10.AL_FORMAT_STEREO16) 2 else 1
     }
 
-    override fun dispose() {
+    override fun destroy() {
         if (buffers == null) return
         if (sourceID != -1) {
             audio.freeSource(sourceID)
@@ -189,20 +188,14 @@ class OpenALAudioDevice(
         buffers = null
     }
 
-    override val isMono: Boolean
-        get() = channels == 1
-
-    override val latency: Int
-        get() = (secondsPerBuffer * bufferCount * 1000).toInt()
-
     companion object {
         private const val bytesPerSample = 2
     }
 
     init {
-        format = if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16
+        format = if (channelsNum > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16
         rate = sampleRate
-        secondsPerBuffer = bufferSize.toFloat() / bytesPerSample / channels / sampleRate
+        secondsPerBuffer = bufferSize.toFloat() / bytesPerSample / channelsNum / sampleRate
         tempBuffer = BufferUtils.createByteBuffer(bufferSize)
     }
 }

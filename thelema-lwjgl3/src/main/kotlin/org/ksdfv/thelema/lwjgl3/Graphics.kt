@@ -16,8 +16,6 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.gl.IGL
-
 
 /** This interface encapsulates communication with the graphics processor.
  *
@@ -29,9 +27,6 @@ import org.ksdfv.thelema.gl.IGL
  * @author mzechner
  */
 interface Graphics {
-
-    var gl: IGL
-
     /** @return the width of the framebuffer in physical pixels
      */
     val backBufferWidth: Int

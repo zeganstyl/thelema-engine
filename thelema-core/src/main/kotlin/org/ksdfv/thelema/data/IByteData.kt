@@ -37,6 +37,13 @@ interface IByteData: IDataArray<Byte> {
         }
     }
 
+    /** Convert to byte and put */
+    fun putInt(vararg values: Int) {
+        for (i in values.indices) {
+            put(values[i].toByte())
+        }
+    }
+
     override fun toInt(index: Int): Int = get(index).toInt() and 0xFF
 
     override fun toFloat(index: Int): Float = (get(index).toInt() and 0xFF).toFloat()

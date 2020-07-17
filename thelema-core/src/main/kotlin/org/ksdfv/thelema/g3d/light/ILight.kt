@@ -16,7 +16,10 @@
 
 package org.ksdfv.thelema.g3d.light
 
+import org.ksdfv.thelema.g3d.IScene
+import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec3
+import org.ksdfv.thelema.texture.ITexture
 
 /** @author zeganstyl */
 interface ILight {
@@ -24,16 +27,27 @@ interface ILight {
 
     var color: IVec3
 
-    var intensity: Float
+    var lightIntensity: Float
 
     /** Use [LightType] */
     val lightType: Int
 
-    var isEnabled: Boolean
+    var isLightEnabled: Boolean
+
+    var isShadowEnabled: Boolean
+
+    val shadowMaps: Array<ITexture>
+
+    /** View projection matrix for each shadow map */
+    val viewProjectionMatrices: Array<IMat4>
+
+    fun setupShadowMaps(width: Int = 1024, height: Int = 1024)
+
+    fun renderShadowMaps(scene: IScene)
 
     fun set(other: ILight): ILight {
         color.set(other.color)
-        intensity = other.intensity
+        lightIntensity = other.lightIntensity
         return this
     }
 

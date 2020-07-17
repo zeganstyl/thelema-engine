@@ -17,28 +17,22 @@
 
 package org.ksdfv.thelema.audio.mock
 
-import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.audio.*
+import org.ksdfv.thelema.fs.IFile
 
 /** The headless backend does its best to mock elements. This is intended to make code-sharing between
  * server and client as simple as possible.
  */
 class MockAudio : IAL {
-    override fun newAudioDevice(samplingRate: Int, isMono: Boolean): IAudioDevice {
-        return MockAudioDevice()
-    }
+    override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice =
+        MockAudioDevice()
 
-    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder {
-        return MockAudioRecorder()
-    }
+    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder =
+        MockAudioRecorder()
 
-    override fun newSound(file: IFile): ISound {
-        return MockSound()
-    }
+    override fun newSound(file: IFile): ISound = MockSound()
 
-    override fun newMusic(file: IFile): IMusic {
-        return MockMusic()
-    }
+    override fun newMusic(file: IFile): IMusic = MockMusic()
 
     override fun getVersion(param: Int): String = ""
 

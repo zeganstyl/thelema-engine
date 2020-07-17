@@ -18,21 +18,22 @@ package org.ksdfv.thelema.test
 
 import org.ksdfv.thelema.input.IKeyListener
 import org.ksdfv.thelema.input.KB
+import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-object KeyboardTest: Test("Keyboard") {
+class KeyboardTest: Test("Keyboard") {
     override fun testMain() {
         KB.addListener(object: IKeyListener {
             override fun keyDown(keycode: Int) {
-                println("keyDown: $keycode (${KB.toString(keycode)})")
+                LOG.info("keyDown: $keycode (${KB.toString(keycode)})")
             }
 
             override fun keyUp(keycode: Int) {
-                println("keyUp: $keycode (${KB.toString(keycode)})")
+                LOG.info("keyUp: $keycode (${KB.toString(keycode)})")
             }
 
             override fun keyTyped(character: Char) {
-                println("keyTyped: $character")
+                LOG.info("keyTyped: $character")
             }
         })
     }

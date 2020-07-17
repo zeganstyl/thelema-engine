@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.gl
 
+import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
@@ -29,7 +30,64 @@ interface IGL {
     val mainFrameBufferHandle: Int
         get() = 0
 
+    /** Default frame buffer width */
+    val mainFrameBufferWidth: Int
+        get() = throw NotImplementedError()
+
+    /** Default frame buffer height */
+    val mainFrameBufferHeight: Int
+        get() = throw NotImplementedError()
+
+    /** Major version of OpenGL/ES/WebGL */
+    val majVer: Int
+        get() = throw NotImplementedError()
+    /** Minor version of OpenGL/ES/WebGL */
+    val minVer: Int
+        get() = throw NotImplementedError()
+    /** Release version of OpenGL/ES/WebGL */
+    val relVer: Int
+        get() = throw NotImplementedError()
+
+    /** Max supported GLSL version
+     * For example 100, 330, 410 and etc */
+    val glslVer: Int
+        get() = throw NotImplementedError()
+
+    val glesMajVer: Int
+        get() = majVer
+
+    val glesMinVer: Int
+        get() = minVer
+
+    val isGLES: Boolean
+        get() = APP.platformType == APP.WebGL || APP.platformType == APP.Android
+
+    fun initGL() {
+        throw NotImplementedError()
+    }
+
     fun isExtensionSupported(extension: String): Boolean {
+        throw NotImplementedError()
+    }
+
+    /** @return true if extension successfully enabled */
+    fun enableExtension(extension: String): Boolean {
+        throw NotImplementedError()
+    }
+
+    /**
+     * @param extension extension name
+     * @param args arguments that will be passed into function
+     * */
+    fun callExtensionFunction(extension: String, functionName: String, args: List<Any?>): Any? {
+        throw NotImplementedError()
+    }
+
+    fun setExtensionParam(extension: String, paramName: String, value: Any?) {
+        throw NotImplementedError()
+    }
+
+    fun getExtensionParam(extension: String, paramName: String): Any? {
         throw NotImplementedError()
     }
     

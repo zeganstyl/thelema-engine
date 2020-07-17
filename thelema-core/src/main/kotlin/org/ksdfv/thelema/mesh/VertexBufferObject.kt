@@ -24,7 +24,7 @@ import org.ksdfv.thelema.shader.IShader
 
 /** @author zeganstyl */
 class VertexBufferObject(
-    override var attributes: IVertexInputs,
+    override var vertexInputs: IVertexInputs,
     override var bytes: IByteData,
     usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true
@@ -43,7 +43,7 @@ class VertexBufferObject(
 
     override var isBound = false
 
-    override var instancesToRenderCount: Int = 0
+    override var instancesToRender: Int = 0
 
     init {
         if (initGpuObjects) initGpuObjects()
@@ -54,9 +54,11 @@ class VertexBufferObject(
     }
 
     override fun loadBufferToGpu() {
-        if (isBound) {
+        isBufferNeedReload = if (isBound) {
             GL.glBufferData(GL_ARRAY_BUFFER, bytes.size, bytes, usage)
-            isBufferNeedReload = false
+            false
+        } else {
+            true
         }
     }
 
@@ -66,13 +68,13 @@ class VertexBufferObject(
 
         if (isBufferNeedReload) loadBufferToGpu()
 
-        shader?.setVertexAttributes(attributes)
+        shader?.setVertexAttributes(vertexInputs)
     }
 
     override fun unbind(shader: IShader?) {
         if (shader != null) {
-            attributes.forEach {
-                val location = shader.attributeLocations[it.name]
+            vertexInputs.forEach {
+                val location = shader.attributes[it.name]
                 if (location != null) GL.glDisableVertexAttribArray(location)
             }
         }

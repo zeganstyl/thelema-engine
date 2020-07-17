@@ -34,12 +34,12 @@ interface IAL {
      * [IAudioDevice.dispose] method when it is no longer used.
      *
      * @param samplingRate the sampling rate.
-     * @param isMono whether the AudioDevice should be in mono or stereo mode
+     * @param channelsNum for mono 1, for stereo 2
      * @return the AudioDevice
      *
      * @throws RuntimeException in case the device could not be created
      */
-    fun newAudioDevice(samplingRate: Int, isMono: Boolean): IAudioDevice
+    fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice
 
     /** Creates a new [IAudioRecorder]. The AudioRecorder has to be disposed after it is no longer used.
      *
@@ -66,7 +66,7 @@ interface IAL {
      *
      *
      *
-     * The Sound has to be disposed if it is no longer used via the [ISound.dispose] method.
+     * The Sound has to be disposed if it is no longer used via the [ISound.destroy] method.
      *
      *
      * @return the new Sound
@@ -75,7 +75,7 @@ interface IAL {
     fun newSound(file: IFile): ISound
 
     /** Creates a new [IMusic] instance which is used to play back a music stream from a file. Currently supported formats are
-     * WAV, MP3 and OGG. The Music instance has to be disposed if it is no longer used via the [IMusic.dispose] method.
+     * WAV, MP3 and OGG. The Music instance has to be disposed if it is no longer used via the [IMusic.destroy] method.
      *
      * @param file the FileHandle
      * @return the new Music or null if the Music could not be loaded

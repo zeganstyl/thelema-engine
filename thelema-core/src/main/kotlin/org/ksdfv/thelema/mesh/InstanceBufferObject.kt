@@ -26,7 +26,8 @@ import org.ksdfv.thelema.shader.IShader
 /** @author zeganstyl */
 class InstanceBufferObject(
     byteBuffer: IByteData,
-    override var attributes: IVertexInputs,
+    override var vertexInputs: IVertexInputs,
+    override var instancesToRender: Int = byteBuffer.size / vertexInputs.bytesPerVertex,
     usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true
 ) : IVertexBuffer {
@@ -50,15 +51,22 @@ class InstanceBufferObject(
     override var isBufferNeedReload = true
     override var isBound = false
 
-    override var instancesToRenderCount: Int = 0
-
     /** Constructs a new interleaved VertexBufferObject.
      *
      * @param numVertices the maximum number of vertices
-     * @param attributes the [VertexInputs].
+     * @param vertexInputs the [VertexInputs].
      */
-    constructor(numVertices: Int, attributes: VertexInputs, usage: Int = GL_STATIC_DRAW):
-            this(DATA.bytes(attributes.bytesPerVertex * numVertices), attributes, usage)
+    constructor(
+        numVertices: Int,
+        vertexInputs: VertexInputs,
+        instancesToRender: Int = numVertices,
+        usage: Int = GL_STATIC_DRAW
+    ): this(
+        DATA.bytes(vertexInputs.bytesPerVertex * numVertices),
+        vertexInputs,
+        instancesToRender,
+        usage
+    )
 
     init {
         this.bytes = byteBuffer
@@ -85,19 +93,19 @@ class InstanceBufferObject(
         if (isBufferNeedReload) loadBufferToGpu()
 
 
-        attributes.forEach {
-            val location = shader?.attributeLocations?.get(it.name)
+        vertexInputs.forEach {
+            val location = shader?.attributes?.get(it.name)
             if (location != null) {
                 GL.glEnableVertexAttribArray(location)
-                GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, attributes.bytesPerVertex, it.byteOffset)
+                GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, vertexInputs.bytesPerVertex, it.byteOffset)
                 GL.glVertexAttribDivisor(location, 1)
             }
         }
     }
 
     override fun unbind(shader: IShader?) {
-        attributes.forEach {
-            val location = shader?.attributeLocations?.get(it.name)
+        vertexInputs.forEach {
+            val location = shader?.attributes?.get(it.name)
             if (location != null) {
                 GL.glDisableVertexAttribArray(location)
             }

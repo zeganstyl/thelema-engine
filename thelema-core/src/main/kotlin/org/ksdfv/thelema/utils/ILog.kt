@@ -21,12 +21,15 @@ interface ILog {
     var infoEnabled: Boolean
     var debugEnabled: Boolean
     var errorEnabled: Boolean
+    var collectLogs: Boolean
 
-    fun info(message: String, exception: Throwable?, tag: String = "MyTag")
-    fun debug(message: String, exception: Throwable?, tag: String = "MyTag")
-    fun error(message: String, exception: Throwable?, tag: String = "MyTag")
+    val logs: MutableList<String>
 
-    fun info(message: String, tag: String = "MyTag") = info(message, null, tag)
-    fun debug(message: String, tag: String = "MyTag") = debug(message, null, tag)
-    fun error(message: String, tag: String = "MyTag") = error(message, null, tag)
+    fun info(message: String, exception: Throwable?, tag: String = "")
+    fun debug(message: String, exception: Throwable?, tag: String = "")
+    fun error(message: String, exception: Throwable?, tag: String = "")
+
+    fun info(message: String, tag: String = "") = info(message, null, tag)
+    fun debug(message: String, tag: String = "") = debug(message, null, tag)
+    fun error(message: String, tag: String = "") = error(message, null, tag)
 }

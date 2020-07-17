@@ -16,13 +16,14 @@
 
 package org.ksdfv.thelema.test.sound
 
-import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.audio.AL
+import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.test.Test
 
 /** @author zeganstyl */
-object SoundWavTest: Test("Sound Wav") {
+class SoundWavTest: Test("Sound Wav") {
     override fun testMain() {
-        AL.newSound(FS.internal("242501__gabrielaraujo__powerup-success.wav")).play()
+        val sound = AL.newSound(FS.internal("242501__gabrielaraujo__powerup-success.wav"))
+        sound.play()
     }
 }

@@ -37,7 +37,10 @@ object KB: IKB {
     const val A = 29
     const val ALT_LEFT = 57
     const val ALT_RIGHT = 58
+
+    /** ' */
     const val APOSTROPHE = 75
+
     const val AT = 77
     const val B = 30
     const val BACK = 4
@@ -70,7 +73,10 @@ object KB: IKB {
     const val F = 34
     const val FOCUS = 80
     const val G = 35
+
+    /** `` ` `` */
     const val GRAVE = 68
+
     const val H = 36
     const val HEADSETHOOK = 79
     const val HOME = 3
@@ -196,23 +202,14 @@ object KB: IKB {
     const val F11 = 254
     const val F12 = 255
 
-    val isLeftShiftPressed
-        get() = isKeyPressed(SHIFT_LEFT)
+    override val shift
+        get() = api.shift
 
-    val isShiftPressed
-        get() = isKeyPressed(SHIFT_LEFT) || isKeyPressed(SHIFT_RIGHT)
+    override val ctrl
+        get() = api.ctrl
 
-    val isLeftCtrlPressed
-        get() = isKeyPressed(CONTROL_LEFT)
-
-    val isCtrlPressed
-        get() = isKeyPressed(CONTROL_LEFT) || isKeyPressed(CONTROL_RIGHT)
-
-    val isLeftAltPressed
-        get() = isKeyPressed(ALT_LEFT)
-
-    val isAltPressed
-        get() = isKeyPressed(ALT_LEFT) || isKeyPressed(ALT_RIGHT)
+    override val alt
+        get() = api.alt
 
     fun toString(keycode: Int): String {
         require(keycode >= 0) { "keycode cannot be negative, keycode: $keycode" }
@@ -368,4 +365,6 @@ object KB: IKB {
     override fun addListener(listener: IKeyListener) = api.addListener(listener)
 
     override fun removeListener(listener: IKeyListener) = api.removeListener(listener)
+
+    override fun clear() = api.clear()
 }

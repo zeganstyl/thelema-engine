@@ -88,7 +88,7 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
             }
             AL10.alSourcei(sourceId, SOFTDirectChannels.AL_DIRECT_CHANNELS_SOFT, AL10.AL_TRUE)
             AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_FALSE)
-            setPan(pan, volume)
+            setPan(pan)
             var filled = false // Check if there's anything to actually play.
             for (i in 0 until bufferCount) {
                 val bufferID = buffers!![i]
@@ -126,7 +126,7 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
         isPlaying = false
     }
 
-    override fun setPan(pan: Float, volume: Float) {
+    override fun setPan(pan: Float) {
         this.volume = volume
         this.pan = pan
         if (audio.noDevice) return
@@ -235,7 +235,7 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
         return true
     }
 
-    override fun dispose() {
+    override fun destroy() {
         stop()
         if (audio.noDevice) return
         if (buffers == null) return

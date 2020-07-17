@@ -44,7 +44,7 @@ import org.ksdfv.thelema.shader.IShader
  * @author mzechner, Dave Clayton <contact@redskyforge.com>, Nate Austin <nate.austin gmail>, zeganstyl
  */
 class VertexArrayObject(
-    override var attributes: IVertexInputs,
+    override var vertexInputs: IVertexInputs,
     byteBuffer: IByteData,
     override var usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true,
@@ -69,7 +69,7 @@ class VertexArrayObject(
     /** Key - vertex attribute id, value - location id */
     private var cachedAttributeToLocation = HashMap<String, Int>()
 
-    override var instancesToRenderCount: Int = 0
+    override var instancesToRender: Int = 0
 
     init {
         if (initGpuObjects) {
@@ -105,8 +105,8 @@ class VertexArrayObject(
         var stillValid = cachedAttributeToLocation.size != 0
 
         if (stillValid) {
-            stillValid = shader.attributeLocations.size == cachedAttributeToLocation.size &&
-                    attributes.firstOrNull { shader.attributeLocations[it.name] == cachedAttributeToLocation[it.name] } == null
+            stillValid = shader.attributes.size == cachedAttributeToLocation.size &&
+                    vertexInputs.firstOrNull { shader.attributes[it.name] == cachedAttributeToLocation[it.name] } == null
         }
 
         if (!stillValid) {
@@ -114,12 +114,12 @@ class VertexArrayObject(
             unbindAttributes(shader)
             cachedAttributeToLocation.clear()
 
-            attributes.forEach {
-                val location = shader.attributeLocations[it.name]
+            vertexInputs.forEach {
+                val location = shader.attributes[it.name]
                 if (location != null) {
                     cachedAttributeToLocation[it.name] = location
 
-                    shader.setVertexAttributes(attributes)
+                    shader.setVertexAttributes(vertexInputs)
                 }
             }
         }
@@ -130,7 +130,7 @@ class VertexArrayObject(
             return
         }
 
-        attributes.forEach {
+        vertexInputs.forEach {
             val location = cachedAttributeToLocation[it.name]
             if (location != null) {
                 GL.glDisableVertexAttribArray(location)

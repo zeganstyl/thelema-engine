@@ -21,8 +21,8 @@ import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.g3d.ActiveCamera
 import org.ksdfv.thelema.g3d.Camera
 import org.ksdfv.thelema.gl.*
-import org.ksdfv.thelema.input.IKeyListener
-import org.ksdfv.thelema.input.KB
+import org.ksdfv.thelema.input.IMouseListener
+import org.ksdfv.thelema.input.MOUSE
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.ScreenQuad
@@ -31,11 +31,21 @@ import org.ksdfv.thelema.mesh.build.PlaneMeshBuilder
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.shader.post.MotionBlur
 import org.ksdfv.thelema.test.Test
-import org.ksdfv.thelema.texture.FrameBuffer
+import org.ksdfv.thelema.texture.SimpleFrameBuffer
+import org.ksdfv.thelema.utils.LOG
 import kotlin.math.abs
 
-object MotionBlurBaseTest: Test("Motion Blur Base") {
+class MotionBlurBaseTest: Test("Motion Blur Base") {
     override fun testMain() {
+        if (GL.isGLES) {
+            if (GL.glesMajVer == 3) {
+                if (!GL.enableExtension("EXT_color_buffer_float")) {
+                    APP.messageBox("Not supported", "Render to float texture not supported")
+                    return
+                }
+            }
+        }
+
         @Language("GLSL")
         val sceneColorShader = Shader(
             vertCode = """
@@ -104,8 +114,14 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
 
         val screenQuad = ScreenQuad.TextureRenderer()
 
-        val sceneColorBuffer = FrameBuffer(APP.width, APP.height, GL_RGB)
-        val velocityMapBuffer = FrameBuffer(APP.width, APP.height, GL_RG, GL_RG16F, GL_FLOAT)
+        val sceneColorBuffer = SimpleFrameBuffer(width = APP.width, height = APP.height, pixelFormat = GL_RGBA)
+        val velocityMapBuffer = SimpleFrameBuffer(
+            width = APP.width,
+            height = APP.height,
+            pixelFormat = GL_RG,
+            internalFormat = GL_RG16F,
+            type = GL_FLOAT
+        )
 
         val motionBlur = MotionBlur(
             sceneColorBuffer.getTexture(0),
@@ -124,17 +140,19 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
 
         var movingEnabled = true
 
-        KB.addListener(object : IKeyListener {
-            override fun keyDown(keycode: Int) {
+        MOUSE.addListener(object : IMouseListener {
+            override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {
                 movingEnabled = !movingEnabled
             }
         })
 
-        println("Press 'Space' to pause/resume")
+        LOG.info("Click on screen to pause/resume")
 
         val cubeColor = Vec3(1f, 0.5f, 0f)
 
         ActiveCamera.updatePreviousTransform()
+
+        GL.glClearColor(0f, 0f, 0f, 1f)
 
         GL.render {
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)

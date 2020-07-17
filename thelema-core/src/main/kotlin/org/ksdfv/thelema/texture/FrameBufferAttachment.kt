@@ -30,14 +30,14 @@ class FrameBufferAttachment(
     override var attachment: Int = GL_COLOR_ATTACHMENT0,
 
     /** In many cases it is [GL_TEXTURE_2D] and you not require to change this */
-    override val textarget: Int = GL_TEXTURE_2D,
+    override val texTarget: Int = GL_TEXTURE_2D,
 
     /** If handle is 0, it must be specified for creating texture.
      * Or if this attachment is render buffer, it must be also defined. */
-    override val internalformat: Int = GL_RGBA,
+    override val internalFormat: Int = GL_RGBA,
 
     /** If handle is 0, it must be specified for creating texture */
-    override val pixelFormat: Int = internalformat,
+    override val pixelFormat: Int = GL_RGBA,
 
     /** If handle is 0 and [target] = [GL_FRAMEBUFFER], it must be specified for creating texture */
     override val type: Int = GL_UNSIGNED_BYTE,

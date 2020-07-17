@@ -43,6 +43,8 @@ interface ICamera: ITransformNode {
     /** The inverse combined projection and view matrix. Used in [unproject] */
     val inverseViewProjectionMatrix: IMat4
 
+    val frustum: Frustum
+
     /** World matrix of camera is [viewMatrix] */
     override val worldMatrix: IMat4
         get() = viewMatrix
@@ -74,7 +76,7 @@ interface ICamera: ITransformNode {
     var isOrthographic: Boolean
 
     /** Used for orthographic projection */
-    var isCenterInPosition: Boolean
+    var isCentered: Boolean
 
     /** Used for orthographic projection */
     var zoom: Float
@@ -113,9 +115,9 @@ interface ICamera: ITransformNode {
 
     fun update() {
         if (isOrthographic) {
-            if (isCenterInPosition) {
-                val widthHalf = zoom * viewportWidth / 2
-                val heightHalf = zoom * viewportHeight / 2
+            if (isCentered) {
+                val widthHalf = zoom * viewportWidth * 0.5f
+                val heightHalf = zoom * viewportHeight * 0.5f
                 projectionMatrix.setToOrtho(-widthHalf, widthHalf, -heightHalf, heightHalf, near, far)
             } else {
                 projectionMatrix.setToOrtho(0f, zoom * viewportWidth, 0f, zoom * viewportHeight, near, far)

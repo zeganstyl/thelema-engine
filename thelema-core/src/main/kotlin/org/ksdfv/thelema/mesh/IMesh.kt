@@ -95,7 +95,7 @@ interface IMesh {
         if (bind) bind(shader)
 
         val instances = instances
-        val numInstances = instances?.instancesToRenderCount ?: 0
+        val numInstances = instances?.instancesToRender ?: 0
 
         val indices = indices
         if (indices != null && indices.sizeInBytes > 0) {

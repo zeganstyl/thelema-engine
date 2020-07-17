@@ -16,8 +16,11 @@
 
 package org.ksdfv.thelema.g3d.light
 
+import org.ksdfv.thelema.g3d.IScene
+import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Vec3
+import org.ksdfv.thelema.texture.ITexture
 
 /** @author zeganstyl */
 class PointLight: ILight {
@@ -26,12 +29,20 @@ class PointLight: ILight {
     override val lightType: Int
         get() = LightType.Point
 
-    override var isEnabled: Boolean = true
-    override var intensity = 1f
+    override var isLightEnabled: Boolean = true
+    override var lightIntensity = 1f
     override var color: IVec3 = Vec3(1f, 1f, 1f)
 
     var position: IVec3 = Vec3()
     var range = 100f
+
+    override var isShadowEnabled: Boolean = false
+
+    override fun setupShadowMaps(width: Int, height: Int) {}
+    override fun renderShadowMaps(scene: IScene) {}
+
+    override val shadowMaps: Array<ITexture> = DirectionalLight.ShadowMapsCap
+    override val viewProjectionMatrices: Array<IMat4> = DirectionalLight.ViewProjectionMatricesCap
 
     override fun set(other: ILight): PointLight {
         super.set(other)

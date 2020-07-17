@@ -17,13 +17,15 @@
 package org.ksdfv.thelema.shader.post
 
 import org.intellij.lang.annotations.Language
-import org.ksdfv.thelema.gl.*
+import org.ksdfv.thelema.gl.GL
+import org.ksdfv.thelema.gl.GL_RGBA
+import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
 import org.ksdfv.thelema.math.IVec2
 import org.ksdfv.thelema.math.Vec2
 import org.ksdfv.thelema.mesh.IScreenQuad
-import org.ksdfv.thelema.texture.FrameBuffer
 import org.ksdfv.thelema.texture.IFrameBuffer
 import org.ksdfv.thelema.texture.ITexture
+import org.ksdfv.thelema.texture.SimpleFrameBuffer
 import kotlin.math.pow
 
 // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
@@ -33,124 +35,151 @@ class Bloom(
     width: Int,
     height: Int,
     iterations: Int = 6,
-    internalFormat: Int = GL_RGB16F,
-    pixelType: Int = GL_UNSIGNED_BYTE
+    iterationsStep: Int = 1,
+    intensity: Float = 1f,
+    pixelFormat: Int = GL_RGBA,
+    internalFormat: Int = GL_RGBA,
+    pixelChannelType: Int = GL_UNSIGNED_BYTE
 ) {
-    private var buffers = Array(iterations) {
-        val div = 2f.pow(it + 1).toInt()
-        FrameBuffer(
+    private var downBuffers = Array(iterations) {
+        val div = 2f.pow(it + 1).toInt() * iterationsStep
+        SimpleFrameBuffer(
             width / div,
             height / div,
-            GL_RGB,
+            pixelFormat,
             internalFormat,
-            pixelType,
+            pixelChannelType,
             hasDepth = false
         )
     }
 
-    private var texelSizes = Array<IVec2>(iterations) { Vec2(1f / buffers[it].width, 1f / buffers[it].height) }
+    private var upBuffers = Array(iterations) {
+        val div = 2f.pow(it + 1).toInt() * iterationsStep
+        SimpleFrameBuffer(
+            width / div,
+            height / div,
+            pixelFormat,
+            internalFormat,
+            pixelChannelType,
+            hasDepth = false
+        )
+    }
+
+    private var texelSizes = Array<IVec2>(iterations) { Vec2(1f / downBuffers[it].width, 1f / downBuffers[it].height) }
 
     val blurDown = PostShader(blurDownCode)
 
     val blurUp = PostShader(blurUpCode)
 
-    private var uTexelSizeDown = 0
-    private var uTexelSizeUp = 0
-    private var uDelta = 0
-    private var uIntensity = 0
-
-    var intensity: Float = 1f
+    var intensity: Float = intensity
         set(value) {
             field = value
             blurUp.bind()
-            blurUp[uIntensity] = intensity
+            blurUp["uIntensity"] = intensity
         }
 
     init {
-        GL.call {
-            blurDown.bind()
-            blurDown["uTexture"] = 0
-            uTexelSizeDown = blurDown["uTexelSize"]
-            uDelta = blurDown["uDelta"]
+        blurDown.bind()
+        blurDown["uTexture"] = 0
 
-            blurUp.bind()
-            blurUp["uTexture"] = 0
-            blurUp["uSourceTexture"] = 1
-            uTexelSizeUp = blurUp["uTexelSize"]
-            uIntensity = blurUp["uIntensity"]
-            blurUp[uIntensity] = intensity
-        }
+        blurUp.bind()
+        blurUp["uTexture"] = 0
+        blurUp["uSourceTexture"] = 1
+        blurUp["uIntensity"] = intensity
     }
 
     fun initBuffers(
         width: Int,
         height: Int,
         iterations: Int = 6,
-        internalFormat: Int = GL_RGB16F,
-        pixelType: Int = GL_FLOAT
+        iterationsStep: Int = 1,
+        pixelFormat: Int = GL_RGBA,
+        internalFormat: Int = pixelFormat,
+        pixelType: Int = GL_UNSIGNED_BYTE
     ) {
-        for (i in buffers.indices) {
-            buffers[i].destroy(true)
+        val downBuffers = downBuffers
+        for (i in downBuffers.indices) {
+            downBuffers[i].destroy(true)
         }
 
-        buffers = Array(iterations) {
-            val div = 2f.pow(it + 1).toInt()
-            FrameBuffer(
+        val upBuffers = upBuffers
+        for (i in upBuffers.indices) {
+            upBuffers[i].destroy(true)
+        }
+
+        this.downBuffers = Array(iterations) {
+            val div = 2f.pow(it + 1).toInt() * iterationsStep
+            SimpleFrameBuffer(
                 width / div,
                 height / div,
-                GL_RGB,
+                pixelFormat,
                 internalFormat,
                 pixelType,
                 hasDepth = false
             )
         }
-        texelSizes = Array(iterations) { Vec2(1f / buffers[it].width, 1f / buffers[it].height) }
+
+        this.upBuffers = Array(iterations) {
+            val div = 2f.pow(it + 1).toInt() * iterationsStep
+            SimpleFrameBuffer(
+                width / div,
+                height / div,
+                pixelFormat,
+                internalFormat,
+                pixelType,
+                hasDepth = false
+            )
+        }
+
+        texelSizes = Array(iterations) { Vec2(1f / downBuffers[it].width, 1f / downBuffers[it].height) }
     }
 
     fun render(screenQuad: IScreenQuad, sceneMap: ITexture, brightnessMap: ITexture, out: IFrameBuffer?) {
+        val downBuffers = downBuffers
+        val upBuffers = upBuffers
+        val texelSizes = texelSizes
+
         // downscale
         blurDown.bind()
-        blurDown[uDelta] = 1f
+        blurDown["uDelta"] = 1f
 
         var prevMap = brightnessMap
-        for (i in buffers.indices) {
-            val buffer = buffers[i].getTexture(0)
-            screenQuad.render(blurDown, buffers[i]) {
-                blurDown[uTexelSizeDown] = texelSizes[i]
+        for (i in downBuffers.indices) {
+            val buffer = downBuffers[i]
+            screenQuad.render(blurDown, buffer) {
+                blurDown["uTexelSize"] = texelSizes[i]
                 prevMap.bind(0)
             }
-            prevMap = buffer
+            prevMap = buffer.getTexture(0)
         }
 
         // upscale
-        blurDown.bind()
-        blurDown[uDelta] = 0.5f
+        blurUp.bind()
+        blurUp["uDelta"] = 0.5f
 
-        var i = buffers.size - 1
+        var i = downBuffers.size - 1
         while (i > 0) {
-            val b = buffers[i]
-            val nextBuffer = buffers[i-1]
-            screenQuad.render(blurUp, nextBuffer, clearMask = null) {
-                blurUp[uTexelSizeUp] = texelSizes[i-1]
-                b.getTexture(0).bind(0)
-                nextBuffer.getTexture(0).bind(1)
+            screenQuad.render(blurUp, upBuffers[i-1], clearMask = null) {
+                blurUp["uTexelSize"] = texelSizes[i-1]
+                downBuffers[i].getTexture(0).bind(0)
+                upBuffers[i].getTexture(0).bind(1)
             }
 
             i--
         }
 
         screenQuad.render(blurUp, out) {
-            blurUp.set(uTexelSizeUp, 1f / (out?.width ?: GL.mainFrameBufferWidth), 1f / (out?.height ?: GL.mainFrameBufferHeight))
-            buffers[0].getTexture(0).bind(0)
+            blurUp.set("uTexelSize", 1f / (out?.width ?: GL.mainFrameBufferWidth), 1f / (out?.height ?: GL.mainFrameBufferHeight))
+            upBuffers[0].getTexture(0).bind(0)
             sceneMap.bind(1)
         }
     }
 
     fun destroy() {
-        for (i in buffers.indices) {
-            buffers[i].destroy(true)
+        for (i in downBuffers.indices) {
+            downBuffers[i].destroy(true)
         }
-        buffers = Array(0) { FrameBuffer(0, 0) }
+        downBuffers = Array(0) { SimpleFrameBuffer(0, 0) }
         texelSizes = Array(0) { Vec2() }
 
         blurDown.destroy()
@@ -159,50 +188,48 @@ class Bloom(
 
     companion object {
         @Language("GLSL")
-        val blurDownCode: String = """
-            varying vec2 uv;
-    
-            uniform sampler2D uTexture;
-    
-            uniform vec2 uTexelSize;
-            uniform float uDelta;
-    
-            void main() {
-                vec4 o = uTexelSize.xyxy * vec2(-uDelta, uDelta).xxyy;
-    
-                vec4 s =
-                texture2D(uTexture, uv + o.xy) +
-                texture2D(uTexture, uv + o.zy) +
-                texture2D(uTexture, uv + o.xw) +
-                texture2D(uTexture, uv + o.zw);
-    
-                gl_FragColor = vec4(s.rgb * 0.25, 1.0);
-            }
-        """.trimIndent()
+        const val blurDownCode: String = """
+varying vec2 uv;
+
+uniform sampler2D uTexture;
+
+uniform vec2 uTexelSize;
+uniform float uDelta;
+
+void main() {
+    vec4 o = uTexelSize.xyxy * vec2(-uDelta, uDelta).xxyy;
+
+    vec4 s =
+    texture2D(uTexture, uv + o.xy) +
+    texture2D(uTexture, uv + o.zy) +
+    texture2D(uTexture, uv + o.xw) +
+    texture2D(uTexture, uv + o.zw);
+
+    gl_FragColor = vec4(s.rgb * 0.25, 1.0);
+}"""
 
         @Language("GLSL")
-        val blurUpCode: String = """
-            varying vec2 uv;
-    
-            uniform sampler2D uSourceTexture;
-            uniform sampler2D uTexture;
-    
-            uniform float delta;
-            uniform vec2 uTexelSize;
-            uniform float uIntensity;
-    
-            void main() {
-                vec4 o = uTexelSize.xyxy * vec2(-0.5, 0.5).xxyy;
-    
-                vec4 s =
-                texture2D(uTexture, uv + o.xy) +
-                texture2D(uTexture, uv + o.zy) +
-                texture2D(uTexture, uv + o.xw) +
-                texture2D(uTexture, uv + o.zw);
-    
-                gl_FragColor = vec4(s.rgb * 0.25 + texture2D(uSourceTexture, uv).rgb, 1.0);
-                gl_FragColor.rgb *= uIntensity;
-            }
-        """.trimIndent()
+        const val blurUpCode: String = """
+varying vec2 uv;
+
+uniform sampler2D uSourceTexture;
+uniform sampler2D uTexture;
+
+uniform float uDelta;
+uniform vec2 uTexelSize;
+uniform float uIntensity;
+
+void main() {
+    vec4 o = uTexelSize.xyxy * vec2(-uDelta, uDelta).xxyy;
+
+    vec4 s =
+    texture2D(uTexture, uv + o.xy) +
+    texture2D(uTexture, uv + o.zy) +
+    texture2D(uTexture, uv + o.xw) +
+    texture2D(uTexture, uv + o.zw);
+
+    gl_FragColor = vec4(s.rgb * 0.25 + texture2D(uSourceTexture, uv).rgb, 1.0);
+    gl_FragColor.rgb *= uIntensity;
+}"""
     }
 }

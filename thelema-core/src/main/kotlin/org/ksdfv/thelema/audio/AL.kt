@@ -16,15 +16,19 @@
 
 package org.ksdfv.thelema.audio
 
-import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.audio.mock.MockAudio
+import org.ksdfv.thelema.fs.IFile
 
 /** @author zeganstyl */
 object AL: IAL {
     var api: IAL = MockAudio()
 
-    override fun newAudioDevice(samplingRate: Int, isMono: Boolean) = api.newAudioDevice(samplingRate, isMono)
-    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean) = api.newAudioRecorder(samplingRate, isMono)
+    override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice =
+        api.newAudioDevice(samplingRate, channelsNum)
+
+    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean) =
+        api.newAudioRecorder(samplingRate, isMono)
+
     override fun newSound(file: IFile) = api.newSound(file)
     override fun newMusic(file: IFile) = api.newMusic(file)
 

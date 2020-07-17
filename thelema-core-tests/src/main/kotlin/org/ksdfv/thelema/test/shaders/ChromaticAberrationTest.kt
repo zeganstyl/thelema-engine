@@ -24,16 +24,16 @@ import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.shader.post.ChromaticAberration
 import org.ksdfv.thelema.test.CubeModel
 import org.ksdfv.thelema.test.Test
-import org.ksdfv.thelema.texture.FrameBuffer
+import org.ksdfv.thelema.texture.SimpleFrameBuffer
 
-object ChromaticAberrationTest: Test("Chromatic Aberration") {
+class ChromaticAberrationTest: Test("Chromatic Aberration") {
     override fun testMain() {
         val model = CubeModel()
 
-        val frameBuffer = FrameBuffer(
-            GL.mainFrameBufferWidth,
-            GL.mainFrameBufferHeight,
-            GL_RGB,
+        val frameBuffer = SimpleFrameBuffer(
+            width = GL.mainFrameBufferWidth,
+            height = GL.mainFrameBufferHeight,
+            pixelFormat = GL_RGB,
             hasDepth = true
         )
 

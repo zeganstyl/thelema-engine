@@ -16,33 +16,34 @@
 
 package org.ksdfv.thelema.test.shaders
 
-import org.ksdfv.thelema.texture.FrameBuffer
-import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_RGB
+import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.shader.post.Bloom
 import org.ksdfv.thelema.test.CubeModel
 import org.ksdfv.thelema.test.Test
+import org.ksdfv.thelema.texture.SimpleFrameBuffer
 
 // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
 
-object BloomTest: Test("Bloom") {
+class BloomTest: Test("Bloom") {
     override fun testMain() {
         val model = CubeModel()
 
-        val sceneBuffer = FrameBuffer(
-            GL.mainFrameBufferWidth,
-            GL.mainFrameBufferHeight,
-            GL_RGB,
+        val sceneBuffer = SimpleFrameBuffer(
+            width = APP.width,
+            height = APP.height,
             hasDepth = true
         )
 
         val screenQuad = ScreenQuad()
 
-        val bloom =
-            Bloom(GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
+        val bloom = Bloom(
+            sceneBuffer.width,
+            sceneBuffer.height,
+            iterations = 6,
+            iterationsStep = 2
+        )
 
         GL.isDepthTestEnabled = true
 

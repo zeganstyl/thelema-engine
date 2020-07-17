@@ -33,6 +33,7 @@ import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.*
 import org.lwjgl.system.Callback
 import java.nio.IntBuffer
+import javax.swing.JOptionPane
 import kotlin.math.max
 import kotlin.math.min
 
@@ -392,7 +393,8 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
         width = mainWindow.graphics.logicalWidth
         height = mainWindow.graphics.logicalHeight
 
-        GL.api = LwjglGL()
+        GL.api = mainWindow.graphics.lwjglGL
+
         GL.initGL()
 
         GL.doSingleCalls()
@@ -407,5 +409,9 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
 
     override fun savePreferences(name: String, text: String) {
         FS.file(conf.cacheDirectory + name, conf.cacheFileLocation).writeText(text, false, "UTF8")
+    }
+
+    override fun messageBox(title: String, message: String) {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE)
     }
 }

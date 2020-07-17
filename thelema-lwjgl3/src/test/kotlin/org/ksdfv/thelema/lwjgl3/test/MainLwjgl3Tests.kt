@@ -19,7 +19,7 @@ package org.ksdfv.thelema.lwjgl3.test
 /** @author zeganstyl */
 object MainLwjgl3Tests {
     @JvmStatic fun main(args: Array<String>) {
-        val testChooser = Lwjgl3TestList()
+        val testChooser = Lwjgl3Tests()
         testChooser.frame.pack()
         testChooser.frame.isVisible = true
     }

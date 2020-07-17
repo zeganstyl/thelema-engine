@@ -195,4 +195,8 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
     init {
         windowHandleChanged(window.windowHandle)
     }
+
+    override fun clear() {
+        listeners.clear()
+    }
 }

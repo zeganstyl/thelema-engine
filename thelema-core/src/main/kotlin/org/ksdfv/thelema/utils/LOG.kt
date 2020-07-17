@@ -17,31 +17,38 @@
 package org.ksdfv.thelema.utils
 
 /** @author zeganstyl */
-object LOG {
-    lateinit var api: ILog
+object LOG: ILog {
+    var api: ILog = DefaultLog()
 
-    var infoEnabled: Boolean
+    override var infoEnabled: Boolean
         get() = api.infoEnabled
         set(value) { api.infoEnabled = value }
 
-    var debugEnabled: Boolean
+    override var debugEnabled: Boolean
         get() = api.debugEnabled
         set(value) { api.debugEnabled = value}
 
-    var errorEnabled: Boolean
+    override var errorEnabled: Boolean
         get() = api.errorEnabled
         set(value) { api.errorEnabled = value }
 
-    fun info(message: String, exception: Throwable?, tag: String = "MyTag") =
+    override var collectLogs: Boolean
+        get() = api.collectLogs
+        set(value) { api.collectLogs = value }
+
+    override val logs: MutableList<String>
+        get() = api.logs
+
+    override fun info(message: String, exception: Throwable?, tag: String) =
         api.info(message, exception, tag)
 
-    fun debug(message: String, exception: Throwable?, tag: String = "MyTag") =
+    override fun debug(message: String, exception: Throwable?, tag: String) =
         api.debug(message, exception, tag)
 
-    fun error(message: String, exception: Throwable?, tag: String = "MyTag") =
+    override fun error(message: String, exception: Throwable?, tag: String) =
         api.error(message, exception, tag)
 
-    fun info(message: String, tag: String = "MyTag") = api.info(message, tag)
-    fun debug(message: String, tag: String = "MyTag") = api.debug(message, tag)
-    fun error(message: String, tag: String = "MyTag") = api.error(message, tag)
+    override fun info(message: String, tag: String) = api.info(message, tag)
+    override fun debug(message: String, tag: String) = api.debug(message, tag)
+    override fun error(message: String, tag: String) = api.error(message, tag)
 }

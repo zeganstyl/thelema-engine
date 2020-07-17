@@ -69,6 +69,10 @@ class IndexBufferObject constructor(
         handle = GL.glGenBuffer()
     }
 
+    override fun loadBufferToGpu() {
+        isBufferNeedReload = true
+    }
+
     override fun update(targetOffset: Int, indices: ByteArray, offset: Int, count: Int) {
 //        isDirty = true
 //        val pos = byteBuffer.position()

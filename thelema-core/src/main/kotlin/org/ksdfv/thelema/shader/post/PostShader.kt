@@ -16,13 +16,14 @@
 
 package org.ksdfv.thelema.shader.post
 
+import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.shader.Shader
 
 open class PostShader(
     fragCode: String,
     name: String = "",
     compile: Boolean = true,
-    defaultPrecision: String = "",
+    defaultPrecision: String = if (APP.platformType != APP.Desktop) "precision mediump float;\n" else "",
     uvName: String = "uv",
     version: Int = 110
 ) :

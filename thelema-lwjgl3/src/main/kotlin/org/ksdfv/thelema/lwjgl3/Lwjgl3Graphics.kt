@@ -16,8 +16,6 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.IGL
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback
@@ -26,7 +24,8 @@ import kotlin.math.min
 
 
 class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
-    override var gl: IGL = LwjglGL()
+    val lwjglGL = LwjglGL()
+
     @Volatile
     override var backBufferWidth = 0
     @Volatile
@@ -135,15 +134,15 @@ class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
                 return
             }
             window.makeCurrent()
-            gl.glViewport(0, 0, width, height)
+            lwjglGL.glViewport(0, 0, width, height)
             GLFW.glfwSwapBuffers(windowHandle)
         }
     }
 
     private fun updateFramebufferInfo() {
         GLFW.glfwGetFramebufferSize(window.windowHandle, tmpBuffer, tmpBuffer2)
-        GL.mainFrameBufferWidth = tmpBuffer[0]
-        GL.mainFrameBufferHeight = tmpBuffer2[0]
+        lwjglGL.mainFrameBufferWidth = tmpBuffer[0]
+        lwjglGL.mainFrameBufferHeight = tmpBuffer2[0]
         backBufferWidth = tmpBuffer[0]
         backBufferHeight = tmpBuffer2[0]
         GLFW.glfwGetWindowSize(window.windowHandle, tmpBuffer, tmpBuffer2)

@@ -17,7 +17,7 @@
 package org.ksdfv.thelema.utils
 
 /** @author zeganstyl */
-open class Pool<T>(val create: () -> T, val reset: ((instance: T) -> Unit)?) {
+class Pool<T>(val create: () -> T, val reset: ((instance: T) -> Unit)?) {
     constructor(create: () -> T): this(create, null)
 
     private val freeInternal = ArrayList<T>()
@@ -30,7 +30,7 @@ open class Pool<T>(val create: () -> T, val reset: ((instance: T) -> Unit)?) {
 
     fun get(): T {
         val obj = if (free.isNotEmpty()) {
-            val instance = free.last()
+            val instance = free[0]
             freeInternal.remove(instance)
             instance
         } else {

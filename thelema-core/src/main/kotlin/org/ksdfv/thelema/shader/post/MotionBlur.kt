@@ -24,25 +24,17 @@ import org.ksdfv.thelema.texture.ITexture
 
 /** @author zeganstyl */
 class MotionBlur(
-    var sceneColorMap: ITexture? = null,
+    var colorMap: ITexture? = null,
     var velocityMap: ITexture? = null,
     blurStrength: Float = 1f,
     numSamples: Int = 8,
     visualizeVelocity: Float = 0f
-): PostShader(motionBlurCode(visualizeVelocity)) {
+): PostShader(motionBlurCode(numSamples, visualizeVelocity)) {
     var blurStrength = blurStrength
         set(value) {
             if (field != value) {
                 field = value
                 this["uBlurStrength"] = value
-            }
-        }
-
-    var numSamples = numSamples
-        set(value) {
-            if (field != value) {
-                field = value
-                this["uNumSamples"] = value
             }
         }
 
@@ -59,7 +51,7 @@ class MotionBlur(
 
     fun render(screenQuad: IScreenQuad, out: IFrameBuffer?) {
         screenQuad.render(this, out) {
-            sceneColorMap?.bind(sceneColorMapUnit)
+            colorMap?.bind(sceneColorMapUnit)
             velocityMap?.bind(velocityMapUnit)
         }
     }
@@ -75,14 +67,13 @@ class MotionBlur(
         }
 
         @Language("GLSL")
-        fun motionBlurCode(visualizeVelocity: Float = 0f): String {
+        fun motionBlurCode(numSamples: Int, visualizeVelocity: Float = 0f): String {
             // http://john-chapman-graphics.blogspot.com/2013/01/what-is-motion-blur-motion-pictures-are.html
             return """
 varying vec2 uv;
 uniform sampler2D uSceneColorMap;
 uniform sampler2D uVelocityMap;
 
-uniform int uNumSamples;
 const vec3 VZERO = vec3(0.0, 0.0, 0.0);
 
 uniform float uBlurStrength;
@@ -92,15 +83,15 @@ void main() {
 
     vec2 velocity = texture2D(uVelocityMap, uv).xy * 0.5;    
     //velocity *= uBlurStrength;
-    if (velocity.x != 0 || velocity.y != 0) {
-        float fNumSamples = float(uNumSamples) - 1.0;
+    if (velocity.x != 0.0 || velocity.y != 0.0) {
+        float fNumSamples = $numSamples.0 - 1.0;
 
-        for (int k = 0; k < uNumSamples; ++k) {; 
+        for (int k = 0; k < $numSamples; ++k) {; 
             vec2 offset = velocity * (float(k) / fNumSamples - 0.5);        
-            vSum += texture2D(uSceneColorMap, uv + offset);
+            vSum += texture2D(uSceneColorMap, uv + offset).xyz;
         }
 
-        vSum /= uNumSamples;
+        vSum /= $numSamples.0;
 
         gl_FragColor = vec4(vSum, 1.0);
     } else {

@@ -20,6 +20,7 @@ package org.ksdfv.thelema.input
  * @author mzechner, zeganstyl
  */
 object MOUSE: IMouse {
+    const val UNKNOWN = -1
     const val LEFT = 0
     const val RIGHT = 1
     const val MIDDLE = 2
@@ -58,4 +59,6 @@ object MOUSE: IMouse {
     override fun addListener(listener: IMouseListener) = api.addListener(listener)
 
     override fun removeListener(listener: IMouseListener) = api.removeListener(listener)
+
+    override fun clear() = api.clear()
 }

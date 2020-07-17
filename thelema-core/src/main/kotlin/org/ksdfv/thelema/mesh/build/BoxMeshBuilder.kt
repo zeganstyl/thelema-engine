@@ -103,4 +103,13 @@ class BoxMeshBuilder(
         if (uv) out.put(u * uvScale, v * uvScale)
         if (normals) out.put(normal.x, normal.y, normal.z)
     }
+
+    companion object {
+        fun skyboxBuilder(): BoxMeshBuilder {
+            val builder = BoxMeshBuilder(0.5f, 0.5f, 0.5f)
+            builder.normals = false
+            builder.uv = false
+            return builder
+        }
+    }
 }

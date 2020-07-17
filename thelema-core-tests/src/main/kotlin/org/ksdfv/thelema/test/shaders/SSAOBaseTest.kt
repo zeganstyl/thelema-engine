@@ -34,22 +34,29 @@ import org.ksdfv.thelema.shader.post.SSAO
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.GBuffer
 
-object SSAOBaseTest: Test("SSAO Base") {
+class SSAOBaseTest: Test("SSAO Base") {
     override fun testMain() {
+        if (GL.isGLES) {
+            if (GL.glesMajVer < 3) {
+                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
+                return
+            }
+        }
+
         @Language("GLSL")
         val sceneShader = Shader(version = 330,
             vertCode = """
-attribute vec3 aPosition;
-attribute vec2 aUV;
-attribute vec3 aNormal;
+in vec3 aPosition;
+in vec2 aUV;
+in vec3 aNormal;
 
 uniform mat4 world;
 uniform mat4 view;
 uniform mat4 viewProj;
 
-varying vec2 vUV;
-varying vec3 vNormal;
-varying vec3 vViewSpacePosition;
+out vec2 vUV;
+out vec3 vNormal;
+out vec3 vViewSpacePosition;
 
 void main() {
 vUV = aUV;
@@ -59,9 +66,9 @@ vViewSpacePosition = (view * worldPos).xyz; // for ssao positions must in view s
 gl_Position = viewProj * worldPos;
 }""",
             fragCode = """
-varying vec2 vUV;
-varying vec3 vNormal;
-varying vec3 vViewSpacePosition;
+in vec2 vUV;
+in vec3 vNormal;
+in vec3 vViewSpacePosition;
 
 layout (location = 0) out vec4 gColor;
 layout (location = 1) out vec4 gNormal;

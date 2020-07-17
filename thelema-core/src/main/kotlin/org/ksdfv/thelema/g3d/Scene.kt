@@ -59,6 +59,8 @@ open class Scene(
 
     override var shaderChannel: Int = -1
 
+    private var defaultRendering = true
+
     override fun updatePreviousTransform() {
         objects.forEach {
             it.updatePreviousTransform()

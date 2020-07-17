@@ -43,6 +43,8 @@ interface IApp {
     var cursor: Int
     var defaultCursor: Int
 
+    fun messageBox(title: String, message: String)
+
     fun loadPreferences(name: String): String
     fun savePreferences(name: String, text: String)
 

@@ -17,8 +17,12 @@
 package org.ksdfv.thelema.lwjgl3
 
 import org.ksdfv.thelema.ext.traverseSafe
-import org.ksdfv.thelema.input.*
-import org.lwjgl.glfw.*
+import org.ksdfv.thelema.input.IKB
+import org.ksdfv.thelema.input.IKeyListener
+import org.ksdfv.thelema.input.KB
+import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFWCharCallback
+import org.lwjgl.glfw.GLFWKeyCallback
 
 class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
     val listeners = ArrayList<IKeyListener>()
@@ -307,5 +311,9 @@ class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
 
     init {
         windowHandleChanged(window.windowHandle)
+    }
+
+    override fun clear() {
+        listeners.clear()
     }
 }

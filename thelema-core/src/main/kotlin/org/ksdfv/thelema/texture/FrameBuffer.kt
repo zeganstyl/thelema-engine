@@ -17,58 +17,28 @@
 package org.ksdfv.thelema.texture
 
 import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.GL_COLOR_ATTACHMENT0
-import org.ksdfv.thelema.gl.GL_RGBA
-import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
 
 /**
- * After creating, you must add attachments.
- * For creating attachments, probably better you already existing functions like [IFrameBufferAttachment.colorAttachment],
- * [IFrameBufferAttachment.depthAttachment] and etc.
+ * Default frame buffer. You need manually add attachments and build them using [buildAttachments].
+ * For creating attachments, probably better you already existing functions from [Attachments].
+ *
+ * For simple frame buffer you can use [SimpleFrameBuffer].
  *
  * @author zeganstyl
  */
-open class FrameBuffer(width: Int, height: Int, initGpuObjects: Boolean = true):
-    IFrameBuffer {
+class FrameBuffer(
+    width: Int = GL.mainFrameBufferWidth,
+    height: Int = GL.mainFrameBufferHeight
+): IFrameBuffer {
     override var width: Int = width
-        protected set
+        private set
 
     override var height: Int = height
-        protected set
+        private set
 
     override var isBound: Boolean = false
 
-    override var glHandle: Int = if (initGpuObjects) GL.glGenFramebuffer() else 0
-
-    constructor(width: Int, height: Int, block: IFrameBuffer.() -> Unit): this(width, height) { block(this) }
-
-    /** Create simple frame buffer with attached textures
-     * @param pixelFormat can be GL_RGBA, GL_RGB, GL_RG and etc */
-    constructor(
-        width: Int,
-        height: Int,
-        pixelFormat: Int = GL_RGBA,
-        internalFormat: Int = pixelFormat,
-        type: Int = GL_UNSIGNED_BYTE,
-        hasDepth: Boolean = true,
-        hasStencil: Boolean = false) : this(width, height) {
-        attachments.add(
-            FrameBufferAttachment(
-                attachment = GL_COLOR_ATTACHMENT0,
-                internalformat = internalFormat,
-                pixelFormat = pixelFormat,
-                type = type
-            )
-        )
-
-        when {
-            hasDepth && hasStencil -> attachments.add(IFrameBufferAttachment.depthStencilRenderBufferAttachment())
-            hasDepth -> attachments.add(IFrameBufferAttachment.depthAttachment())
-            hasStencil -> attachments.add(IFrameBufferAttachment.stencilRenderBufferAttachment())
-        }
-
-        buildAttachments()
-    }
+    override var glHandle: Int = GL.glGenFramebuffer()
 
     override val attachments = ArrayList<IFrameBufferAttachment>()
 

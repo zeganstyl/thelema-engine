@@ -22,8 +22,8 @@ import org.ksdfv.thelema.texture.IFrameBuffer
 import org.ksdfv.thelema.texture.ITexture
 
 /** @author zeganstyl */
-class Threshold {
-    var cutoff = 0.5f
+class Threshold(cutoff: Float = 1f) {
+    var cutoff = cutoff
         set(value) {
             field = value
             shader.bind()
@@ -57,7 +57,7 @@ uniform sampler2D tex;
 uniform float cutoff;
 
 void main() {
-    vec4 color = texture(tex, uv);
+    vec4 color = texture2D(tex, uv);
 
     float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
     if (brightness > cutoff) {

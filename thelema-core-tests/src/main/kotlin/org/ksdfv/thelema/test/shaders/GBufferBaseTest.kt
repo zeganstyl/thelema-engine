@@ -32,8 +32,21 @@ import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.GBuffer
 
-object GBufferBaseTest: Test("G-Buffer") {
+class GBufferBaseTest: Test("G-Buffer base") {
     override fun testMain() {
+        if (GL.isGLES) {
+            if (GL.glesMajVer < 3) {
+                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
+                return
+            }
+            if (GL.glesMajVer == 3) {
+                if (!GL.enableExtension("EXT_color_buffer_float")) {
+                    APP.messageBox("Not supported", "Render to float texture not supported")
+                    return
+                }
+            }
+        }
+
         val screenQuad = ScreenQuad.TextureRenderer(0f, 0f, 0.5f, 0.5f)
 
         val gBuffer = GBuffer()
@@ -43,16 +56,16 @@ object GBufferBaseTest: Test("G-Buffer") {
         @Language("GLSL")
         val shader = Shader(version = 330,
             vertCode = """
-attribute vec3 aPosition;
-attribute vec2 aUV;
-attribute vec3 aNormal;
+in vec3 aPosition;
+in vec2 aUV;
+in vec3 aNormal;
 
 uniform mat4 world;
 uniform mat4 viewProj;
 
-varying vec2 vUV;
-varying vec3 vNormal;
-varying vec3 vPosition;
+out vec2 vUV;
+out vec3 vNormal;
+out vec3 vPosition;
 
 void main() {
 vUV = aUV;
@@ -61,9 +74,9 @@ vPosition = (world * vec4(aPosition, 1.0)).xyz;
 gl_Position = viewProj * vec4(vPosition, 1.0);
 }""",
             fragCode = """
-varying vec2 vUV;
-varying vec3 vNormal;
-varying vec3 vPosition;
+in vec2 vUV;
+in vec3 vNormal;
+in vec3 vPosition;
 
 layout (location = 0) out vec4 gColor;
 layout (location = 1) out vec4 gNormal;

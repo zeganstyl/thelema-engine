@@ -18,12 +18,12 @@ package org.ksdfv.thelema.lwjgl3.test
 
 import org.ksdfv.thelema.lwjgl3.Lwjgl3App
 import org.ksdfv.thelema.lwjgl3.Lwjgl3AppConf
-import org.ksdfv.thelema.test.shaders.MotionBlurBaseTest
+import org.ksdfv.thelema.test.shaders.CascadedShadowMappingBaseTest
 
 /** @author zeganstyl */
 object MainLwjgl3SingleTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        Lwjgl3App(Lwjgl3AppConf(windowWidth = 1280, windowHeight = 720)) { MotionBlurBaseTest.testMain() }
+        Lwjgl3App(Lwjgl3AppConf(windowWidth = 1280, windowHeight = 720)) { CascadedShadowMappingBaseTest().testMain() }
     }
 }

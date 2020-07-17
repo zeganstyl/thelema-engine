@@ -10,7 +10,8 @@ group = thelemaGroup
 
 val gitRepositoryUrl: String by project
 
-val verName = "0.2.0"
+val thelemaVersion: String by project
+val verName = thelemaVersion
 version = verName
 
 dependencies {
@@ -39,6 +40,8 @@ bintray {
     // user and key properties must be saved in user home (by default ~/.gradle/gradle.properties)
     user = project.property("BINTRAY_USER") as String
     key = project.property("BINTRAY_KEY") as String
+    override = true
+    publish = true
     setPublications("mavenJava")
     pkg.apply {
         repo = "thelema-engine"

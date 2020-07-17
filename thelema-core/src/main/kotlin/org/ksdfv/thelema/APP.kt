@@ -29,7 +29,35 @@ object APP: IApp {
     const val HorizontalResizeCursor = 4
     const val VerticalResizeCursor = 5
 
-    lateinit var api: IApp
+    var api: IApp = object : IApp {
+        override val platformType: Int
+            get() = Desktop
+        override val width: Int
+            get() = 640
+        override val height: Int
+            get() = 480
+        override val deltaTime: Float
+            get() = 0f
+        override val rawDeltaTime: Float
+            get() = 0f
+        override val fps: Int
+            get() = 0
+        override var clipboardString: String
+            get() = ""
+            set(_) {}
+        override var cursor: Int
+            get() = 0
+            set(_) {}
+        override var defaultCursor: Int
+            get() = 0
+            set(_) {}
+
+        override fun messageBox(title: String, message: String) {}
+        override fun loadPreferences(name: String): String = ""
+        override fun savePreferences(name: String, text: String) {}
+        override fun destroy() {}
+        override fun startLoop() {}
+    }
 
     override val platformType: Int
         get() = api.platformType
@@ -68,6 +96,7 @@ object APP: IApp {
     /** See [mainLoopIteration] */
     var maxMainLoopIterationCounter: Int = 1
 
+    override fun messageBox(title: String, message: String) = api.messageBox(title, message)
 
     override fun loadPreferences(name: String): String = api.loadPreferences(name)
 

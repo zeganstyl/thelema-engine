@@ -20,17 +20,40 @@ import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
 import org.ksdfv.thelema.ext.traverseSafe
+import org.ksdfv.thelema.gl.GL.depthFunc
 import org.ksdfv.thelema.img.IImage
+import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
 object GL: IGL {
     var api: IGL = object: IGL {}
 
     /** Default frame buffer width */
-    var mainFrameBufferWidth: Int = 0
+    override val mainFrameBufferWidth: Int
+        get() = api.mainFrameBufferWidth
 
     /** Default frame buffer height */
-    var mainFrameBufferHeight: Int = 0
+    override val mainFrameBufferHeight: Int
+        get() = api.mainFrameBufferHeight
+
+    override val mainFrameBufferHandle: Int
+        get() = api.mainFrameBufferHandle
+
+    override val majVer: Int
+        get() = api.majVer
+    override val minVer: Int
+        get() = api.minVer
+    override val relVer: Int
+        get() = api.relVer
+    override val glslVer: Int
+        get() = api.glslVer
+
+    override val glesMajVer: Int
+        get() = api.glesMajVer
+    override val glesMinVer: Int
+        get() = api.glesMinVer
+    override val isGLES: Boolean
+        get() = api.isGLES
 
     /** See [call] */
     val singleCallRequests = ArrayList<Request>()
@@ -178,7 +201,9 @@ object GL: IGL {
         }
     }
 
-    fun initGL() {
+    override fun initGL() {
+        api.initGL()
+
         initTextureUnits()
 
         if (isExtensionSupported("GL_EXT_texture_filter_anisotropic")) {
@@ -195,17 +220,17 @@ object GL: IGL {
     }
 
     /** Will be called once and removed */
-    fun call(name: String? = null, call: () -> Unit) {
+    fun call(name: String = "", call: () -> Unit) {
         singleCallRequests.add(Request(name, call))
     }
 
     /** Will be called every thread loop */
-    fun render(name: String? = null, call: () -> Unit) {
+    fun render(name: String = "", call: () -> Unit) {
         renderCallRequests.add(Request(name, call))
     }
 
     /** Will be called every thread loop */
-    fun destroy(name: String? = null, call: () -> Unit) {
+    fun destroy(name: String = "", call: () -> Unit) {
         destroyCallRequests.add(Request(name, call))
     }
 
@@ -213,7 +238,7 @@ object GL: IGL {
     fun doSingleCalls() {
         singleCallRequests.traverseSafe {
             it.call()
-            if (it.name != null) println("\"${it.name}\" called on GL thread")
+            if (it.name.isNotEmpty()) LOG.info("\"${it.name}\" called on GL thread")
         }
         singleCallRequests.clear()
     }
@@ -227,12 +252,24 @@ object GL: IGL {
     fun doDestroyCalls() {
         destroyCallRequests.traverseSafe {
             it.call()
-            if (it.name != null) println("\"${it.name}\" called on GL thread")
+            if (it.name.isNotEmpty()) LOG.info("\"${it.name}\" called on GL thread")
         }
         destroyCallRequests.clear()
     }
 
     override fun isExtensionSupported(extension: String) = api.isExtensionSupported(extension)
+
+    override fun enableExtension(extension: String): Boolean =
+        api.enableExtension(extension)
+
+    override fun callExtensionFunction(extension: String, functionName: String, args: List<Any?>): Any? =
+        api.callExtensionFunction(extension, functionName, args)
+
+    override fun setExtensionParam(extension: String, paramName: String, value: Any?) =
+        api.setExtensionParam(extension, paramName, value)
+
+    override fun getExtensionParam(extension: String, paramName: String): Any? =
+        api.getExtensionParam(extension, paramName)
 
     override fun glReadBuffer(mode: Int) = api.glReadBuffer(mode)
 
@@ -904,5 +941,5 @@ object GL: IGL {
 
 
     /** @param name can be used in debug */
-    class Request(var name: String? = null, val call: () -> Unit)
+    class Request(var name: String = "", val call: () -> Unit)
 }

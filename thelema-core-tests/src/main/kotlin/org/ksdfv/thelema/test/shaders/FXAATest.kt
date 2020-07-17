@@ -24,20 +24,23 @@ import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.shader.post.FXAA
 import org.ksdfv.thelema.test.CubeModel
 import org.ksdfv.thelema.test.Test
-import org.ksdfv.thelema.texture.FrameBuffer
+import org.ksdfv.thelema.texture.SimpleFrameBuffer
+import org.ksdfv.thelema.utils.LOG
 
-object FXAATest: Test("FXAA") {
+class FXAATest: Test("FXAA") {
     override fun testMain() {
         val model = CubeModel()
 
-        val frameBuffer = FrameBuffer(
-            GL.mainFrameBufferWidth,
-            GL.mainFrameBufferHeight,
-            GL_RGB,
+        val frameBuffer = SimpleFrameBuffer(
+            width = GL.mainFrameBufferWidth,
+            height = GL.mainFrameBufferHeight,
+            pixelFormat = GL_RGB,
             hasDepth = true
         )
 
         val fxaa = FXAA()
+
+        LOG.info(fxaa.shader.sourceCode())
 
         val screenQuad = ScreenQuad()
 

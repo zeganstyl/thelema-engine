@@ -16,7 +16,9 @@
 
 package org.ksdfv.thelema.texture
 
+import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.gl.*
+import org.ksdfv.thelema.utils.LOG
 
 /**
  * @author zeganstyl
@@ -41,23 +43,31 @@ interface IFrameBuffer {
                     if (attachment.target == GL_RENDERBUFFER) {
                         attachment.glHandle = GL.glGenRenderbuffer()
                         GL.glBindRenderbuffer(GL_RENDERBUFFER, attachment.glHandle)
-                        GL.glRenderbufferStorage(GL_RENDERBUFFER, attachment.internalformat, width, height)
+                        GL.glRenderbufferStorage(GL_RENDERBUFFER, attachment.internalFormat, width, height)
                     } else {
                         val texture = Texture2D()
                         texture.glHandle = GL.glGenTexture()
-                        texture.glTarget = attachment.textarget
+                        texture.glTarget = attachment.texTarget
+
+                        // https://computergraphics.stackexchange.com/questions/9719/does-webgl-2-support-linear-depth-texture-sampling
+                        val filter = if (attachment.pixelFormat == GL_DEPTH_COMPONENT && APP.platformType == APP.WebGL) {
+                            GL_NEAREST
+                        } else {
+                            GL_LINEAR
+                        }
+
                         texture.load(
-                            width,
-                            height,
-                            null,
-                            attachment.mipmapLevel,
-                            attachment.internalformat,
-                            attachment.pixelFormat,
-                            attachment.type,
-                            GL_LINEAR,
-                            GL_LINEAR,
-                            GL_CLAMP_TO_EDGE,
-                            GL_CLAMP_TO_EDGE
+                            width = width,
+                            height = height,
+                            pixels = null,
+                            mipmapLevel = attachment.mipmapLevel,
+                            internalFormat = attachment.internalFormat,
+                            pixelFormat = attachment.pixelFormat,
+                            type = attachment.type,
+                            minFilter = filter,
+                            magFilter = filter,
+                            sWrap = GL_CLAMP_TO_EDGE,
+                            tWrap = GL_CLAMP_TO_EDGE
                         )
                         attachment.glHandle = texture.glHandle
                         attachment.texture = texture
@@ -68,7 +78,7 @@ interface IFrameBuffer {
                     GL.glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment.attachment, GL_RENDERBUFFER, attachment.glHandle)
                     GL.glBindRenderbuffer(GL_RENDERBUFFER, 0)
                 } else {
-                    GL.glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.attachment, attachment.textarget, attachment.glHandle, attachment.mipmapLevel)
+                    GL.glFramebufferTexture2D(GL_FRAMEBUFFER, attachment.attachment, attachment.texTarget, attachment.glHandle, attachment.mipmapLevel)
                 }
             }
 
@@ -137,7 +147,7 @@ interface IFrameBuffer {
                 GL_FRAMEBUFFER_UNSUPPORTED -> "unsupported combination of formats"
                 else -> "unknown error $result"
             }}"
-            println(errorText)
+            LOG.info(errorText)
         }
     }
 
@@ -163,30 +173,24 @@ interface IFrameBuffer {
 
     /** Bind this, do [block] and unbind this.
      * Usually used for setting framebuffer parameters, attaching textures, etc.
-     * For rendering you can use [render] */
+     * For rendering you can use [render].
+     * After all, it will bind default frame buffer */
     fun bind(block: IFrameBuffer.() -> Unit) {
         isBound = true
         GL.glBindFramebuffer(GL_FRAMEBUFFER, glHandle)
         block(this)
-        GL.glBindFramebuffer(GL_FRAMEBUFFER,
-            defaultFramebufferHandle
-        )
+        GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         isBound = false
     }
 
     /** Like [bind], but also sets viewport */
     fun render(block: IFrameBuffer.() -> Unit) {
+        isBound = true
         GL.glBindFramebuffer(GL_FRAMEBUFFER, glHandle)
         GL.glViewport(0, 0, width, height)
         block(this)
-        GL.glBindFramebuffer(GL_FRAMEBUFFER,
-            defaultFramebufferHandle
-        )
+        GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
-    }
-
-    companion object {
-        /** the default framebuffer handle, a.k.a screen.  */
-        var defaultFramebufferHandle = 0
+        isBound = false
     }
 }
