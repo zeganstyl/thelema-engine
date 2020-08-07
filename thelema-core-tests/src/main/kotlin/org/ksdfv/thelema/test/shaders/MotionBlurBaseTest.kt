@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.input.IMouseListener
 import org.ksdfv.thelema.input.MOUSE
@@ -35,7 +35,11 @@ import org.ksdfv.thelema.texture.SimpleFrameBuffer
 import org.ksdfv.thelema.utils.LOG
 import kotlin.math.abs
 
-class MotionBlurBaseTest: Test("Motion Blur Base") {
+/** @author zeganstyl */
+class MotionBlurBaseTest: Test {
+    override val name: String
+        get() = "Motion Blur Base"
+
     override fun testMain() {
         if (GL.isGLES) {
             if (GL.glesMajVer == 3) {
@@ -108,7 +112,12 @@ vec2 prevNdcPos = (prevClipPos / prevClipPos.w).xy;
 gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
 }""")
 
-        ActiveCamera.api = Camera(from = Vec3(5f, 5f, 0f), to = IVec3.Zero, near = 0.1f, far = 100f)
+        ActiveCamera.api = Camera(
+            from = Vec3(5f, 5f, 0f),
+            to = IVec3.Zero,
+            near = 0.1f,
+            far = 100f
+        )
 
         val plane = PlaneMeshBuilder(width = 5f, height = 5f).build()
 

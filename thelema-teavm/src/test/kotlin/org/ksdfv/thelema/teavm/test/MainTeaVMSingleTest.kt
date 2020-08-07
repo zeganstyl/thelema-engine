@@ -16,14 +16,18 @@
 
 package org.ksdfv.thelema.teavm.test
 
+import org.ksdfv.thelema.phys.PHYS
+import org.ksdfv.thelema.phys.ode4j.OdePhys
 import org.ksdfv.thelema.teavm.TeaVMApp
-import org.ksdfv.thelema.test.sound.SoundWavTest
+import org.ksdfv.thelema.test.phys.BoxShapeTest
 
 object MainTeaVMSingleTest {
     @JvmStatic
     fun main(args: Array<String>) {
         TeaVMApp {
-            SoundWavTest().testMain()
+            PHYS.api = OdePhys()
+
+            BoxShapeTest().testMain()
         }
     }
 }

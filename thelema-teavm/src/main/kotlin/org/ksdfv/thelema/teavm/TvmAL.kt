@@ -20,6 +20,7 @@ import org.ksdfv.thelema.audio.*
 import org.ksdfv.thelema.fs.IFile
 import org.teavm.jso.webaudio.AudioContext
 
+/** @author zeganstyl */
 class TvmAL: IAL {
     val context = AudioContext.create()
 

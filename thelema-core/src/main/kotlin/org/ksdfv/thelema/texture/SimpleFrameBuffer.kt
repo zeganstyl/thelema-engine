@@ -28,7 +28,7 @@ import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
  * @param pixelFormat can be GL_RGBA, GL_RGB, GL_RG and etc
  * @param internalFormat can be GL_RGBA, GL_RGBA16F, GL_RG16F and etc
  * @param type can GL_FLOAT, GL_UNSIGNED_BYTE and etc
- * */
+ * @author zeganstyl */
 class SimpleFrameBuffer(
     width: Int = GL.mainFrameBufferWidth,
     height: Int = GL.mainFrameBufferHeight,
@@ -73,6 +73,10 @@ class SimpleFrameBuffer(
     override val depth: Int
         get() = texture.depth
 
+    override var textureHandle: Int
+        get() = texture.textureHandle
+        set(value) { texture.textureHandle = value }
+
     /** First attachment color texture */
     val texture: ITexture
         get() = getTexture(0)
@@ -85,7 +89,7 @@ class SimpleFrameBuffer(
 
     override var isBound: Boolean = false
 
-    override var glHandle: Int = GL.glGenFramebuffer()
+    override var frameBufferHandle: Int = GL.glGenFramebuffer()
 
     override val attachments = ArrayList<IFrameBufferAttachment>()
 

@@ -18,7 +18,8 @@ package org.ksdfv.thelema.texture
 
 import org.ksdfv.thelema.gl.*
 
-/** Frame buffer attachment creation functions */
+/** Frame buffer attachment creation functions
+ * @author zeganstyl */
 object Attachments {
     /** Simple color attachment
      * @param index You must specify index of color attachment.

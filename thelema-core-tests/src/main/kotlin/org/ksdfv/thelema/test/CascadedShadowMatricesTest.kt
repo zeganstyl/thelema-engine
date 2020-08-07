@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
@@ -35,7 +35,11 @@ import org.ksdfv.thelema.utils.LOG
 import kotlin.math.max
 import kotlin.math.min
 
-class CascadedShadowMatricesTest: Test("Cascaded shadow matrices") {
+/** @author zeganstyl */
+class CascadedShadowMatricesTest: Test {
+    override val name: String
+        get() = "Cascaded shadow matrices"
+
     val lightDirection = Vec3(1f, -1f, -1f).nor()
     val lightPositionOffset = 0f
 
@@ -62,7 +66,8 @@ class CascadedShadowMatricesTest: Test("Cascaded shadow matrices") {
     val tmpVec = Vec3()
     val centroid = Vec3()
 
-    val sceneCamera = Camera(near = 0.1f, far = 10f, isOrthographic = false)
+    val sceneCamera =
+        Camera(near = 0.1f, far = 10f, isOrthographic = false)
     val sceneCameraFrustum = Frustum(sceneCamera.inverseViewProjectionMatrix)
 
     fun updateFrustums() {

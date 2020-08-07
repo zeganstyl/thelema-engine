@@ -38,11 +38,18 @@ class IndexBufferObject constructor(
     var usage: Int = GL_STATIC_DRAW,
     initGpuObjects: Boolean = true
 ): IIndexBufferObject {
+    /** Handle will be set after [initGpuObjects] executed */
     override var handle: Int = 0
 
     private var isBufferNeedReload = true
 
-    override var numBytesPerIndex: Int = 0
+    override val bytesPerIndex: Int
+        get() = when (type) {
+            GL_UNSIGNED_BYTE -> 1
+            GL_UNSIGNED_SHORT -> 2
+            GL_UNSIGNED_INT -> 4
+            else -> 0
+        }
 
     override var type: Int = 0
         set(value) {
@@ -51,13 +58,6 @@ class IndexBufferObject constructor(
             }
 
             field = value
-
-            numBytesPerIndex = when (type) {
-                GL_UNSIGNED_BYTE -> 1
-                GL_UNSIGNED_SHORT -> 2
-                GL_UNSIGNED_INT -> 4
-                else -> 0
-            }
         }
 
     init {
@@ -67,54 +67,26 @@ class IndexBufferObject constructor(
 
     override fun initGpuObjects() {
         handle = GL.glGenBuffer()
-    }
-
-    override fun loadBufferToGpu() {
         isBufferNeedReload = true
     }
 
-    override fun update(targetOffset: Int, indices: ByteArray, offset: Int, count: Int) {
-//        isDirty = true
-//        val pos = byteBuffer.position()
-//        byteBuffer.put(indices, offset, count)
-//        byteBuffer.position(targetOffset)
-//        BufferUtils.copy(indices, offset, byteBuffer, count)
-//        byteBuffer.position(pos)
-//
-//        if (isBound) {
-//            GL.glBufferData(GL_ELEMENT_ARRAY_BUFFER, byteBuffer.limit(), byteBuffer, usage)
-//            isDirty = false
-//        }
+    override fun loadBufferToGpu() {
+        GL.glBufferData(GL_ELEMENT_ARRAY_BUFFER, bytes.size, bytes, usage)
+        isBufferNeedReload = false
     }
 
     /** Binds this IndexBufferObject for rendering with glDrawElements.  */
     override fun bind() {
         if (handle != 0) {
             GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle)
-            if (isBufferNeedReload) {
-                GL.glBufferData(GL_ELEMENT_ARRAY_BUFFER, bytes.size, bytes, usage)
-                isBufferNeedReload = false
-            }
-        } else {
-            unbind()
+            if (isBufferNeedReload) loadBufferToGpu()
         }
-    }
-
-    /** Unbinds this IndexBufferObject.  */
-    override fun unbind() {
-        GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-    }
-
-    /** Invalidates the IndexBufferObject so a new OpenGL buffer handle is created. Use this in case of a context loss.  */
-    override fun invalidate() {
-        handle = GL.glGenBuffer()
-        isBufferNeedReload = true
     }
 
     /** Disposes this IndexBufferObject and all its associated OpenGL resources.  */
     override fun destroy() {
         if (handle != 0) {
-            GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+            if (GL.elementArrayBuffer == handle) GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
             GL.glDeleteBuffer(handle)
             handle = 0
         }

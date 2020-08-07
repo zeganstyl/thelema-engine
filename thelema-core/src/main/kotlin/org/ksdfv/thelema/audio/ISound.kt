@@ -40,7 +40,7 @@ package org.ksdfv.thelema.audio
  * **Note**: any values provided will not be clamped, it is the developer's responsibility to do so
  *
  *
- * @author badlogicgames@gmail.com
+ * @author badlogicgames@gmail.com, zeganstyl
  */
 interface ISound {
     /** Plays the sound. If the sound is already playing, it will be played again, concurrently.
@@ -49,7 +49,7 @@ interface ISound {
      * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
      * @return the id of the sound instance if successful, or -1 on failure.
      */
-    fun play(volume: Float = 1f, pitch: Float = 0f, pan: Float = 0f, loop: Boolean = false): Int
+    fun play(volume: Float = 1f, pitch: Float = 1f, pan: Float = 0f, loop: Boolean = false): Int
 
     /** Stops playing all instances of this sound.  */
     fun stop()

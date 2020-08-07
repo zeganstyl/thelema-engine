@@ -21,7 +21,10 @@ import org.ksdfv.thelema.test.Test
 import kotlin.random.Random
 
 /** @author zeganstyl */
-class AudioDeviceTest: Test("Audio Device") {
+class AudioDeviceTest: Test {
+    override val name: String
+        get() = "Audio Device"
+
     override fun testMain() {
         // 500 samples in second, 5 seconds of noise
         val sampleRate = 500

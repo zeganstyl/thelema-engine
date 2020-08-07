@@ -17,8 +17,6 @@
 package org.ksdfv.thelema.g3d.cam
 
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.ICamera
 import org.ksdfv.thelema.input.IMouseListener
 import org.ksdfv.thelema.input.KB
 import org.ksdfv.thelema.input.MOUSE
@@ -31,7 +29,9 @@ import kotlin.math.sin
 
 /** Orbit control uses spherical coordinates [zenith], [azimuth] and [targetDistance].
  *
- * See [Spherical coordinate system](https://en.wikipedia.org/wiki/Spherical_coordinate_system) */
+ * See [Spherical coordinate system](https://en.wikipedia.org/wiki/Spherical_coordinate_system)
+ *
+ * @author zeganstyl */
 open class OrbitCameraControl(
     /** Zenith (vertical) angle in radians */
     var zenith: Float = 1f,

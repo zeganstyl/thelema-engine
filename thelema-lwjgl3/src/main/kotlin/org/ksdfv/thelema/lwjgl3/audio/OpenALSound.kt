@@ -22,20 +22,19 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 
-/** @author Nathan Sweet
- */
+/** @author Nathan Sweet */
 abstract class OpenALSound(private val audio: OpenAL) : ISound {
     private var bufferID = -1
     var duration = 0f
         private set
 
     fun setup(pcm: ByteArray, channels: Int, sampleRate: Int) {
-        val bytes = pcm.size - pcm.size % if (channels > 1) 4 else 2
-        val samples = bytes / (2 * channels)
+        val bytesNum = pcm.size - pcm.size % if (channels > 1) 4 else 2
+        val samples = bytesNum / (2 * channels)
         duration = samples / sampleRate.toFloat()
-        val buffer = ByteBuffer.allocateDirect(bytes)
+        val buffer = ByteBuffer.allocateDirect(bytesNum)
         buffer.order(ByteOrder.nativeOrder())
-        buffer.put(pcm, 0, bytes)
+        buffer.put(pcm, 0, bytesNum)
         buffer.flip()
         if (bufferID == -1) {
             bufferID = AL10.alGenBuffers()
@@ -46,12 +45,17 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
     override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int {
         if (audio.noDevice) return 0
         var sourceID = audio.obtainSource(false)
-        if (sourceID == -1) { // Attempt to recover by stopping the least recently played sound
+        if (sourceID == -1) {
+            // Attempt to recover by stopping the least recently played sound
             audio.retain(this, true)
             sourceID = audio.obtainSource(false)
-        } else audio.retain(this, false)
+        } else {
+            audio.retain(this, false)
+        }
+
         // In case it still didn't work
         if (sourceID == -1) return -1
+
         val soundId = audio.getSoundId(sourceID)
         AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
         AL10.alSourcei(sourceID, AL10.AL_LOOPING, if (loop) AL10.AL_TRUE else AL10.AL_FALSE)

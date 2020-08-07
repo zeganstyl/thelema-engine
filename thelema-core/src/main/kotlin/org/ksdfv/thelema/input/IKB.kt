@@ -35,5 +35,5 @@ interface IKB {
     fun addListener(listener: IKeyListener)
     fun removeListener(listener: IKeyListener)
 
-    fun clear()
+    fun reset()
 }

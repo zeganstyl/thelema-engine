@@ -20,11 +20,10 @@ import org.ksdfv.thelema.gl.GL_BACK
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.Vec4
 import org.ksdfv.thelema.shader.IShader
-import org.ksdfv.thelema.shader.Shader
 
 /** @author zeganstyl */
 open class Material(
-    override var shader: Shader? = null,
+    override var shader: IShader? = null,
 
     override var baseColor: IVec4 = Vec4(1f),
     override var metallic: Float = 0f,

@@ -20,6 +20,7 @@ import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.utils.LOG
 
+/** @author zeganstyl */
 class CubeFrameBuffer(
     override var width: Int,
     override var height: Int,
@@ -31,7 +32,7 @@ class CubeFrameBuffer(
 ): IFrameBuffer {
     override var isBound: Boolean = false
 
-    override var glHandle: Int = if (initGpuObjects) GL.glGenFramebuffer() else 0
+    override var frameBufferHandle: Int = if (initGpuObjects) GL.glGenFramebuffer() else 0
 
     override val attachments = ArrayList<IFrameBufferAttachment>()
 
@@ -62,7 +63,7 @@ class CubeFrameBuffer(
 
         for (i in 0 until 6) {
             attachments.add(FrameBufferAttachment(
-                glHandle = texture.glHandle,
+                glHandle = texture.textureHandle,
                 texture = texture,
                 target = GL_FRAMEBUFFER,
                 attachment = GL_COLOR_ATTACHMENT0,
@@ -82,7 +83,7 @@ class CubeFrameBuffer(
     }
 
     fun renderCube(block: (side: Int) -> Unit) {
-        GL.glBindFramebuffer(GL_FRAMEBUFFER, glHandle)
+        GL.glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle)
         GL.glViewport(0, 0, width, height)
 
         for (i in 0 until 6) {

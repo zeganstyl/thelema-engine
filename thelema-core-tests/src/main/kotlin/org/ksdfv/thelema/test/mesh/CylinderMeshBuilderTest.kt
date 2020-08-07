@@ -17,6 +17,8 @@
 package org.ksdfv.thelema.test.mesh
 
 import org.ksdfv.thelema.g3d.*
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.light.DirectionalLight
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
@@ -25,7 +27,11 @@ import org.ksdfv.thelema.mesh.build.CylinderMeshBuilder
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.Color
 
-class CylinderMeshBuilderTest: Test("Cylinder Mesh Builder") {
+/** @author zeganstyl */
+class CylinderMeshBuilderTest: Test {
+    override val name: String
+        get() = "Cylinder Mesh Builder"
+
     override fun testMain() {
         val graphics = Object3D().apply {
             meshes.add(CylinderMeshBuilder {

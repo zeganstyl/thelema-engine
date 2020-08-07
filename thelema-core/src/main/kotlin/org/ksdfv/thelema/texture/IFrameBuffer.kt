@@ -29,7 +29,7 @@ interface IFrameBuffer {
 
     val attachments: MutableList<IFrameBufferAttachment>
 
-    var glHandle: Int
+    var frameBufferHandle: Int
 
     var isBound: Boolean
 
@@ -46,7 +46,7 @@ interface IFrameBuffer {
                         GL.glRenderbufferStorage(GL_RENDERBUFFER, attachment.internalFormat, width, height)
                     } else {
                         val texture = Texture2D()
-                        texture.glHandle = GL.glGenTexture()
+                        texture.textureHandle = GL.glGenTexture()
                         texture.glTarget = attachment.texTarget
 
                         // https://computergraphics.stackexchange.com/questions/9719/does-webgl-2-support-linear-depth-texture-sampling
@@ -69,7 +69,7 @@ interface IFrameBuffer {
                             sWrap = GL_CLAMP_TO_EDGE,
                             tWrap = GL_CLAMP_TO_EDGE
                         )
-                        attachment.glHandle = texture.glHandle
+                        attachment.glHandle = texture.textureHandle
                         attachment.texture = texture
                     }
                 }
@@ -97,7 +97,7 @@ interface IFrameBuffer {
     /** You have to reimplement this and set width and height fields */
     fun setResolution(width: Int, height: Int) {
         destroy(true)
-        glHandle = GL.glGenFramebuffer()
+        frameBufferHandle = GL.glGenFramebuffer()
         buildAttachments()
     }
 
@@ -105,7 +105,7 @@ interface IFrameBuffer {
      * Used for multi render target.
      * If no indices specified, all color attachments will be used in added order. */
     fun initBuffersOrder(vararg indices: Int) {
-        if (glHandle == 0) throw RuntimeException("GL Object is not created, may be you must call createGLObject()")
+        if (frameBufferHandle == 0) throw RuntimeException("GL Object is not created, may be you must call createGLObject()")
         if (!isBound) throw RuntimeException("Frame buffer it not bound. You must use bind {}")
 
         if (indices.isEmpty()) {
@@ -168,7 +168,7 @@ interface IFrameBuffer {
             attachment.glHandle = 0
         }
 
-        GL.glDeleteFramebuffer(glHandle)
+        GL.glDeleteFramebuffer(frameBufferHandle)
     }
 
     /** Bind this, do [block] and unbind this.
@@ -177,7 +177,7 @@ interface IFrameBuffer {
      * After all, it will bind default frame buffer */
     fun bind(block: IFrameBuffer.() -> Unit) {
         isBound = true
-        GL.glBindFramebuffer(GL_FRAMEBUFFER, glHandle)
+        GL.glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle)
         block(this)
         GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         isBound = false
@@ -186,7 +186,7 @@ interface IFrameBuffer {
     /** Like [bind], but also sets viewport */
     fun render(block: IFrameBuffer.() -> Unit) {
         isBound = true
-        GL.glBindFramebuffer(GL_FRAMEBUFFER, glHandle)
+        GL.glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle)
         GL.glViewport(0, 0, width, height)
         block(this)
         GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)

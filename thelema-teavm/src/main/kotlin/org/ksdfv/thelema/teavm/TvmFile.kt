@@ -26,7 +26,7 @@ import org.teavm.jso.typedarrays.Uint8Array
 import java.io.InputStream
 import java.io.OutputStream
 
-
+/** @author zeganstyl */
 class TvmFile(override val path: String): IFile {
     override val isDirectory: Boolean
         get() = false
@@ -140,6 +140,7 @@ class TvmFile(override val path: String): IFile {
     override fun write(append: Boolean): OutputStream { throw NotImplementedError() }
     override fun writeBytes(bytes: ByteArray, append: Boolean) {}
     override fun writeBytes(bytes: ByteArray, offset: Int, length: Int, append: Boolean) {}
+    override fun writeBytes(bytes: IByteData) {}
     override fun writeText(text: String, append: Boolean, charset: String?) {}
     override fun mkdirs() {}
 }

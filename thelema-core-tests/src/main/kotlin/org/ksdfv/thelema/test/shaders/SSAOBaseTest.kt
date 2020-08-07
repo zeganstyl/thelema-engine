@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -34,12 +34,21 @@ import org.ksdfv.thelema.shader.post.SSAO
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.GBuffer
 
-class SSAOBaseTest: Test("SSAO Base") {
+/** @author zeganstyl */
+class SSAOBaseTest: Test {
+    override val name: String
+        get() = "SSAO Base"
+
     override fun testMain() {
         if (GL.isGLES) {
             if (GL.glesMajVer < 3) {
                 APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
                 return
+            } else {
+                if (!GL.enableExtension("EXT_color_buffer_float")) {
+                    APP.messageBox("Not supported", "Render to float texture not supported")
+                    return
+                }
             }
         }
 
@@ -86,7 +95,12 @@ gPosition = vec4(vViewSpacePosition, 1.0);
 
         val ssao = SSAO(gBuffer.colorMap, gBuffer.normalMap, gBuffer.positionMap)
 
-        ActiveCamera.api = Camera(from = Vec3(0f, 3f, -3f), to = IVec3.Zero, near = 0.1f, far = 100f)
+        ActiveCamera.api = Camera(
+            from = Vec3(0f, 3f, -3f),
+            to = IVec3.Zero,
+            near = 0.1f,
+            far = 100f
+        )
 
         val cube = BoxMeshBuilder().build()
         val plane = PlaneMeshBuilder(width = 5f, height = 5f).build()

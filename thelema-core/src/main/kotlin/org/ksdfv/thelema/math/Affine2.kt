@@ -229,7 +229,7 @@ class Affine2 {
      * @param scaleY The scale in x.
      * @return This matrix for the purpose of chaining operations.
      */
-    fun setToTrnRotScl(x: Float, y: Float, degrees: Float, scaleX: Float, scaleY: Float): Affine2 {
+    fun setToTRS(x: Float, y: Float, degrees: Float, scaleX: Float, scaleY: Float): Affine2 {
         m02 = x
         m12 = y
         if (degrees == 0f) {
@@ -255,8 +255,8 @@ class Affine2 {
      * @param scale The scale vector.
      * @return This matrix for the purpose of chaining operations.
      */
-    fun setToTrnRotScl(trn: Vec2, degrees: Float, scale: Vec2): Affine2 {
-        return setToTrnRotScl(trn.x, trn.y, degrees, scale.x, scale.y)
+    fun setToTRS(trn: Vec2, degrees: Float, scale: Vec2): Affine2 {
+        return setToTRS(trn.x, trn.y, degrees, scale.x, scale.y)
     }
 
     /** Sets this matrix to a concatenation of translation, rotation and scale. It is a more efficient form for:

@@ -1064,7 +1064,7 @@ interface IMat4 {
         return this
     }
 
-    fun getTranslation(out: IVec3 = Temp.vec3): IVec3 = out.set(m03, m13, m23)
+    fun getTranslation(out: IVec3): IVec3 = out.set(m03, m13, m23)
     fun getRotation(out: IVec4): IVec4 = out.setQuaternion(this)
     fun getScale(out: IVec3): IVec3 = out.set(scaleX, scaleY, scaleZ)
 

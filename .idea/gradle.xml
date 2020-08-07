@@ -14,10 +14,10 @@
             <option value="$PROJECT_DIR$/thelema-core-tests" />
             <option value="$PROJECT_DIR$/thelema-jvm" />
             <option value="$PROJECT_DIR$/thelema-lwjgl3" />
+            <option value="$PROJECT_DIR$/thelema-ode4j" />
             <option value="$PROJECT_DIR$/thelema-teavm" />
           </set>
         </option>
-        <option name="useQualifiedModuleNames" value="true" />
       </GradleProjectSettings>
     </option>
   </component>

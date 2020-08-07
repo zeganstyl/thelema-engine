@@ -15,22 +15,20 @@ val verName = thelemaVersion
 version = verName
 
 repositories {
-    mavenCentral()
+    jcenter()
     maven {
         url = uri("https://www.beatunes.com/repo/maven2/")
     }
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+
     api(project(":thelema-jvm"))
     api(project(":thelema-core"))
 
     testImplementation(project(path = ":thelema-core-tests"))
-
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.7")
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    testImplementation(project(path = ":thelema-ode4j"))
 
     // https://mvnrepository.com/artifact/com.jcraft/jogg
     api("com.jcraft", "jogg", "0.0.7")
@@ -60,7 +58,7 @@ dependencies {
 
 tasks {
     jar {
-        from ({
+        from({
             configurations.runtimeClasspath.get().map {
                 if (it.isDirectory) {
                     it
@@ -77,6 +75,31 @@ tasks {
             }
         })
     }
+}
+
+tasks.create("testsJar", Jar::class) {
+    archiveBaseName.set("thelema-lwjgl3-tests")
+
+    manifest {
+        attributes["Main-Class"] = "org.ksdfv.thelema.lwjgl3.test.MainLwjgl3Tests"
+    }
+
+    from(sourceSets.main.get().output)
+    from(sourceSets.test.get().output)
+
+    from({
+        configurations.testRuntimeClasspath.get().map {
+            if (it.isDirectory) {
+                it
+            } else {
+                if (it.extension.toLowerCase() == "jar") {
+                    zipTree(it)
+                } else {
+                    it
+                }
+            }
+        }
+    })
 }
 
 val sourcesJar by tasks.registering(Jar::class) {

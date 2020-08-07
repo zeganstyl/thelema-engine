@@ -25,7 +25,8 @@ class PlaneMeshBuilder (
     var height: Float = 1f,
     var xDivisions: Int = 1,
     var yDivisions: Int = 1,
-    var normal: IVec3 = IVec3.Y
+    var normal: IVec3 = IVec3.Y,
+    var heightProvider: (hIndex: Int, vIndex: Int) -> Float = { _, _ -> 0f }
 ): MeshBuilder() {
     override fun build(out: IMesh): IMesh {
         val xNum = xDivisions + 1
@@ -42,34 +43,37 @@ class PlaneMeshBuilder (
 
             val xStart = -halfWidth
             val xStep = width / xDivisions
-            val uStep = uvScale * xStep / height
+            val uStep = xStep / height
 
             val yStart = -halfHeight
             val yStep = height / yDivisions
-            val vStep = uvScale * yStep / height
+            val vStep = yStep / height
 
             var y = yStart
             var v = 0f
-            while (y <= halfHeight) {
+            var iy = 0
+            while (iy < yNum) {
 
                 var x = xStart
                 var u = 0f
-                while (x <= halfWidth) {
-                    put(x, 0f, y)
-                    //println("$x, 0f, $y")
+                var ix = 0
+                while (ix < xNum) {
+                    put(x, heightProvider(ix, iy), y)
                     if (uv) put(u, v)
                     if (normals) put(normalX, normalY, normalZ)
 
                     u += uStep
                     x += xStep
+                    ix++
                 }
 
                 v += vStep
                 y += yStep
+                iy++
             }
         }
 
-        out.indices = createIndicesShort(6 * xNum * yNum) {
+        out.indices = createIndicesShort(6 * xDivisions * yDivisions) {
             val xQuads = xDivisions
             val yQuads = yDivisions
 

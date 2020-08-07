@@ -38,7 +38,7 @@ class FrameBuffer(
 
     override var isBound: Boolean = false
 
-    override var glHandle: Int = GL.glGenFramebuffer()
+    override var frameBufferHandle: Int = GL.glGenFramebuffer()
 
     override val attachments = ArrayList<IFrameBufferAttachment>()
 

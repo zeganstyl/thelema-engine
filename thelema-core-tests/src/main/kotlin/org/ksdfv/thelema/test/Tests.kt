@@ -17,25 +17,28 @@
 package org.ksdfv.thelema.test
 
 import org.ksdfv.thelema.test.mesh.*
+import org.ksdfv.thelema.test.phys.BoxShapeTest
+import org.ksdfv.thelema.test.phys.SphereShapeTest
+import org.ksdfv.thelema.test.phys.TrimeshShapeTest
 import org.ksdfv.thelema.test.shaders.*
+import org.ksdfv.thelema.test.shaders.glsl.*
 import org.ksdfv.thelema.test.sound.SoundWavTest
 
 /** @author zeganstyl */
-abstract class Tests {
-    val groups = ArrayList<TestCategory>()
+open class Tests {
+    val groups = ArrayList<TestGroup>()
 
-    val meshes = TestCategory(
+    val meshes = TestGroup(
         "Mesh",
         MeshTest(),
         MeshCubeTest(),
-        ScreenQuadTest(),
         PlaneMeshBuilderTest(),
         BoxMeshBuilderTest(),
         FrustumMeshBuilderTest(),
         InstancingTest()
     )
 
-    val shaders = TestCategory(
+    val shaders = TestGroup(
         "Shader",
         BloomBaseTest(),
         BloomTest(),
@@ -48,7 +51,19 @@ abstract class Tests {
         ThresholdTest()
     )
 
-    val other = TestCategory(
+    val glslNodes = TestGroup(
+        "GLSL nodes",
+        CascadedShadowMappingTest(),
+        EmissionBloomTest(),
+        GBufferTest(),
+        MotionBlurTest(),
+        SkyboxVertexNodeTest(),
+        SSAOTest(),
+        VelocityNodeTest(),
+        VertexNodeTest()
+    )
+
+    val other = TestGroup(
         "Other",
         Texture2DTest(),
         FrameBufferTest(),
@@ -56,12 +71,22 @@ abstract class Tests {
         KeyboardTest(),
         MouseTest(),
         CascadedShadowMatricesTest(),
-        SkyboxTest()
+        SkyboxTest(),
+        GLTFLoaderAnimTest()
+    )
+
+    val physics = TestGroup(
+        "Physics",
+        BoxShapeTest(),
+        SphereShapeTest(),
+        TrimeshShapeTest()
     )
 
     init {
         groups.add(meshes)
         groups.add(shaders)
+        groups.add(glslNodes)
         groups.add(other)
+        groups.add(physics)
     }
 }

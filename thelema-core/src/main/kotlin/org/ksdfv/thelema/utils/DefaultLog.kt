@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.utils
 
+/** @author zeganstyl */
 class DefaultLog: ILog {
     override var infoEnabled: Boolean = true
     override var debugEnabled: Boolean = true

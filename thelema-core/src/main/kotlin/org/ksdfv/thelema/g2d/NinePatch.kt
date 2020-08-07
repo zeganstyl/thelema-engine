@@ -20,7 +20,7 @@ import org.ksdfv.thelema.gl.GL_LINEAR
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Vec4
-import org.ksdfv.thelema.texture.Texture2D
+import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.utils.Color
 import kotlin.math.max
 
@@ -39,7 +39,7 @@ import kotlin.math.max
  *
  * [TextureAtlas] is one way to generate a post-processed nine-patch from a ".9.png" file.  */
 class NinePatch {
-    var texture: Texture2D? = null
+    var texture: ITexture2D? = null
         private set
     private var bottomLeft = -1
     private var bottomCenter = -1
@@ -93,7 +93,7 @@ class NinePatch {
      * @param top Pixels from top edge.
      * @param bottom Pixels from bottom edge.
      */
-    constructor(texture: Texture2D, left: Int = 0, right: Int = 0, top: Int = 0, bottom: Int = 0, color: IVec4 = Vec4(1f)) :
+    constructor(texture: ITexture2D, left: Int = 0, right: Int = 0, top: Int = 0, bottom: Int = 0, color: IVec4 = Vec4(1f)) :
             this(TextureRegion(texture), left, right, top, bottom, color)
 
     /** Create a ninepatch by cutting up the given texture region into nine patches. The subsequent parameters define the 4 lines
@@ -109,43 +109,19 @@ class NinePatch {
         val middleHeight = region.regionHeight - top - bottom
         val patches = arrayOfNulls<TextureRegion>(9)
         if (top > 0) {
-            if (left > 0) patches[TOP_LEFT] =
-                TextureRegion(region, 0, 0, left, top)
-            if (middleWidth > 0) patches[TOP_CENTER] =
-                TextureRegion(region, left, 0, middleWidth, top)
-            if (right > 0) patches[TOP_RIGHT] =
-                TextureRegion(region, left + middleWidth, 0, right, top)
+            if (left > 0) patches[TOP_LEFT] = TextureRegion().setRegion(region, 0, 0, left, top)
+            if (middleWidth > 0) patches[TOP_CENTER] = TextureRegion().setRegion(region, left, 0, middleWidth, top)
+            if (right > 0) patches[TOP_RIGHT] = TextureRegion().setRegion(region, left + middleWidth, 0, right, top)
         }
         if (middleHeight > 0) {
-            if (left > 0) patches[MIDDLE_LEFT] =
-                TextureRegion(region, 0, top, left, middleHeight)
-            if (middleWidth > 0) patches[MIDDLE_CENTER] =
-                TextureRegion(region, left, top, middleWidth, middleHeight)
-            if (right > 0) patches[MIDDLE_RIGHT] = TextureRegion(
-                region,
-                left + middleWidth,
-                top,
-                right,
-                middleHeight
-            )
+            if (left > 0) patches[MIDDLE_LEFT] = TextureRegion().setRegion(region, 0, top, left, middleHeight)
+            if (middleWidth > 0) patches[MIDDLE_CENTER] = TextureRegion().setRegion(region, left, top, middleWidth, middleHeight)
+            if (right > 0) patches[MIDDLE_RIGHT] = TextureRegion().setRegion(region, left + middleWidth, top, right, middleHeight)
         }
         if (bottom > 0) {
-            if (left > 0) patches[BOTTOM_LEFT] =
-                TextureRegion(region, 0, top + middleHeight, left, bottom)
-            if (middleWidth > 0) patches[BOTTOM_CENTER] = TextureRegion(
-                region,
-                left,
-                top + middleHeight,
-                middleWidth,
-                bottom
-            )
-            if (right > 0) patches[BOTTOM_RIGHT] = TextureRegion(
-                region,
-                left + middleWidth,
-                top + middleHeight,
-                right,
-                bottom
-            )
+            if (left > 0) patches[BOTTOM_LEFT] = TextureRegion().setRegion(region, 0, top + middleHeight, left, bottom)
+            if (middleWidth > 0) patches[BOTTOM_CENTER] = TextureRegion().setRegion(region, left, top + middleHeight, middleWidth, bottom)
+            if (right > 0) patches[BOTTOM_RIGHT] = TextureRegion().setRegion(region, left + middleWidth, top + middleHeight, right, bottom)
         }
         // If split only vertical, move splits from right to center.
         if (left == 0 && middleWidth == 0) {
@@ -284,10 +260,10 @@ class NinePatch {
 
     private fun add(region: TextureRegion?, color: Float, isStretchW: Boolean, isStretchH: Boolean): Int {
         if (texture == null) texture = region!!.texture else require(!(texture !== region!!.texture)) { "All regions must be from the same texture." }
-        var u = region!!.u
-        var v = region.v2
-        var u2 = region.u2
-        var v2 = region.v
+        var u = region!!.left
+        var v = region.top
+        var u2 = region.right
+        var v2 = region.bottom
         // Add half pixel offsets on stretchable dimensions to avoid color bleeding when GL_LINEAR
 // filtering is used for the texture. This nudges the texture coordinate to the center
 // of the texel where the neighboring pixel has 0% contribution in linear blending mode.

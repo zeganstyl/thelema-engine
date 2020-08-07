@@ -76,5 +76,5 @@ interface IMouse {
     fun addListener(listener: IMouseListener)
     fun removeListener(listener: IMouseListener)
 
-    fun clear()
+    fun reset()
 }

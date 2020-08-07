@@ -46,6 +46,7 @@ object Color {
         return newVec
     }
 
+    val WHITE_FLOAT = toFloatBits(IVec4.One)
     val WHITE
         get() = IVec4.One
     val LIGHT_GRAY = int(-0x40404001)

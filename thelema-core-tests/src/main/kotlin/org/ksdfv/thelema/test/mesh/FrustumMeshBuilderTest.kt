@@ -17,18 +17,24 @@
 package org.ksdfv.thelema.test.mesh
 
 import org.intellij.lang.annotations.Language
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
+import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.build.FrustumMeshBuilder
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.Color
+import org.ksdfv.thelema.utils.LOG
 
-class FrustumMeshBuilderTest: Test("Frustum Mesh Builder") {
+/** @author zeganstyl */
+class FrustumMeshBuilderTest: Test {
+    override val name: String
+        get() = "Frustum Mesh Builder"
+
     override fun testMain() {
         @Language("GLSL")
         val shader = Shader(
@@ -45,7 +51,8 @@ void main () {
     gl_FragColor = color;
 }""")
 
-        val perspectiveCamera = Camera(near = 0.1f, far = 1f, isOrthographic = false)
+        val perspectiveCamera =
+            Camera(near = 0.1f, far = 1f, isOrthographic = false)
 
         val orthographicCamera = Camera(
             isOrthographic = true,
@@ -58,15 +65,20 @@ void main () {
         val perspectiveFrustumMesh = FrustumMeshBuilder(perspectiveCamera.inverseViewProjectionMatrix).build()
         val orthographicFrustumMesh = FrustumMeshBuilder(orthographicCamera.inverseViewProjectionMatrix).build()
 
-        ActiveCamera.api = Camera(
-            from = Vec3(3f, 3f, -3f),
-            to = Vec3(0f, 0f, 0f),
-            near = 0.1f,
-            far = 100f
+        ActiveCamera.api = Camera()
+
+        val control = OrbitCameraControl(
+            targetDistance = 0.3f,
+            azimuth = 0.5f
         )
+        control.listenToMouse()
+        LOG.info(control.help)
 
         GL.render {
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+
+            control.update(APP.deltaTime)
+            ActiveCamera.update()
 
             shader.bind()
             shader["viewProj"] = ActiveCamera.viewProjectionMatrix

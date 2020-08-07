@@ -23,17 +23,9 @@ import kotlin.math.min
  * @author badlogicgames@gmail.com
  */
 open class Rectangle {
-    /** @return the x-coordinate of the bottom left corner
-     */
     var x = 0f
-    /** @return the y-coordinate of the bottom left corner
-     */
     var y = 0f
-    /** @return the width
-     */
     var width = 0f
-    /** @return the height
-     */
     var height = 0f
 
     /** Constructs a new rectangle with all values set to zero  */

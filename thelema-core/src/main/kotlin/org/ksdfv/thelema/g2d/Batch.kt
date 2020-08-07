@@ -19,8 +19,8 @@ package org.ksdfv.thelema.g2d
 import org.ksdfv.thelema.math.Affine2
 import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec4
-import org.ksdfv.thelema.shader.Shader
-import org.ksdfv.thelema.texture.Texture2D
+import org.ksdfv.thelema.shader.IShader
+import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.utils.Color
 
 
@@ -82,7 +82,7 @@ interface Batch {
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The rectangle is offset by
      * originX, originY relative to the origin. Scale specifies the scaling factor by which the rectangle should be scaled around
      * originX, originY. Rotation specifies the angle of counter clockwise rotation of the rectangle around originX, originY. The
-     * portion of the [Texture2D] given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in
+     * portion of the [ITexture2D] given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in
      * texels. FlipX and flipY specify whether the texture portion should be flipped horizontally or vertically.
      * @param x the x-coordinate in screen space
      * @param y the y-coordinate in screen space
@@ -100,11 +100,11 @@ interface Batch {
      * @param flipX whether to flip the sprite horizontally
      * @param flipY whether to flip the sprite vertically
      */
-    fun draw(texture: Texture2D, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float, scaleX: Float,
+    fun draw(texture: ITexture2D, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float, scaleX: Float,
              scaleY: Float, rotation: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int, flipX: Boolean, flipY: Boolean)
 
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The portion of the
-     * [Texture2D] given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in texels. FlipX
+     * [ITexture2D] given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in texels. FlipX
      * and flipY specify whether the texture portion should be flipped horizontally or vertically.
      * @param x the x-coordinate in screen space
      * @param y the y-coordinate in screen space
@@ -117,11 +117,11 @@ interface Batch {
      * @param flipX whether to flip the sprite horizontally
      * @param flipY whether to flip the sprite vertically
      */
-    fun draw(texture: Texture2D, x: Float, y: Float, width: Float, height: Float, srcX: Int, srcY: Int, srcWidth: Int,
+    fun draw(texture: ITexture2D, x: Float, y: Float, width: Float, height: Float, srcX: Int, srcY: Int, srcWidth: Int,
              srcHeight: Int, flipX: Boolean, flipY: Boolean)
 
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The portion of the
-     * [Texture2D] given by srcX, srcY and srcWidth, srcHeight are used. These coordinates and sizes are given in texels.
+     * [ITexture2D] given by srcX, srcY and srcWidth, srcHeight are used. These coordinates and sizes are given in texels.
      * @param x the x-coordinate in screen space
      * @param y the y-coordinate in screen space
      * @param srcX the x-coordinate in texel space
@@ -129,24 +129,24 @@ interface Batch {
      * @param srcWidth the source with in texels
      * @param srcHeight the source height in texels
      */
-    fun draw(texture: Texture2D, x: Float, y: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int)
+    fun draw(texture: ITexture2D, x: Float, y: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int)
 
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The portion of the
-     * [Texture2D] given by u, v and u2, v2 are used. These coordinates and sizes are given in texture size percentage. The
+     * [ITexture2D] given by u, v and u2, v2 are used. These coordinates and sizes are given in texture size percentage. The
      * rectangle will have the given tint color.
      * @param x the x-coordinate in screen space
      * @param y the y-coordinate in screen space
      * @param width the width in pixels
      * @param height the height in pixels
      */
-    fun draw(texture: Texture2D, x: Float, y: Float, width: Float, height: Float, u: Float, v: Float, u2: Float, v2: Float)
+    fun draw(texture: ITexture2D, x: Float, y: Float, width: Float, height: Float, u: Float, v: Float, u2: Float, v2: Float)
 
     /** Draws a rectangle with the bottom left corner at x,y and stretching the region to cover the given width and height.  */
-    fun draw(texture: Texture2D, x: Float, y: Float, width: Float = texture.width.toFloat(), height: Float = texture.height.toFloat())
+    fun draw(texture: ITexture2D, x: Float, y: Float, width: Float = texture.width.toFloat(), height: Float = texture.height.toFloat())
 
     /** Draws a rectangle using the given vertices. There must be 4 vertices, each made up of 5 elements in this order: x, y, color,
      * u, v. [color] is not applied.  */
-    fun draw(texture: Texture2D, spriteVertices: FloatArray, offset: Int, count: Int)
+    fun draw(texture: ITexture2D, spriteVertices: FloatArray, offset: Int = 0, count: Int = spriteVertices.size)
 
     /** Draws a rectangle with the bottom left corner at x,y and stretching the region to cover the given width and height.  */
     fun draw(region: TextureRegion, x: Float, y: Float, width: Float = region.regionWidth.toFloat(), height: Float = region.regionHeight.toFloat())
@@ -207,6 +207,8 @@ interface Batch {
     /** Sets the transform matrix to be used by this Batch.  */
     var transformMatrix: IMat4
 
+    val combinedMatrix: IMat4
+
     /** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "aPosition", the texture
      * coordinates attribute is called "aUV", the color attribute is called "aColor".
      * which gets "0" appended to indicate the use of the first texture unit. The combined transform and projection matrx is
@@ -218,7 +220,7 @@ interface Batch {
      *
      * This method will flush the batch before setting the new shader, you can call it in between [begin] and [end].
      */
-    var shader: Shader
+    var shader: IShader
 
     /** @return true if blending for sprites is enabled
      */

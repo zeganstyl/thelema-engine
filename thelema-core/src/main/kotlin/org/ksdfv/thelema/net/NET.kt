@@ -16,7 +16,9 @@
 
 package org.ksdfv.thelema.net
 
-/** Network */
+/** Network
+ *
+ * @author zeganstyl*/
 object NET {
     const val OK = 200
     const val Forbidden = 403

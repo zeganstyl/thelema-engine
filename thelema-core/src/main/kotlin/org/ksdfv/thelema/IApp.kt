@@ -43,6 +43,9 @@ interface IApp {
     var cursor: Int
     var defaultCursor: Int
 
+    fun addListener(listener: AppListener)
+    fun removeListener(listener: AppListener)
+
     fun messageBox(title: String, message: String)
 
     fun loadPreferences(name: String): String

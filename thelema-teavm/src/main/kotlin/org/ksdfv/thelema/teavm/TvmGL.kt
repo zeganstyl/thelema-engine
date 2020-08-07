@@ -323,7 +323,7 @@ class TvmGL(
     }
 
     private fun uLoc(location: Int) =
-        programs.wrap(GL.currentProgram)?.uniformLocations?.getOrNull(location)?.gl
+        programs.wrap(GL.shader)?.uniformLocations?.getOrNull(location)?.gl
 
     override fun glUniform1i(location: Int, x: Int) { gl.uniform1i(uLoc(location), x) }
     override fun glUniform2i(location: Int, x: Int, y: Int) { gl.uniform2i(uLoc(location), x, y) }

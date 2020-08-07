@@ -50,47 +50,4 @@ interface IVertexInput {
         GL_UNSIGNED_BYTE, GL_BYTE -> 1
         else -> 0
     }
-
-    companion object {
-        const val PositionName = "aPosition"
-        const val UVName = "aUV"
-        const val NormalName = "aNormal"
-        const val TangentName = "aTangent"
-        const val ColorName = "aColor"
-        const val BonesName = "aBones"
-        const val BoneWeightsName = "aBoneWeights"
-        const val ColorPackedName = "aColorPacked"
-        const val Position2dName = "aPosition2d"
-
-        /** Default position attribute */
-        var Position: () -> IVertexInput = { VertexInput(3, PositionName, GL_FLOAT, true) }
-
-        /** Default texture coordinates attribute */
-        var UV: (index: Int) -> IVertexInput = {
-            VertexInput(2, "aUV${if (it == 0) "" else "$it"}", GL_FLOAT, true)
-        }
-
-        /** Default normal attribute */
-        var Normal: () -> IVertexInput = { VertexInput(3, NormalName, GL_FLOAT, true) }
-        /** Default tangent attribute */
-        var Tangent: () -> IVertexInput = { VertexInput(4, TangentName, GL_FLOAT, true) }
-        /** Default color attribute */
-        var Color: (index: Int) -> IVertexInput = {
-            VertexInput(4, "$ColorName${if (it == 0) "" else "$it"}", GL_FLOAT, true)
-        }
-        /** Default 4 bones attribute. Each bone is index, that points to matrix in array */
-        var Bones: (index: Int) -> IVertexInput = {
-            VertexInput(4, "$BonesName${if (it == 0) "" else "$it"}", GL_FLOAT, false)
-        }
-
-        /** Default 4 bone weights attribute */
-        var BoneWeights: (index: Int) -> IVertexInput = {
-            VertexInput(4, "$BoneWeightsName${if (it == 0) "" else "$it"}", GL_FLOAT, true)
-        }
-
-        /** Used for 2d graphics. Less memory consumption and faster load to GPU */
-        var ColorPacked: () -> IVertexInput = { VertexInput(4, ColorPackedName, GL_UNSIGNED_BYTE, true) }
-
-        var Position2d: () -> IVertexInput = { VertexInput(2, Position2dName, GL_FLOAT, true) }
-    }
 }

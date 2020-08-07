@@ -64,7 +64,6 @@ class VertexArrayObject(
     private var vaoHandle = 0
 
     override var isBufferNeedReload = true
-    override var isBound = false
 
     /** Key - vertex attribute id, value - location id */
     private var cachedAttributeToLocation = HashMap<String, Int>()
@@ -80,13 +79,12 @@ class VertexArrayObject(
 
     override fun initGpuObjects() {
         handle = GL.glGenBuffer()
-
         vaoHandle = GL.glGenVertexArrays()
+        isBufferNeedReload = true
     }
 
     override fun bind(shader: IShader?) {
         GL.glBindVertexArray(vaoHandle)
-        isBound = true
 
         if (shader != null) bindAttributes(shader)
 
@@ -94,11 +92,9 @@ class VertexArrayObject(
     }
 
     override fun loadBufferToGpu() {
-        if (isBound) {
-            GL.glBindBuffer(GL_ARRAY_BUFFER, handle)
-            GL.glBufferData(GL_ARRAY_BUFFER, bytes.size, bytes, usage)
-            isBufferNeedReload = false
-        }
+        GL.glBindBuffer(GL_ARRAY_BUFFER, handle)
+        GL.glBufferData(GL_ARRAY_BUFFER, bytes.size, bytes, usage)
+        isBufferNeedReload = false
     }
 
     private fun bindAttributes(shader: IShader) {
@@ -111,7 +107,7 @@ class VertexArrayObject(
 
         if (!stillValid) {
             GL.glBindBuffer(GL_ARRAY_BUFFER, handle)
-            unbindAttributes(shader)
+            unbindAttributes()
             cachedAttributeToLocation.clear()
 
             vertexInputs.forEach {
@@ -125,7 +121,7 @@ class VertexArrayObject(
         }
     }
 
-    private fun unbindAttributes(shader: IShader) {
+    private fun unbindAttributes() {
         if (cachedAttributeToLocation.size == 0) {
             return
         }
@@ -138,21 +134,15 @@ class VertexArrayObject(
         }
     }
 
-    override fun unbind(shader: IShader?) {
-        val gl = GL
-        gl.glBindVertexArray(0)
-        isBound = false
-    }
-
     override fun destroy() {
         if (handle != 0) {
-            GL.glBindBuffer(GL_ARRAY_BUFFER, 0)
+            if (GL.arrayBuffer == handle) GL.glBindBuffer(GL_ARRAY_BUFFER, 0)
             GL.glDeleteBuffer(handle)
             handle = 0
         }
 
         if (vaoHandle != 0) {
-            GL.glDeleteVertexArrays(vaoHandle)
+            if (GL.vertexArray == vaoHandle) GL.glDeleteVertexArrays(vaoHandle)
             vaoHandle = 0
         }
     }

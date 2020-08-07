@@ -19,6 +19,7 @@ package org.ksdfv.thelema.teavm
 import org.teavm.jso.JSProperty
 import org.teavm.jso.dom.html.HTMLImageElement
 
+/** @author zeganstyl */
 interface HTMLImageElement: HTMLImageElement {
     @JSProperty
     fun getComplete(): Boolean

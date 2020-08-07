@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.mesh
 
+/** @author zeganstyl */
 interface IVertexInputs: MutableCollection<IVertexInput> {
     /** The size of a single vertex in bytes. It is updated only when any input added or removed */
     val bytesPerVertex: Int

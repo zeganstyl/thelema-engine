@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.g3d
 
 /** Used in [IMaterial.shaderChannels] as key.
+ *
  * @author zeganstyl */
 object ShaderChannel {
     private var idCounter = 0

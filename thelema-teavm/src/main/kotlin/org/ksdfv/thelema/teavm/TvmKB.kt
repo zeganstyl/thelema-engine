@@ -22,6 +22,7 @@ import org.ksdfv.thelema.input.KB
 import org.teavm.jso.browser.Window
 import org.teavm.jso.dom.events.KeyboardEvent
 
+/** @author zeganstyl */
 class TvmKB: IKB {
     val pressed = HashSet<Int>()
 
@@ -193,7 +194,7 @@ class TvmKB: IKB {
         listeners.remove(listener)
     }
 
-    override fun clear() {
+    override fun reset() {
         listeners.clear()
     }
 }

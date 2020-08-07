@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.g3d.node
 
 /** Node type will define, what transform data may be stored in node.
+ *
  * @author zeganstyl */
 object TransformNodeType {
     const val None = 0

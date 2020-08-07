@@ -24,7 +24,10 @@ import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class ScreenQuadTest: Test("Screen Quad") {
+class ScreenQuadTest: Test {
+    override val name: String
+        get() = "Screen Quad"
+
     override fun testMain() {
         @Language("GLSL")
         val shader = Shader(

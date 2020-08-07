@@ -17,37 +17,36 @@
 package org.ksdfv.thelema.test.mesh
 
 import org.intellij.lang.annotations.Language
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.math.Vec3
-import org.ksdfv.thelema.mesh.IVertexInput
 import org.ksdfv.thelema.mesh.build.PlaneMeshBuilder
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class PlaneMeshBuilderTest: Test("Plane Mesh Builder") {
-    override fun testMain() {
-        val uvName = IVertexInput.UVName
-        val posName = IVertexInput.PositionName
+class PlaneMeshBuilderTest: Test {
+    override val name: String
+        get() = "Plane Mesh Builder"
 
+    override fun testMain() {
         @Language("GLSL")
         val shader = Shader(
                 vertCode = """
-attribute vec3 $posName;
-attribute vec2 $uvName;
+attribute vec3 aPosition;
+attribute vec2 aUV;
 varying vec2 uv;
 uniform mat4 projViewModelTrans;
 
 void main() {
-    uv = $uvName;
-    gl_Position = projViewModelTrans * vec4($posName, 1.0);
+    uv = aUV;
+    gl_Position = projViewModelTrans * vec4(aPosition, 1.0);
 }""",
                 fragCode = """
 varying vec2 uv;

@@ -19,6 +19,7 @@ package org.ksdfv.thelema.shader.post
 import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.shader.Shader
 
+/** @author zeganstyl */
 open class PostShader(
     fragCode: String,
     name: String = "",

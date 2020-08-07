@@ -23,6 +23,7 @@ import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
 import org.ksdfv.thelema.img.IImage
 import org.teavm.jso.dom.html.HTMLImageElement
 
+/** @author zeganstyl */
 class HtmlImage(
     val htmlImage: HTMLImageElement
 ): IImage {

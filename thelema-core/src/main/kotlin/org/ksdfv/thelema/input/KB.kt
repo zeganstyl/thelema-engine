@@ -366,5 +366,5 @@ object KB: IKB {
 
     override fun removeListener(listener: IKeyListener) = api.removeListener(listener)
 
-    override fun clear() = api.clear()
+    override fun reset() = api.reset()
 }

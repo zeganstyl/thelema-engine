@@ -20,7 +20,7 @@ import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Rectangle
 import org.ksdfv.thelema.math.Vec4
-import org.ksdfv.thelema.texture.Texture2D
+import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.utils.Color
 import kotlin.math.abs
 
@@ -119,7 +119,7 @@ open class Sprite : TextureRegion {
      * @param srcHeight The height of the texture region. May be negative to flip the sprite when drawn.
      */
     @JvmOverloads
-    constructor(texture: Texture2D, srcX: Int = 0, srcY: Int = 0, srcWidth: Int = texture.width, srcHeight: Int = texture.height) {
+    constructor(texture: ITexture2D, srcX: Int = 0, srcY: Int = 0, srcWidth: Int = texture.width, srcHeight: Int = texture.height) {
         this.texture = texture
         setRegion(srcX, srcY, srcWidth, srcHeight)
         setColor(1f, 1f, 1f, 1f)
@@ -157,10 +157,10 @@ open class Sprite : TextureRegion {
     fun set(sprite: Sprite) {
         System.arraycopy(sprite.verts, 0, verts, 0, SPRITE_SIZE)
         texture = sprite.texture
-        u = sprite.u
-        v = sprite.v
-        u2 = sprite.u2
-        v2 = sprite.v2
+        left = sprite.left
+        bottom = sprite.bottom
+        right = sprite.right
+        top = sprite.top
         x = sprite.x
         y = sprite.y
         width = sprite.width
@@ -475,7 +475,7 @@ open class Sprite : TextureRegion {
         setAlpha(oldAlpha)
     }
 
-    override fun setRegion(u: Float, v: Float, u2: Float, v2: Float) {
+    override fun setRegion(u: Float, v: Float, u2: Float, v2: Float): Sprite {
         super.setRegion(u, v, u2, v2)
         val vertices = verts
         vertices[Batch.U1] = u
@@ -486,39 +486,40 @@ open class Sprite : TextureRegion {
         vertices[Batch.V3] = v
         vertices[Batch.U4] = u2
         vertices[Batch.V4] = v2
+        return this
     }
 
-    override var u: Float
-        get() = super.u
+    override var left: Float
+        get() = super.left
         set(value) {
-            super.u = value
+            super.left = value
 
             verts[Batch.U1] = value
             verts[Batch.U2] = value
         }
 
-    override var v: Float
-        get() = super.v
+    override var bottom: Float
+        get() = super.bottom
         set(value) {
-            super.v = value
+            super.bottom = value
 
             verts[Batch.V2] = value
             verts[Batch.V3] = value
         }
 
-    override var u2: Float
-        get() = super.u2
+    override var right: Float
+        get() = super.right
         set(value) {
-            super.u2 = value
+            super.right = value
 
             verts[Batch.U3] = value
             verts[Batch.U4] = value
         }
 
-    override var v2: Float
-        get() = super.v2
+    override var top: Float
+        get() = super.top
         set(value) {
-            super.v2 = value
+            super.top = value
 
             verts[Batch.V1] = value
             verts[Batch.V4] = value
@@ -570,8 +571,8 @@ open class Sprite : TextureRegion {
         if (xAmount != 0f) {
             val u = (vertices[Batch.U1] + xAmount) % 1
             val u2 = u + width / texture.width
-            this.u = u
-            this.u2 = u2
+            this.left = u
+            this.right = u2
             vertices[Batch.U1] = u
             vertices[Batch.U2] = u
             vertices[Batch.U3] = u2
@@ -580,8 +581,8 @@ open class Sprite : TextureRegion {
         if (yAmount != 0f) {
             val v = (vertices[Batch.V2] + yAmount) % 1
             val v2 = v + height / texture.height
-            this.v = v
-            this.v2 = v2
+            this.bottom = v
+            this.top = v2
             vertices[Batch.V1] = v2
             vertices[Batch.V2] = v
             vertices[Batch.V3] = v

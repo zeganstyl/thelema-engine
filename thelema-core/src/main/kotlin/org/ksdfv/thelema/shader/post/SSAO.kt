@@ -18,7 +18,7 @@ package org.ksdfv.thelema.shader.post
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.data.DATA
-import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.mesh.IScreenQuad
 import org.ksdfv.thelema.texture.IFrameBuffer

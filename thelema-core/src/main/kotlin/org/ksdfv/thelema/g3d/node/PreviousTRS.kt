@@ -18,7 +18,9 @@ package org.ksdfv.thelema.g3d.node
 
 import org.ksdfv.thelema.math.IMat4
 
-/** Stores only world matrix */
+/** Stores only world matrix
+ *
+ * @author zeganstyl */
 class PreviousTRS: AdapterTransformNode() {
     override val nodeType: Int
         get() = TransformNodeType.TRS

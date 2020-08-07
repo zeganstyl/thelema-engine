@@ -19,7 +19,7 @@ package org.ksdfv.thelema.utils
 import org.ksdfv.thelema.net.NET
 
 /** To check loading progress of models, sounds, or may be even procedural generating resources
- * @author zeganstyl*/
+ * @author zeganstyl */
 interface IResourceLoader {
     var name: String
 

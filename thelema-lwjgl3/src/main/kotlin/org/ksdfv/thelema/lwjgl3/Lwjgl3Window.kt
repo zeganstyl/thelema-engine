@@ -127,6 +127,12 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
             for (i in listeners.indices) {
                 listeners[i].sizeChanged(p1, p2)
             }
+
+            if (app.mainWindow == this@Lwjgl3Window) {
+                for (i in app.listeners.indices) {
+                    app.listeners[i].resized(p1, p2)
+                }
+            }
         }
     }
 

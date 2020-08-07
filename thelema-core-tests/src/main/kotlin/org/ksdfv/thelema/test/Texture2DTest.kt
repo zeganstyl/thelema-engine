@@ -22,12 +22,15 @@ import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.texture.Texture2D
 
 /** @author zeganstyl */
-class Texture2DTest: Test("Texture 2D") {
+class Texture2DTest: Test {
+    override val name: String
+        get() = "Texture 2D"
+
     override fun testMain() {
         val screenQuad = ScreenQuad.TextureRenderer()
 
-        val texture = Texture2D(
-            url = "thelema-logo.png",
+        val texture = Texture2D().load(
+            uri = "thelema-logo.png",
             minFilter = GL_LINEAR,
             magFilter = GL_LINEAR
         )

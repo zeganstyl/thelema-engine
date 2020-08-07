@@ -60,5 +60,5 @@ object MOUSE: IMouse {
 
     override fun removeListener(listener: IMouseListener) = api.removeListener(listener)
 
-    override fun clear() = api.clear()
+    override fun reset() = api.reset()
 }

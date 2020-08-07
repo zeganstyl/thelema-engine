@@ -16,12 +16,14 @@
 
 package org.ksdfv.thelema.utils
 
+import org.ksdfv.thelema.gl.GL_FLOAT
+import org.ksdfv.thelema.gl.GL_UNSIGNED_BYTE
 import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.mesh.IMesh
 import org.ksdfv.thelema.mesh.IVertexBuffer
-import org.ksdfv.thelema.mesh.IVertexInput
+import org.ksdfv.thelema.mesh.VertexInput
 import org.ksdfv.thelema.mesh.VertexInputs
 import org.ksdfv.thelema.shader.Shader
 
@@ -38,10 +40,10 @@ class ImmediateModeRenderer20(
         private val numTexCoords: Int,
         private var shader: Shader?) : ImmediateModeRenderer {
     val vertexInputs = VertexInputs().apply {
-        if (hasNormals) add(IVertexInput.Normal())
-        if (hasColors) add(IVertexInput.ColorPacked())
+        if (hasNormals) add(VertexInput(3, "aNormal", GL_FLOAT, true))
+        if (hasColors) add(VertexInput(4, "aColor", GL_UNSIGNED_BYTE, true))
         for (i in 0 until numTexCoords) {
-            add(IVertexInput.UV(0))
+            add(VertexInput(2, "aUV", GL_FLOAT, true))
         }
     }
 
@@ -52,9 +54,9 @@ class ImmediateModeRenderer20(
     private val mesh: IMesh
     private var ownsShader = false
     private val vertexSize: Int = vertexInputs.bytesPerVertex / 4
-    private val normalOffset: Int = vertexInputs.floatOffsetOrNullOf(IVertexInput.NormalName) ?: 0
-    private val colorOffset: Int = vertexInputs.floatOffsetOrNullOf(IVertexInput.ColorName) ?: 0
-    private val texCoordOffset: Int = vertexInputs.floatOffsetOrNullOf(IVertexInput.UVName) ?: 0
+    private val normalOffset: Int = vertexInputs.floatOffsetOrNullOf("aNormal") ?: 0
+    private val colorOffset: Int = vertexInputs.floatOffsetOrNullOf("aColor") ?: 0
+    private val texCoordOffset: Int = vertexInputs.floatOffsetOrNullOf("aUV") ?: 0
     private val projModelView = Mat4()
     private val vertices: FloatArray
     private val shaderUniformNames: Array<String>
@@ -81,10 +83,10 @@ class ImmediateModeRenderer20(
 
     private fun buildVertexAttributes(hasNormals: Boolean, hasColor: Boolean, numTexCoords: Int): VertexInputs {
         return VertexInputs().apply {
-            if (hasNormals) add(IVertexInput.Normal())
-            if (hasColor) add(IVertexInput.ColorPacked())
+            if (hasNormals) add(VertexInput(3, "aNormal", GL_FLOAT, true))
+            if (hasColor) add(VertexInput(4, "aColor", GL_UNSIGNED_BYTE, true))
             for (i in 0 until numTexCoords) {
-                add(IVertexInput.UV(0))
+                add(VertexInput(2, "aUV", GL_FLOAT, true))
             }
         }
     }
@@ -159,21 +161,21 @@ class ImmediateModeRenderer20(
 
     companion object {
         private fun createVertexShader(hasNormals: Boolean, hasColors: Boolean, numTexCoords: Int): String {
-            var shader = ("attribute vec4 " + IVertexInput.PositionName + ";\n"
-                    + (if (hasNormals) "attribute vec3 " + IVertexInput.NormalName + ";\n" else "")
-                    + if (hasColors) "attribute vec4 " + IVertexInput.ColorName + ";\n" else "")
+            var shader = ("attribute vec4 aPosition;\n"
+                    + (if (hasNormals) "attribute vec3 aNormal;\n" else "")
+                    + if (hasColors) "attribute vec4 aColor;\n" else "")
             for (i in 0 until numTexCoords) {
-                shader += "attribute vec2 " + IVertexInput.UVName + i + ";\n"
+                shader += "attribute vec2 aUV$i;\n"
             }
             shader += "uniform mat4 u_projModelView;\n"
             shader += if (hasColors) "varying vec4 v_col;\n" else ""
             for (i in 0 until numTexCoords) {
                 shader += "varying vec2 v_tex$i;\n"
             }
-            shader += ("void main() {\n" + "   gl_Position = u_projModelView * " + IVertexInput.PositionName + ";\n"
-                    + if (hasColors) "   v_col = " + IVertexInput.ColorName + ";\n" else "")
+            shader += ("void main() {\n" + "   gl_Position = u_projModelView * aPosition;\n"
+                    + if (hasColors) "   v_col = aColor;\n" else "")
             for (i in 0 until numTexCoords) {
-                shader += "   v_tex" + i + " = " + IVertexInput.UVName + i + ";\n"
+                shader += "   v_tex$i = aUV$i;\n"
             }
             shader += "   gl_PointSize = 1.0;\n"
             shader += "}\n"

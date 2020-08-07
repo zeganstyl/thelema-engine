@@ -19,6 +19,7 @@ package org.ksdfv.thelema.g3d
 import org.ksdfv.thelema.g3d.node.IDelegateTransformNode
 import org.ksdfv.thelema.g3d.node.ITransformNode
 import org.ksdfv.thelema.mesh.IMesh
+import org.ksdfv.thelema.shader.IShader
 import org.ksdfv.thelema.shader.Shader
 
 /** Visible transformable 3d object
@@ -32,6 +33,8 @@ interface IObject3D: IDelegateTransformNode {
     var meshes: MutableList<IMesh>
 
     var armature: IArmature?
+
+    var boundingBox: IBoundingBox?
 
     fun set(other: IObject3D): IObject3D {
         node.set(other)
@@ -110,6 +113,6 @@ interface IObject3D: IDelegateTransformNode {
         /** Builder for internal creating */
         var Build: () -> IObject3D = { Object3D() }
 
-        private val preparedShaders = HashSet<Shader>()
+        private val preparedShaders = HashSet<IShader>()
     }
 }

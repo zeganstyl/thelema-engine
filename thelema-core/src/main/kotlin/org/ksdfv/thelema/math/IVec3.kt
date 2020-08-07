@@ -231,12 +231,12 @@ interface IVec3 : IVec {
 
     /** Transforms the given vector using this quaternion */
     fun transformByQuaternion(quaternion: IVec4): IVec3 {
-        Temp.vec4.set(quaternion)
-        Temp.vec4.conjugate()
-        Temp.vec4.mulLeft(Temp.vec4n2.set(x, y, z, 0f)).mulLeft(quaternion)
-        x = Temp.vec4.x
-        y = Temp.vec4.y
-        z = Temp.vec4.z
+        tmpV.set(quaternion)
+        tmpV.conjugate()
+        tmpV.mulLeft(x, y, z, 0f).mulLeft(quaternion)
+        x = tmpV.x
+        y = tmpV.y
+        z = tmpV.z
         return this
     }
 
@@ -393,6 +393,7 @@ interface IVec3 : IVec {
 
     companion object {
         private val tmpMat = Mat4()
+        private val tmpV = Vec4()
 
         var Build: () -> IVec3 = { Vec3() }
 

@@ -21,6 +21,7 @@ import org.teavm.jso.webaudio.GainNode
 import org.teavm.jso.webaudio.MediaElementAudioSourceNode
 import org.teavm.jso.webaudio.StereoPannerNode
 
+/** @author zeganstyl */
 class SoundInstance(
     val element: HTMLAudioElement,
     val source: MediaElementAudioSourceNode,

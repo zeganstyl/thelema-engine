@@ -24,7 +24,7 @@ import org.ksdfv.thelema.utils.LOG
 
 /**
  * @author zeganstyl */
-class TextureCube(override var glHandle: Int = GL.glGenTexture()): Texture(GL_TEXTURE_CUBE_MAP) {
+class TextureCube(override var textureHandle: Int = GL.glGenTexture()): Texture(GL_TEXTURE_CUBE_MAP) {
     override var width: Int = 0
 
     override var height: Int = 0

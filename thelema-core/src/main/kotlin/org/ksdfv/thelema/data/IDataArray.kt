@@ -21,7 +21,7 @@ interface IDataArray<T> {
     val sourceObject: Any
         get() = this
 
-    /** Elements number. */
+    /** Limit of data, limit can't be greater than capacity. */
     var size: Int
 
     var position: Int

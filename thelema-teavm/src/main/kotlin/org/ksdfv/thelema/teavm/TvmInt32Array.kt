@@ -20,6 +20,7 @@ import org.ksdfv.thelema.data.IIntData
 import org.teavm.jso.typedarrays.ArrayBufferView
 import org.teavm.jso.typedarrays.Int32Array
 
+/** @author zeganstyl */
 class TvmInt32Array(val intArray: Int32Array): IIntData, TvmArrayBufferView<Int>() {
     override val array: ArrayBufferView
         get() = intArray

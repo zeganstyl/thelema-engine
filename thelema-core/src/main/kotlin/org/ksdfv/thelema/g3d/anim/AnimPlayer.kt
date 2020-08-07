@@ -22,6 +22,7 @@ import org.ksdfv.thelema.utils.Pool
 import kotlin.math.abs
 
 // TODO: implement https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#appendix-c-spline-interpolation
+/** @author Xoppa, zeganstyl */
 class AnimPlayer {
     var applying = false
 
@@ -349,22 +350,7 @@ class AnimPlayer {
         val rotationTracks = animation.rotationTracks
         val scaleTracks = animation.scaleTracks
 
-        if (!blending) {
-            // apply directly
-            val nodes = nodes
-            for (i in translationTracks.indices) {
-                val track = translationTracks[i]
-                getTranslationAtTime(track, time, nodes[track.nodeIndex].position)
-            }
-            for (i in translationTracks.indices) {
-                val track = rotationTracks[i]
-                getRotationAtTime(track, time, nodes[track.nodeIndex].rotation)
-            }
-            for (i in translationTracks.indices) {
-                val track = scaleTracks[i]
-                getScalingAtTime(track, time, nodes[track.nodeIndex].scale)
-            }
-        } else {
+        if (blending) {
             // apply blending
             for (i in translationTracks.indices) {
                 val track = translationTracks[i]
@@ -439,6 +425,21 @@ class AnimPlayer {
                         }
                     }
                 }
+            }
+        } else {
+            // apply directly
+            val nodes = nodes
+            for (i in translationTracks.indices) {
+                val track = translationTracks[i]
+                getTranslationAtTime(track, time, nodes[track.nodeIndex].position)
+            }
+            for (i in translationTracks.indices) {
+                val track = rotationTracks[i]
+                getRotationAtTime(track, time, nodes[track.nodeIndex].rotation)
+            }
+            for (i in translationTracks.indices) {
+                val track = scaleTracks[i]
+                getScalingAtTime(track, time, nodes[track.nodeIndex].scale)
             }
         }
     }
@@ -518,8 +519,6 @@ class AnimPlayer {
             val value2 = frames[index]
             val time2 = track.times[index]
             val t = (time - time1) / (time2 - time1)
-            //println("($time - $time1) / ($time2 - $time1) = $t")
-
             out.slerp(value2, t)
         }
 

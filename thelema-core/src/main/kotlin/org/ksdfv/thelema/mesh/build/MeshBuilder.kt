@@ -22,8 +22,8 @@ import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IShortData
 import org.ksdfv.thelema.g3d.IMaterial
 import org.ksdfv.thelema.g3d.Material
+import org.ksdfv.thelema.gl.GL_FLOAT
 import org.ksdfv.thelema.gl.GL_UNSIGNED_SHORT
-import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.*
 
 /** @author zeganstyl */
@@ -31,16 +31,18 @@ open class MeshBuilder {
     open var uv: Boolean = true
     open var normals: Boolean = true
 
-    open var uvScale: Float = 1f
-
     var material: IMaterial = Material()
+
+    var positionName: String = "aPosition"
+    var uvName: String = "aUV"
+    var normalName: String = "aNormal"
 
     lateinit var currentFloatBuffer: IFloatData
 
     fun createAttributes(): VertexInputs {
-        val attributes = VertexInputs(IVertexInput.Position())
-        if (uv) attributes.add(IVertexInput.UV(0))
-        if (normals) attributes.add(IVertexInput.Normal())
+        val attributes = VertexInputs(VertexInput(3, positionName, GL_FLOAT, false))
+        if (uv) attributes.add(VertexInput(2, uvName, GL_FLOAT, false))
+        if (normals) attributes.add(VertexInput(3, normalName, GL_FLOAT, false))
         return attributes
     }
 
@@ -70,9 +72,5 @@ open class MeshBuilder {
     open fun build(out: IMesh = IMesh.Build()): IMesh {
         out.material = material
         return out
-    }
-
-    companion object {
-        val normal = Vec3()
     }
 }

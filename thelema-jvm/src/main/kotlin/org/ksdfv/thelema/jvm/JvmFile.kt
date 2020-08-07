@@ -16,13 +16,16 @@
 
 package org.ksdfv.thelema.jvm
 
-import org.ksdfv.thelema.utils.StreamUtils
+import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.net.NET
+import org.ksdfv.thelema.utils.StreamUtils
 import java.io.*
+import java.nio.ByteBuffer
 
+/** @author mzechner, Nathan Sweet, zeganstyl */
 class JvmFile(
         val file: File,
         override val location: Int = FileLocation.Absolute
@@ -209,6 +212,16 @@ class JvmFile(
             throw RuntimeException("Error writing file: $file ($location)", ex)
         } finally {
             StreamUtils.closeQuietly(output)
+        }
+    }
+
+    override fun writeBytes(bytes: IByteData) {
+        try {
+            val fc = FileOutputStream(path).channel
+            fc.write(bytes.sourceObject as ByteBuffer)
+            fc.close()
+        } catch (ex: IOException) {
+            throw RuntimeException("Error writing file: $file ($location)", ex)
         }
     }
 

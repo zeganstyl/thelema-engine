@@ -25,6 +25,10 @@ interface IByteData: IDataArray<Byte> {
     fun intView(): IIntData
     fun floatView(): IFloatData
 
+    fun readShort(byteStartIndex: Int): Short
+    fun readInt(byteStartIndex: Int): Int
+    fun readFloat(byteStartIndex: Int): Float
+
     fun put(array: ByteArray) {
         for (i in array.indices) {
             put(array[i])

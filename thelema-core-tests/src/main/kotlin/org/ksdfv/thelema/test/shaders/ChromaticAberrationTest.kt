@@ -26,7 +26,11 @@ import org.ksdfv.thelema.test.CubeModel
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.SimpleFrameBuffer
 
-class ChromaticAberrationTest: Test("Chromatic Aberration") {
+/** @author zeganstyl */
+class ChromaticAberrationTest: Test {
+    override val name: String
+        get() = "Chromatic Aberration"
+
     override fun testMain() {
         val model = CubeModel()
 

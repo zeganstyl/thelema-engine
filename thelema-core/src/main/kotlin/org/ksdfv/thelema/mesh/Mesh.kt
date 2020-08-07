@@ -26,8 +26,7 @@ class Mesh(
     override var indices: IIndexBufferObject? = null,
     override var material: IMaterial = Material(),
     override var instances: IVertexBuffer? = null,
-    override var primitiveType: Int = GL_TRIANGLES,
-    override var autoBind: Boolean = true
+    override var primitiveType: Int = GL_TRIANGLES
 ): IMesh {
     constructor(
         vertices: IVertexBuffer? = null,
@@ -35,15 +34,13 @@ class Mesh(
         material: IMaterial = IMaterial.Default,
         instances: IVertexBuffer? = null,
         primitiveType: Int = GL_TRIANGLES,
-        autoBind: Boolean = true,
         context: IMesh.() -> Unit
     ): this(
         vertices,
         indices,
         material,
         instances,
-        primitiveType,
-        autoBind
+        primitiveType
     ) { context(this) }
 
     override var name: String = ""

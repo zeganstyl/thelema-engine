@@ -25,7 +25,7 @@ import org.ksdfv.thelema.img.IImage
 /**
  * OpenGL API
  * [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es3.0/)
- * */
+ * @author zeganstyl */
 interface IGL {
     val mainFrameBufferHandle: Int
         get() = 0
@@ -65,6 +65,9 @@ interface IGL {
     fun initGL() {
         throw NotImplementedError()
     }
+
+    /** Reset state without destroying this object */
+    fun reset() {}
 
     fun isExtensionSupported(extension: String): Boolean {
         throw NotImplementedError()

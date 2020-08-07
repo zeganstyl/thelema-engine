@@ -17,7 +17,9 @@
 package org.ksdfv.thelema.test.shaders
 
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.gl.*
+import org.ksdfv.thelema.gl.GL
+import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
+import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.mesh.ScreenQuad
 import org.ksdfv.thelema.shader.post.Bloom
 import org.ksdfv.thelema.test.CubeModel
@@ -26,7 +28,11 @@ import org.ksdfv.thelema.texture.SimpleFrameBuffer
 
 // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
 
-class BloomTest: Test("Bloom") {
+/** @author zeganstyl */
+class BloomTest: Test {
+    override val name: String
+        get() = "Bloom"
+
     override fun testMain() {
         val model = CubeModel()
 

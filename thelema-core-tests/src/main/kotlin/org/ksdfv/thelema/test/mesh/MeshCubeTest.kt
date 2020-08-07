@@ -18,12 +18,9 @@ package org.ksdfv.thelema.test.mesh
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.data.DATA
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
-import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.gl.GL_UNSIGNED_SHORT
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
+import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.math.Vec3
@@ -32,9 +29,16 @@ import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 
 /** @author zeganstyl */
-class MeshCubeTest: Test("Mesh Cube") {
+class MeshCubeTest: Test {
+    override val name: String
+        get() = "Mesh Cube"
+
     override fun testMain() {
         val mesh = Mesh()
+
+        val vertexInputs = VertexInputs(
+            VertexInput(3, "aPosition", GL_FLOAT, true)
+        )
 
         mesh.vertices = IVertexBuffer.build(DATA.bytes(8 * 3 * 4).apply {
             floatView().apply {
@@ -51,7 +55,7 @@ class MeshCubeTest: Test("Mesh Cube") {
                         -1f,  1f, -1f
                 )
             }
-        }, VertexInputs(IVertexInput.Position()))
+        }, vertexInputs)
 
         mesh.indices = IndexBufferObject(DATA.bytes(6 * 6 * 2).apply {
             shortView().apply {

@@ -31,13 +31,13 @@ interface IIndexBufferObject {
 
     /** Use opengl constants, for example GL20.GL_UNSIGNED_SHORT */
     var type: Int
-    var numBytesPerIndex: Int
+    val bytesPerIndex: Int
 
     var bytes: IByteData
 
     /** Maximum number of indices this IndexBufferObject can store. */
     val size
-        get() = sizeInBytes / numBytesPerIndex
+        get() = sizeInBytes / bytesPerIndex
 
     val sizeInBytes: Int
         get() = bytes.size
@@ -46,22 +46,8 @@ interface IIndexBufferObject {
 
     fun loadBufferToGpu()
 
-    /** Update (a portion of) the indices.
-     * @param targetOffset offset in indices buffer
-     * @param indices the index data
-     * @param offset the offset to start copying the data from
-     * @param count the number of shorts to copy
-     */
-    fun update(targetOffset: Int, indices: ByteArray, offset: Int, count: Int)
-
     /** Binds this IndexBufferObject for rendering with glDrawElements.  */
     fun bind()
-
-    /** Unbinds this IndexBufferObject.  */
-    fun unbind()
-
-    /** Invalidates the IndexBufferObject so a new OpenGL buffer handle is created. Use this in case of a context loss.  */
-    fun invalidate()
 
     /** Disposes this IndexDatat and all its associated OpenGL resources.  */
     fun destroy()

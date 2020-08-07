@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.texture
 
+import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.gl.GL
 
 /**
@@ -28,7 +29,7 @@ interface ITexture {
     var glTarget: Int
 
     /** The OpenGL handle for this texture. You can specify for example 0 if don't want to call opengl function */
-    var glHandle: Int
+    var textureHandle: Int
 
     /** Texture filter minification. By default is GL_NEAREST_MIPMAP_LINEAR.
      * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glTexParameter.xml) */
@@ -57,21 +58,34 @@ interface ITexture {
 
     /** Binds this texture. The texture will be bound to the currently active texture unit. */
     fun bind() {
-        GL.glBindTexture(glTarget, glHandle)
+        GL.glBindTexture(glTarget, textureHandle)
     }
 
     /** Sets active texture unit and binds texture to the given unit.
      * @param unit the unit (0 to MAX_TEXTURE_UNITS).
      */
     fun bind(unit: Int) {
-        GL.activeTextureUnit = unit
-        GL.glBindTexture(glTarget, glHandle)
+        GL.activeTexture = unit
+        GL.glBindTexture(glTarget, textureHandle)
+    }
+
+    /** Texture must be bound */
+    fun generateMipmapsGPU() {
+        if (APP.platformType != APP.Desktop) {
+            GL.glGenerateMipmap(glTarget)
+        } else {
+            if (GL.isExtensionSupported("GL_ARB_framebuffer_object") || GL.isExtensionSupported("GL_EXT_framebuffer_object")) {
+                GL.glGenerateMipmap(glTarget)
+            } else {
+                throw RuntimeException("Can't create mipmaps on GPU")
+            }
+        }
     }
 
     fun destroy() {
-        if (glHandle != 0) {
-            GL.glDeleteTexture(glHandle)
-            glHandle = 0
+        if (textureHandle != 0) {
+            GL.glDeleteTexture(textureHandle)
+            textureHandle = 0
         }
     }
 }

@@ -33,4 +33,6 @@ object FileLocation {
     const val Absolute = 3
     /** Path relative to the private files directory on Android and to the application's root directory on the desktop.  */
     const val Local = 4
+    /** Files contained in random access memory */
+    const val RAM = 5
 }

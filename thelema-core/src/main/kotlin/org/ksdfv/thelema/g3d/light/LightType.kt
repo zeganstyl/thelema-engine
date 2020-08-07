@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.g3d.light
 
+/** @author zeganstyl */
 object LightType {
     const val None = 0
     const val Directional = 1

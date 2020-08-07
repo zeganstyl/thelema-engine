@@ -20,6 +20,7 @@ import org.ksdfv.thelema.data.IShortData
 import org.teavm.jso.typedarrays.ArrayBufferView
 import org.teavm.jso.typedarrays.Uint16Array
 
+/** @author zeganstyl */
 class TvmUInt16Array(val shortArray: Uint16Array): IShortData, TvmArrayBufferView<Short>() {
     override val array: ArrayBufferView
         get() = shortArray

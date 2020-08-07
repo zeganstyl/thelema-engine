@@ -19,6 +19,7 @@ package org.ksdfv.thelema.g2d
 import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.img.Pixmap
+import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.texture.Texture2D
 import org.ksdfv.thelema.utils.StreamUtils
 import java.io.BufferedReader
@@ -34,7 +35,7 @@ import kotlin.collections.LinkedHashSet
  */
 class TextureAtlas {
     /** Textures of the pages, unordered */
-    val textures: LinkedHashSet<Texture2D> = LinkedHashSet(4)
+    val textures: LinkedHashSet<ITexture2D> = LinkedHashSet(4)
 
     /** Returns all regions in the atlas.  */
     val regions: ArrayList<AtlasRegion> = ArrayList()
@@ -201,11 +202,11 @@ class TextureAtlas {
     }
 
     private fun load(data: TextureAtlasData) {
-        val pageToTexture = HashMap<TextureAtlasData.Page, Texture2D>()
+        val pageToTexture = HashMap<TextureAtlasData.Page, ITexture2D>()
         for (page in data.pages) {
-            var texture = page.texture
+            var texture: ITexture2D? = page.texture
             if (texture == null) {
-                texture = Texture2D(page.textureFile)
+                texture = Texture2D().load(page.textureFile)
                 if (page.useMipMaps) texture.generateMipmapsGPU()
             }
 

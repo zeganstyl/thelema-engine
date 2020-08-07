@@ -27,7 +27,7 @@ import org.ksdfv.thelema.shader.IShader
 interface IVertexBuffer {
     var handle: Int
 
-    /** @return the number of vertices this VertexData stores */
+    /** @return the number of vertices this buffer stores */
     var size
         get() = if (vertexInputs.bytesPerVertex > 0) bytes.size / vertexInputs.bytesPerVertex else 0
         set(_) {}
@@ -36,12 +36,11 @@ interface IVertexBuffer {
     var vertexInputs: IVertexInputs
 
     /** Float buffer view of [bytes] */
-    var floatBuffer: IFloatData
+    val floatBuffer: IFloatData
 
     var bytes: IByteData
 
     var isBufferNeedReload: Boolean
-    var isBound: Boolean
     var usage: Int
 
     /** Number of instances for instanced buffers or particle system buffers.
@@ -77,7 +76,6 @@ interface IVertexBuffer {
     }
 
     fun bind(shader: IShader? = null)
-    fun unbind(shader: IShader? = null)
 
     /** Disposes vertex data of this object and all its associated OpenGL resources.  */
     fun destroy()
@@ -117,44 +115,14 @@ interface IVertexBuffer {
             return Build(bytes, attributes, usage, initGpuObjects)
         }
 
-        /** Wrapper for [Build]. With position attribute */
-        fun buildPos(
-            verticesNum: Int,
-            usage: Int = GL_STATIC_DRAW,
-            initGpuObjects: Boolean = true,
-            context: IFloatData.() -> Unit
-        ): IVertexBuffer {
-            val attributes = VertexInputs(IVertexInput.Position())
-            val bytes = DATA.bytes(verticesNum * attributes.bytesPerVertex)
-            context(bytes.floatView())
-            return Build(bytes, attributes, usage, initGpuObjects)
-        }
-
-        /** Wrapper for [Build]. With position, texture coordinates and normal attributes */
-        fun buildPosTexNor(
-            verticesNum: Int,
-            usage: Int = GL_STATIC_DRAW,
-            initGpuObjects: Boolean = true,
-            context: IFloatData.() -> Unit
-        ): IVertexBuffer {
-            val attributes = VertexInputs(
-                IVertexInput.Position(),
-                IVertexInput.UV(0),
-                IVertexInput.Normal()
-            )
-            val bytes = DATA.bytes(verticesNum * attributes.bytesPerVertex)
-            context(bytes.floatView())
-            return Build(bytes, attributes, usage, initGpuObjects)
-        }
-
         /** Default builder */
         var Build: (
             data: IByteData,
             attributes: IVertexInputs,
             usage: Int,
             initGpuObjects: Boolean
-        ) -> IVertexBuffer = { data, attributes, usage, initGpuObjects ->
-            VertexBufferObject(attributes, data, usage, initGpuObjects)
+        ) -> IVertexBuffer = { data, inputs, usage, initGpuObjects ->
+            VertexBufferObject(inputs, data, 0, usage, initGpuObjects)
         }
     }
 }

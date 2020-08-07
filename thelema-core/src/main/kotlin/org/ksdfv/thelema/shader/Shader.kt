@@ -17,16 +17,15 @@
 package org.ksdfv.thelema.shader
 
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.gl.*
-import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.shader.glsl.IShaderNode
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
 open class Shader(
     override var vertCode: String = "",
     override var fragCode: String = "",
-    var name: String = "",
+    override var name: String = "",
     compile: Boolean = true,
 
     /** Precision will be added as first line */
@@ -49,6 +48,8 @@ open class Shader(
     override var vertexShaderHandle: Int = 0
     override var fragmentShaderHandle: Int = 0
     override var handle: Int = 0
+
+    override val nodes: MutableList<IShaderNode> = ArrayList()
 
     init {
         if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
@@ -208,6 +209,78 @@ open class Shader(
         return program
     }
 
+    override fun buildSourceCode() {
+        var uid = 0
+        nodes.forEach { node ->
+            node.shaderOrNull = this
+            node.output.forEach {
+                it.value.uid = uid
+                uid++
+            }
+        }
+
+        nodes.forEach { it.prepareToBuild() }
+
+        // Sort nodes with order: less dependencies depth - first, more dependencies depth - last
+        val countMap = HashMap<IShaderNode, Int>()
+        nodes.forEach { countMap[it] = findMaxChildrenTreeDepth(it) }
+        nodes.sortBy { countMap[it] }
+
+        val vertDecl = StringBuilder()
+        val vertExe = StringBuilder()
+        val fragDecl = StringBuilder()
+        val fragExe = StringBuilder()
+
+        nodes.forEach {
+            it.declarationVert(vertDecl)
+            it.executionVert(vertExe)
+            it.declarationFrag(fragDecl)
+            it.executionFrag(fragExe)
+        }
+
+        vertDecl.appendln()
+        vertDecl.appendln("void main() {")
+        vertDecl.appendln(vertExe)
+        vertDecl.appendln("}")
+        vertCode = vertDecl.toString()
+
+        fragDecl.appendln()
+        fragDecl.appendln("void main() {")
+        fragDecl.appendln(fragExe)
+        fragDecl.appendln("}")
+        fragCode = fragDecl.toString()
+    }
+
+    override fun build() {
+        buildSourceCode()
+        if (isCompiled) destroy()
+        load(vertCode, fragCode)
+        if (!isCompiled) {
+            LOG.info(sourceCode())
+            throw RuntimeException("Errors in generated shader")
+        }
+        bind()
+        nodes.forEach { it.shaderCompiled() }
+    }
+
+    private fun findMaxChildrenTreeDepth(node: IShaderNode, count: Int = 0): Int {
+        if (node.input.isNotEmpty()) {
+            val incCount = count + 1
+            var maxCount = incCount
+            node.input.values.forEach {
+                val container = it.container
+                if (container != node && container != null) {
+                    val childCount = findMaxChildrenTreeDepth(container, incCount)
+                    if (childCount > maxCount) {
+                        maxCount = childCount
+                    }
+                }
+            }
+            return maxCount
+        }
+        return count
+    }
+
     override fun destroy() {
         isCompiledInternal = false
         logInternal = ""
@@ -215,142 +288,6 @@ open class Shader(
         fragmentShaderHandle = 0
         handle = 0
         super.destroy()
-    }
-
-    private fun fetchAttributeLocation(name: String): Int {
-        // -2 == not yet cached
-        // -1 == cached but not found
-        var location = attributes[name] ?: -2
-        if (location == -2) {
-            location = GL.glGetAttribLocation(this.handle, name)
-            attributes[name] = location
-        }
-        return location
-    }
-
-    /** @param pedantic flag indicating whether attributes & uniforms must be present at all times */
-    fun fetchUniformLocation(name: String, pedantic: Boolean = false): Int {
-        // -1 == not found
-        var location = uniforms[name]
-        if (location == null) {
-            location = GL.glGetUniformLocation(this.handle, name)
-            require(!(location == -1 && pedantic)) { "no uniform with name '$name' in shader" }
-            uniforms[name] = location
-        }
-        return location
-    }
-
-    /** Sets the uniform with the given name. Shader must be bound. */
-    fun setUniformi(name: String, value: Int) {
-        GL.glUniform1i(fetchUniformLocation(name), value)
-    }
-
-    /** Sets the uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Int, value2: Int) {
-        GL.glUniform2i(fetchUniformLocation(name), value1, value2)
-    }
-
-    /** Sets the uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Int, value2: Int, value3: Int) {
-        val location = fetchUniformLocation(name)
-        GL.glUniform3i(location, value1, value2, value3)
-    }
-
-    /** Sets the uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Int, value2: Int, value3: Int, value4: Int) =
-        GL.glUniform4i(fetchUniformLocation(name), value1, value2, value3, value4)
-
-    /** Sets the uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Float, value2: Float) = GL.glUniform2f(fetchUniformLocation(name), value1, value2)
-
-    /** Sets the vec3 uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Float, value2: Float, value3: Float) =
-        GL.glUniform3f(fetchUniformLocation(name), value1, value2, value3)
-
-    /** Sets the vec4 uniform with the given name. Shader must be bound. */
-    fun set(name: String, value1: Float, value2: Float, value3: Float, value4: Float) =
-        GL.glUniform4f(fetchUniformLocation(name), value1, value2, value3, value4)
-
-    fun set1(name: String, values: FloatArray, offset: Int, length: Int) =
-        GL.glUniform1fv(fetchUniformLocation(name), length, values, offset)
-
-    fun set2(name: String, values: FloatArray, offset: Int, length: Int) =
-        GL.glUniform2fv(fetchUniformLocation(name), length / 2, values, offset)
-
-    fun set3(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size) {
-        val location = fetchUniformLocation(name)
-        GL.glUniform3fv(location, length / 3, values, offset)
-    }
-
-    fun set4(name: String, values: FloatArray, offset: Int, length: Int) {
-        val location = fetchUniformLocation(name)
-        GL.glUniform4fv(location, length / 4, values, offset)
-    }
-
-    /** Sets the uniform matrix with the given name. Shader must be bound. */
-    fun set(name: String, mat: IMat4, transpose: Boolean) {
-        GL.glUniformMatrix4fv(fetchUniformLocation(name), 1, transpose, mat.values, 0)
-    }
-
-    /** Sets the uniform matrix with the given name. Shader must be bound. */
-    fun set(name: String, mat: Mat3, transpose: Boolean = false) {
-        GL.glUniformMatrix3fv(fetchUniformLocation(name), 1, transpose, mat.values, 0)
-    }
-
-    /** Sets an array of uniform matrices with the given name. Shader must be bound. */
-    fun setUniformMatrix3fv(name: String, buffer: IFloatData, count: Int, transpose: Boolean) {
-        buffer.position = 0
-        val location = fetchUniformLocation(name)
-        GL.glUniformMatrix3fv(location, count, transpose, buffer)
-    }
-
-    /** Sets an array of uniform matrices with the given name. Shader must be bound. */
-    fun set(name: String, buffer: IFloatData, count: Int, transpose: Boolean) {
-        buffer.position = 0
-        val location = fetchUniformLocation(name)
-        GL.glUniformMatrix4fv(location, count, transpose, buffer)
-    }
-
-    fun setMatrix4(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size) =
-        setMatrix4(fetchUniformLocation(name), values, offset, length)
-
-    operator fun set(name: String, value: Boolean) = setUniformi(name, if (value) 1 else 0)
-
-    operator fun set(name: String, value: Int) = setUniformi(name, value)
-
-    operator fun set(name: String, value: Float) = GL.glUniform1f(fetchUniformLocation(name), value)
-
-    /** Reduce value to float and set to uniform */
-    operator fun set(name: String, value: Double) = GL.glUniform1f(fetchUniformLocation(name), value.toFloat())
-
-    operator fun set(name: String, values: IVec2) = set(name, values.x, values.y)
-
-    operator fun set(name: String, values: IVec3) = set(name, values.x, values.y, values.z)
-
-    operator fun set(name: String, values: IVec4) = set(name, values.x, values.y, values.z, values.w)
-
-    operator fun set(name: String, value: Mat3) = set(name, value, false)
-
-    operator fun set(name: String, value: IMat4) = set(name, value, false)
-
-    /** Sets the given attribute
-     *
-     * @param name the name of the attribute
-     * @param value1 the first value
-     * @param value2 the second value
-     * @param value3 the third value
-     * @param value4 the fourth value
-     */
-    fun setAttributef(name: String, value1: Float, value2: Float, value3: Float, value4: Float) =
-        GL.glVertexAttrib4f(fetchAttributeLocation(name), value1, value2, value3, value4)
-
-    fun getAttributeLocation(name: String) = attributes[name] ?: -1
-
-    /** Some cards/drivers have different behavior */
-    fun getUniformArrayLocation(name: String, errorIfNotFound: Boolean = false): Int {
-        val value = uniforms[name] ?: uniforms["$name[0]"]
-        if (errorIfNotFound && value == null) LOG.info("uniform \"$name\" is not found in shader \"$name\"")
-        return value ?: -1
     }
 
     companion object {

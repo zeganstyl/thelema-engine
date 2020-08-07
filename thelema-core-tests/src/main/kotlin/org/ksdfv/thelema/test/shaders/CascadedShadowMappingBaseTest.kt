@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.*
@@ -34,7 +34,11 @@ import org.ksdfv.thelema.utils.LOG
 import kotlin.math.max
 import kotlin.math.min
 
-class CascadedShadowMappingBaseTest: Test("Cascaded shadow mapping base") {
+/** @author zeganstyl */
+class CascadedShadowMappingBaseTest: Test {
+    override val name: String
+        get() = "Cascaded shadow mapping base"
+
     val lightDirection = Vec3(-1f, -1f, -1f).nor()
 
     val numCascades = 4
@@ -230,7 +234,7 @@ void main() {
             buffer
         }
 
-        val cube = BoxMeshBuilder().build()
+        val cube = BoxMeshBuilder(xSize = 2f, ySize = 2f, zSize = 2f).build()
         val plane = PlaneMeshBuilder(width = 500f, height = 500f).build()
 
         val cubeColor = Vec4(1f, 0.5f, 0f, 1f)

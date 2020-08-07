@@ -18,7 +18,7 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
@@ -35,7 +35,11 @@ import org.ksdfv.thelema.texture.ITexture
 import org.ksdfv.thelema.texture.SimpleFrameBuffer
 import kotlin.math.pow
 
-class BloomBaseTest: Test("Bloom base") {
+/** @author zeganstyl */
+class BloomBaseTest: Test {
+    override val name: String
+        get() = "Bloom base"
+
     override fun testMain() {
         @Language("GLSL")
         val cubeShader = Shader(

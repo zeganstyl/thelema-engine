@@ -18,7 +18,9 @@ package org.ksdfv.thelema.g3d.node
 
 import org.ksdfv.thelema.math.*
 
-/** Translation only node. This node does not store matrices, only vec3 for position */
+/** Translation only node. This node does not store matrices, only vec3 for position
+ *
+ * @author zeganstyl */
 class TranslationNode: ITransformNode {
     override var name: String = ""
 

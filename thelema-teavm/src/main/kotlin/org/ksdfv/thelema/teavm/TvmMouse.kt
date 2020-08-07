@@ -24,6 +24,7 @@ import org.teavm.jso.dom.events.WheelEvent
 import org.teavm.jso.dom.html.HTMLCanvasElement
 import kotlin.math.sign
 
+/** @author zeganstyl */
 class TvmMouse(canvas: HTMLCanvasElement): IMouse {
     override var x: Int = 0
     override var y: Int = 0
@@ -137,7 +138,7 @@ class TvmMouse(canvas: HTMLCanvasElement): IMouse {
         listeners.remove(listener)
     }
 
-    override fun clear() {
+    override fun reset() {
         listeners.clear()
     }
 }

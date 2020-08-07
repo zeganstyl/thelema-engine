@@ -18,12 +18,12 @@ package org.ksdfv.thelema.utils
 
 /** @author zeganstyl */
 open class AsyncArrayList<T>: ArrayList<T>(), IAsyncList<T> {
-    override val loaded = HashSet<Int>()
+    override val ready = HashSet<Int>()
     override val requests = ArrayList<Pair<Int, () -> Unit>>()
 
     override fun clear() {
         super.clear()
-        loaded.clear()
+        ready.clear()
         requests.clear()
     }
 

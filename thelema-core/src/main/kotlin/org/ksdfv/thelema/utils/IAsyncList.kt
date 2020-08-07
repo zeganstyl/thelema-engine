@@ -18,11 +18,11 @@ package org.ksdfv.thelema.utils
 
 /** @author zeganstyl */
 interface IAsyncList<T>: MutableList<T> {
-    val loaded: MutableSet<Int>
+    val ready: MutableSet<Int>
     val requests: MutableList<Pair<Int, () -> Unit>>
 
-    fun loaded(index: Int) {
-        loaded.add(index)
+    fun ready(index: Int) {
+        ready.add(index)
 
         val tmp = ArrayList<Pair<Int, () -> Unit>>()
         requests.forEach {
@@ -37,16 +37,8 @@ interface IAsyncList<T>: MutableList<T> {
         tmp.clear()
     }
 
-    fun getOrWait(index: Int, call: () -> Unit) {
-        if (loaded.contains(index)) {
-            call()
-        } else {
-            requests.add(Pair(index, call))
-        }
-    }
-
-    fun getOrWait2(index: Int, call: (obj: T) -> Unit) {
-        if (loaded.contains(index)) {
+    fun getOrWait(index: Int, call: (obj: T) -> Unit) {
+        if (ready.contains(index)) {
             call(this[index])
         } else {
             requests.add(Pair(index) {

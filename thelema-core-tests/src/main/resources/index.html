@@ -1,118 +1,112 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Thelema-TeaVM</title>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <link rel="shortcut icon" href="thelema-logo.png" type="image/png">
-    <script type="text/javascript" charset="utf-8" src="classes.js"></script>
-    <style>
-      #canvasCell {
-      vertical-align: top;
-      width: 100%;
-      }
-      #canvas {
-      display:block;
-      vertical-align: top;
-      width: 100%;
-      height: 100%;
-      }
-      #listCell {
-      vertical-align: top;
-      text-align: center;
-      height: 100%;
-      }
-      ul {
-      list-style-type: none;
-      text-align: left;
-      margin: 0;
-      padding: 0;
-      overflow-y: auto;
-      height: 100%;
-      }
-      li {
-      padding: 5px;
-      }
-      * {
-      font-family: monospace;
-      font-size: 14px;
-      }
-      .testGroupTitle {
-      font-size: 20px;
-      font-weight: bold;
-      }
-      .testButton {
-      background-color: transparent;
-      border: none;
-      color: black;
-      display: inline-block;
-      outline: none;
-      }
-      .testButton:hover {
-      color: red;
-      }
-      .testButton:active {
-      color: black;
-      }
-      html, body, body table {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      max-height: 100%;
-      }
-      a {
-      text-decoration: none;
-      font-weight: bold;
-      }
+<head>
+  <title>Thelema-TeaVM</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <link rel="shortcut icon" href="thelema-logo.png" type="image/png">
+  <script type="text/javascript" charset="utf-8" src="classes.js"></script>
+  <style>
+            #canvas {
+                display:block;
+                vertical-align: top;
+                flex:1;
+            }
+            #tests {
+                list-style-type: none;
+                text-align: left;
+                margin: 0;
+                padding: 0;
+                overflow-y: auto;
+                height: 100%;
+                width: 270px;
+            }
+            li {
+                padding: 5px;
+            }
+            * {
+                font-family: monospace;
+                font-size: 14px;
+            }
+            .testGroupTitle {
+                font-size: 20px;
+                font-weight: bold;
+            }
+            .testButton {
+                background-color: transparent;
+                border: none;
+                color: black;
+                display: inline-block;
+                outline: none;
+            }
+            .testButton:hover {
+                color: red;
+            }
+            .testButton:active {
+                color: black;
+            }
+            html, body {
+                position:fixed;
+                top:0;
+                bottom:0;
+                left:0;
+                right:0;
+            }
+            a {
+                text-decoration: none;
+                font-weight: bold;
+            }
 
-      /* width */
-      ::-webkit-scrollbar {
-        width: 10px;
-      }
+            /* width */
+            ::-webkit-scrollbar {
+                width: 10px;
+            }
 
-      /* Track */
-      ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
+            /* Track */
+            ::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
 
-      /* Handle */
-      ::-webkit-scrollbar-thumb {
-        background: #AAA;
-      }
+            /* Handle */
+            ::-webkit-scrollbar-thumb {
+                background: #AAA;
+            }
 
-      /* Handle on hover */
-      ::-webkit-scrollbar-thumb:hover {
-        background: #888;
-      }
-    </style>
-  </head>
-  <body onload="main()">
-  <table>
-    <tbody>
-    <tr>
-      <td>
-        <img src="thelema-logo-128.png"/>
-      </td>
-      <td>
+            /* Handle on hover */
+            ::-webkit-scrollbar-thumb:hover {
+                background: #888;
+            }
+
+            .hbox {
+                display: flex;
+                flex-direction: row;
+            }
+            .vbox {
+                display: flex;
+                flex-direction: column;
+            }
+            .height100 {
+                height: 100%;
+            }
+        </style>
+</head>
+<body onload="main()">
+<div class="hbox height100">
+  <div class="vbox">
+    <div class="hbox">
+      <img src="thelema-logo-128.png"/>
+      <div id="links" class="vbox">
         <a href="https://github.com/zeganstyl/thelema-engine"><img src="github-mark.png"/><img src="github.png"/></a>
         <a href="https://www.youtube.com/playlist?list=PLS4PI9m5p5MmodmfBNVft1_mUges3x35O"><img src="youtube.png"/></a>
         <a href="https://www.patreon.com/thelema_engine"><img src="patreon.png"/></a>
-      </td>
-      <td id="canvasCell" rowspan="3">
-        <canvas id="canvas"></canvas>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <div>Powered by <a href="http://teavm.org/">TeaVM</a> </div>
-        Open console to see more
-      </td>
-    </tr>
-    <tr>
-      <td id="listCell" colspan="2">
-        <ul id="tests"></ul>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  </body>
+      </div>
+    </div>
+    <div>
+      <div>Powered by <a href="http://teavm.org/">TeaVM</a> </div>
+      <div>Open console to see more</div>
+    </div>
+    <ul id="tests"></ul>
+  </div>
+  <canvas id="canvas"></canvas>
+</div>
+</body>
 </html>

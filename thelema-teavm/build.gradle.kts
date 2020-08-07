@@ -19,6 +19,10 @@ dependencies {
     api(project(":thelema-core"))
     testImplementation(project(":thelema-core-tests"))
 
+    testImplementation(project(":thelema-ode4j"))
+    testImplementation(files("../thelema-ode4j/libs/core-0.4.1-SNAPSHOT.jar"))
+    //testImplementation("org.ode4j:core:0.4.0")
+
     // https://mvnrepository.com/artifact/com.github.cliftonlabs/json-simple
     api("com.github.cliftonlabs:json-simple:3.1.1")
 
@@ -146,15 +150,11 @@ val copyTestRuntimeResources = tasks.register<Copy>("copyTestRuntimeResources") 
 tasks.register("teavm-compile-tests", Exec::class) {
     dependsOn(copyTestRuntimeDependencies, copyTestRuntimeResources)
 
-    val jars = ArrayList<File>()
-
+    println("=== dependencies ===")
     configurations.testRuntimeClasspath.get().all {
-        if (checkTeavmDependency(it)) jars.add(it)
+        if (checkTeavmDependency(it)) println(it.name)
         true
     }
-
-    println("=== dependencies ===")
-    jars.forEach { println(it.name) }
 
     /*
     usage: java org.teavm.cli.TeaVMRunner [OPTIONS] [qualified.main.Class]
@@ -191,23 +191,18 @@ tasks.register("teavm-compile-tests", Exec::class) {
                                     only 1 is supported)
      */
 
-    commandLine = ArrayList<String>().apply {
-        add("java")
-        add("-jar")
-        add("teavm.jar")
-        add("--classpath")
-        add("$buildDir/classes/dependencies")
-        add("$buildDir/classes/kotlin/main")
-        add("$buildDir/classes/kotlin/test")
-
-        jars.forEach {
-            add(it.path)
-        }
-
-        add("--targetdir")
-        add("build/teavm")
-        add("--debug")
-        add("--sourcemaps")
-        add("org.ksdfv.thelema.teavm.test.MainTeaVMTests")
-    }
+    commandLine = listOf(
+        "java",
+        "-jar",
+        "teavm.jar",
+        "--classpath",
+        "$buildDir/classes/dependencies",
+        "$buildDir/classes/kotlin/main",
+        "$buildDir/classes/kotlin/test",
+        "--targetdir",
+        "build/teavm",
+        "--debug",
+        "--sourcemaps",
+        "org.ksdfv.thelema.teavm.test.MainTeaVMTests"
+    )
 }

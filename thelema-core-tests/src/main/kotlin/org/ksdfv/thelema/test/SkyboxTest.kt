@@ -18,7 +18,7 @@ package org.ksdfv.thelema.test
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
@@ -28,7 +28,11 @@ import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.texture.TextureCube
 import org.ksdfv.thelema.utils.LOG
 
-class SkyboxTest: Test("Skybox") {
+/** @author zeganstyl */
+class SkyboxTest: Test {
+    override val name: String
+        get() = "Skybox"
+
     override fun testMain() {
         @Language("GLSL")
         val shader = Shader(
@@ -66,9 +70,9 @@ void main () {
         )
 
         val mesh = BoxMeshBuilder(
-            halfSizeX = 0.5f,
-            halfSizeY = 0.5f,
-            halfSizeZ = 0.5f
+            xSize = 0.5f,
+            ySize = 0.5f,
+            zSize = 0.5f
         ).build()
 
         val control = OrbitCameraControl()

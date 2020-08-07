@@ -23,6 +23,7 @@ import org.ksdfv.thelema.img.IImg
 import org.ksdfv.thelema.net.NET
 import org.teavm.jso.browser.Window
 
+/** @author zeganstyl */
 object TvmIMG: IImg {
     override fun createImage(): IImage =
         HtmlImage(Window.current().document.createElement("img") as HTMLImageElement)

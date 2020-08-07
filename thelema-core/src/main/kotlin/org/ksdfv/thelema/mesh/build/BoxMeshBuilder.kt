@@ -22,57 +22,73 @@ import org.ksdfv.thelema.mesh.IMesh
 /**
  * @author zeganstyl
  */
-class BoxMeshBuilder(
-    var halfSizeX: Float = 1f,
-    var halfSizeY: Float = 1f,
-    var halfSizeZ: Float = 1f
+class BoxMeshBuilder constructor(
+    var xSize: Float = 1f,
+    var ySize: Float = 1f,
+    var zSize: Float = 1f
 ): MeshBuilder() {
     override fun build(out: IMesh): IMesh {
         out.vertices = createVerticesFloat(24) {
+            val xs = xSize * 0.5f
+            val ys = ySize * 0.5f
+            val zs = zSize * 0.5f
+
             // front
-            normal.set(1f, 0f, 0f)
-            putV2(this, -1f, -1f,  1f, 0f, 0f)
-            putV2(this, 1f, -1f,  1f, 1f, 0f)
-            putV2(this, 1f, 1f,  1f, 1f, 1f)
-            putV2(this, -1f, 1f,  1f, 0f, 1f)
+            putSide(
+                this, 0f, 0f, 1f,
+                -xs, -ys,  zs,
+                 xs, -ys,  zs,
+                 xs,  ys,  zs,
+                -xs,  ys,  zs
+            )
 
             // top
-            normal.set(0f, 1f, 0f)
-            putV2(this, -1f, 1f,  1f, 0f, 0f)
-            putV2(this, 1f, 1f,  1f, 1f, 0f)
-            putV2(this, 1f, 1f,  -1f, 1f, 1f)
-            putV2(this, -1f, 1f,  -1f, 0f, 1f)
+            putSide(
+                this, 0f, 1f, 0f,
+                -xs,  ys,  zs,
+                xs,  ys,  zs,
+                xs,  ys, -zs,
+                -xs,  ys, -zs
+            )
 
             // back
-            normal.set(0f, 0f, 1f).scl(-1f)
-            putV2(this, 1f, -1f,  -1f, 0f, 0f)
-            putV2(this, -1f, -1f,  -1f, 1f, 0f)
-            putV2(this, -1f, 1f,  -1f, 1f, 1f)
-            putV2(this, 1f, 1f,  -1f, 0f, 1f)
+            putSide(
+                this, 0f, 0f, -1f,
+                xs, -ys, -zs,
+                -xs, -ys, -zs,
+                -xs,  ys, -zs,
+                xs,  ys, -zs
+            )
 
             // bottom
-            normal.set(0f, 1f, 0f).scl(-1f)
-            putV2(this, -1f, -1f,  -1f, 0f, 0f)
-            putV2(this, 1f, -1f,  -1f, 1f, 0f)
-            putV2(this, 1f, -1f,  1f, 1f, 1f)
-            putV2(this, -1f, -1f,  1f, 0f, 1f)
+            putSide(
+                this, 0f, -1f, 0f,
+                -xs, -ys, -zs,
+                xs, -ys, -zs,
+                xs, -ys,  zs,
+                -xs, -ys,  zs
+            )
 
             // left
-            normal.set(1f, 0f, 0f).scl(-1f)
-            putV2(this, -1f, -1f,  1f, 0f, 0f)
-            putV2(this, -1f, -1f, -1f, 1f, 0f)
-            putV2(this, -1f,  1f, -1f, 1f, 1f)
-            putV2(this, -1f,  1f,  1f, 0f, 1f)
+            putSide(
+                this, -1f, 0f, 0f,
+                -xs, -ys,  zs,
+                -xs, -ys, -zs,
+                -xs,  ys, -zs,
+                -xs,  ys,  zs
+            )
 
             // right
-            normal.set(1f, 0f, 0f)
-            putV2(this, 1f, -1f,  1f, 0f, 0f)
-            putV2(this, 1f, -1f, -1f, 1f, 0f)
-            putV2(this, 1f,  1f, -1f, 1f, 1f)
-            putV2(this, 1f,  1f,  1f, 0f, 1f)
+            putSide(
+                this, 1f, 0f, 0f,
+                xs, -ys,  zs,
+                xs, -ys, -zs,
+                xs,  ys, -zs,
+                xs,  ys,  zs
+            )
         }
 
-        out.indices = createIndicesShort(6 * 6) {
+        out.indices = createIndicesShort(36) {
             put(
                 // front
                 0,  1,  2,
@@ -98,15 +114,34 @@ class BoxMeshBuilder(
         return super.build(out)
     }
 
-    private fun putV2(out: IFloatData, x: Float, y: Float, z: Float, u: Float, v: Float) {
-        out.put(x * halfSizeX,  y * halfSizeY,  z * halfSizeZ)
-        if (uv) out.put(u * uvScale, v * uvScale)
-        if (normals) out.put(normal.x, normal.y, normal.z)
+    private fun putSide(
+        out: IFloatData,
+        xn: Float, yn: Float, zn: Float,
+        x1: Float, y1: Float, z1: Float,
+        x2: Float, y2: Float, z2: Float,
+        x3: Float, y3: Float, z3: Float,
+        x4: Float, y4: Float, z4: Float
+    ) {
+        putVertex(out, x1, y1, z1, 0f, 0f, xn, yn, zn)
+        putVertex(out, x2, y2, z2, 1f, 0f, xn, yn, zn)
+        putVertex(out, x3, y3, z3, 1f, 1f, xn, yn, zn)
+        putVertex(out, x4, y4, z4, 0f, 1f, xn, yn, zn)
+    }
+
+    private fun putVertex(
+        out: IFloatData,
+        x: Float, y: Float, z: Float,
+        u: Float, v: Float,
+        xn: Float, yn: Float, zn: Float
+    ) {
+        out.put(x, y, z)
+        if (uv) out.put(u, v)
+        if (normals) out.put(xn, yn, zn)
     }
 
     companion object {
         fun skyboxBuilder(): BoxMeshBuilder {
-            val builder = BoxMeshBuilder(0.5f, 0.5f, 0.5f)
+            val builder = BoxMeshBuilder(1f, 1f, 1f)
             builder.normals = false
             builder.uv = false
             return builder

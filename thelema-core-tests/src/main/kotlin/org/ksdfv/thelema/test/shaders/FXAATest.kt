@@ -27,7 +27,11 @@ import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.SimpleFrameBuffer
 import org.ksdfv.thelema.utils.LOG
 
-class FXAATest: Test("FXAA") {
+/** @author zeganstyl */
+class FXAATest: Test {
+    override val name: String
+        get() = "FXAA"
+
     override fun testMain() {
         val model = CubeModel()
 

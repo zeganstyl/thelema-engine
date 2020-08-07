@@ -20,6 +20,7 @@ import org.ksdfv.thelema.data.IFloatData
 import org.teavm.jso.typedarrays.ArrayBufferView
 import org.teavm.jso.typedarrays.Float32Array
 
+/** @author zeganstyl */
 class TvmFloat32Array(val floatArray: Float32Array): IFloatData, TvmArrayBufferView<Float>() {
     override val array: ArrayBufferView
         get() = floatArray

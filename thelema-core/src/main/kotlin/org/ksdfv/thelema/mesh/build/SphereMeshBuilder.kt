@@ -16,54 +16,57 @@
 
 package org.ksdfv.thelema.mesh.build
 
-import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.mesh.IMesh
-import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * @author zeganstyl
  */
-class SphereMeshBuilder() : MeshBuilder() {
-    constructor(block: SphereMeshBuilder.() -> Unit): this() { block(this) }
-
-    var radius = 1f
-    var horizontalDivisions = 16
-    var verticalDivisions = 16
-
+class SphereMeshBuilder(
+    var radius: Float = 1f,
+    var hDivisions: Int = 16,
+    var vDivisions: Int = 16
+) : MeshBuilder() {
     override fun build(out: IMesh): IMesh {
-        out.vertices = createVerticesFloat((horizontalDivisions + 1) * (verticalDivisions + 1)) {
+        val pi = 3.141592653589793f
+        val pi2 = pi * 2f
+        val hNum = hDivisions + 1
+        val vNum = vDivisions + 1
+
+        out.vertices = createVerticesFloat(hNum * vNum) {
             // https://en.wikipedia.org/wiki/Spherical_coordinate_system
+            for (yi in 0 until vNum) {
+                val v = yi.toFloat() / vDivisions
+                val zenith = v * pi
 
-            for (yi in 0 until verticalDivisions + 1) {
-                val zenithPercent = yi.toFloat() / verticalDivisions
-                val zenith = zenithPercent * PI.toFloat()
+                val yn = cos(zenith)
+                val y = radius * yn
+                val zenithSinR = radius * sin(zenith)
 
-                val y = radius * cos(zenith)
+                for (xi in 0 until hNum) {
+                    val u = xi.toFloat() / hDivisions
+                    val azimuth = u * pi2
 
-                for (xi in 0 until horizontalDivisions + 1) {
-                    val azimuthPercent = xi.toFloat() / horizontalDivisions
-                    val azimuth = azimuthPercent * PI.toFloat() * 2f
-
-                    val x = radius * sin(zenith) * cos(azimuth)
-                    val z = radius * sin(zenith) * sin(azimuth)
-                    if (normals) normal.set(x, y, z).nor()
+                    val xn = cos(azimuth)
+                    val zn = sin(azimuth)
+                    val x = zenithSinR * xn
+                    val z = zenithSinR * zn
 
                     put(x, y, z)
-                    if (uv) put(azimuthPercent * uvScale, zenithPercent * uvScale)
-                    if (normals) put(normal.x, normal.y, normal.z)
+                    if (uv) put(u, v)
+                    if (normals) put(xn, yn, zn)
                 }
             }
         }
 
-        out.indices = createIndicesShort(6 * (horizontalDivisions + 1) * (verticalDivisions + 1)) {
+        out.indices = createIndicesShort(6 * (hDivisions + 1) * (vDivisions + 1)) {
             var ringIndex = 1
-            while (ringIndex < verticalDivisions + 2) {
+            while (ringIndex < vDivisions + 2) {
 
-                var curRingVertexIndex = horizontalDivisions * ringIndex
-                var prevRingVertexIndex = horizontalDivisions * (ringIndex - 1)
-                while (curRingVertexIndex < horizontalDivisions * (ringIndex + 1) + 1) {
+                var curRingVertexIndex = hDivisions * ringIndex
+                var prevRingVertexIndex = hDivisions * (ringIndex - 1)
+                while (curRingVertexIndex < hDivisions * (ringIndex + 1) + 1) {
                     put((curRingVertexIndex + 1).toShort(), prevRingVertexIndex.toShort(), (prevRingVertexIndex + 1).toShort())
                     put(curRingVertexIndex.toShort(), prevRingVertexIndex.toShort(), (curRingVertexIndex + 1).toShort())
                     curRingVertexIndex += 1
@@ -75,9 +78,5 @@ class SphereMeshBuilder() : MeshBuilder() {
         }
 
         return super.build(out)
-    }
-
-    companion object {
-        val normal = Vec3()
     }
 }

@@ -22,4 +22,29 @@ object Blending {
     const val Clip = 1
     const val Blend = 2
     const val Hashed = 3
+
+    val items: MutableList<Int> = ArrayList()
+
+    init {
+        items.add(Opaque)
+        items.add(Clip)
+        items.add(Blend)
+        items.add(Hashed)
+    }
+
+    fun getByName(name: String): Int = when (name) {
+        "Opaque" -> Opaque
+        "Clip" -> Clip
+        "Blend" -> Blend
+        "Hashed" -> Hashed
+        else -> throw IllegalStateException("No blending with name \"$name\"")
+    }
+
+    fun getById(id: Int): String = when (id) {
+        Opaque -> "Opaque"
+        Clip -> "Clip"
+        Blend -> "Blend"
+        Hashed -> "Hashed"
+        else -> throw IllegalStateException("No blending with id = $id")
+    }
 }

@@ -16,79 +16,102 @@
 
 package org.ksdfv.thelema.mesh
 
+import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_ARRAY_BUFFER
 import org.ksdfv.thelema.gl.GL_STATIC_DRAW
 import org.ksdfv.thelema.shader.IShader
 
-/** @author zeganstyl */
+/** Simple vertex buffer
+ *
+ * @author zeganstyl */
 class VertexBufferObject(
     override var vertexInputs: IVertexInputs,
-    override var bytes: IByteData,
-    usage: Int = GL_STATIC_DRAW,
+    bytes: IByteData,
+    override var instancesToRender: Int = 0,
+
+    /** If user change this, buffer must reloaded */
+    override var usage: Int = GL_STATIC_DRAW,
+
     initGpuObjects: Boolean = true
 ) : IVertexBuffer {
+    /** Create vertex buffer and use it as instance buffer
+     *
+     * @param numVertices the maximum number of vertices
+     * @param vertexInputs the [VertexInputs].
+     */
+    constructor(
+        numVertices: Int,
+        vertexInputs: VertexInputs,
+        instancesToRender: Int = numVertices,
+        usage: Int = GL_STATIC_DRAW,
+        initGpuObjects: Boolean = true
+    ): this(
+        vertexInputs,
+        DATA.bytes(vertexInputs.bytesPerVertex * numVertices),
+        instancesToRender,
+        usage,
+        initGpuObjects
+    )
+
+    /** If user change this, buffer must reloaded */
     override var floatBuffer = bytes.floatView()
+        private set
 
-    override var handle = 0
-
-    override var usage: Int = usage
+    /** If user change this, buffer must reloaded */
+    override var bytes: IByteData = bytes
         set(value) {
-            if (isBound) throw RuntimeException("Cannot change usage while VBO is bound")
             field = value
+            floatBuffer = bytes.floatView()
         }
 
+    /** Handle will be set after [initGpuObjects] executed */
+    override var handle = 0
+
     override var isBufferNeedReload = true
-
-    override var isBound = false
-
-    override var instancesToRender: Int = 0
 
     init {
         if (initGpuObjects) initGpuObjects()
     }
 
     override fun initGpuObjects() {
-        if (handle == 0) handle = GL.glGenBuffer()
+        handle = GL.glGenBuffer()
+        isBufferNeedReload = true
     }
 
     override fun loadBufferToGpu() {
-        isBufferNeedReload = if (isBound) {
-            GL.glBufferData(GL_ARRAY_BUFFER, bytes.size, bytes, usage)
-            false
-        } else {
-            true
-        }
+        if (GL.arrayBuffer != handle) GL.glBindBuffer(GL_ARRAY_BUFFER, handle)
+        GL.glBufferData(GL_ARRAY_BUFFER, bytes.size, bytes, usage)
+        isBufferNeedReload = false
     }
 
     override fun bind(shader: IShader?) {
         GL.glBindBuffer(GL_ARRAY_BUFFER, handle)
-        isBound = true
 
         if (isBufferNeedReload) loadBufferToGpu()
 
-        shader?.setVertexAttributes(vertexInputs)
-    }
-
-    override fun unbind(shader: IShader?) {
-        if (shader != null) {
-            vertexInputs.forEach {
-                val location = shader.attributes[it.name]
-                if (location != null) GL.glDisableVertexAttribArray(location)
+        val attributes = shader?.attributes
+        if (attributes != null) {
+            val vertexInputs = vertexInputs
+            val bytesPerVertex = vertexInputs.bytesPerVertex
+            for (i in vertexInputs.indices) {
+                val input = vertexInputs[i]
+                val location = attributes[input.name]
+                if (location != null) {
+                    GL.glEnableVertexAttribArray(location)
+                    GL.glVertexAttribPointer(location, input.size, input.type, input.normalized, bytesPerVertex, input.byteOffset)
+                    GL.glVertexAttribDivisor(location, if (instancesToRender > 0) 1 else 0)
+                }
             }
         }
-
-        GL.glBindBuffer(GL_ARRAY_BUFFER, 0)
-        isBound = false
     }
 
-    /** Disposes of all resources this VertexBufferObject uses.  */
+    /** Disposes of all resources this object uses.  */
     override fun destroy() {
         if (handle != 0) {
-            val gl = GL
-            gl.glBindBuffer(GL_ARRAY_BUFFER, 0)
-            gl.glDeleteBuffer(handle)
+            if (GL.arrayBuffer == handle) GL.glBindBuffer(GL_ARRAY_BUFFER, 0)
+            GL.glDeleteBuffer(handle)
             handle = 0
         }
     }

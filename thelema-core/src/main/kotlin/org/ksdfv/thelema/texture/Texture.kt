@@ -23,7 +23,7 @@ import org.ksdfv.thelema.gl.*
  */
 abstract class Texture(
     override var glTarget: Int,
-    override var glHandle: Int = GL.glGenTexture()
+    override var textureHandle: Int = GL.glGenTexture()
 ): ITexture {
     override var name: String = ""
 

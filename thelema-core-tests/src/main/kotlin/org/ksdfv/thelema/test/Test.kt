@@ -19,11 +19,9 @@ package org.ksdfv.thelema.test
 import org.ksdfv.thelema.IApp
 
 /** @author zeganstyl */
-abstract class Test(val name: String = "") {
-    open val autoCreateApp: Boolean
-        get() = true
+interface Test {
+    val name: String
 
-    /** Here must be code that will be executed after application creation [IApp] and
-     * before main loop started [IApp.startLoop] */
-    abstract fun testMain()
+    /** Here must be code that will be executed after application created [IApp] */
+    fun testMain()
 }

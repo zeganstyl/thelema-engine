@@ -19,6 +19,7 @@ package org.ksdfv.thelema.teavm
 import org.ksdfv.thelema.fs.IFS
 import org.ksdfv.thelema.fs.IFile
 
+/** @author zeganstyl */
 class TvmFS: IFS {
     override val externalStoragePath: String
         get() = ""

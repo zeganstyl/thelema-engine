@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.teavm
 
 import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.AppListener
 import org.ksdfv.thelema.IApp
 import org.ksdfv.thelema.audio.AL
 import org.ksdfv.thelema.audio.mock.MockAudio
@@ -94,8 +95,16 @@ class TeaVMApp(
 
     var anim: (timeStamp: Double) -> Unit = {}
 
+    val listeners = ArrayList<AppListener>()
+
     init {
         APP.api = this
+
+        canvas.addEventListener("resize") {
+            for (i in listeners.indices) {
+                listeners[i].resized(canvas.width, canvas.height)
+            }
+        }
 
         anim = {
             val time = System.nanoTime()
@@ -154,6 +163,14 @@ class TeaVMApp(
         if (setViewport) GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
 
         startLoop()
+    }
+
+    override fun addListener(listener: AppListener) {
+        listeners.add(listener)
+    }
+
+    override fun removeListener(listener: AppListener) {
+        listeners.remove(listener)
     }
 
     override fun messageBox(title: String, message: String) {

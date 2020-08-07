@@ -19,6 +19,7 @@ package org.ksdfv.thelema.teavm
 import org.ksdfv.thelema.data.IDataArray
 import org.teavm.jso.typedarrays.ArrayBufferView
 
+/** @author zeganstyl */
 abstract class TvmArrayBufferView<T>: IDataArray<T> {
     abstract val array: ArrayBufferView
 

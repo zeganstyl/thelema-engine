@@ -21,8 +21,13 @@ import org.ksdfv.thelema.input.KB
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class KeyboardTest: Test("Keyboard") {
+class KeyboardTest: Test {
+    override val name: String
+        get() = "Keyboard"
+
     override fun testMain() {
+        LOG.info("Press some key on keyboard")
+
         KB.addListener(object: IKeyListener {
             override fun keyDown(keycode: Int) {
                 LOG.info("keyDown: $keycode (${KB.toString(keycode)})")

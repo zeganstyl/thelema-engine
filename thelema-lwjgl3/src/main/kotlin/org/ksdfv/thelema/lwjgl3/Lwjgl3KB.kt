@@ -313,7 +313,7 @@ class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
         windowHandleChanged(window.windowHandle)
     }
 
-    override fun clear() {
+    override fun reset() {
         listeners.clear()
     }
 }

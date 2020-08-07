@@ -20,7 +20,9 @@ import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.IVec4
 
-/** Node that delegates methods and properties to [node] */
+/** Node that delegates methods and properties to [node]
+ *
+ * @author zeganstyl */
 interface IDelegateTransformNode: ITransformNode {
     /** Delegate node */
     var node: ITransformNode

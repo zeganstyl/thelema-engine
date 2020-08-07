@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -32,7 +32,11 @@ import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.texture.GBuffer
 
-class GBufferBaseTest: Test("G-Buffer base") {
+/** @author zeganstyl */
+class GBufferBaseTest: Test {
+    override val name: String
+        get() = "G-Buffer base"
+
     override fun testMain() {
         if (GL.isGLES) {
             if (GL.glesMajVer < 3) {
@@ -51,7 +55,12 @@ class GBufferBaseTest: Test("G-Buffer base") {
 
         val gBuffer = GBuffer()
 
-        ActiveCamera.api = Camera(from = Vec3(0f, 3f, -3f), to = IVec3.Zero, near = 2f, far = 5f)
+        ActiveCamera.api = Camera(
+            from = Vec3(0f, 3f, -3f),
+            to = IVec3.Zero,
+            near = 2f,
+            far = 5f
+        )
 
         @Language("GLSL")
         val shader = Shader(version = 330,

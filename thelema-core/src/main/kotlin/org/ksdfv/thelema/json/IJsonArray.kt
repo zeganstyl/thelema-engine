@@ -84,4 +84,25 @@ interface IJsonArray {
     fun add(value: IJsonArrayIO)
     fun addObj(newChildContext: IJsonObject.() -> Unit)
     fun addArray(newChildContext: IJsonArray.() -> Unit)
+
+    fun add(vararg values: Float) {
+        for (i in values.indices) {
+            add(values[i])
+        }
+    }
+    fun add(vararg values: Int) {
+        for (i in values.indices) {
+            add(values[i])
+        }
+    }
+    fun add(vararg values: String) {
+        for (i in values.indices) {
+            add(values[i])
+        }
+    }
+    fun add(vararg values: Boolean) {
+        for (i in values.indices) {
+            add(values[i])
+        }
+    }
 }

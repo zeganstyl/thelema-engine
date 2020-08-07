@@ -18,14 +18,14 @@ package org.ksdfv.thelema.test.mesh
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_FLOAT
-import org.ksdfv.thelema.mesh.InstanceBufferObject
+import org.ksdfv.thelema.mesh.VertexBufferObject
 import org.ksdfv.thelema.mesh.VertexInput
 import org.ksdfv.thelema.mesh.VertexInputs
 import org.ksdfv.thelema.mesh.build.BoxMeshBuilder
@@ -34,7 +34,11 @@ import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.LOG
 
-class InstancingTest: Test("Instancing") {
+/** @author zeganstyl */
+class InstancingTest: Test {
+    override val name: String
+        get() = "Instancing"
+
     override fun testMain() {
         @Language("GLSL")
         val simpleShader = Shader(
@@ -79,7 +83,7 @@ void main() {
 
         val cubes = BoxMeshBuilder().build()
 
-        cubes.instances = InstanceBufferObject(
+        cubes.instances = VertexBufferObject(
             numVertices = numX * numZ,
             instancesToRender = numX * numZ,
             vertexInputs = VertexInputs(

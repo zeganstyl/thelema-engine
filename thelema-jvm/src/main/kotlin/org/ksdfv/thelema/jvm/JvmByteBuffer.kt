@@ -51,12 +51,41 @@ class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer<Byte>() {
     override fun get(): Byte = byteBuffer.get()
 
     override fun put(value: Byte) {
-        byteBuffer.slice()
         byteBuffer.put(value)
+        byteBuffer.slice()
     }
 
     override fun byteView(): IByteData = JvmByteBuffer(byteBuffer.slice())
     override fun shortView(): IShortData = JvmShortBuffer(byteBuffer.asShortBuffer())
     override fun intView(): IIntData = JvmIntBuffer(byteBuffer.asIntBuffer())
     override fun floatView(): IFloatData = JvmFloatBuffer(byteBuffer.asFloatBuffer())
+
+    override fun readShort(byteStartIndex: Int): Short {
+        bytes4.position(0)
+        bytes4.put(1, get(byteStartIndex))
+        bytes4.put(0, get(byteStartIndex + 1))
+        return bytes4.short
+    }
+
+    override fun readInt(byteStartIndex: Int): Int {
+        bytes4.position(0)
+        bytes4.put(3, get(byteStartIndex))
+        bytes4.put(2, get(byteStartIndex + 1))
+        bytes4.put(1, get(byteStartIndex + 2))
+        bytes4.put(0, get(byteStartIndex + 3))
+        return bytes4.int
+    }
+
+    override fun readFloat(byteStartIndex: Int): Float {
+        bytes4.position(0)
+        bytes4.put(3, get(byteStartIndex))
+        bytes4.put(2, get(byteStartIndex + 1))
+        bytes4.put(1, get(byteStartIndex + 2))
+        bytes4.put(0, get(byteStartIndex + 3))
+        return bytes4.float
+    }
+
+    companion object {
+        val bytes4 = ByteBuffer.allocate(4)
+    }
 }

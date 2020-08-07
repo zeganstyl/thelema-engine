@@ -25,7 +25,10 @@ import org.ksdfv.thelema.texture.Attachments
 import org.ksdfv.thelema.texture.FrameBuffer
 
 /** @author zeganstyl */
-class FrameBufferTest: Test("Frame buffer") {
+class FrameBufferTest: Test {
+    override val name: String
+        get() = "Frame buffer"
+
     override fun testMain() {
         val screenQuad = ScreenQuad.TextureRenderer()
 

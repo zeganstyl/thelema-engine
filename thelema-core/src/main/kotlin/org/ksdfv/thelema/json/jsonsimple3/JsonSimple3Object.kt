@@ -92,9 +92,9 @@ class JsonSimple3Object(val source: JsonObject): IJsonObject {
             return Jsoner.prettyPrint(child.toJson())
         }
 
-        fun printObject(json: IJsonObjectIO): String = Jsoner.prettyPrint(Simple3JsonObjectIO(json).toJson())
+        fun printObject(json: IJsonObjectIO): String = Jsoner.prettyPrint(Simple3JsonObjectIO(json).apply { write() }.toJson())
 
-        fun printArray(json: IJsonArrayIO): String = Jsoner.prettyPrint(Simple3JsonArrayIO(json).toJson())
+        fun printArray(json: IJsonArrayIO): String = Jsoner.prettyPrint(Simple3JsonArrayIO(json).apply { write() }.toJson())
 
         fun parseObject(text: String): IJsonObject = JsonSimple3Object(Jsoner.deserialize(text, JsonObject()))
 

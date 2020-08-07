@@ -16,7 +16,7 @@
 
 package org.ksdfv.thelema.g2d
 
-import org.ksdfv.thelema.texture.Texture2D
+import org.ksdfv.thelema.texture.ITexture2D
 
 /** Describes the region of a packed image and provides information about the original image before it was packed.
  * @author Nathan Sweet */
@@ -56,7 +56,8 @@ class AtlasRegion : TextureRegion {
     /** The ninepatch pads, or null if not a ninepatch or the has no padding. Has 4 elements: left, right, top, bottom.  */
     var pads: IntArray? = null
 
-    constructor(texture: Texture2D, x: Int, y: Int, width: Int, height: Int) : super(texture, x, y, width, height) {
+    constructor(texture: ITexture2D, x: Int, y: Int, width: Int, height: Int) : super(texture) {
+        setRegion(x, y, width, height)
         originalWidth = width
         originalHeight = height
         packedWidth = width

@@ -16,8 +16,8 @@
 
 package org.ksdfv.thelema.g3d.light
 
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.IScene
 import org.ksdfv.thelema.g3d.ShaderChannel
 import org.ksdfv.thelema.gl.GL

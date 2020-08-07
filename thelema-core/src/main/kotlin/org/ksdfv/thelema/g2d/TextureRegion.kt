@@ -16,115 +16,102 @@
 
 package org.ksdfv.thelema.g2d
 
+import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.texture.Texture2D
 import kotlin.math.abs
 import kotlin.math.round
 
 /** Defines a rectangular area of a texture. The coordinate system used has its origin in the upper left corner with the x-axis
  * pointing to the right and the y axis pointing downwards.
- * @author mzechner, Nathan Sweet
+ * @author mzechner, Nathan Sweet, zeganstyl
  */
-open class TextureRegion {
-    var texture: Texture2D =
-        Texture2D.White
-    open var u = 0f
+open class TextureRegion(
+    texture: ITexture2D = Texture2D.White,
+    left: Float = 0f,
+    bottom: Float = 0f,
+    right: Float = 1f,
+    top: Float = 1f
+) {
+    open var texture: ITexture2D = texture
+        set(value) {
+            field = value
+            regionWidth = round(abs(right - left) * value.width).toInt()
+            regionHeight = round(abs(right - left) * value.width).toInt()
+        }
+
+    open var left = left
         set(value) {
             if (field != value) {
                 field = value
-                regionWidth = round(abs(u2 - u) * texture.width).toInt()
+                regionWidth = round(abs(right - left) * texture.width).toInt()
             }
         }
-    open var v = 0f
+    open var bottom = bottom
         set(value) {
             if (field != value) {
                 field = value
-                regionHeight = round(abs(v2 - v) * texture.height).toInt()
+                regionHeight = round(abs(top - bottom) * texture.height).toInt()
             }
         }
-    open var u2 = 0f
+    open var right = right
         set(value) {
             if (field != value) {
                 field = value
-                regionWidth = round(abs(u2 - u) * texture.width).toInt()
+                regionWidth = round(abs(right - left) * texture.width).toInt()
             }
         }
 
-    open var v2 = 0f
+    open var top = top
         set(value) {
             if (field != value) {
                 field = value
-                regionHeight = round(abs(v2 - v) * texture.height).toInt()
+                regionHeight = round(abs(top - bottom) * texture.height).toInt()
             }
         }
 
-    var regionWidth = 0
+    var regionX: Int
+        get() = round(left * texture.width).toInt()
+        set(x) {
+            left = x / texture.width.toFloat()
+        }
+
+    var regionY: Int
+        get() = round(bottom * texture.height).toInt()
+        set(y) {
+            bottom = y / texture.height.toFloat()
+        }
+
+    var regionWidth: Int = round(abs(right - left) * texture.width).toInt()
         private set
 
-    var regionHeight = 0
+    var regionHeight: Int = round(abs(top - bottom) * texture.height).toInt()
         private set
 
-    /** Constructs a region that cannot be used until a texture and texture coordinates are set.  */
-    constructor()
+    val isFlipX: Boolean
+        get() = left > right
 
-    /** Constructs a region the size of the specified texture.  */
-    constructor(texture: Texture2D) {
-        this.texture = texture
-        setRegion(0, 0, texture.width, texture.height)
-    }
-
-    /** @param width The width of the texture region. May be negative to flip the sprite when drawn.
-     * @param height The height of the texture region. May be negative to flip the sprite when drawn.
-     */
-    constructor(texture: Texture2D, width: Int, height: Int) {
-        this.texture = texture
-        setRegion(0, 0, width, height)
-    }
-
-    /** @param width The width of the texture region. May be negative to flip the sprite when drawn.
-     * @param height The height of the texture region. May be negative to flip the sprite when drawn.
-     */
-    constructor(texture: Texture2D, x: Int, y: Int, width: Int, height: Int) {
-        this.texture = texture
-        setRegion(x, y, width, height)
-    }
-
-    constructor(texture: Texture2D, u: Float, v: Float, u2: Float, v2: Float) {
-        this.texture = texture
-        setRegion(u, v, u2, v2)
-    }
-
-    /** Constructs a region with the same texture and coordinates of the specified region.  */
-    constructor(region: TextureRegion) {
-        setRegion(region)
-    }
-
-    /** Constructs a region with the same texture as the specified region and sets the coordinates relative to the specified
-     * region.
-     * @param width The width of the texture region. May be negative to flip the sprite when drawn.
-     * @param height The height of the texture region. May be negative to flip the sprite when drawn.
-     */
-    constructor(region: TextureRegion, x: Int, y: Int, width: Int, height: Int) {
-        setRegion(region, x, y, width, height)
-    }
+    val isFlipY: Boolean
+        get() = bottom > top
 
     /** Sets the texture and sets the coordinates to the size of the specified texture.  */
-    fun setRegion(texture: Texture2D) {
+    fun setRegion(texture: ITexture2D): TextureRegion {
         this.texture = texture
-        setRegion(0, 0, texture.width, texture.height)
+        return setRegion(0, 0, texture.width, texture.height)
     }
 
     /** @param width The width of the texture region. May be negative to flip the sprite when drawn.
      * @param height The height of the texture region. May be negative to flip the sprite when drawn.
      */
-    fun setRegion(x: Int, y: Int, width: Int, height: Int) {
+    fun setRegion(x: Int, y: Int, width: Int, height: Int): TextureRegion {
         val invTexWidth = 1f / texture.width
         val invTexHeight = 1f / texture.height
         setRegion(x * invTexWidth, y * invTexHeight, (x + width) * invTexWidth, (y + height) * invTexHeight)
         regionWidth = abs(width)
         regionHeight = abs(height)
+        return this
     }
 
-    open fun setRegion(u: Float, v: Float, u2: Float, v2: Float) {
+    open fun setRegion(u: Float, v: Float, u2: Float, v2: Float): TextureRegion {
         var uvar = u
         var vvar = v
         var u2var = u2
@@ -142,54 +129,37 @@ open class TextureRegion {
             vvar += adjustY
             v2var -= adjustY
         }
-        this.u = uvar
-        this.v = vvar
-        this.u2 = u2var
-        this.v2 = v2var
+        this.left = uvar
+        this.bottom = vvar
+        this.right = u2var
+        this.top = v2var
+        return this
     }
 
     /** Sets the texture and coordinates to the specified region.  */
-    fun setRegion(region: TextureRegion) {
+    fun setRegion(region: TextureRegion): TextureRegion {
         texture = region.texture
-        setRegion(region.u, region.v, region.u2, region.v2)
+        return setRegion(region.left, region.bottom, region.right, region.top)
     }
 
     /** Sets the texture to that of the specified region and sets the coordinates relative to the specified region.  */
-    fun setRegion(region: TextureRegion, x: Int, y: Int, width: Int, height: Int) {
+    fun setRegion(region: TextureRegion, x: Int, y: Int, width: Int, height: Int): TextureRegion {
         texture = region.texture
-        setRegion(region.regionX + x, region.regionY + y, width, height)
+        return setRegion(region.regionX + x, region.regionY + y, width, height)
     }
-
-    var regionX: Int
-        get() = round(u * texture.width).toInt()
-        set(x) {
-            u = x / texture.width.toFloat()
-        }
-
-    var regionY: Int
-        get() = round(v * texture.height).toInt()
-        set(y) {
-            v = y / texture.height.toFloat()
-        }
 
     open fun flip(x: Boolean, y: Boolean) {
         if (x) {
-            val temp = u
-            u = u2
-            u2 = temp
+            val temp = left
+            left = right
+            right = temp
         }
         if (y) {
-            val temp = v
-            v = v2
-            v2 = temp
+            val temp = bottom
+            bottom = top
+            top = temp
         }
     }
-
-    val isFlipX: Boolean
-        get() = u > u2
-
-    val isFlipY: Boolean
-        get() = v > v2
 
     /** Offsets the region relative to the current region. Generally the region's size should be the entire size of the texture in
      * the direction(s) it is scrolled.
@@ -198,14 +168,14 @@ open class TextureRegion {
      */
     open fun scroll(xAmount: Float, yAmount: Float) {
         if (xAmount != 0f) {
-            val width = (u2 - u) * texture.width
-            u = (u + xAmount) % 1
-            u2 = u + width / texture.width
+            val width = (right - left) * texture.width
+            left = (left + xAmount) % 1
+            right = left + width / texture.width
         }
         if (yAmount != 0f) {
-            val height = (v2 - v) * texture.height
-            v = (v + yAmount) % 1
-            v2 = v + height / texture.height
+            val height = (top - bottom) * texture.height
+            bottom = (bottom + yAmount) % 1
+            top = bottom + height / texture.height
         }
     }
 
@@ -226,15 +196,7 @@ open class TextureRegion {
         val rows = height / tileHeight
         val cols = width / tileWidth
         val startX = x
-        val tiles = Array(rows) { Array(cols) {
-            TextureRegion(
-                texture,
-                x,
-                y,
-                tileWidth,
-                tileHeight
-            )
-        } }
+        val tiles = Array(rows) { Array(cols) { TextureRegion(texture).apply { setRegion(x, y, tileWidth, tileHeight) } } }
         var row = 0
         while (row < rows) {
             x = startX

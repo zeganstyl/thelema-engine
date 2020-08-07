@@ -23,7 +23,7 @@ class VertexInput(
     override val size: Int,
     override var name: String,
     override val type: Int = GL_FLOAT,
-    override val normalized: Boolean = true
+    override val normalized: Boolean = false
 ) : IVertexInput {
     override var byteOffset: Int = 0
     override var componentOffset: Int = 0

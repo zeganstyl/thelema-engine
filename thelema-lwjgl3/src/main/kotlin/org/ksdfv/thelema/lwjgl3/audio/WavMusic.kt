@@ -16,12 +16,12 @@
 
 package org.ksdfv.thelema.lwjgl3.audio
 
-import org.ksdfv.thelema.utils.StreamUtils
 import org.ksdfv.thelema.fs.IFile
+import org.ksdfv.thelema.utils.StreamUtils
 import java.io.IOException
 
 class WavMusic(audio: OpenAL, file: IFile) : OpenALMusic(audio, file) {
-    private var input: WavInputStream?
+    private var input: WavInputStream? = WavInputStream(file)
     override fun read(buffer: ByteArray): Int {
         if (input == null) {
             input = WavInputStream(file)
@@ -40,7 +40,6 @@ class WavMusic(audio: OpenAL, file: IFile) : OpenALMusic(audio, file) {
     }
 
     init {
-        input = WavInputStream(file)
         if (!audio.noDevice) {
             setup(input!!.channels, input!!.sampleRate)
         }

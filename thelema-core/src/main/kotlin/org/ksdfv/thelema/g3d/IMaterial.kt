@@ -18,7 +18,6 @@ package org.ksdfv.thelema.g3d
 
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.shader.IShader
-import org.ksdfv.thelema.shader.Shader
 
 /** @author zeganstyl */
 interface IMaterial {
@@ -41,7 +40,7 @@ interface IMaterial {
     var cullFaceMode: Int
 
     /** Default shader */
-    var shader: Shader?
+    var shader: IShader?
 
     var baseColor: IVec4
 

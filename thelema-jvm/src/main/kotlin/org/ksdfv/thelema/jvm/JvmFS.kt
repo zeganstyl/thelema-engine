@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.jvm
 
 import org.ksdfv.thelema.fs.IFS
+import org.ksdfv.thelema.fs.IFile
 import java.io.File
 
 /** @author zeganstyl */
@@ -32,6 +33,9 @@ class JvmFS: IFS {
 
     override val isLocalStorageAvailable: Boolean
         get() = true
+
+    /** Key - file path, value - file */
+    val ram = HashMap<String, IFile>()
 
     override fun file(path: String, location: Int) = JvmFile(path, location)
 

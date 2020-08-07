@@ -138,18 +138,6 @@ interface IJsonObject {
 
     /** @param childBlock context for created child */
     fun setArray(key: String, childBlock: IJsonArray.() -> Unit)
-    fun <T: Any> setArrayOf(key: String, vararg values: T) {
-        setArray(key) {
-            for (i in values.indices) {
-                add(values[i])
-            }
-        }
-    }
-
-    fun setFloats(key: String, vararg values: Float) = setArrayOf(key, values)
-    fun setInts(key: String, vararg values: Int) = setArrayOf(key, values)
-    fun setBools(key: String, vararg values: Boolean) = setArrayOf(key, values)
-    fun setStrings(key: String, vararg values: String) = setArrayOf(key, values)
 
     fun <T: Any> setArrayOf(key: String, size: Int, call: (i: Int) -> T) {
         setArray(key) {

@@ -3,5 +3,6 @@ include(
         "thelema-core-tests",
         "thelema-jvm",
         "thelema-lwjgl3",
-        "thelema-teavm"
+        "thelema-teavm",
+        "thelema-ode4j"
 )

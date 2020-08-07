@@ -170,21 +170,23 @@ interface IFile {
      * @throws RuntimeException if this file handle represents a directory, if it is a [FileLocation.Classpath] or
      * [FileLocation.Internal] file, or if it could not be written.
      */
-    fun writeText(text: String, append: Boolean, charset: String? = null)
+    fun writeText(text: String, append: Boolean = false, charset: String? = null)
 
     /** Writes the specified bytes to the file. Parent directories will be created if necessary.
      * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
      * @throws RuntimeException if this file handle represents a directory, if it is a [FileLocation.Classpath] or
      * [FileLocation.Internal] file, or if it could not be written.
      */
-    fun writeBytes(bytes: ByteArray, append: Boolean)
+    fun writeBytes(bytes: ByteArray, append: Boolean = false)
 
     /** Writes the specified bytes to the file. Parent directories will be created if necessary.
      * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
      * @throws RuntimeException if this file handle represents a directory, if it is a [FileLocation.Classpath] or
      * [FileLocation.Internal] file, or if it could not be written.
      */
-    fun writeBytes(bytes: ByteArray, offset: Int, length: Int, append: Boolean)
+    fun writeBytes(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size, append: Boolean = false)
+
+    fun writeBytes(bytes: IByteData)
 
     /** Returns the paths to the children of this directory. Returns an empty list if this file handle represents a file and not a
      * directory. On the desktop, an [FileLocation.Internal] handle to a directory on the classpath will return a zero length

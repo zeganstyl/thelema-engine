@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.g3d
 
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.g3d.light.ILight
 import org.ksdfv.thelema.g3d.node.ITransformNode
 import org.ksdfv.thelema.g3d.node.Node

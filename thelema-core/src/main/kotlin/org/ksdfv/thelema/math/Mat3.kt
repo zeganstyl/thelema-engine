@@ -34,12 +34,36 @@ class Mat3 {
     var values = FloatArray(9)
     private val tmp = FloatArray(9)
 
+    var m00: Float
+        get() = values[M00]
+        set(value) { values[M00] = value }
+    var m01: Float
+        get() = values[M01]
+        set(value) { values[M01] = value }
+    var m02: Float
+        get() = values[M02]
+        set(value) { values[M02] = value }
+    var m10: Float
+        get() = values[M10]
+        set(value) { values[M10] = value }
+    var m11: Float
+        get() = values[M11]
+        set(value) { values[M11] = value }
+    var m12: Float
+        get() = values[M12]
+        set(value) { values[M12] = value }
+    var m20: Float
+        get() = values[M20]
+        set(value) { values[M20] = value }
+    var m21: Float
+        get() = values[M21]
+        set(value) { values[M21] = value }
+    var m22: Float
+        get() = values[M22]
+        set(value) { values[M22] = value }
+
     constructor() {
         idt()
-    }
-
-    constructor(mat: Mat3) {
-        set(mat)
     }
 
     /** Constructs a matrix from the given float array. The array must have at least 9 elements; the first 9 will be copied.
@@ -568,7 +592,6 @@ class Mat3 {
     }
 
     companion object {
-        private const val serialVersionUID = 7907569533774959788L
         const val M00 = 0
         const val M01 = 3
         const val M02 = 6

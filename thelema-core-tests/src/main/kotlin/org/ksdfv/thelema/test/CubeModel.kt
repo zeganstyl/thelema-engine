@@ -16,18 +16,18 @@
 
 package org.ksdfv.thelema.test
 
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.intellij.lang.annotations.Language
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.Object3D
 import org.ksdfv.thelema.g3d.Scene
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.mesh.build.BoxMeshBuilder
 import org.ksdfv.thelema.shader.Shader
-import org.intellij.lang.annotations.Language
 
 /** @author zeganstyl */
 class CubeModel(val shader: Shader? = defaultShader()) {
-    val mesh = BoxMeshBuilder().build()
+    val mesh = BoxMeshBuilder(xSize = 2f, ySize = 2f, zSize = 2f).build()
 
     val obj = Object3D().apply { meshes.add(mesh) }
 

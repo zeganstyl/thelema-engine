@@ -21,6 +21,7 @@ import org.ksdfv.thelema.data.IData
 import org.teavm.jso.browser.Window
 import org.teavm.jso.typedarrays.Uint8Array
 
+/** @author zeganstyl */
 class TvmDATA: IData {
     override val nullBuffer: IByteData = bytes(0)
 

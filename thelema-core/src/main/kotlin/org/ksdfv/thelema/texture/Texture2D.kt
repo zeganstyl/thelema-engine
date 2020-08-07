@@ -16,7 +16,6 @@
 
 package org.ksdfv.thelema.texture
 
-import org.ksdfv.thelema.APP
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.fs.IFile
@@ -28,7 +27,7 @@ import org.ksdfv.thelema.utils.LOG
 
 /** 2D texture object
  * @author zeganstyl */
-open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
+open class Texture2D(textureHandle: Int = GL.glGenTexture()) : ITexture2D, Texture(GL_TEXTURE_2D, textureHandle) {
     override var width: Int = 0
     override var height: Int = 0
     override val depth: Int
@@ -37,40 +36,16 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
     /** Link ti image from which texture loaded, may be null, if texture generated from buffer directly */
     var image: IImage? = null
 
-    constructor(
-        url: String,
-        minFilter: Int = GL_LINEAR,
-        magFilter: Int = GL_LINEAR,
-        sWrap: Int = GL_REPEAT,
-        tWrap: Int = GL_REPEAT,
-        anisotropicFilter: Float = 1f,
-        generateMipmaps: Boolean = false
-    ) : this() {
-        load(url, minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
-    }
-
-    constructor(
-        file: IFile,
-        minFilter: Int = GL_LINEAR,
-        magFilter: Int = GL_LINEAR,
-        sWrap: Int = GL_REPEAT,
-        tWrap: Int = GL_REPEAT,
-        anisotropicFilter: Float = 1f,
-        generateMipmaps: Boolean = false
-    ) : this() {
-        load(file, minFilter, magFilter, sWrap, tWrap, anisotropicFilter, generateMipmaps)
-    }
-
-    fun load(
-        url: String,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean = false
-    ) {
-        IMG.load(url) { status, img ->
+    override fun load(
+        uri: String,
+        minFilter: Int,
+        magFilter: Int,
+        sWrap: Int,
+        tWrap: Int,
+        anisotropicFilter: Float,
+        generateMipmaps: Boolean
+    ): ITexture2D {
+        IMG.load(uri) { status, img ->
             if (NET.isSuccess(status)) {
                 this.image = img
                 name = img.name
@@ -80,20 +55,22 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
                 if (generateMipmaps) generateMipmapsGPU()
                 GL.glBindTexture(glTarget, 0)
             } else {
-                LOG.info("can't read $url, status $status")
+                LOG.info("can't read $uri, status $status")
             }
         }
+
+        return this
     }
 
-    fun load(
+    override fun load(
         file: IFile,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean = false
-    ) {
+        minFilter: Int,
+        magFilter: Int,
+        sWrap: Int,
+        tWrap: Int,
+        anisotropicFilter: Float,
+        generateMipmaps: Boolean
+    ): ITexture2D {
         IMG.load(file) { status, img ->
             if (NET.isSuccess(status)) {
                 this.image = img
@@ -107,18 +84,20 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
                 LOG.info("can't read ${file.path}, status $status")
             }
         }
+
+        return this
     }
 
     /** Texture must be bound */
-    fun load(
+    override fun load(
         image: IImage,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean = false
-    ) {
+        minFilter: Int,
+        magFilter: Int,
+        sWrap: Int,
+        tWrap: Int,
+        anisotropicFilter: Float,
+        generateMipmaps: Boolean
+    ): ITexture2D {
         this.image = image
         name = image.name
 
@@ -126,27 +105,31 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         GL.glTexImage2D(glTarget, 0, image.glInternalFormat, width, height, 0, image.glPixelFormat, image.glType, image)
         if (generateMipmaps) generateMipmapsGPU()
         GL.glBindTexture(glTarget, 0)
+
+        return this
     }
 
-    fun load(
+    override fun load(
         width: Int,
         height: Int,
-        pixels: IByteData? = null,
-        mipmapLevel: Int = 0,
-        internalFormat: Int = GL_RGBA,
-        pixelFormat: Int = GL_RGBA,
-        type: Int = GL_UNSIGNED_BYTE,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean = false
-    ) {
+        pixels: IByteData?,
+        mipmapLevel: Int,
+        internalFormat: Int,
+        pixelFormat: Int,
+        type: Int,
+        minFilter: Int,
+        magFilter: Int,
+        sWrap: Int,
+        tWrap: Int,
+        anisotropicFilter: Float,
+        generateMipmaps: Boolean
+    ): ITexture2D {
         beforeGlTexImage2D(width, height, minFilter, magFilter, sWrap, tWrap, anisotropicFilter)
         GL.glTexImage2D(glTarget, mipmapLevel, internalFormat, width, height, 0, pixelFormat, type, pixels)
         if (generateMipmaps) generateMipmapsGPU()
         GL.glBindTexture(glTarget, 0)
+
+        return this
     }
 
     private fun beforeGlTexImage2D(
@@ -161,8 +144,8 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         this.width = width
         this.height = height
 
-        if (glHandle == 0) {
-            glHandle = GL.glGenTexture()
+        if (textureHandle == 0) {
+            textureHandle = GL.glGenTexture()
         }
 
         bind()
@@ -176,25 +159,12 @@ open class Texture2D() : Texture(GL_TEXTURE_2D, 0) {
         GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_T, tWrap)
         this.anisotropicFilter = anisotropicFilter
     }
-
-    /** Texture must be bound */
-    fun generateMipmapsGPU() {
-        if (APP.platformType != APP.Desktop) {
-            GL.glGenerateMipmap(glTarget)
-        } else {
-            if (GL.isExtensionSupported("GL_ARB_framebuffer_object") || GL.isExtensionSupported("GL_EXT_framebuffer_object")) {
-                GL.glGenerateMipmap(glTarget)
-            } else {
-                throw RuntimeException("Can't create mipmaps on GPU")
-            }
-        }
-    }
     
     companion object {
         /** Create one pixel white opaque texture.
          * May be used as default texture or tinted to some color */
         fun createWhite() = Texture2D().apply {
-            glHandle = GL.glGenTexture()
+            textureHandle = GL.glGenTexture()
             val bytes = DATA.bytes(4)
             val pixel = bytes.intView()
             pixel.put(0xFFFFFFFF.toInt())

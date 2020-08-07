@@ -52,6 +52,8 @@ object APP: IApp {
             get() = 0
             set(_) {}
 
+        override fun addListener(listener: AppListener) {}
+        override fun removeListener(listener: AppListener) {}
         override fun messageBox(title: String, message: String) {}
         override fun loadPreferences(name: String): String = ""
         override fun savePreferences(name: String, text: String) {}
@@ -89,12 +91,9 @@ object APP: IApp {
         get() = api.defaultCursor
         set(value) { api.defaultCursor = value }
 
-    /** It can be used to check if new iteration started. Minimal states is 0 and 1.
-     * If [maxMainLoopIterationCounter] is less than this, iteration will be set to 0 */
-    var mainLoopIteration: Int = 0
+    override fun addListener(listener: AppListener) = api.addListener(listener)
 
-    /** See [mainLoopIteration] */
-    var maxMainLoopIterationCounter: Int = 1
+    override fun removeListener(listener: AppListener) = api.removeListener(listener)
 
     override fun messageBox(title: String, message: String) = api.messageBox(title, message)
 

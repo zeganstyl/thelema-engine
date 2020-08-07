@@ -36,7 +36,7 @@ class GBuffer(
         private set
 
     override val attachments: MutableList<IFrameBufferAttachment> = ArrayList()
-    override var glHandle: Int = GL.glGenFramebuffer()
+    override var frameBufferHandle: Int = GL.glGenFramebuffer()
     override var isBound: Boolean = false
 
     val colorMap: ITexture

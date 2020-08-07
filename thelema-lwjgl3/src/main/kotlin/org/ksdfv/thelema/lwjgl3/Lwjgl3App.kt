@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.lwjgl3
 
 import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.AppListener
 import org.ksdfv.thelema.IApp
 import org.ksdfv.thelema.audio.AL
 import org.ksdfv.thelema.data.DATA
@@ -69,27 +70,40 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
     override var defaultCursor: Int = APP.ArrowCursor
     override var cursor: Int = defaultCursor
         set(value) {
-            field = value
+            if (field != value) {
+                field = value
 
-            val glfwCursor: Long = when (value) {
-                APP.ArrowCursor -> getOrCreateSystemCursor(GLFW.GLFW_ARROW_CURSOR)
-                APP.CrosshairCursor -> getOrCreateSystemCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
-                APP.HandCursor -> getOrCreateSystemCursor(GLFW.GLFW_HAND_CURSOR)
-                APP.HorizontalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_HRESIZE_CURSOR)
-                APP.VerticalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_VRESIZE_CURSOR)
-                APP.IBeamCursor -> getOrCreateSystemCursor(GLFW.GLFW_IBEAM_CURSOR)
-                else -> cursorMapping[value]!!
+                val glfwCursor: Long = when (value) {
+                    APP.ArrowCursor -> getOrCreateSystemCursor(GLFW.GLFW_ARROW_CURSOR)
+                    APP.CrosshairCursor -> getOrCreateSystemCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
+                    APP.HandCursor -> getOrCreateSystemCursor(GLFW.GLFW_HAND_CURSOR)
+                    APP.HorizontalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_HRESIZE_CURSOR)
+                    APP.VerticalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_VRESIZE_CURSOR)
+                    APP.IBeamCursor -> getOrCreateSystemCursor(GLFW.GLFW_IBEAM_CURSOR)
+                    else -> cursorMapping[value]!!
+                }
+
+                GLFW.glfwSetCursor(mainWindow.windowHandle, glfwCursor)
             }
-
-            GLFW.glfwSetCursor(mainWindow.windowHandle, glfwCursor)
         }
 
     val cursorMapping = HashMap<Int, Long>()
 
+    val listeners = ArrayList<AppListener>()
+
+    override fun addListener(listener: AppListener) {
+        listeners.add(listener)
+    }
+
+    override fun removeListener(listener: AppListener) {
+        listeners.remove(listener)
+    }
+
     private fun getOrCreateSystemCursor(shape: Int): Long {
         var cursor = cursorMapping[shape]
         if (cursor == null) {
-            cursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
+            cursor = GLFW.glfwCreateStandardCursor(shape)
+            cursorMapping[shape] = cursor
         }
         return cursor
     }
@@ -100,9 +114,6 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
     private fun loop() {
         val closedWindows = ArrayList<Lwjgl3Window>()
         while (running && windows.size > 0) { // FIXME put it on a separate thread
-            APP.mainLoopIteration++
-            if (APP.mainLoopIteration > APP.maxMainLoopIterationCounter) APP.mainLoopIteration = 0
-
             width = mainWindow.graphics.logicalWidth
             height = mainWindow.graphics.logicalHeight
 
@@ -117,6 +128,7 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
                 window.makeCurrent()
                 currentWindow = window
                 //haveWindowsRendered = haveWindowsRendered or window.update()
+
                 window.update()
                 if (window.shouldClose()) {
                     closedWindows.add(window)
@@ -344,7 +356,9 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
     }
 
     override fun destroy() {
-        GL.doDestroyCalls()
+        for (i in listeners.indices) {
+            listeners[i].destroy()
+        }
 
         running = false
 
@@ -394,6 +408,8 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
         height = mainWindow.graphics.logicalHeight
 
         GL.api = mainWindow.graphics.lwjglGL
+
+        //GLFW.glfwSetCursor(mainWindow.windowHandle, GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR))
 
         GL.initGL()
 

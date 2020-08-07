@@ -20,6 +20,7 @@ import org.ksdfv.thelema.math.IMat4
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.IVec4
 
+/** @author zeganstyl */
 open class AdapterTransformNode: ITransformNode {
     override var name: String
         get() = ""

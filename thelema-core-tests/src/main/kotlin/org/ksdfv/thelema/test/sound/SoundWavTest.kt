@@ -21,9 +21,11 @@ import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.test.Test
 
 /** @author zeganstyl */
-class SoundWavTest: Test("Sound Wav") {
+class SoundWavTest: Test {
+    override val name: String
+        get() = "Sound Wav"
+
     override fun testMain() {
-        val sound = AL.newSound(FS.internal("242501__gabrielaraujo__powerup-success.wav"))
-        sound.play()
+        AL.newSound(FS.internal("242501__gabrielaraujo__powerup-success.wav")).play()
     }
 }

@@ -19,6 +19,7 @@ package org.ksdfv.thelema.teavm
 import org.ksdfv.thelema.audio.IAudioDevice
 import org.teavm.jso.webaudio.AudioBuffer
 
+/** @author zeganstyl */
 class TvmAudioDevice(
     val al: TvmAL,
     val sampleRate: Float,

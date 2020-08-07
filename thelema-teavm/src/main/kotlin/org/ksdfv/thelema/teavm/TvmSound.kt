@@ -22,6 +22,7 @@ import org.ksdfv.thelema.utils.Pool
 import org.teavm.jso.browser.Window
 import org.teavm.jso.dom.html.HTMLAudioElement
 
+/** @author zeganstyl */
 class TvmSound(val al: TvmAL, val src: String): ISound, IMusic {
     var pool: Pool<SoundInstance> = Pool {
         val element = Window.current().document.createElement("audio") as HTMLAudioElement

@@ -21,7 +21,7 @@ import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_TRIANGLES
 import org.ksdfv.thelema.shader.IShader
 
-/** Mesh is vertex buffer (+ index buffer) (+ instanced buffer) + material
+/** Mesh is vertex buffer (+ index buffer) (+ instanced buffer) + material.
  *
  * @author mzechner, Dave Clayton <contact@redskyforge.com>, Xoppa, zeganstyl
  * */
@@ -41,15 +41,6 @@ interface IMesh {
 
     var name: String
 
-    /** Sets whether to bind the underlying [vertices] automatically on a call to one of the
-     * render methods. Usually you want to use autobind. Manual binding is an expert functionality. There is a driver bug on the
-     * MSM720xa chips that will fuck up memory if you manipulate the vertices and indices of a Mesh multiple times while it is
-     * bound. Keep this in mind.
-     */
-    var autoBind: Boolean
-        get() = true
-        set(_) = Unit
-
     /** Binds the underlying [VertexBufferObject] and [IndexBufferObject] if indices where given. Use this with OpenGL
      * ES 2.0 and when auto-bind is disabled.
      *
@@ -59,17 +50,6 @@ interface IMesh {
         vertices?.bind(shader)
         instances?.bind(shader)
         if (indices?.sizeInBytes ?: 0 > 0) indices?.bind()
-    }
-
-    /** Unbinds the underlying [VertexBufferObject] and [IndexBufferObject] is indices were given. Use this with OpenGL
-     * ES 1.x and when auto-bind is disabled.
-     *
-     * @param shader the shader (does not unbind the shader)
-     * */
-    fun unbind(shader: IShader) {
-        vertices?.unbind(shader)
-        instances?.unbind(shader)
-        if (indices?.sizeInBytes ?: 0 > 0) indices?.unbind()
     }
 
     /**
@@ -84,11 +64,13 @@ interface IMesh {
      * @param offset the offset into the vertex or index buffer
      * @param count number of vertices or indices to use
      */
-    fun render(shader: IShader,
-               primitiveType: Int = this.primitiveType,
-               offset: Int = 0,
-               count: Int = (if (indices?.sizeInBytes ?: 0 > 0) indices?.size else vertices?.size) ?: 0,
-               bind: Boolean = this.autoBind) {
+    fun render(
+        shader: IShader,
+        primitiveType: Int = this.primitiveType,
+        offset: Int = 0,
+        count: Int = (if (indices?.sizeInBytes ?: 0 > 0) indices?.size else vertices?.size) ?: 0,
+        bind: Boolean = autoBind
+    ) {
         if (count == 0) return
         if (vertices?.handle == 0) return
 
@@ -110,11 +92,11 @@ interface IMesh {
                 if (numInstances > 0) {
                     if (instances.handle == 0) return
                     shader.prepareToDrawMesh(this)
-                    GL.glDrawElementsInstanced(primitiveType, count, indices.type, offset * indices.numBytesPerIndex, numInstances)
+                    GL.glDrawElementsInstanced(primitiveType, count, indices.type, offset * indices.bytesPerIndex, numInstances)
                 }
             } else {
                 shader.prepareToDrawMesh(this)
-                GL.glDrawElements(primitiveType, count, indices.type, offset * indices.numBytesPerIndex)
+                GL.glDrawElements(primitiveType, count, indices.type, offset * indices.bytesPerIndex)
             }
         } else {
             if (instances != null) {
@@ -128,8 +110,6 @@ interface IMesh {
                 GL.glDrawArrays(primitiveType, offset, count)
             }
         }
-
-        if (bind) unbind(shader)
     }
 
     fun set(other: IMesh): IMesh {
@@ -155,6 +135,13 @@ interface IMesh {
     }
 
     companion object {
+        /** Sets whether to bind the underlying [vertices] automatically on a call to one of the
+         * render methods. Usually you want to use autoBind. Manual binding is an expert functionality. There is a driver bug on the
+         * MSM720xa chips that will fuck up memory if you manipulate the vertices and indices of a Mesh multiple times while it is
+         * bound. Keep this in mind.
+         */
+        var autoBind: Boolean = true
+
         var Build: () -> IMesh = { Mesh(material = IMaterial.Default) }
     }
 }

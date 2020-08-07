@@ -28,7 +28,10 @@ import org.ksdfv.thelema.texture.SimpleFrameBuffer
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class ThresholdTest: Test("Threshold Filter") {
+class ThresholdTest: Test {
+    override val name: String
+        get() = "Threshold Filter"
+
     override fun testMain() {
         val model = CubeModel()
 

@@ -27,7 +27,10 @@ import org.ksdfv.thelema.test.Test
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class MeshTest: Test("Mesh") {
+class MeshTest: Test {
+    override val name: String
+        get() = "Mesh"
+
     override fun testMain() {
         val mesh = Mesh()
 
@@ -36,7 +39,7 @@ class MeshTest: Test("Mesh") {
             VertexInput(2, "aUV", GL_FLOAT, true)
         )
 
-        mesh.vertices = VertexBufferObject(vertexInputs, DATA.bytes(20 * 4).apply {
+        val vertexBytes = DATA.bytes(20 * 4).apply {
             floatView().apply {
                 // x, y, z,   u, v
                 put(-1f, -1f, 0f,   0f, 0f)
@@ -44,7 +47,9 @@ class MeshTest: Test("Mesh") {
                 put(1f, 1f, 0f,   1f, 1f)
                 put(-1f, 1f, 0f,   0f, 1f)
             }
-        })
+        }
+
+        mesh.vertices = VertexBufferObject(vertexInputs, vertexBytes)
 
         mesh.indices = IndexBufferObject(DATA.bytes(12).apply {
             shortView().apply {

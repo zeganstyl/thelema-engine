@@ -18,8 +18,8 @@ package org.ksdfv.thelema.test.shaders
 
 import org.intellij.lang.annotations.Language
 import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.g3d.ActiveCamera
-import org.ksdfv.thelema.g3d.Camera
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.Mat4
@@ -36,8 +36,13 @@ import org.ksdfv.thelema.texture.FrameBuffer
 import org.ksdfv.thelema.utils.Color
 import org.ksdfv.thelema.utils.LOG
 
-/** [learnopengl.com](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping) */
-class ShadowMappingBaseTest: Test("Shadow mapping base") {
+/** [learnopengl.com](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping)
+ *
+ * @author zeganstyl */
+class ShadowMappingBaseTest: Test {
+    override val name: String
+        get() = "Shadow mapping base"
+
     override fun testMain() {
         @Language("GLSL")
         val sceneObjectShader = Shader(
@@ -131,7 +136,7 @@ void main() {
             up = Vec3(0f, 1f, 0f)
         ))
 
-        val cube = BoxMeshBuilder().build()
+        val cube = BoxMeshBuilder(xSize = 2f, ySize = 2f, zSize = 2f).build()
         val plane = PlaneMeshBuilder(width = 500f, height = 500f).build()
 
         // visualize light field bounds

@@ -27,5 +27,6 @@ open class Object3D(
     override var name: String = "",
     override var isVisible: Boolean = true,
     override var meshes: MutableList<IMesh> = ArrayList(),
-    override var armature: IArmature? = null
+    override var armature: IArmature? = null,
+    override var boundingBox: IBoundingBox? = null
 ): IObject3D

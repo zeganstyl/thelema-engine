@@ -16,5 +16,6 @@
 
 package org.ksdfv.thelema.g3d.cam
 
+/** @author zeganstyl */
 class FlyCameraControl {
 }

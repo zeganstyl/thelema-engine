@@ -21,8 +21,13 @@ import org.ksdfv.thelema.input.MOUSE
 import org.ksdfv.thelema.utils.LOG
 
 /** @author zeganstyl */
-class MouseTest: Test("Mouse") {
+class MouseTest: Test {
+    override val name: String
+        get() = "Mouse"
+
     override fun testMain() {
+        LOG.info("Press some button on mouse or move mouse over window")
+
         MOUSE.addListener(object: IMouseListener {
             override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
                 LOG.info("buttonDown: $button")

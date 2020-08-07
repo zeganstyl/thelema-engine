@@ -61,12 +61,6 @@ object GL: IGL {
     /** See [render] */
     val renderCallRequests = ArrayList<Request>()
 
-    /** See [call] */
-    val destroyCallRequests = ArrayList<Request>()
-
-    /** Will be Called when screen resize is performed. No removing after execution. */
-    val resizeCallRequests = ArrayList<Request>()
-
     private var enableGlCall = false
 
     /** Maximum supported anisotropic filtering level supported by the device. */
@@ -74,7 +68,7 @@ object GL: IGL {
         private set
 
     /** Current shader program. See [glUseProgram] */
-    var currentProgram: Int = 0
+    var shader: Int = 0
         set(value) {
             if (field != value) {
                 field = value
@@ -83,11 +77,38 @@ object GL: IGL {
         }
 
     /** Current texture unit. Starts from 0 */
-    var activeTextureUnit: Int = 0
+    var activeTexture: Int = 0
         set(value) {
             if (field != value) {
                 field = value
                 api.glActiveTexture(GL_TEXTURE0 + value)
+            }
+        }
+
+    /** Currently bound array buffer (vertex buffer) */
+    var arrayBuffer: Int = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                api.glBindBuffer(GL_ARRAY_BUFFER, value)
+            }
+        }
+
+    /** Currently bound element array buffer (index buffer) */
+    var elementArrayBuffer: Int = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                api.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, value)
+            }
+        }
+
+    /** Currently bound vertex array (VAO) */
+    var vertexArray: Int = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                api.glBindVertexArray(value)
             }
         }
 
@@ -174,6 +195,23 @@ object GL: IGL {
 
     private var samplerCounter: Int = 0
 
+    override fun reset() {
+        super.reset()
+
+        samplerCounter = 0
+        isDepthMaskEnabled = true
+        depthFunc = GL_LESS
+        isDepthTestEnabled = false
+        blendFactorD = GL_ZERO
+        blendFactorS = GL_ONE
+        cullFaceMode = GL_BACK
+        isCullFaceEnabled = false
+        activeTexture = 0
+        shader = 0
+        singleCallRequests.clear()
+        renderCallRequests.clear()
+    }
+
     /** Get free texture unit. If all texture units are grabbed, it will give units from 0 again */
     fun grabTextureUnit(): Int {
         val unit = samplerCounter
@@ -229,11 +267,6 @@ object GL: IGL {
         renderCallRequests.add(Request(name, call))
     }
 
-    /** Will be called every thread loop */
-    fun destroy(name: String = "", call: () -> Unit) {
-        destroyCallRequests.add(Request(name, call))
-    }
-
     /** Must be called on OpenGL thread by platform backend */
     fun doSingleCalls() {
         singleCallRequests.traverseSafe {
@@ -246,15 +279,6 @@ object GL: IGL {
     /** Must be called on OpenGL thread by platform backend */
     fun doRenderCalls() {
         renderCallRequests.traverseSafe { it.call() }
-    }
-
-    /** Must be called on OpenGL thread by platform backend */
-    fun doDestroyCalls() {
-        destroyCallRequests.traverseSafe {
-            it.call()
-            if (it.name.isNotEmpty()) LOG.info("\"${it.name}\" called on GL thread")
-        }
-        destroyCallRequests.clear()
     }
 
     override fun isExtensionSupported(extension: String) = api.isExtensionSupported(extension)
@@ -344,7 +368,9 @@ object GL: IGL {
 
     override fun glFlushMappedBufferRange(target: Int, offset: Int, length: Int) = api.glFlushMappedBufferRange(target, offset, length)
 
-    override fun glBindVertexArray(array: Int) = api.glBindVertexArray(array)
+    override fun glBindVertexArray(array: Int) {
+        vertexArray = array
+    }
 
     override fun glDeleteVertexArrays(id: Int) = api.glDeleteVertexArrays(id)
 
@@ -508,12 +534,12 @@ object GL: IGL {
             api.glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height)
 
     override fun glActiveTexture(texture: Int) {
-        activeTextureUnit = texture - GL_TEXTURE0
+        activeTexture = texture - GL_TEXTURE0
     }
 
     override fun glBindTexture(target: Int, texture: Int) {
-        if (textureUnitsInternal[activeTextureUnit] != texture) {
-            textureUnitsInternal[activeTextureUnit] = texture
+        if (textureUnitsInternal[activeTexture] != texture) {
+            textureUnitsInternal[activeTexture] = texture
             api.glBindTexture(target, texture)
         }
     }
@@ -653,7 +679,13 @@ object GL: IGL {
 
     override fun glBindAttribLocation(program: Int, index: Int, name: String) = api.glBindAttribLocation(program, index, name)
 
-    override fun glBindBuffer(target: Int, buffer: Int) = api.glBindBuffer(target, buffer)
+    override fun glBindBuffer(target: Int, buffer: Int) {
+        when (target) {
+            GL_ARRAY_BUFFER -> arrayBuffer = buffer
+            GL_ELEMENT_ARRAY_BUFFER -> elementArrayBuffer = buffer
+            else -> api.glBindBuffer(target, buffer)
+        }
+    }
 
     override fun glBindFramebuffer(target: Int, framebuffer: Int) = api.glBindFramebuffer(target, framebuffer)
 
@@ -908,10 +940,10 @@ object GL: IGL {
     override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) =
             api.glUniformMatrix4fv(location, count, transpose, value, offset)
 
-    /** GL will check if [currentProgram] is not equal to [program] and then do OpenGL call.
-     * Also you can use [currentProgram] to set program */
+    /** GL will check if [shader] is not equal to [program] and then do OpenGL call.
+     * Also you can use [shader] to set program */
     override fun glUseProgram(program: Int) {
-        currentProgram = program
+        shader = program
     }
 
     override fun glValidateProgram(program: Int) = api.glValidateProgram(program)
