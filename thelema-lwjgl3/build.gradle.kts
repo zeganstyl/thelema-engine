@@ -16,9 +16,6 @@ version = verName
 
 repositories {
     jcenter()
-    maven {
-        url = uri("https://www.beatunes.com/repo/maven2/")
-    }
 }
 
 dependencies {
@@ -29,12 +26,6 @@ dependencies {
 
     testImplementation(project(path = ":thelema-core-tests"))
     testImplementation(project(path = ":thelema-ode4j"))
-
-    // https://mvnrepository.com/artifact/com.jcraft/jogg
-    api("com.jcraft", "jogg", "0.0.7")
-
-    // https://mvnrepository.com/artifact/com.jcraft/jorbis
-    api("com.jcraft", "jorbis", "0.0.17")
 
     val lwjglVersion = "3.2.3"
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
