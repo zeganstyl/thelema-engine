@@ -18,17 +18,17 @@ package org.ksdfv.thelema.teavm
 
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.img.IImage
+import org.ksdfv.thelema.img.IImageData
 import org.ksdfv.thelema.img.IImg
 import org.ksdfv.thelema.net.NET
 import org.teavm.jso.browser.Window
 
 /** @author zeganstyl */
 object TvmIMG: IImg {
-    override fun createImage(): IImage =
-        HtmlImage(Window.current().document.createElement("img") as HTMLImageElement)
+    override fun image(): IImageData =
+        HtmlImageData(Window.current().document.createElement("img") as HTMLImageElement)
 
-    override fun load(url: String, out: IImage, sourceLocation: Int, response: (status: Int, img: IImage) -> Unit): IImage {
+    override fun load(url: String, out: IImageData, sourceLocation: Int, response: (status: Int, img: IImageData) -> Unit): IImageData {
         val img = out.sourceObject as HTMLImageElement
         img.src = url
 
@@ -42,7 +42,7 @@ object TvmIMG: IImg {
         return out
     }
 
-    override fun load(file: IFile, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage {
+    override fun load(file: IFile, out: IImageData, response: (status: Int, img: IImageData) -> Unit): IImageData {
         val img = out.sourceObject as HTMLImageElement
         img.src = file.path
         if (img.getComplete()) {
@@ -54,7 +54,7 @@ object TvmIMG: IImg {
         return out
     }
 
-    override fun load(data: IByteData, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage {
+    override fun load(data: IByteData, out: IImageData, response: (status: Int, img: IImageData) -> Unit): IImageData {
         TODO("Not yet implemented")
     }
 }

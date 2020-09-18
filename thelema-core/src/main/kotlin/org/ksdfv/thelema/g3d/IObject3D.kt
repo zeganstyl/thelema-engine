@@ -16,15 +16,16 @@
 
 package org.ksdfv.thelema.g3d
 
-import org.ksdfv.thelema.g3d.node.IDelegateTransformNode
+import org.ksdfv.thelema.g3d.node.IProxyTransformNode
 import org.ksdfv.thelema.g3d.node.ITransformNode
+import org.ksdfv.thelema.kx.ThreadLocal
 import org.ksdfv.thelema.mesh.IMesh
 import org.ksdfv.thelema.shader.IShader
 import org.ksdfv.thelema.shader.Shader
 
 /** Visible transformable 3d object
  * @author zeganstyl */
-interface IObject3D: IDelegateTransformNode {
+interface IObject3D: IProxyTransformNode {
     /** If previous transform data is not used, it must be linked to [ITransformNode.Cap] */
     var previousTransform: ITransformNode
 
@@ -101,6 +102,14 @@ interface IObject3D: IDelegateTransformNode {
         }
     }
 
+    fun getMeshes(opaque: MutableList<IMesh>, translucent: MutableList<IMesh>) {
+        val meshes = meshes
+        for (i in meshes.indices) {
+            val mesh = meshes[i]
+            if (mesh.material.alphaMode == Blending.Blend) translucent.add(mesh) else opaque.add(mesh)
+        }
+    }
+
     override fun clear() {
         super.clear()
         meshes.clear()
@@ -109,10 +118,8 @@ interface IObject3D: IDelegateTransformNode {
         armature = null
     }
 
+    @ThreadLocal
     companion object {
-        /** Builder for internal creating */
-        var Build: () -> IObject3D = { Object3D() }
-
         private val preparedShaders = HashSet<IShader>()
     }
 }

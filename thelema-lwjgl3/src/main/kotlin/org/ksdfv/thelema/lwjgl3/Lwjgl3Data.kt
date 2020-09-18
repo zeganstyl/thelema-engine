@@ -18,7 +18,7 @@ package org.ksdfv.thelema.lwjgl3
 
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IData
-import org.ksdfv.thelema.jvm.JvmByteBuffer
+import org.ksdfv.thelema.jvm.data.JvmByteBuffer
 import org.lwjgl.system.MemoryUtil
 import java.net.URLDecoder
 import java.net.URLEncoder

@@ -17,7 +17,7 @@
 package org.ksdfv.thelema.lwjgl3.audio
 
 import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.utils.StreamUtils
+import org.ksdfv.thelema.jvm.JvmFile
 import java.io.EOFException
 import java.io.FilterInputStream
 import java.io.IOException
@@ -25,7 +25,7 @@ import kotlin.math.min
 
 /** @author Nathan Sweet
  */
-class WavInputStream(file: IFile) : FilterInputStream(file.read()) {
+class WavInputStream(file: IFile) : FilterInputStream((file as JvmFile).inputStream()) {
     var channels = 0
     var sampleRate = 0
     var dataRemaining = 0
@@ -85,7 +85,7 @@ class WavInputStream(file: IFile) : FilterInputStream(file.read()) {
             skipFully(fmtChunkLength - 16)
             dataRemaining = seekToChunk('d', 'a', 't', 'a')
         } catch (ex: Throwable) {
-            StreamUtils.closeQuietly(this)
+            close()
             throw RuntimeException("Error reading WAV file: $file", ex)
         }
     }

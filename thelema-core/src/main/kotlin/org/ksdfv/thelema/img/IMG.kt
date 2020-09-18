@@ -18,26 +18,28 @@ package org.ksdfv.thelema.img
 
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.fs.IFile
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** @author zeganstyl */
+@ThreadLocal
 object IMG: IImg {
-    lateinit var api: IImg
+    lateinit var proxy: IImg
 
-    override fun createImage(): IImage = api.createImage()
+    override fun image(): IImageData = proxy.image()
 
     override fun load(
         url: String,
-        out: IImage,
+        out: IImageData,
         sourceLocation: Int,
-        response: (status: Int, img: IImage) -> Unit
-    ): IImage = api.load(url, out, sourceLocation, response)
+        response: (status: Int, img: IImageData) -> Unit
+    ): IImageData = proxy.load(url, out, sourceLocation, response)
 
-    override fun load(file: IFile, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage =
-        api.load(file, out, response)
+    override fun load(file: IFile, out: IImageData, response: (status: Int, img: IImageData) -> Unit): IImageData =
+        proxy.load(file, out, response)
 
-    override fun load(byteArray: ByteArray, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage =
-        api.load(byteArray, out, response)
+    override fun load(byteArray: ByteArray, out: IImageData, response: (status: Int, img: IImageData) -> Unit): IImageData =
+        proxy.load(byteArray, out, response)
 
-    override fun load(data: IByteData, out: IImage, response: (status: Int, img: IImage) -> Unit): IImage =
-        api.load(data, out, response)
+    override fun load(data: IByteData, out: IImageData, response: (status: Int, img: IImageData) -> Unit): IImageData =
+        proxy.load(data, out, response)
 }

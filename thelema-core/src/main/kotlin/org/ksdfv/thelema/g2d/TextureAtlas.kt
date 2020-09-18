@@ -18,13 +18,11 @@ package org.ksdfv.thelema.g2d
 
 import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.gl.*
-import org.ksdfv.thelema.img.Pixmap
-import org.ksdfv.thelema.texture.ITexture2D
-import org.ksdfv.thelema.texture.Texture2D
-import org.ksdfv.thelema.utils.StreamUtils
-import java.io.BufferedReader
+import org.ksdfv.thelema.img.ITexture2D
+import org.ksdfv.thelema.img.Texture2D
+import org.ksdfv.thelema.net.NET
+import org.ksdfv.thelema.utils.LOG
 import java.io.IOException
-import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
@@ -70,115 +68,130 @@ class TextureAtlas {
         val regions: ArrayList<Region> = ArrayList()
 
         init {
-            val reader = BufferedReader(InputStreamReader(packFile.read()), 64)
-            try {
-                var pageImage: Page? = null
-                while (true) {
-                    val line = reader.readLine() ?: break
-                    when {
-                        line.trim { it <= ' ' }.isEmpty() -> pageImage = null
-                        pageImage == null -> {
-                            val file = imagesDir.child(line)
-                            var width = 0f
-                            var height = 0f
-                            if (readTuple(reader) == 2) { // size is only optional for an atlas packed with an old TexturePacker.
-                                width = tuple[0]!!.toInt().toFloat()
-                                height = tuple[1]!!.toInt().toFloat()
-                                readTuple(reader)
-                            }
-                            //val format = Pixmap.Format.valueOf(tuple[0]!!)
-                            val format = when (tuple[0]!!) {
-                                "Alpha" -> Pixmap.AlphaFormat
-                                "Intensity" -> Pixmap.AlphaFormat
-                                "LuminanceAlpha" -> Pixmap.LuminanceAlphaFormat
-                                "RGB565" -> Pixmap.RGB565Format
-                                "RGBA4444" -> Pixmap.RGBA4444Format
-                                "RGB888" -> Pixmap.RGB888Format
-                                "RGBA8888" -> Pixmap.RGBA8888Format
-                                else -> throw RuntimeException("Unknown pixmap format: ${tuple[0]!!}")
-                            }
-
-                            readTuple(reader)
-
-                            val min = when (tuple[0]!!) {
-                                "Nearest" -> GL_NEAREST
-                                "Linear" -> GL_LINEAR
-                                "MipMapNearestNearest" -> GL_NEAREST_MIPMAP_NEAREST
-                                "MipMapLinearNearest" -> GL_LINEAR_MIPMAP_NEAREST
-                                "MipMapNearestLinear" -> GL_NEAREST_MIPMAP_LINEAR
-                                "MipMapLinearLinear" -> GL_LINEAR_MIPMAP_LINEAR
-                                else -> throw RuntimeException("TextureAtlas: format is unknown: ${tuple[0]}")
-                            }
-                            val max = when (tuple[1]!!) {
-                                "Nearest" -> GL_NEAREST
-                                "Linear" -> GL_LINEAR
-                                "MipMapNearestNearest" -> GL_NEAREST_MIPMAP_NEAREST
-                                "MipMapLinearNearest" -> GL_LINEAR_MIPMAP_NEAREST
-                                "MipMapNearestLinear" -> GL_NEAREST_MIPMAP_LINEAR
-                                "MipMapLinearLinear" -> GL_LINEAR_MIPMAP_LINEAR
-                                else -> throw RuntimeException("TextureAtlas: format is unknown: ${tuple[1]}")
-                            }
-
-                            val isMipmap = min == GL_NEAREST_MIPMAP_NEAREST ||
-                                    min == GL_LINEAR_MIPMAP_NEAREST ||
-                                    min == GL_NEAREST_MIPMAP_LINEAR ||
-                                    min == GL_LINEAR_MIPMAP_LINEAR
-
-                            val direction = readValue(reader)
-                            var repeatX = GL_CLAMP_TO_EDGE
-                            var repeatY = GL_CLAMP_TO_EDGE
-                            when (direction) {
-                                "x" -> repeatX = GL_REPEAT
-                                "y" -> repeatY = GL_REPEAT
-                                "xy" -> {
-                                    repeatX = GL_REPEAT
-                                    repeatY = GL_REPEAT
+            packFile.readText { status, text ->
+                if (status == NET.OK) {
+                    val lines = text.split('\n')
+                    var i = 0
+                    while (i < lines.size) {
+                        val line = lines[i]
+                        var pageImage: Page? = null
+                        when {
+                            line.trim { it <= ' ' }.isEmpty() -> pageImage = null
+                            pageImage == null -> {
+                                val file = imagesDir.child(line)
+                                var width = 0f
+                                var height = 0f
+                                i++
+                                if (readTuple(lines[i]) == 2) { // size is only optional for an atlas packed with an old TexturePacker.
+                                    width = tuple[0]!!.toInt().toFloat()
+                                    height = tuple[1]!!.toInt().toFloat()
+                                    i++
+                                    readTuple(lines[i])
                                 }
-                            }
-                            pageImage = Page(file, width, height, isMipmap, format, min, max, repeatX, repeatY)
-                            pages.add(pageImage)
-                        }
-                        else -> {
-                            val rotateValue = readValue(reader)
-                            var degrees: Int
-                            degrees = if (rotateValue.equals("true", ignoreCase = true)) 90 else if (rotateValue.equals("false", ignoreCase = true)) 0 else Integer.valueOf(rotateValue)
-                            readTuple(reader)
-                            val left = tuple[0]!!.toInt()
-                            val top = tuple[1]!!.toInt()
-                            readTuple(reader)
-                            val width = tuple[0]!!.toInt()
-                            val height = tuple[1]!!.toInt()
-                            val region = Region()
-                            region.page = pageImage
-                            region.left = left
-                            region.top = top
-                            region.width = width
-                            region.height = height
-                            region.name = line
-                            region.rotate = degrees == 90
-                            region.degrees = degrees
-                            if (readTuple(reader) == 4) { // split is optional
-                                region.splits = intArrayOf(tuple[0]!!.toInt(), tuple[1]!!.toInt(), tuple[2]!!.toInt(), tuple[3]!!.toInt())
-                                if (readTuple(reader) == 4) { // pad is optional, but only present with splits
-                                    region.pads = intArrayOf(tuple[0]!!.toInt(), tuple[1]!!.toInt(), tuple[2]!!.toInt(), tuple[3]!!.toInt())
-                                    readTuple(reader)
+
+                                //val format = Pixmap.Format.valueOf(tuple[0]!!)
+                                val format = when (tuple[0]!!) {
+                                    "Alpha" -> GL_R8
+                                    "Intensity" -> GL_R8
+                                    "LuminanceAlpha" -> GL_RG8
+                                    "RGB565" -> GL_RGB565
+                                    "RGBA4444" -> GL_RGBA4
+                                    "RGB888" -> GL_RGB8
+                                    "RGBA8888" -> GL_RGBA8
+                                    else -> throw RuntimeException("Unknown pixmap format: ${tuple[0]!!}")
                                 }
+
+                                i++
+                                readTuple(lines[i])
+
+                                val min = when (tuple[0]!!) {
+                                    "Nearest" -> GL_NEAREST
+                                    "Linear" -> GL_LINEAR
+                                    "MipMapNearestNearest" -> GL_NEAREST_MIPMAP_NEAREST
+                                    "MipMapLinearNearest" -> GL_LINEAR_MIPMAP_NEAREST
+                                    "MipMapNearestLinear" -> GL_NEAREST_MIPMAP_LINEAR
+                                    "MipMapLinearLinear" -> GL_LINEAR_MIPMAP_LINEAR
+                                    else -> throw RuntimeException("TextureAtlas: format is unknown: ${tuple[0]}")
+                                }
+                                val max = when (tuple[1]!!) {
+                                    "Nearest" -> GL_NEAREST
+                                    "Linear" -> GL_LINEAR
+                                    "MipMapNearestNearest" -> GL_NEAREST_MIPMAP_NEAREST
+                                    "MipMapLinearNearest" -> GL_LINEAR_MIPMAP_NEAREST
+                                    "MipMapNearestLinear" -> GL_NEAREST_MIPMAP_LINEAR
+                                    "MipMapLinearLinear" -> GL_LINEAR_MIPMAP_LINEAR
+                                    else -> throw RuntimeException("TextureAtlas: format is unknown: ${tuple[1]}")
+                                }
+
+                                val isMipmap = min == GL_NEAREST_MIPMAP_NEAREST ||
+                                        min == GL_LINEAR_MIPMAP_NEAREST ||
+                                        min == GL_NEAREST_MIPMAP_LINEAR ||
+                                        min == GL_LINEAR_MIPMAP_LINEAR
+
+                                i++
+                                val direction = readValue(lines[i])
+                                var repeatX = GL_CLAMP_TO_EDGE
+                                var repeatY = GL_CLAMP_TO_EDGE
+                                when (direction) {
+                                    "x" -> repeatX = GL_REPEAT
+                                    "y" -> repeatY = GL_REPEAT
+                                    "xy" -> {
+                                        repeatX = GL_REPEAT
+                                        repeatY = GL_REPEAT
+                                    }
+                                }
+                                pageImage = Page(file, width, height, isMipmap, format, min, max, repeatX, repeatY)
+                                pages.add(pageImage)
                             }
-                            region.originalWidth = tuple[0]!!.toInt()
-                            region.originalHeight = tuple[1]!!.toInt()
-                            readTuple(reader)
-                            region.offsetX = tuple[0]!!.toInt().toFloat()
-                            region.offsetY = tuple[1]!!.toInt().toFloat()
-                            region.index = readValue(reader).toInt()
-                            if (flip) region.flip = true
-                            regions.add(region)
+                            else -> {
+                                i++
+                                val rotateValue = readValue(lines[i])
+                                var degrees: Int
+                                degrees = if (rotateValue.equals("true", ignoreCase = true)) 90 else if (rotateValue.equals("false", ignoreCase = true)) 0 else Integer.valueOf(rotateValue)
+                                i++
+                                readTuple(lines[i])
+                                val left = tuple[0]!!.toInt()
+                                val top = tuple[1]!!.toInt()
+                                i++
+                                readTuple(lines[i])
+                                val width = tuple[0]!!.toInt()
+                                val height = tuple[1]!!.toInt()
+                                val region = Region()
+                                region.page = pageImage
+                                region.left = left
+                                region.top = top
+                                region.width = width
+                                region.height = height
+                                region.name = line
+                                region.rotate = degrees == 90
+                                region.degrees = degrees
+                                i++
+                                if (readTuple(lines[i]) == 4) { // split is optional
+                                    region.splits = intArrayOf(tuple[0]!!.toInt(), tuple[1]!!.toInt(), tuple[2]!!.toInt(), tuple[3]!!.toInt())
+                                    i++
+                                    if (readTuple(lines[i]) == 4) { // pad is optional, but only present with splits
+                                        region.pads = intArrayOf(tuple[0]!!.toInt(), tuple[1]!!.toInt(), tuple[2]!!.toInt(), tuple[3]!!.toInt())
+                                        i++
+                                        readTuple(lines[i])
+                                    }
+                                }
+                                region.originalWidth = tuple[0]!!.toInt()
+                                region.originalHeight = tuple[1]!!.toInt()
+                                i++
+                                readTuple(lines[i])
+                                region.offsetX = tuple[0]!!.toInt().toFloat()
+                                region.offsetY = tuple[1]!!.toInt().toFloat()
+                                i++
+                                region.index = readValue(lines[i]).toInt()
+                                if (flip) region.flip = true
+                                regions.add(region)
+                            }
                         }
+                        i++
                     }
+                } else {
+                    LOG.error("Error reading file ${packFile.path}, status: $status")
                 }
-            } catch (ex: Exception) {
-                throw RuntimeException("Error reading pack file: $packFile", ex)
-            } finally {
-                StreamUtils.closeQuietly(reader)
             }
             regions.sortedWith(indexComparator)
         }
@@ -437,8 +450,7 @@ class TextureAtlas {
         }
 
         @Throws(IOException::class)
-        fun readValue(reader: BufferedReader): String {
-            val line = reader.readLine()
+        fun readValue(line: String): String {
             val colon = line.indexOf(':')
             if (colon == -1) throw RuntimeException("Invalid line: $line")
             return line.substring(colon + 1).trim { it <= ' ' }
@@ -446,8 +458,7 @@ class TextureAtlas {
 
         /** Returns the number of tuple values read (1, 2 or 4).  */
         @Throws(IOException::class)
-        fun readTuple(reader: BufferedReader): Int {
-            val line = reader.readLine()
+        fun readTuple(line: String): Int {
             val colon = line.indexOf(':')
             if (colon == -1) throw RuntimeException("Invalid line: $line")
             var lastMatch = colon + 1

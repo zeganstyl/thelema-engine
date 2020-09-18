@@ -23,9 +23,6 @@ dependencies {
     testImplementation(files("../thelema-ode4j/libs/core-0.4.1-SNAPSHOT.jar"))
     //testImplementation("org.ode4j:core:0.4.0")
 
-    // https://mvnrepository.com/artifact/com.github.cliftonlabs/json-simple
-    api("com.github.cliftonlabs:json-simple:3.1.1")
-
     api("org.teavm:teavm-classlib:0.6.1")
     api("org.teavm:teavm-jso-apis:0.6.1")
 }
@@ -36,13 +33,8 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets.main.get().allSource)
 }
 
-val dokkaJavadoc by tasks.registering(org.jetbrains.dokka.gradle.DokkaTask::class) {
-    outputFormat = "javadoc"
-    outputDirectory = "$buildDir/javadoc"
-}
-
 val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(dokkaJavadoc)
+    dependsOn(tasks.getByName("dokkaJavadoc"))
     archiveClassifier.set("javadoc")
     from("$buildDir/javadoc")
 }

@@ -17,8 +17,12 @@
 package org.ksdfv.thelema.g3d.node
 
 import org.ksdfv.thelema.ext.traverseSafe
-import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.math.IMat4
+import org.ksdfv.thelema.math.IVec3
+import org.ksdfv.thelema.math.IVec4
+import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.utils.IPath
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** Spatial transform node. Node may contain children and forms a tree of nodes.
  * Node may contain any transform data, depended on [nodeType].
@@ -73,9 +77,9 @@ interface ITransformNode: IPath {
     fun updateTransform(recursive: Boolean = true) {}
 
     fun traverseChildrenTree(call: (node: ITransformNode) -> Unit) {
-        childNodes.traverseSafe {
-            call(it)
-            it.traverseChildrenTree(call)
+        for (i in childNodes.indices) {
+            call(childNodes[i])
+            childNodes[i].traverseChildrenTree(call)
         }
     }
 
@@ -90,31 +94,13 @@ interface ITransformNode: IPath {
 
     fun copy(): ITransformNode
 
-    fun getPosition(out: IVec3 = tmp, isLocal: Boolean = false): IVec3 = out.set(position)
-    
-    fun getWorldMatrix(out: IMat4 = tmpM, isLocal: Boolean = false): IMat4 = out.set(worldMatrix)
+    fun getGlobalPosition(out: IVec3): IVec3 = worldMatrix.getCol3Vec3(out)
 
-    /** Squared distance to position. By default in global world space */
-    fun dst2(node: ITransformNode, isLocal: Boolean = false): Float = getPosition(
-        tmp, isLocal).dst2(node.getPosition(tmp2, isLocal))
+    /** Squared distance to position in global world space */
+    fun dst2(node: ITransformNode): Float = getGlobalPosition(tmp).dst2(node.getGlobalPosition(tmp2))
 
-    /** Squared distance to position. By default in global world space */
-    fun dst2(position: IVec3, isLocal: Boolean = false): Float = getPosition(tmp, isLocal).dst2(position)
-
-    /** Set local position */
-    fun setPosition(vec: IVec3): ITransformNode {
-        position.set(vec)
-        return this
-    }
-
-    /** Set local world matrix */
-    fun setWorldMatrix(mat: IMat4): ITransformNode = this
-
-    /** Transform [vec] with global transformation data of this node */
-    fun applyTo(vec: IVec3) {}
-
-    /** Transform [mat] with global spatial data of this node */
-    fun applyTo(mat: IMat4) {}
+    /** Squared distance to position in global world space */
+    fun dst2(position: IVec3): Float = getGlobalPosition(tmp).dst2(position)
 
     /** Clear data, unlink children and unlink from parent */
     fun clear() {
@@ -123,16 +109,12 @@ interface ITransformNode: IPath {
         childNodes.traverseSafe { removeChildNode(it) }
     }
 
+    @ThreadLocal
     companion object {
-        /** Default implementation for this interface */
-        var Build: () -> ITransformNode = { Node() }
-
         /** It may be used to set unused variables */
         val Cap = AdapterTransformNode()
 
         private val tmp = Vec3()
         private val tmp2 = Vec3()
-
-        private val tmpM = Mat4()
     }
 }

@@ -17,7 +17,7 @@
 package org.ksdfv.thelema.lwjgl3.audio
 
 import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.utils.StreamUtils
+import org.ksdfv.thelema.jvm.StreamUtils
 import java.io.IOException
 
 class WavSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
@@ -34,7 +34,7 @@ class WavSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
             } catch (ex: IOException) {
                 throw RuntimeException("Error reading WAV file: $file", ex)
             } finally {
-                StreamUtils.closeQuietly(input)
+                input?.close()
             }
         }
     }

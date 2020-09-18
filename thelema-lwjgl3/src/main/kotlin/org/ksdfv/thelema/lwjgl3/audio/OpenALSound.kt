@@ -20,10 +20,10 @@ import org.ksdfv.thelema.audio.ISound
 import org.lwjgl.openal.AL10
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-
+import java.nio.ShortBuffer
 
 /** @author Nathan Sweet */
-abstract class OpenALSound(private val audio: OpenAL) : ISound {
+open class OpenALSound(private val audio: OpenAL) : ISound {
     private var bufferID = -1
     var duration = 0f
         private set
@@ -39,6 +39,26 @@ abstract class OpenALSound(private val audio: OpenAL) : ISound {
         if (bufferID == -1) {
             bufferID = AL10.alGenBuffers()
             AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, buffer.asShortBuffer(), sampleRate)
+        }
+    }
+
+    fun setup(pcm: ByteBuffer, channels: Int, sampleRate: Int) {
+        val bytesNum = pcm.limit() - pcm.limit() % if (channels > 1) 4 else 2
+        val samples = bytesNum / (2 * channels)
+        duration = samples / sampleRate.toFloat()
+        if (bufferID == -1) {
+            bufferID = AL10.alGenBuffers()
+            AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, pcm, sampleRate)
+        }
+    }
+
+    fun setup(pcm: ShortBuffer, channels: Int, sampleRate: Int) {
+        val bytesNum = (pcm.limit() - pcm.limit() % channels) * 2
+        val samples = bytesNum / (2 * channels)
+        duration = samples / sampleRate.toFloat()
+        if (bufferID == -1) {
+            bufferID = AL10.alGenBuffers()
+            AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, pcm, sampleRate)
         }
     }
 

@@ -20,15 +20,15 @@ import org.ksdfv.thelema.lwjgl3.Lwjgl3App
 import org.ksdfv.thelema.lwjgl3.Lwjgl3AppConf
 import org.ksdfv.thelema.phys.PHYS
 import org.ksdfv.thelema.phys.ode4j.OdePhys
-import org.ksdfv.thelema.test.shaders.glsl.SkyboxVertexNodeTest
+import org.ksdfv.thelema.test.shader.node.CascadedShadowMappingTest
 
 /** @author zeganstyl */
 object MainLwjgl3SingleTest {
     @JvmStatic
     fun main(args: Array<String>) {
         Lwjgl3App(Lwjgl3AppConf(windowWidth = 1280, windowHeight = 720)) {
-            PHYS.api = OdePhys()
-            SkyboxVertexNodeTest().testMain()
+            PHYS.proxy = OdePhys()
+            CascadedShadowMappingTest().testMain()
         }
     }
 }

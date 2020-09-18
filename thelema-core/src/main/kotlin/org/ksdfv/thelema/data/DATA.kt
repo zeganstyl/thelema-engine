@@ -16,21 +16,21 @@
 
 package org.ksdfv.thelema.data
 
-/** @author zeganstyl */
+import org.ksdfv.thelema.kx.ThreadLocal
+
+@ThreadLocal
 object DATA: IData {
-    lateinit var api: IData
+    lateinit var proxy: IData
 
     override val nullBuffer: IByteData
-        get() = api.nullBuffer
+        get() = proxy.nullBuffer
 
-    override fun decodeURI(uri: String): String = api.decodeURI(uri)
-    override fun encodeURI(uri: String): String = api.encodeURI(uri)
-
-    override fun decodeBase64(text: String): ByteArray = api.decodeBase64(text)
-    override fun decodeBase64(text: String, out: IByteData) = api.decodeBase64(text, out)
-    override fun encodeBase64(bytes: ByteArray): String = api.encodeBase64(bytes)
-    override fun encodeBase64(data: IByteData): String = api.encodeBase64(data)
-
-    override fun bytes(capacity: Int): IByteData = api.bytes(capacity)
-    override fun destroyBytes(data: IByteData) = api.destroyBytes(data)
+    override fun decodeURI(uri: String): String = proxy.decodeURI(uri)
+    override fun encodeURI(uri: String): String = proxy.encodeURI(uri)
+    override fun decodeBase64(text: String): ByteArray = proxy.decodeBase64(text)
+    override fun decodeBase64(text: String, out: IByteData): IByteData = proxy.decodeBase64(text, out)
+    override fun encodeBase64(bytes: ByteArray): String = proxy.encodeBase64(bytes)
+    override fun encodeBase64(data: IByteData): String = proxy.encodeBase64(data)
+    override fun bytes(capacity: Int): IByteData = proxy.bytes(capacity)
+    override fun destroyBytes(data: IByteData) = proxy.destroyBytes(data)
 }

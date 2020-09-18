@@ -19,639 +19,478 @@ package org.ksdfv.thelema.gl
 import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.data.IFloatData
 import org.ksdfv.thelema.data.IIntData
-import org.ksdfv.thelema.ext.traverseSafe
-import org.ksdfv.thelema.gl.GL.depthFunc
-import org.ksdfv.thelema.img.IImage
-import org.ksdfv.thelema.utils.LOG
+import org.ksdfv.thelema.img.IImageData
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** @author zeganstyl */
+@ThreadLocal
 object GL: IGL {
-    var api: IGL = object: IGL {}
+    lateinit var proxy: IGL
 
     /** Default frame buffer width */
     override val mainFrameBufferWidth: Int
-        get() = api.mainFrameBufferWidth
+        get() = proxy.mainFrameBufferWidth
 
     /** Default frame buffer height */
     override val mainFrameBufferHeight: Int
-        get() = api.mainFrameBufferHeight
+        get() = proxy.mainFrameBufferHeight
 
     override val mainFrameBufferHandle: Int
-        get() = api.mainFrameBufferHandle
+        get() = proxy.mainFrameBufferHandle
 
     override val majVer: Int
-        get() = api.majVer
+        get() = proxy.majVer
     override val minVer: Int
-        get() = api.minVer
+        get() = proxy.minVer
     override val relVer: Int
-        get() = api.relVer
+        get() = proxy.relVer
     override val glslVer: Int
-        get() = api.glslVer
+        get() = proxy.glslVer
 
     override val glesMajVer: Int
-        get() = api.glesMajVer
+        get() = proxy.glesMajVer
     override val glesMinVer: Int
-        get() = api.glesMinVer
+        get() = proxy.glesMinVer
     override val isGLES: Boolean
-        get() = api.isGLES
+        get() = proxy.isGLES
 
-    /** See [call] */
-    val singleCallRequests = ArrayList<Request>()
+    override val maxAnisotropicFilterLevel: Float
+        get() = proxy.maxAnisotropicFilterLevel
 
-    /** See [render] */
-    val renderCallRequests = ArrayList<Request>()
+    override var program: Int
+        get() = proxy.program
+        set(value) { proxy.program = value }
 
-    private var enableGlCall = false
+    override var activeTexture: Int
+        get() = proxy.activeTexture
+        set(value) { proxy.activeTexture = value }
 
-    /** Maximum supported anisotropic filtering level supported by the device. */
-    var maxAnisotropicFilterLevel = 1f
-        private set
+    override var arrayBuffer: Int
+        get() = proxy.arrayBuffer
+        set(value) { proxy.arrayBuffer = value }
 
-    /** Current shader program. See [glUseProgram] */
-    var shader: Int = 0
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glUseProgram(value)
-            }
-        }
+    override var elementArrayBuffer: Int
+        get() = proxy.elementArrayBuffer
+        set(value) { proxy.elementArrayBuffer = value }
 
-    /** Current texture unit. Starts from 0 */
-    var activeTexture: Int = 0
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glActiveTexture(GL_TEXTURE0 + value)
-            }
-        }
+    override var vertexArray: Int
+        get() = proxy.vertexArray
+        set(value) { proxy.vertexArray = value }
 
-    /** Currently bound array buffer (vertex buffer) */
-    var arrayBuffer: Int = 0
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glBindBuffer(GL_ARRAY_BUFFER, value)
-            }
-        }
+    override val textureUnits: List<Int>
+        get() = proxy.textureUnits
 
-    /** Currently bound element array buffer (index buffer) */
-    var elementArrayBuffer: Int = 0
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, value)
-            }
-        }
+    override var isCullFaceEnabled: Boolean
+        get() = proxy.isCullFaceEnabled
+        set(value) { proxy.isCullFaceEnabled = value }
 
-    /** Currently bound vertex array (VAO) */
-    var vertexArray: Int = 0
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glBindVertexArray(value)
-            }
-        }
+    override var cullFaceMode: Int
+        get() = proxy.cullFaceMode
+        set(value) { proxy.cullFaceMode = value }
 
-    private val textureUnitsInternal = ArrayList<Int>(16).apply { for (i in 0 until 16) { add(0) } }
+    override var isBlendEnabled: Boolean
+        get() = proxy.isBlendEnabled
+        set(value) { proxy.isBlendEnabled = value }
 
-    /** Contains texture handles of all texture image units.
-     * Initial size is 16, you can update and check max texture units number of your video card with [initTextureUnits] */
-    val textureUnits: List<Int>
-        get() = textureUnitsInternal
+    override var blendFactorS: Int
+        get() = proxy.blendFactorS
+        set(value) { proxy.blendFactorS = value }
 
-    var isCullFaceEnabled: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-                if (value) api.glEnable(GL_CULL_FACE) else api.glDisable(GL_CULL_FACE)
-            }
-        }
+    override var blendFactorD: Int
+        get() = proxy.blendFactorD
+        set(value) { proxy.blendFactorD = value }
 
-    /** [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glCullFace.xml) */
-    var cullFaceMode: Int = GL_BACK
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glCullFace(value)
-            }
-        }
+    override var isDepthTestEnabled: Boolean
+        get() = proxy.isDepthTestEnabled
+        set(value) { proxy.isDepthTestEnabled = value }
 
-    /** Use [blendFactorS] and [blendFactorD] to set parameters. */
-    var isBlendEnabled: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-                if (value) api.glEnable(GL_BLEND) else api.glDisable(GL_BLEND)
-            }
-        }
+    override var depthFunc: Int
+        get() = proxy.depthFunc
+        set(value) { proxy.depthFunc = value }
 
-    /** Use [isBlendEnabled] to enable this parameter.
-     * [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml) */
-    var blendFactorS: Int = GL_ONE
-        set(value) {
-            if (field != value) {
-                field = value
-                if (enableGlCall) api.glBlendFunc(value, blendFactorD)
-            }
-        }
+    override var isDepthMaskEnabled: Boolean
+        get() = proxy.isDepthMaskEnabled
+        set(value) { proxy.isDepthMaskEnabled = value }
 
-    /** Use [isBlendEnabled] to enable this parameter.
-     * [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml) */
-    var blendFactorD: Int = GL_ZERO
-        set(value) {
-            if (field != value) {
-                field = value
-                if (enableGlCall) api.glBlendFunc(blendFactorS, value)
-            }
-        }
+    override fun initGL() = proxy.initGL()
 
-    /** Use [depthFunc] to set parameters. */
-    var isDepthTestEnabled: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-                if (value) api.glEnable(GL_DEPTH_TEST) else api.glDisable(GL_DEPTH_TEST)
-            }
-        }
+    override fun getNextTextureUnit(): Int = proxy.getNextTextureUnit()
 
-    /** Use [isDepthTestEnabled] to enable this parameter.
-     * [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glDepthFunc.xml) */
-    var depthFunc: Int = GL_LESS
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glDepthFunc(value)
-            }
-        }
+    override fun resetTextureUnitCounter() = proxy.resetTextureUnitCounter()
 
-    /** [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glDepthMask.xml) */
-    var isDepthMaskEnabled: Boolean = true
-        set(value) {
-            if (field != value) {
-                field = value
-                api.glDepthMask(value)
-            }
-        }
+    override fun setSimpleAlphaBlending() = proxy.setSimpleAlphaBlending()
 
-    private var samplerCounter: Int = 0
+    override fun call(function: () -> Unit) = proxy.call(function)
 
-    override fun reset() {
-        super.reset()
+    override fun render(function: () -> Unit) = proxy.render(function)
 
-        samplerCounter = 0
-        isDepthMaskEnabled = true
-        depthFunc = GL_LESS
-        isDepthTestEnabled = false
-        blendFactorD = GL_ZERO
-        blendFactorS = GL_ONE
-        cullFaceMode = GL_BACK
-        isCullFaceEnabled = false
-        activeTexture = 0
-        shader = 0
-        singleCallRequests.clear()
-        renderCallRequests.clear()
-    }
+    override fun removeSingleCall(function: () -> Unit) = proxy.removeSingleCall(function)
 
-    /** Get free texture unit. If all texture units are grabbed, it will give units from 0 again */
-    fun grabTextureUnit(): Int {
-        val unit = samplerCounter
-        samplerCounter++
-        if (samplerCounter >= textureUnits.size) samplerCounter = 0
-        return unit
-    }
+    override fun removeRenderCall(function: () -> Unit) = proxy.removeRenderCall(function)
 
-    /** This function will check maximum number of texture units and update [textureUnits] */
-    fun initTextureUnits() {
-        val buffer = IntArray(1)
-        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, buffer)
-        val units = buffer[0]
+    override fun clearSingleCalls() = proxy.clearSingleCalls()
 
-        if (textureUnitsInternal.size < units) {
-            val num = units - textureUnitsInternal.size
-            for (i in 0 until num) {
-                textureUnitsInternal.add(0)
-            }
-        } else if (textureUnitsInternal.size > units) {
-            val num = textureUnitsInternal.size - units
-            for (i in 0 until num) {
-                textureUnitsInternal.removeAt(textureUnitsInternal.lastIndex)
-            }
-        }
-    }
+    override fun clearRenderCalls() = proxy.clearRenderCalls()
 
-    override fun initGL() {
-        api.initGL()
+    override fun runSingleCalls() = proxy.runSingleCalls()
 
-        initTextureUnits()
+    override fun runRenderCalls() = proxy.runRenderCalls()
 
-        if (isExtensionSupported("GL_EXT_texture_filter_anisotropic")) {
-            val buffer = FloatArray(16)
-            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, buffer)
-            maxAnisotropicFilterLevel = buffer[0]
-        }
-    }
-
-    /** Simple blending function in most cases.
-     * sfactor = GL_SRC_ALPHA; dfactor = GL_ONE_MINUS_SRC_ALPHA */
-    fun setSimpleAlphaBlending() {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    }
-
-    /** Will be called once and removed */
-    fun call(name: String = "", call: () -> Unit) {
-        singleCallRequests.add(Request(name, call))
-    }
-
-    /** Will be called every thread loop */
-    fun render(name: String = "", call: () -> Unit) {
-        renderCallRequests.add(Request(name, call))
-    }
-
-    /** Must be called on OpenGL thread by platform backend */
-    fun doSingleCalls() {
-        singleCallRequests.traverseSafe {
-            it.call()
-            if (it.name.isNotEmpty()) LOG.info("\"${it.name}\" called on GL thread")
-        }
-        singleCallRequests.clear()
-    }
-
-    /** Must be called on OpenGL thread by platform backend */
-    fun doRenderCalls() {
-        renderCallRequests.traverseSafe { it.call() }
-    }
-
-    override fun isExtensionSupported(extension: String) = api.isExtensionSupported(extension)
+    override fun isExtensionSupported(extension: String) = proxy.isExtensionSupported(extension)
 
     override fun enableExtension(extension: String): Boolean =
-        api.enableExtension(extension)
+        proxy.enableExtension(extension)
 
     override fun callExtensionFunction(extension: String, functionName: String, args: List<Any?>): Any? =
-        api.callExtensionFunction(extension, functionName, args)
+        proxy.callExtensionFunction(extension, functionName, args)
 
     override fun setExtensionParam(extension: String, paramName: String, value: Any?) =
-        api.setExtensionParam(extension, paramName, value)
+        proxy.setExtensionParam(extension, paramName, value)
 
     override fun getExtensionParam(extension: String, paramName: String): Any? =
-        api.getExtensionParam(extension, paramName)
+        proxy.getExtensionParam(extension, paramName)
 
-    override fun glReadBuffer(mode: Int) = api.glReadBuffer(mode)
+    override fun glTexImage3D(
+        target: Int,
+        level: Int,
+        internalformat: Int,
+        width: Int,
+        height: Int,
+        depth: Int,
+        border: Int,
+        format: Int,
+        type: Int,
+        pixels: IByteData?
+    ) = proxy.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels)
+
+    override fun glGenRenderbuffers(renderbuffers: IntArray) = proxy.glGenRenderbuffers(renderbuffers)
+
+    override fun getErrorString(error: Int): String = proxy.getErrorString(error)
+
+    override fun glReadBuffer(mode: Int) = proxy.glReadBuffer(mode)
 
     override fun glDrawRangeElements(mode: Int, start: Int, end: Int, count: Int, type: Int, indices: IByteData) =
-            api.glDrawRangeElements(mode, start, end, count, type, indices)
+        proxy.glDrawRangeElements(mode, start, end, count, type, indices)
 
     override fun glDrawRangeElements(mode: Int, start: Int, end: Int, count: Int, type: Int, offset: Int) =
-            api.glDrawRangeElements(mode, start, end, count, type, offset)
+        proxy.glDrawRangeElements(mode, start, end, count, type, offset)
 
     override fun glTexImage3D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, depth: Int, border: Int, format: Int, type: Int, offset: Int) =
-            api.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, offset)
+        proxy.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, offset)
 
     override fun glTexSubImage3D(target: Int, level: Int, xoffset: Int, yoffset: Int, zoffset: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, pixels: IByteData) =
-            api.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels)
+        proxy.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels)
 
     override fun glTexSubImage3D(target: Int, level: Int, xoffset: Int, yoffset: Int, zoffset: Int, width: Int, height: Int, depth: Int, format: Int, type: Int, offset: Int) =
-            api.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, offset)
+        proxy.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, offset)
 
     override fun glCopyTexSubImage3D(target: Int, level: Int, xoffset: Int, yoffset: Int, zoffset: Int, x: Int, y: Int, width: Int, height: Int) =
-            api.glCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height)
+        proxy.glCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height)
 
-    override fun glGenQueries(ids: IntArray) = api.glGenQueries(ids)
+    override fun glGenQueries(ids: IntArray) = proxy.glGenQueries(ids)
 
-    override fun glGenQueries(): Int = api.glGenQueries()
+    override fun glGenQueries(): Int = proxy.glGenQueries()
 
-    override fun glDeleteQueries(ids: IntArray) = api.glDeleteQueries(ids)
+    override fun glDeleteQueries(ids: IntArray) = proxy.glDeleteQueries(ids)
 
-    override fun glDeleteQueries(id: Int) = api.glDeleteQueries(id)
+    override fun glDeleteQueries(id: Int) = proxy.glDeleteQueries(id)
 
-    override fun glIsQuery(id: Int): Boolean = api.glIsQuery(id)
+    override fun glIsQuery(id: Int): Boolean = proxy.glIsQuery(id)
 
-    override fun glBeginQuery(target: Int, id: Int) = api.glBeginQuery(target, id)
+    override fun glBeginQuery(target: Int, id: Int) = proxy.glBeginQuery(target, id)
 
-    override fun glEndQuery(target: Int) = api.glEndQuery(target)
+    override fun glEndQuery(target: Int) = proxy.glEndQuery(target)
 
-    override fun glGetQueryiv(target: Int, pname: Int, params: IntArray) = api.glGetQueryiv(target, pname, params)
+    override fun glGetQueryiv(target: Int, pname: Int, params: IntArray) = proxy.glGetQueryiv(target, pname, params)
 
-    override fun glGetQueryObjectuiv(id: Int, pname: Int, params: IntArray) = api.glGetQueryObjectuiv(id, pname, params)
+    override fun glGetQueryObjectuiv(id: Int, pname: Int, params: IntArray) = proxy.glGetQueryObjectuiv(id, pname, params)
 
-    override fun glUnmapBuffer(target: Int): Boolean = api.glUnmapBuffer(target)
+    override fun glUnmapBuffer(target: Int): Boolean = proxy.glUnmapBuffer(target)
 
-    override fun glGetBufferPointerv(target: Int, pname: Int): IntArray = api.glGetBufferPointerv(target, pname)
+    override fun glGetBufferPointerv(target: Int, pname: Int): IntArray = proxy.glGetBufferPointerv(target, pname)
 
-    override fun glDrawBuffers(n: Int, bufs: IntArray) = api.glDrawBuffers(n, bufs)
+    override fun glDrawBuffers(n: Int, bufs: IntArray) = proxy.glDrawBuffers(n, bufs)
 
     override fun glUniformMatrix2x3fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix2x3fv(location, count, transpose, value)
+        proxy.glUniformMatrix2x3fv(location, count, transpose, value)
 
     override fun glUniformMatrix3x2fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix3x2fv(location, count, transpose, value)
+        proxy.glUniformMatrix3x2fv(location, count, transpose, value)
 
     override fun glUniformMatrix2x4fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix2x4fv(location, count, transpose, value)
+        proxy.glUniformMatrix2x4fv(location, count, transpose, value)
 
     override fun glUniformMatrix4x2fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix4x2fv(location, count, transpose, value)
+        proxy.glUniformMatrix4x2fv(location, count, transpose, value)
 
     override fun glUniformMatrix3x4fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix3x4fv(location, count, transpose, value)
+        proxy.glUniformMatrix3x4fv(location, count, transpose, value)
 
     override fun glUniformMatrix4x3fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix4x3fv(location, count, transpose, value)
+        proxy.glUniformMatrix4x3fv(location, count, transpose, value)
 
     override fun glBlitFramebuffer(srcX0: Int, srcY0: Int, srcX1: Int, srcY1: Int, dstX0: Int, dstY0: Int, dstX1: Int, dstY1: Int, mask: Int, filter: Int) =
-            api.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter)
+        proxy.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter)
 
     override fun glRenderbufferStorageMultisample(target: Int, samples: Int, internalformat: Int, width: Int, height: Int) =
-            api.glRenderbufferStorageMultisample(target, samples, internalformat, width, height)
+        proxy.glRenderbufferStorageMultisample(target, samples, internalformat, width, height)
 
     override fun glFramebufferTextureLayer(target: Int, attachment: Int, texture: Int, level: Int, layer: Int) =
-            api.glFramebufferTextureLayer(target, attachment, texture, level, layer)
+        proxy.glFramebufferTextureLayer(target, attachment, texture, level, layer)
 
-    override fun glFlushMappedBufferRange(target: Int, offset: Int, length: Int) = api.glFlushMappedBufferRange(target, offset, length)
+    override fun glFlushMappedBufferRange(target: Int, offset: Int, length: Int) = proxy.glFlushMappedBufferRange(target, offset, length)
 
-    override fun glBindVertexArray(array: Int) {
-        vertexArray = array
-    }
+    override fun glBindVertexArray(array: Int) = proxy.glBindVertexArray(array)
 
-    override fun glDeleteVertexArrays(id: Int) = api.glDeleteVertexArrays(id)
+    override fun glDeleteVertexArrays(id: Int) = proxy.glDeleteVertexArrays(id)
 
-    override fun glDeleteVertexArrays(arrays: IntArray) = api.glDeleteVertexArrays(arrays)
+    override fun glDeleteVertexArrays(arrays: IntArray) = proxy.glDeleteVertexArrays(arrays)
 
-    override fun glGenVertexArrays() = api.glGenVertexArrays()
+    override fun glGenVertexArrays() = proxy.glGenVertexArrays()
 
-    override fun glGenVertexArrays(arrays: IntArray) = api.glGenVertexArrays(arrays)
+    override fun glGenVertexArrays(arrays: IntArray) = proxy.glGenVertexArrays(arrays)
 
-    override fun glIsVertexArray(array: Int): Boolean = api.glIsVertexArray(array)
+    override fun glIsVertexArray(array: Int): Boolean = proxy.glIsVertexArray(array)
 
-    override fun glBeginTransformFeedback(primitiveMode: Int) = api.glBeginTransformFeedback(primitiveMode)
+    override fun glBeginTransformFeedback(primitiveMode: Int) = proxy.glBeginTransformFeedback(primitiveMode)
 
-    override fun glEndTransformFeedback() = api.glEndTransformFeedback()
+    override fun glEndTransformFeedback() = proxy.glEndTransformFeedback()
 
     override fun glBindBufferRange(target: Int, index: Int, buffer: Int, offset: Int, size: Int) =
-            api.glBindBufferRange(target, index, buffer, offset, size)
+        proxy.glBindBufferRange(target, index, buffer, offset, size)
 
     override fun glBindBufferBase(target: Int, index: Int, buffer: Int) =
-            api.glBindBufferBase(target, index, buffer)
+        proxy.glBindBufferBase(target, index, buffer)
 
     override fun glTransformFeedbackVaryings(program: Int, varyings: Array<String>, bufferMode: Int) =
-            api.glTransformFeedbackVaryings(program, varyings, bufferMode)
+        proxy.glTransformFeedbackVaryings(program, varyings, bufferMode)
 
     override fun glVertexAttribIPointer(index: Int, size: Int, type: Int, stride: Int, offset: Int) =
-            api.glVertexAttribIPointer(index, size, type, stride, offset)
+        proxy.glVertexAttribIPointer(index, size, type, stride, offset)
 
     override fun glGetVertexAttribIiv(index: Int, pname: Int, params: IntArray) =
-            api.glGetVertexAttribIiv(index, pname, params)
+        proxy.glGetVertexAttribIiv(index, pname, params)
 
     override fun glGetVertexAttribIuiv(index: Int, pname: Int, params: IntArray) =
-            api.glGetVertexAttribIuiv(index, pname, params)
+        proxy.glGetVertexAttribIuiv(index, pname, params)
 
     override fun glVertexAttribI4i(index: Int, x: Int, y: Int, z: Int, w: Int) =
-            api.glVertexAttribI4i(index, x, y, z, w)
+        proxy.glVertexAttribI4i(index, x, y, z, w)
 
     override fun glVertexAttribI4ui(index: Int, x: Int, y: Int, z: Int, w: Int) =
-            api.glVertexAttribI4ui(index, x, y, z, w)
+        proxy.glVertexAttribI4ui(index, x, y, z, w)
 
     override fun glGetUniformuiv(program: Int, location: Int, params: IntArray) =
-            api.glGetUniformuiv(program, location, params)
+        proxy.glGetUniformuiv(program, location, params)
 
     override fun glGetFragDataLocation(program: Int, name: String): Int =
-            api.glGetFragDataLocation(program, name)
+        proxy.glGetFragDataLocation(program, name)
 
     override fun glUniform1uiv(location: Int, count: Int, value: IIntData) =
-            api.glUniform1uiv(location, count, value)
+        proxy.glUniform1uiv(location, count, value)
 
     override fun glUniform3uiv(location: Int, count: Int, value: IIntData) =
-            api.glUniform3uiv(location, count, value)
+        proxy.glUniform3uiv(location, count, value)
 
     override fun glUniform4uiv(location: Int, count: Int, value: IIntData) =
-            api.glUniform4uiv(location, count, value)
+        proxy.glUniform4uiv(location, count, value)
 
     override fun glClearBufferiv(buffer: Int, drawbuffer: Int, value: IIntData) =
-            api.glClearBufferiv(buffer, drawbuffer, value)
+        proxy.glClearBufferiv(buffer, drawbuffer, value)
 
     override fun glClearBufferuiv(buffer: Int, drawbuffer: Int, value: IIntData) =
-            api.glClearBufferuiv(buffer, drawbuffer, value)
+        proxy.glClearBufferuiv(buffer, drawbuffer, value)
 
     override fun glClearBufferfv(buffer: Int, drawbuffer: Int, value: IFloatData) =
-            api.glClearBufferfv(buffer, drawbuffer, value)
+        proxy.glClearBufferfv(buffer, drawbuffer, value)
 
     override fun glClearBufferfi(buffer: Int, drawbuffer: Int, depth: Float, stencil: Int) =
-            api.glClearBufferfi(buffer, drawbuffer, depth, stencil)
+        proxy.glClearBufferfi(buffer, drawbuffer, depth, stencil)
 
     override fun glGetStringi(name: Int, index: Int): String =
-            api.glGetStringi(name, index)
+        proxy.glGetStringi(name, index)
 
     override fun glCopyBufferSubData(readTarget: Int, writeTarget: Int, readOffset: Int, writeOffset: Int, size: Int) =
-            api.glCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size)
+        proxy.glCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size)
 
     override fun glGetUniformIndices(program: Int, uniformNames: Array<String>, uniformIndices: IIntData) =
-            api.glGetUniformIndices(program, uniformNames, uniformIndices)
+        proxy.glGetUniformIndices(program, uniformNames, uniformIndices)
 
     override fun glGetActiveUniformsiv(program: Int, uniformCount: Int, uniformIndices: IntArray, pname: Int, params: IntArray) =
-            api.glGetActiveUniformsiv(program, uniformCount, uniformIndices, pname, params)
+        proxy.glGetActiveUniformsiv(program, uniformCount, uniformIndices, pname, params)
 
     override fun glGetUniformBlockIndex(program: Int, uniformBlockName: String): Int =
-            api.glGetUniformBlockIndex(program, uniformBlockName)
+        proxy.glGetUniformBlockIndex(program, uniformBlockName)
 
     override fun glGetActiveUniformBlockiv(program: Int, uniformBlockIndex: Int, pname: Int): Int =
-        api.glGetActiveUniformBlockiv(program, uniformBlockIndex, pname)
+        proxy.glGetActiveUniformBlockiv(program, uniformBlockIndex, pname)
 
     override fun glGetActiveUniformBlockName(program: Int, uniformBlockIndex: Int, length: IntArray, uniformBlockName: IByteData) =
-            api.glGetActiveUniformBlockName(program, uniformBlockIndex, length, uniformBlockName)
+        proxy.glGetActiveUniformBlockName(program, uniformBlockIndex, length, uniformBlockName)
 
     override fun glGetActiveUniformBlockName(program: Int, uniformBlockIndex: Int): String =
-            api.glGetActiveUniformBlockName(program, uniformBlockIndex)
+        proxy.glGetActiveUniformBlockName(program, uniformBlockIndex)
 
     override fun glUniformBlockBinding(program: Int, uniformBlockIndex: Int, uniformBlockBinding: Int) =
-            api.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding)
+        proxy.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding)
 
     override fun glDrawArraysInstanced(mode: Int, first: Int, count: Int, instanceCount: Int) =
-            api.glDrawArraysInstanced(mode, first, count, instanceCount)
+        proxy.glDrawArraysInstanced(mode, first, count, instanceCount)
 
     override fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indicesOffset: Int, instanceCount: Int) =
-            api.glDrawElementsInstanced(mode, count, type, indicesOffset, instanceCount)
+        proxy.glDrawElementsInstanced(mode, count, type, indicesOffset, instanceCount)
 
     override fun glGetInteger64v(pname: Int, params: LongArray) =
-            api.glGetInteger64v(pname, params)
+        proxy.glGetInteger64v(pname, params)
 
     override fun glGetBufferParameteri64v(target: Int, pname: Int, params: LongArray) =
-            api.glGetBufferParameteri64v(target, pname, params)
+        proxy.glGetBufferParameteri64v(target, pname, params)
 
-    override fun glGenSamplers() = api.glGenSamplers()
+    override fun glGenSamplers() = proxy.glGenSamplers()
 
-    override fun glGenSamplers(samplers: IntArray) = api.glGenSamplers(samplers)
+    override fun glGenSamplers(samplers: IntArray) = proxy.glGenSamplers(samplers)
 
-    override fun glDeleteSamplers(sampler: Int) = api.glDeleteSamplers(sampler)
+    override fun glDeleteSamplers(sampler: Int) = proxy.glDeleteSamplers(sampler)
 
-    override fun glDeleteSamplers(samplers: IntArray) = api.glDeleteSamplers(samplers)
+    override fun glDeleteSamplers(samplers: IntArray) = proxy.glDeleteSamplers(samplers)
 
-    override fun glIsSampler(sampler: Int): Boolean = api.glIsSampler(sampler)
+    override fun glIsSampler(sampler: Int): Boolean = proxy.glIsSampler(sampler)
 
-    override fun glBindSampler(unit: Int, sampler: Int) = api.glBindSampler(unit, sampler)
+    override fun glBindSampler(unit: Int, sampler: Int) = proxy.glBindSampler(unit, sampler)
 
     override fun glSamplerParameteri(sampler: Int, pname: Int, param: Int) =
-            api.glSamplerParameteri(sampler, pname, param)
+        proxy.glSamplerParameteri(sampler, pname, param)
 
     override fun glSamplerParameteriv(sampler: Int, pname: Int, param: IntArray) =
-            api.glSamplerParameteriv(sampler, pname, param)
+        proxy.glSamplerParameteriv(sampler, pname, param)
 
     override fun glSamplerParameterf(sampler: Int, pname: Int, param: Float) =
-            api.glSamplerParameterf(sampler, pname, param)
+        proxy.glSamplerParameterf(sampler, pname, param)
 
     override fun glSamplerParameterfv(sampler: Int, pname: Int, param: FloatArray) =
-            api.glSamplerParameterfv(sampler, pname, param)
+        proxy.glSamplerParameterfv(sampler, pname, param)
 
     override fun glGetSamplerParameteriv(sampler: Int, pname: Int, params: IntArray) =
-            api.glGetSamplerParameteriv(sampler, pname, params)
+        proxy.glGetSamplerParameteriv(sampler, pname, params)
 
     override fun glGetSamplerParameterfv(sampler: Int, pname: Int, params: FloatArray) =
-            api.glGetSamplerParameterfv(sampler, pname, params)
+        proxy.glGetSamplerParameterfv(sampler, pname, params)
 
-    override fun glVertexAttribDivisor(index: Int, divisor: Int) = api.glVertexAttribDivisor(index, divisor)
+    override fun glVertexAttribDivisor(index: Int, divisor: Int) = proxy.glVertexAttribDivisor(index, divisor)
 
-    override fun glBindTransformFeedback(target: Int, id: Int) = api.glBindTransformFeedback(target, id)
+    override fun glBindTransformFeedback(target: Int, id: Int) = proxy.glBindTransformFeedback(target, id)
 
-    override fun glDeleteTransformFeedbacks(id: Int) = api.glDeleteTransformFeedbacks(id)
+    override fun glDeleteTransformFeedbacks(id: Int) = proxy.glDeleteTransformFeedbacks(id)
 
-    override fun glDeleteTransformFeedbacks(ids: IntArray) = api.glDeleteTransformFeedbacks(ids)
+    override fun glDeleteTransformFeedbacks(ids: IntArray) = proxy.glDeleteTransformFeedbacks(ids)
 
-    override fun glGenTransformFeedbacks() = api.glGenTransformFeedbacks()
+    override fun glGenTransformFeedbacks() = proxy.glGenTransformFeedbacks()
 
-    override fun glGenTransformFeedbacks(ids: IntArray) = api.glGenTransformFeedbacks(ids)
+    override fun glGenTransformFeedbacks(ids: IntArray) = proxy.glGenTransformFeedbacks(ids)
 
-    override fun glIsTransformFeedback(id: Int): Boolean = api.glIsTransformFeedback(id)
+    override fun glIsTransformFeedback(id: Int): Boolean = proxy.glIsTransformFeedback(id)
 
-    override fun glPauseTransformFeedback() = api.glPauseTransformFeedback()
+    override fun glPauseTransformFeedback() = proxy.glPauseTransformFeedback()
 
-    override fun glResumeTransformFeedback() = api.glResumeTransformFeedback()
+    override fun glResumeTransformFeedback() = proxy.glResumeTransformFeedback()
 
     override fun glProgramParameteri(program: Int, pname: Int, value: Int) =
-            api.glProgramParameteri(program, pname, value)
+        proxy.glProgramParameteri(program, pname, value)
 
     override fun glInvalidateFramebuffer(target: Int, numAttachments: Int, attachments: IntArray) =
-            api.glInvalidateFramebuffer(target, numAttachments, attachments)
+        proxy.glInvalidateFramebuffer(target, numAttachments, attachments)
 
     override fun glInvalidateSubFramebuffer(target: Int, numAttachments: Int, attachments: IntArray, x: Int, y: Int, width: Int, height: Int) =
-            api.glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height)
+        proxy.glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height)
 
-    override fun glActiveTexture(texture: Int) {
-        activeTexture = texture - GL_TEXTURE0
-    }
+    override fun glActiveTexture(texture: Int) = proxy.glActiveTexture(texture)
 
-    override fun glBindTexture(target: Int, texture: Int) {
-        if (textureUnitsInternal[activeTexture] != texture) {
-            textureUnitsInternal[activeTexture] = texture
-            api.glBindTexture(target, texture)
-        }
-    }
+    override fun glBindTexture(target: Int, texture: Int) = proxy.glBindTexture(target, texture)
 
-    override fun glBlendFunc(sfactor: Int, dfactor: Int) {
-        enableGlCall = false
-        api.glBlendFunc(sfactor, dfactor)
-        blendFactorS = sfactor
-        blendFactorD = sfactor
-        enableGlCall = true
-    }
+    override fun glBlendFunc(sfactor: Int, dfactor: Int) = proxy.glBlendFunc(sfactor, dfactor)
 
-    override fun glClear(mask: Int) = api.glClear(mask)
+    override fun glClear(mask: Int) = proxy.glClear(mask)
 
     override fun glClearColor(red: Float, green: Float, blue: Float, alpha: Float) =
-            api.glClearColor(red, green, blue, alpha)
+        proxy.glClearColor(red, green, blue, alpha)
 
-    override fun glClearDepthf(depth: Float) = api.glClearDepthf(depth)
+    override fun glClearDepthf(depth: Float) = proxy.glClearDepthf(depth)
 
-    override fun glClearStencil(s: Int) = api.glClearStencil(s)
+    override fun glClearStencil(s: Int) = proxy.glClearStencil(s)
 
     override fun glColorMask(red: Boolean, green: Boolean, blue: Boolean, alpha: Boolean) =
-            api.glColorMask(red, green, blue, alpha)
+        proxy.glColorMask(red, green, blue, alpha)
 
     override fun glCompressedTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, imageSize: Int, data: IByteData) =
-            api.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data)
+        proxy.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data)
 
     override fun glCompressedTexSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, width: Int, height: Int, format: Int, imageSize: Int, data: IByteData) =
-            api.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data)
+        proxy.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data)
 
     override fun glCopyTexImage2D(target: Int, level: Int, internalformat: Int, x: Int, y: Int, width: Int, height: Int, border: Int) =
-            api.glCopyTexImage2D(target, level, internalformat, x, y, width, height, border)
+        proxy.glCopyTexImage2D(target, level, internalformat, x, y, width, height, border)
 
     override fun glCopyTexSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, x: Int, y: Int, width: Int, height: Int) =
-            api.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
+        proxy.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
 
-    override fun glCullFace(mode: Int) {
-        cullFaceMode = mode
-    }
+    override fun glCullFace(mode: Int) = proxy.glCullFace(mode)
 
-    override fun glDeleteTextures(textures: IntArray) = api.glDeleteTextures(textures)
+    override fun glDeleteTextures(textures: IntArray) = proxy.glDeleteTextures(textures)
 
-    override fun glDeleteTexture(texture: Int) = api.glDeleteTexture(texture)
+    override fun glDeleteTexture(texture: Int) = proxy.glDeleteTexture(texture)
 
-    override fun glDepthFunc(func: Int) {
-        depthFunc = func
-    }
+    override fun glDepthFunc(func: Int) = proxy.glDepthFunc(func)
 
-    override fun glDepthMask(flag: Boolean) {
-        isDepthMaskEnabled = flag
-    }
+    override fun glDepthMask(flag: Boolean) = proxy.glDepthMask(flag)
 
-    override fun glDepthRangef(zNear: Float, zFar: Float) = api.glDepthRangef(zNear, zFar)
+    override fun glDepthRangef(zNear: Float, zFar: Float) = proxy.glDepthRangef(zNear, zFar)
 
-    override fun glDisable(cap: Int) {
-        when (cap) {
-            GL_BLEND -> isBlendEnabled = false
-            GL_CULL_FACE -> isCullFaceEnabled = false
-            else -> api.glDisable(cap)
-        }
-    }
+    override fun glDisable(cap: Int) = proxy.glDisable(cap)
 
-    override fun glDrawArrays(mode: Int, first: Int, count: Int) = api.glDrawArrays(mode, first, count)
+    override fun glDrawArrays(mode: Int, first: Int, count: Int) = proxy.glDrawArrays(mode, first, count)
 
-    override fun glDrawElements(mode: Int, count: Int, type: Int, indices: IByteData) = api.glDrawElements(mode, count, type, indices)
+    override fun glDrawElements(mode: Int, count: Int, type: Int, indices: IByteData) = proxy.glDrawElements(mode, count, type, indices)
 
-    override fun glEnable(cap: Int) {
-        when (cap) {
-            GL_BLEND -> isBlendEnabled = true
-            GL_CULL_FACE -> isCullFaceEnabled = true
-            else -> api.glEnable(cap)
-        }
-    }
+    override fun glEnable(cap: Int) = proxy.glEnable(cap)
 
-    override fun glFinish() = api.glFinish()
+    override fun glFinish() = proxy.glFinish()
 
-    override fun glFlush() = api.glFlush()
+    override fun glFlush() = proxy.glFlush()
 
-    override fun glFrontFace(mode: Int) = api.glFrontFace(mode)
+    override fun glFrontFace(mode: Int) = proxy.glFrontFace(mode)
 
-    override fun glGenTextures(n: Int, textures: IntArray) = api.glGenTextures(n, textures)
+    override fun glGenTextures(n: Int, textures: IntArray) = proxy.glGenTextures(n, textures)
 
-    override fun glGenTexture(): Int = api.glGenTexture()
+    override fun glGenTexture(): Int = proxy.glGenTexture()
 
-    override fun glGetError(): Int = api.glGetError()
+    override fun glGetError(): Int = proxy.glGetError()
 
-    override fun glGetIntegerv(pname: Int, params: IntArray) = api.glGetIntegerv(pname, params)
+    override fun glGetIntegerv(pname: Int, params: IntArray) = proxy.glGetIntegerv(pname, params)
 
-    override fun glGetString(name: Int): String? = api.glGetString(name)
+    override fun glGetString(name: Int): String? = proxy.glGetString(name)
 
-    override fun glHint(target: Int, mode: Int) = api.glHint(target, mode)
+    override fun glHint(target: Int, mode: Int) = proxy.glHint(target, mode)
 
-    override fun glLineWidth(width: Float) = api.glLineWidth(width)
+    override fun glLineWidth(width: Float) = proxy.glLineWidth(width)
 
-    override fun glPixelStorei(pname: Int, param: Int) = api.glPixelStorei(pname, param)
+    override fun glPixelStorei(pname: Int, param: Int) = proxy.glPixelStorei(pname, param)
 
-    override fun glPolygonOffset(factor: Float, units: Float) = api.glPolygonOffset(factor, units)
+    override fun glPolygonOffset(factor: Float, units: Float) = proxy.glPolygonOffset(factor, units)
 
     override fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: IByteData) =
-            api.glReadPixels(x, y, width, height, format, type, pixels)
+        proxy.glReadPixels(x, y, width, height, format, type, pixels)
 
     override fun glScissor(x: Int, y: Int, width: Int, height: Int) =
-            api.glScissor(x, y, width, height)
+        proxy.glScissor(x, y, width, height)
 
-    override fun glStencilFunc(func: Int, ref: Int, mask: Int) = api.glStencilFunc(func, ref, mask)
+    override fun glStencilFunc(func: Int, ref: Int, mask: Int) = proxy.glStencilFunc(func, ref, mask)
 
-    override fun glStencilMask(mask: Int) = api.glStencilMask(mask)
+    override fun glStencilMask(mask: Int) = proxy.glStencilMask(mask)
 
-    override fun glStencilOp(fail: Int, zfail: Int, zpass: Int) = api.glStencilOp(fail, zfail, zpass)
+    override fun glStencilOp(fail: Int, zfail: Int, zpass: Int) = proxy.glStencilOp(fail, zfail, zpass)
 
     override fun glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, type: Int, pixels: IByteData?) =
-            api.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
+        proxy.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
 
     override fun glTexImage2D(
         target: Int,
@@ -662,316 +501,302 @@ object GL: IGL {
         border: Int,
         format: Int,
         type: Int,
-        image: IImage?
-    ) {
-        api.glTexImage2D(target, level, internalformat, width, height, border, format, type, image)
-    }
+        image: IImageData
+    ) = proxy.glTexImage2D(target, level, internalformat, width, height, border, format, type, image)
 
     override fun glTexParameterf(target: Int, pname: Int, param: Float) =
-            api.glTexParameterf(target, pname, param)
+        proxy.glTexParameterf(target, pname, param)
 
     override fun glTexSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, width: Int, height: Int, format: Int, type: Int, pixels: IByteData) =
-            api.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
+        proxy.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
 
-    override fun glViewport(x: Int, y: Int, width: Int, height: Int) = api.glViewport(x, y, width, height)
+    override fun glViewport(x: Int, y: Int, width: Int, height: Int) = proxy.glViewport(x, y, width, height)
 
-    override fun glAttachShader(program: Int, shader: Int) = api.glAttachShader(program, shader)
+    override fun glAttachShader(program: Int, shader: Int) = proxy.glAttachShader(program, shader)
 
-    override fun glBindAttribLocation(program: Int, index: Int, name: String) = api.glBindAttribLocation(program, index, name)
+    override fun glBindAttribLocation(program: Int, index: Int, name: String) = proxy.glBindAttribLocation(program, index, name)
 
-    override fun glBindBuffer(target: Int, buffer: Int) {
-        when (target) {
-            GL_ARRAY_BUFFER -> arrayBuffer = buffer
-            GL_ELEMENT_ARRAY_BUFFER -> elementArrayBuffer = buffer
-            else -> api.glBindBuffer(target, buffer)
-        }
-    }
+    override fun glBindBuffer(target: Int, buffer: Int) = proxy.glBindBuffer(target, buffer)
 
-    override fun glBindFramebuffer(target: Int, framebuffer: Int) = api.glBindFramebuffer(target, framebuffer)
+    override fun glBindFramebuffer(target: Int, framebuffer: Int) = proxy.glBindFramebuffer(target, framebuffer)
 
-    override fun glBindRenderbuffer(target: Int, renderbuffer: Int) = api.glBindRenderbuffer(target, renderbuffer)
+    override fun glBindRenderbuffer(target: Int, renderbuffer: Int) = proxy.glBindRenderbuffer(target, renderbuffer)
 
     override fun glBlendColor(red: Float, green: Float, blue: Float, alpha: Float) =
-            api.glBlendColor(red, green, blue, alpha)
+        proxy.glBlendColor(red, green, blue, alpha)
 
-    override fun glBlendEquation(mode: Int) = api.glBlendEquation(mode)
+    override fun glBlendEquation(mode: Int) = proxy.glBlendEquation(mode)
 
-    override fun glBlendEquationSeparate(modeRGB: Int, modeAlpha: Int) = api.glBlendEquationSeparate(modeRGB, modeAlpha)
+    override fun glBlendEquationSeparate(modeRGB: Int, modeAlpha: Int) = proxy.glBlendEquationSeparate(modeRGB, modeAlpha)
 
     override fun glBlendFuncSeparate(srcRGB: Int, dstRGB: Int, srcAlpha: Int, dstAlpha: Int) =
-            api.glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
+        proxy.glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
 
     override fun glBufferData(target: Int, size: Int, data: IByteData?, usage: Int) =
-            api.glBufferData(target, size, data, usage)
+        proxy.glBufferData(target, size, data, usage)
 
     override fun glBufferSubData(target: Int, offset: Int, size: Int, data: IByteData) =
-            api.glBufferSubData(target, offset, size, data)
+        proxy.glBufferSubData(target, offset, size, data)
 
-    override fun glCheckFramebufferStatus(target: Int): Int = api.glCheckFramebufferStatus(target)
+    override fun glCheckFramebufferStatus(target: Int): Int = proxy.glCheckFramebufferStatus(target)
 
-    override fun glCompileShader(shader: Int) = api.glCompileShader(shader)
+    override fun glCompileShader(shader: Int) = proxy.glCompileShader(shader)
 
-    override fun glCreateProgram(): Int = api.glCreateProgram()
+    override fun glCreateProgram(): Int = proxy.glCreateProgram()
 
-    override fun glCreateShader(type: Int): Int = api.glCreateShader(type)
+    override fun glCreateShader(type: Int): Int = proxy.glCreateShader(type)
 
-    override fun glDeleteBuffer(buffer: Int) = api.glDeleteBuffer(buffer)
+    override fun glDeleteBuffer(buffer: Int) = proxy.glDeleteBuffer(buffer)
 
-    override fun glDeleteBuffers(buffers: IntArray) = api.glDeleteBuffers(buffers)
+    override fun glDeleteBuffers(buffers: IntArray) = proxy.glDeleteBuffers(buffers)
 
-    override fun glDeleteFramebuffer(framebuffer: Int) = api.glDeleteFramebuffer(framebuffer)
+    override fun glDeleteFramebuffer(framebuffer: Int) = proxy.glDeleteFramebuffer(framebuffer)
 
-    override fun glDeleteFramebuffers(framebuffers: IntArray) = api.glDeleteFramebuffers(framebuffers)
+    override fun glDeleteFramebuffers(framebuffers: IntArray) = proxy.glDeleteFramebuffers(framebuffers)
 
-    override fun glDeleteProgram(program: Int) = api.glDeleteProgram(program)
+    override fun glDeleteProgram(program: Int) = proxy.glDeleteProgram(program)
 
-    override fun glDeleteRenderbuffer(renderbuffer: Int) = api.glDeleteRenderbuffer(renderbuffer)
+    override fun glDeleteRenderbuffer(renderbuffer: Int) = proxy.glDeleteRenderbuffer(renderbuffer)
 
-    override fun glDeleteRenderbuffers(renderbuffers: IntArray) = api.glDeleteRenderbuffers(renderbuffers)
+    override fun glDeleteRenderbuffers(renderbuffers: IntArray) = proxy.glDeleteRenderbuffers(renderbuffers)
 
-    override fun glDeleteShader(shader: Int) = api.glDeleteShader(shader)
+    override fun glDeleteShader(shader: Int) = proxy.glDeleteShader(shader)
 
-    override fun glDetachShader(program: Int, shader: Int) = api.glDetachShader(program, shader)
+    override fun glDetachShader(program: Int, shader: Int) = proxy.glDetachShader(program, shader)
 
-    override fun glDisableVertexAttribArray(index: Int) = api.glDisableVertexAttribArray(index)
+    override fun glDisableVertexAttribArray(index: Int) = proxy.glDisableVertexAttribArray(index)
 
-    override fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) = api.glDrawElements(mode, count, type, indices)
+    override fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) = proxy.glDrawElements(mode, count, type, indices)
 
-    override fun glEnableVertexAttribArray(index: Int) = api.glEnableVertexAttribArray(index)
+    override fun glEnableVertexAttribArray(index: Int) = proxy.glEnableVertexAttribArray(index)
 
     override fun glFramebufferRenderbuffer(target: Int, attachment: Int, renderbuffertarget: Int, renderbuffer: Int) =
-            api.glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer)
+        proxy.glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer)
 
     override fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: Int, level: Int) =
-            api.glFramebufferTexture2D(target, attachment, textarget, texture, level)
+        proxy.glFramebufferTexture2D(target, attachment, textarget, texture, level)
 
-    override fun glGenBuffer(): Int = api.glGenBuffer()
+    override fun glGenBuffer(): Int = proxy.glGenBuffer()
 
-    override fun glGenBuffers(buffers: IntArray) = api.glGenBuffers(buffers)
+    override fun glGenBuffers(buffers: IntArray) = proxy.glGenBuffers(buffers)
 
-    override fun glGenerateMipmap(target: Int) = api.glGenerateMipmap(target)
+    override fun glGenerateMipmap(target: Int) = proxy.glGenerateMipmap(target)
 
-    override fun glGenFramebuffer(): Int = api.glGenFramebuffer()
+    override fun glGenFramebuffer(): Int = proxy.glGenFramebuffer()
 
-    override fun glGenFramebuffers(framebuffers: IntArray) = api.glGenFramebuffers(framebuffers)
+    override fun glGenFramebuffers(framebuffers: IntArray) = proxy.glGenFramebuffers(framebuffers)
 
-    override fun glGenRenderbuffer(): Int = api.glGenRenderbuffer()
+    override fun glGenRenderbuffer(): Int = proxy.glGenRenderbuffer()
 
     override fun glGetActiveAttrib(program: Int, index: Int, size: IntArray, type: IntArray): String =
-            api.glGetActiveAttrib(program, index, size, type)
+        proxy.glGetActiveAttrib(program, index, size, type)
 
     override fun glGetActiveUniform(program: Int, index: Int, size: IntArray, type: IntArray): String =
-            api.glGetActiveUniform(program, index, size, type)
+        proxy.glGetActiveUniform(program, index, size, type)
 
     override fun glGetAttachedShaders(program: Int, maxcount: Int, count: IntArray, shaders: IntArray) =
-            api.glGetAttachedShaders(program, maxcount, count, shaders)
+        proxy.glGetAttachedShaders(program, maxcount, count, shaders)
 
     override fun glGetAttribLocation(program: Int, name: String): Int =
-            api.glGetAttribLocation(program, name)
+        proxy.glGetAttribLocation(program, name)
 
-    override fun glGetBooleanv(pname: Int, params: IByteData) = api.glGetBooleanv(pname, params)
+    override fun glGetBooleanv(pname: Int, params: IByteData) = proxy.glGetBooleanv(pname, params)
 
     override fun glGetBufferParameteriv(target: Int, pname: Int, params: IntArray) =
-            api.glGetBufferParameteriv(target, pname, params)
+        proxy.glGetBufferParameteriv(target, pname, params)
 
-    override fun glGetFloatv(pname: Int, params: FloatArray) = api.glGetFloatv(pname, params)
+    override fun glGetFloatv(pname: Int, params: FloatArray) = proxy.glGetFloatv(pname, params)
 
     override fun glGetFramebufferAttachmentParameteriv(target: Int, attachment: Int, pname: Int, params: IntArray) =
-            api.glGetFramebufferAttachmentParameteriv(target, attachment, pname, params)
+        proxy.glGetFramebufferAttachmentParameteriv(target, attachment, pname, params)
 
     override fun glGetProgramiv(program: Int, pname: Int, params: IntArray) =
-            api.glGetProgramiv(program, pname, params)
+        proxy.glGetProgramiv(program, pname, params)
 
-    override fun glGetProgramInfoLog(program: Int): String = api.glGetProgramInfoLog(program)
+    override fun glGetProgramInfoLog(program: Int): String = proxy.glGetProgramInfoLog(program)
 
     override fun glGetRenderbufferParameteriv(target: Int, pname: Int, params: IntArray) =
-            api.glGetRenderbufferParameteriv(target, pname, params)
+        proxy.glGetRenderbufferParameteriv(target, pname, params)
 
-    override fun glGetShaderiv(shader: Int, pname: Int, params: IntArray) = api.glGetShaderiv(shader, pname, params)
+    override fun glGetShaderiv(shader: Int, pname: Int, params: IntArray) = proxy.glGetShaderiv(shader, pname, params)
 
-    override fun glGetShaderInfoLog(shader: Int): String = api.glGetShaderInfoLog(shader)
+    override fun glGetShaderInfoLog(shader: Int): String = proxy.glGetShaderInfoLog(shader)
 
     override fun glGetShaderPrecisionFormat(shadertype: Int, precisiontype: Int, range: IntArray, precision: IntArray) =
-            api.glGetShaderPrecisionFormat(shadertype, precisiontype, range, precision)
+        proxy.glGetShaderPrecisionFormat(shadertype, precisiontype, range, precision)
 
     override fun glGetTexParameterfv(target: Int, pname: Int, params: FloatArray) =
-            api.glGetTexParameterfv(target, pname, params)
+        proxy.glGetTexParameterfv(target, pname, params)
 
     override fun glGetTexParameteriv(target: Int, pname: Int, params: IntArray) =
-            api.glGetTexParameteriv(target, pname, params)
+        proxy.glGetTexParameteriv(target, pname, params)
 
     override fun glGetUniformfv(program: Int, location: Int, params: FloatArray) =
-            api.glGetUniformfv(program, location, params)
+        proxy.glGetUniformfv(program, location, params)
 
     override fun glGetUniformiv(program: Int, location: Int, params: IntArray) =
-            api.glGetUniformiv(program, location, params)
+        proxy.glGetUniformiv(program, location, params)
 
-    override fun glGetUniformLocation(program: Int, name: String): Int = api.glGetUniformLocation(program, name)
+    override fun glGetUniformLocation(program: Int, name: String): Int = proxy.glGetUniformLocation(program, name)
 
     override fun glGetVertexAttribfv(index: Int, pname: Int, params: FloatArray) =
-            api.glGetVertexAttribfv(index, pname, params)
+        proxy.glGetVertexAttribfv(index, pname, params)
 
     override fun glGetVertexAttribiv(index: Int, pname: Int, params: IntArray) =
-            api.glGetVertexAttribiv(index, pname, params)
+        proxy.glGetVertexAttribiv(index, pname, params)
 
     override fun glGetVertexAttribPointerv(index: Int, pname: Int, pointer: IntArray) =
-            api.glGetVertexAttribPointerv(index, pname, pointer)
+        proxy.glGetVertexAttribPointerv(index, pname, pointer)
 
-    override fun glIsBuffer(buffer: Int): Boolean = api.glIsBuffer(buffer)
+    override fun glIsBuffer(buffer: Int): Boolean = proxy.glIsBuffer(buffer)
 
-    override fun glIsEnabled(cap: Int): Boolean = api.glIsEnabled(cap)
+    override fun glIsEnabled(cap: Int): Boolean = proxy.glIsEnabled(cap)
 
-    override fun glIsFramebuffer(framebuffer: Int): Boolean = api.glIsFramebuffer(framebuffer)
+    override fun glIsFramebuffer(framebuffer: Int): Boolean = proxy.glIsFramebuffer(framebuffer)
 
-    override fun glIsProgram(program: Int): Boolean = api.glIsProgram(program)
+    override fun glIsProgram(program: Int): Boolean = proxy.glIsProgram(program)
 
-    override fun glIsRenderbuffer(renderbuffer: Int): Boolean = api.glIsRenderbuffer(renderbuffer)
+    override fun glIsRenderbuffer(renderbuffer: Int): Boolean = proxy.glIsRenderbuffer(renderbuffer)
 
-    override fun glIsShader(shader: Int): Boolean = api.glIsShader(shader)
+    override fun glIsShader(shader: Int): Boolean = proxy.glIsShader(shader)
 
-    override fun glIsTexture(texture: Int): Boolean = api.glIsTexture(texture)
+    override fun glIsTexture(texture: Int): Boolean = proxy.glIsTexture(texture)
 
-    override fun glLinkProgram(program: Int) = api.glLinkProgram(program)
+    override fun glLinkProgram(program: Int) = proxy.glLinkProgram(program)
 
-    override fun glReleaseShaderCompiler() = api.glReleaseShaderCompiler()
+    override fun glReleaseShaderCompiler() = proxy.glReleaseShaderCompiler()
 
     override fun glRenderbufferStorage(target: Int, internalformat: Int, width: Int, height: Int) =
-            api.glRenderbufferStorage(target, internalformat, width, height)
+        proxy.glRenderbufferStorage(target, internalformat, width, height)
 
-    override fun glSampleCoverage(value: Float, invert: Boolean) = api.glSampleCoverage(value, invert)
+    override fun glSampleCoverage(value: Float, invert: Boolean) = proxy.glSampleCoverage(value, invert)
 
     override fun glShaderBinary(n: Int, shaders: IntArray, binaryformat: Int, binary: IByteData, length: Int) =
-            api.glShaderBinary(n, shaders, binaryformat, binary, length)
+        proxy.glShaderBinary(n, shaders, binaryformat, binary, length)
 
-    override fun glShaderSource(shader: Int, string: String) = api.glShaderSource(shader, string)
+    override fun glShaderSource(shader: Int, string: String) = proxy.glShaderSource(shader, string)
 
     override fun glStencilFuncSeparate(face: Int, func: Int, ref: Int, mask: Int) =
-            api.glStencilFuncSeparate(face, func, ref, mask)
+        proxy.glStencilFuncSeparate(face, func, ref, mask)
 
-    override fun glStencilMaskSeparate(face: Int, mask: Int) = api.glStencilMaskSeparate(face, mask)
+    override fun glStencilMaskSeparate(face: Int, mask: Int) = proxy.glStencilMaskSeparate(face, mask)
 
     override fun glStencilOpSeparate(face: Int, fail: Int, zfail: Int, zpass: Int) =
-            api.glStencilOpSeparate(face, fail, zfail, zpass)
+        proxy.glStencilOpSeparate(face, fail, zfail, zpass)
 
     override fun glTexParameterfv(target: Int, pname: Int, params: FloatArray) =
-            api.glTexParameterfv(target, pname, params)
+        proxy.glTexParameterfv(target, pname, params)
 
     override fun glTexParameteri(target: Int, pname: Int, param: Int) =
-            api.glTexParameteri(target, pname, param)
+        proxy.glTexParameteri(target, pname, param)
 
     override fun glTexParameteriv(target: Int, pname: Int, params: IntArray) =
-            api.glTexParameteriv(target, pname, params)
+        proxy.glTexParameteriv(target, pname, params)
 
-    override fun glUniform1f(location: Int, x: Float) = api.glUniform1f(location, x)
+    override fun glUniform1f(location: Int, x: Float) = proxy.glUniform1f(location, x)
 
-    override fun glUniform1fv(location: Int, count: Int, v: FloatArray) = api.glUniform1fv(location, count, v)
+    override fun glUniform1fv(location: Int, count: Int, v: FloatArray) = proxy.glUniform1fv(location, count, v)
 
     override fun glUniform1fv(location: Int, count: Int, v: FloatArray, offset: Int) =
-            api.glUniform1fv(location, count, v, offset)
+        proxy.glUniform1fv(location, count, v, offset)
 
-    override fun glUniform1i(location: Int, x: Int) = api.glUniform1i(location, x)
+    override fun glUniform1i(location: Int, x: Int) = proxy.glUniform1i(location, x)
 
     override fun glUniform1iv(location: Int, count: Int, v: IntArray) =
-            api.glUniform1iv(location, count, v)
+        proxy.glUniform1iv(location, count, v)
 
     override fun glUniform1iv(location: Int, count: Int, v: IntArray, offset: Int) =
-            api.glUniform1iv(location, count, v, offset)
+        proxy.glUniform1iv(location, count, v, offset)
 
-    override fun glUniform2f(location: Int, x: Float, y: Float) = api.glUniform2f(location, x, y)
+    override fun glUniform2f(location: Int, x: Float, y: Float) = proxy.glUniform2f(location, x, y)
 
-    override fun glUniform2fv(location: Int, count: Int, v: FloatArray) = api.glUniform2fv(location, count, v)
+    override fun glUniform2fv(location: Int, count: Int, v: FloatArray) = proxy.glUniform2fv(location, count, v)
 
     override fun glUniform2fv(location: Int, count: Int, v: FloatArray, offset: Int) =
-            api.glUniform2fv(location, count, v, offset)
+        proxy.glUniform2fv(location, count, v, offset)
 
-    override fun glUniform2i(location: Int, x: Int, y: Int) = api.glUniform2i(location, x, y)
+    override fun glUniform2i(location: Int, x: Int, y: Int) = proxy.glUniform2i(location, x, y)
 
-    override fun glUniform2iv(location: Int, count: Int, v: IntArray) = api.glUniform2iv(location, count, v)
+    override fun glUniform2iv(location: Int, count: Int, v: IntArray) = proxy.glUniform2iv(location, count, v)
 
     override fun glUniform2iv(location: Int, count: Int, v: IntArray, offset: Int) =
-            api.glUniform2iv(location, count, v, offset)
+        proxy.glUniform2iv(location, count, v, offset)
 
-    override fun glUniform3f(location: Int, x: Float, y: Float, z: Float) = api.glUniform3f(location, x, y, z)
+    override fun glUniform3f(location: Int, x: Float, y: Float, z: Float) = proxy.glUniform3f(location, x, y, z)
 
-    override fun glUniform3fv(location: Int, count: Int, v: FloatArray) = api.glUniform3fv(location, count, v)
+    override fun glUniform3fv(location: Int, count: Int, v: FloatArray) = proxy.glUniform3fv(location, count, v)
 
     override fun glUniform3fv(location: Int, count: Int, v: FloatArray, offset: Int) =
-            api.glUniform3fv(location, count, v, offset)
+        proxy.glUniform3fv(location, count, v, offset)
 
-    override fun glUniform3i(location: Int, x: Int, y: Int, z: Int) = api.glUniform3i(location, x, y, z)
+    override fun glUniform3i(location: Int, x: Int, y: Int, z: Int) = proxy.glUniform3i(location, x, y, z)
 
-    override fun glUniform3iv(location: Int, count: Int, v: IntArray) = api.glUniform3iv(location, count, v)
+    override fun glUniform3iv(location: Int, count: Int, v: IntArray) = proxy.glUniform3iv(location, count, v)
 
     override fun glUniform3iv(location: Int, count: Int, v: IntArray, offset: Int) =
-            api.glUniform3iv(location, count, v, offset)
+        proxy.glUniform3iv(location, count, v, offset)
 
     override fun glUniform4f(location: Int, x: Float, y: Float, z: Float, w: Float) =
-            api.glUniform4f(location, x, y, z, w)
+        proxy.glUniform4f(location, x, y, z, w)
 
-    override fun glUniform4fv(location: Int, count: Int, v: FloatArray) = api.glUniform4fv(location, count, v)
+    override fun glUniform4fv(location: Int, count: Int, v: FloatArray) = proxy.glUniform4fv(location, count, v)
 
     override fun glUniform4fv(location: Int, count: Int, v: FloatArray, offset: Int) =
-            api.glUniform4fv(location, count, v, offset)
+        proxy.glUniform4fv(location, count, v, offset)
 
     override fun glUniform4i(location: Int, x: Int, y: Int, z: Int, w: Int) =
-            api.glUniform4i(location, x, y, z, w)
+        proxy.glUniform4i(location, x, y, z, w)
 
     override fun glUniform4iv(location: Int, count: Int, v: IntArray) =
-            api.glUniform4iv(location, count, v)
+        proxy.glUniform4iv(location, count, v)
 
     override fun glUniform4iv(location: Int, count: Int, v: IntArray, offset: Int) =
-            api.glUniform4iv(location, count, v, offset)
+        proxy.glUniform4iv(location, count, v, offset)
 
     override fun glUniformMatrix2fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix2fv(location, count, transpose, value)
+        proxy.glUniformMatrix2fv(location, count, transpose, value)
 
     override fun glUniformMatrix2fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) =
-            api.glUniformMatrix2fv(location, count, transpose, value, offset)
+        proxy.glUniformMatrix2fv(location, count, transpose, value, offset)
 
     override fun glUniformMatrix3fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix3fv(location, count, transpose, value)
+        proxy.glUniformMatrix3fv(location, count, transpose, value)
 
     override fun glUniformMatrix3fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) =
-            api.glUniformMatrix3fv(location, count, transpose, value, offset)
+        proxy.glUniformMatrix3fv(location, count, transpose, value, offset)
 
     override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) =
-            api.glUniformMatrix4fv(location, count, transpose, value)
+        proxy.glUniformMatrix4fv(location, count, transpose, value)
 
     override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) =
-            api.glUniformMatrix4fv(location, count, transpose, value, offset)
+        proxy.glUniformMatrix4fv(location, count, transpose, value, offset)
 
-    /** GL will check if [shader] is not equal to [program] and then do OpenGL call.
-     * Also you can use [shader] to set program */
-    override fun glUseProgram(program: Int) {
-        shader = program
-    }
+    /** GL will check if [program] is not equal to [program] and then do OpenGL call.
+     * Also you can use [program] to set program */
+    override fun glUseProgram(program: Int) = proxy.glUseProgram(program)
 
-    override fun glValidateProgram(program: Int) = api.glValidateProgram(program)
+    override fun glValidateProgram(program: Int) = proxy.glValidateProgram(program)
 
-    override fun glVertexAttrib1f(indx: Int, x: Float) = api.glVertexAttrib1f(indx, x)
+    override fun glVertexAttrib1f(indx: Int, x: Float) = proxy.glVertexAttrib1f(indx, x)
 
-    override fun glVertexAttrib1fv(indx: Int, values: FloatArray) = api.glVertexAttrib1fv(indx, values)
+    override fun glVertexAttrib1fv(indx: Int, values: FloatArray) = proxy.glVertexAttrib1fv(indx, values)
 
-    override fun glVertexAttrib2f(indx: Int, x: Float, y: Float) = api.glVertexAttrib2f(indx, x, y)
+    override fun glVertexAttrib2f(indx: Int, x: Float, y: Float) = proxy.glVertexAttrib2f(indx, x, y)
 
-    override fun glVertexAttrib2fv(indx: Int, values: FloatArray) = api.glVertexAttrib2fv(indx, values)
+    override fun glVertexAttrib2fv(indx: Int, values: FloatArray) = proxy.glVertexAttrib2fv(indx, values)
 
-    override fun glVertexAttrib3f(indx: Int, x: Float, y: Float, z: Float) = api.glVertexAttrib3f(indx, x, y, z)
+    override fun glVertexAttrib3f(indx: Int, x: Float, y: Float, z: Float) = proxy.glVertexAttrib3f(indx, x, y, z)
 
-    override fun glVertexAttrib3fv(indx: Int, values: FloatArray) = api.glVertexAttrib3fv(indx, values)
+    override fun glVertexAttrib3fv(indx: Int, values: FloatArray) = proxy.glVertexAttrib3fv(indx, values)
 
     override fun glVertexAttrib4f(indx: Int, x: Float, y: Float, z: Float, w: Float) =
-            api.glVertexAttrib4f(indx, x, y, z, w)
+        proxy.glVertexAttrib4f(indx, x, y, z, w)
 
-    override fun glVertexAttrib4fv(indx: Int, values: FloatArray) = api.glVertexAttrib4fv(indx, values)
+    override fun glVertexAttrib4fv(indx: Int, values: FloatArray) = proxy.glVertexAttrib4fv(indx, values)
 
     override fun glVertexAttribPointer(indx: Int, size: Int, type: Int, normalized: Boolean, stride: Int, ptr: IByteData) =
-            api.glVertexAttribPointer(indx, size, type, normalized, stride, ptr)
+        proxy.glVertexAttribPointer(indx, size, type, normalized, stride, ptr)
 
     override fun glVertexAttribPointer(indx: Int, size: Int, type: Int, normalized: Boolean, stride: Int, ptr: Int) =
-            api.glVertexAttribPointer(indx, size, type, normalized, stride, ptr)
-
-
-    /** @param name can be used in debug */
-    class Request(var name: String = "", val call: () -> Unit)
+        proxy.glVertexAttribPointer(indx, size, type, normalized, stride, ptr)
 }

@@ -1,7 +1,7 @@
 package org.ksdfv.thelema.phys.test
 
 import org.intellij.lang.annotations.Language
-import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.app.APP
 import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.cam.OrbitCameraControl
@@ -12,8 +12,8 @@ import org.ksdfv.thelema.lwjgl3.Lwjgl3App
 import org.ksdfv.thelema.lwjgl3.Lwjgl3AppConf
 import org.ksdfv.thelema.math.IVec3
 import org.ksdfv.thelema.math.Vec3
-import org.ksdfv.thelema.mesh.build.BoxMeshBuilder
-import org.ksdfv.thelema.mesh.build.PlaneMeshBuilder
+import org.ksdfv.thelema.mesh.gen.BoxMeshBuilder
+import org.ksdfv.thelema.mesh.gen.PlaneMeshBuilder
 import org.ksdfv.thelema.shader.Shader
 import org.ksdfv.thelema.utils.LOG
 import org.ode4j.ode.*

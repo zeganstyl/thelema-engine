@@ -25,7 +25,7 @@ object MainTeaVMSingleTest {
     @JvmStatic
     fun main(args: Array<String>) {
         TeaVMApp {
-            PHYS.api = OdePhys()
+            PHYS.proxy = OdePhys()
 
             BoxShapeTest().testMain()
         }

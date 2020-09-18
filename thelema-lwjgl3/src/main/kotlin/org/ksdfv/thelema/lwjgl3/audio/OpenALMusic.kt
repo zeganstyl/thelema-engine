@@ -245,11 +245,10 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
     }
 
     companion object {
-        private const val bufferSize = 4096 * 10
-        private const val bufferCount = 3
-        private const val bytesPerSample = 2
+        const val bufferSize = 4096 * 10
+        const val bufferCount = 3
+        const val bytesPerSample = 2
         private val tempBytes = ByteArray(bufferSize)
         private val tempBuffer = BufferUtils.createByteBuffer(bufferSize)
     }
-
 }

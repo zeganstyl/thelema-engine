@@ -16,9 +16,10 @@
 
 package org.ksdfv.thelema.teavm
 
-import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.AppListener
-import org.ksdfv.thelema.IApp
+import org.ksdfv.thelema.app.APP
+import org.ksdfv.thelema.app.AppListener
+import org.ksdfv.thelema.app.Cursor
+import org.ksdfv.thelema.app.IApp
 import org.ksdfv.thelema.audio.AL
 import org.ksdfv.thelema.audio.mock.MockAudio
 import org.ksdfv.thelema.data.DATA
@@ -28,9 +29,10 @@ import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.input.KB
 import org.ksdfv.thelema.input.MOUSE
 import org.ksdfv.thelema.json.JSON
-import org.ksdfv.thelema.json.jsonsimple3.JsonSimple3Api
+import org.ksdfv.thelema.teavm.json.TvmJson
 import org.ksdfv.thelema.utils.LOG
 import org.teavm.jso.browser.Window
+import org.teavm.jso.core.JSDate
 import org.teavm.jso.dom.html.HTMLCanvasElement
 
 /**
@@ -72,19 +74,19 @@ class TeaVMApp(
         get() = ""
         set(_) {}
 
-    override var defaultCursor: Int = APP.ArrowCursor
+    override var defaultCursor: Int = Cursor.Arrow
     override var cursor: Int = defaultCursor
         set(value) {
             field = value
 
             // https://developer.mozilla.org/ru/docs/Web/CSS/cursor
             when (value) {
-                APP.ArrowCursor -> canvas.style.setProperty("cursor", "default")
-                APP.CrosshairCursor -> canvas.style.setProperty("cursor", "crosshair")
-                APP.HandCursor -> canvas.style.setProperty("cursor", "pointer")
-                APP.HorizontalResizeCursor -> canvas.style.setProperty("cursor", "col-resize")
-                APP.VerticalResizeCursor -> canvas.style.setProperty("cursor", "row-resize")
-                APP.IBeamCursor -> canvas.style.setProperty("cursor", "text")
+                Cursor.Arrow -> canvas.style.setProperty("cursor", "default")
+                Cursor.Crosshair -> canvas.style.setProperty("cursor", "crosshair")
+                Cursor.Hand -> canvas.style.setProperty("cursor", "pointer")
+                Cursor.HorizontalResize -> canvas.style.setProperty("cursor", "col-resize")
+                Cursor.VerticalResize -> canvas.style.setProperty("cursor", "row-resize")
+                Cursor.IBeam -> canvas.style.setProperty("cursor", "text")
                 else -> canvas.style.setProperty("cursor", "auto")
             }
         }
@@ -97,8 +99,12 @@ class TeaVMApp(
 
     val listeners = ArrayList<AppListener>()
 
+    override val time: Long
+        get() = JSDate.now().toLong()
+
     init {
-        APP.api = this
+        APP.proxy = this
+        LOG.proxy = TvmLog()
 
         canvas.addEventListener("resize") {
             for (i in listeners.indices) {
@@ -119,8 +125,8 @@ class TeaVMApp(
             }
             frames++
 
-            GL.doSingleCalls()
-            GL.doRenderCalls()
+            GL.runSingleCalls()
+            GL.runRenderCalls()
 
             if (isEnabled) Window.requestAnimationFrame(anim)
         }
@@ -151,16 +157,19 @@ class TeaVMApp(
             }
         }
 
-        GL.api = TvmGL(gl, ver, glslVer = if (ver == 2) 300 else 100)
-        IMG.api = TvmIMG
-        DATA.api = TvmDATA()
-        FS.api = TvmFS()
-        JSON.api = JsonSimple3Api()
-        MOUSE.api = TvmMouse(canvas)
-        KB.api = TvmKB()
-        AL.api = TvmAL()
+        GL.proxy = TvmGL(gl, ver, glslVer = if (ver == 2) 300 else 100)
+        IMG.proxy = TvmIMG
+        DATA.proxy = TvmDATA()
+        FS.proxy = TvmFS()
+        JSON.proxy = TvmJson()
+        MOUSE.proxy = TvmMouse(canvas)
+        KB.proxy = TvmKB()
+        AL.proxy = TvmAL()
 
         if (setViewport) GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
+
+        GL.initGL()
+        GL.runSingleCalls()
 
         startLoop()
     }
@@ -192,6 +201,6 @@ class TeaVMApp(
     override fun destroy() {
         isEnabled = false
         AL.destroy()
-        AL.api = MockAudio()
+        AL.proxy = MockAudio()
     }
 }

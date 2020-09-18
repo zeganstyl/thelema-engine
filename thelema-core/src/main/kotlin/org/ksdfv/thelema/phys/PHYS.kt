@@ -16,11 +16,13 @@
 
 package org.ksdfv.thelema.phys
 
-/** @author zeganstyl */
+import org.ksdfv.thelema.kx.ThreadLocal
+
+@ThreadLocal
 object PHYS: IPhys {
-    lateinit var api: IPhys
+    lateinit var proxy: IPhys
 
-    override fun createWorld() = api.createWorld()
+    override fun world(): IPhysicsWorld = proxy.world()
 
-    override fun destroy() = api.destroy()
+    override fun destroy() = proxy.destroy()
 }

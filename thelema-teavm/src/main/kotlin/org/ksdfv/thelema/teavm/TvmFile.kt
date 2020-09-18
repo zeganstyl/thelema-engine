@@ -17,14 +17,11 @@
 package org.ksdfv.thelema.teavm
 
 import org.ksdfv.thelema.data.IByteData
-import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.fs.IFile
 import org.teavm.jso.ajax.XMLHttpRequest
 import org.teavm.jso.typedarrays.ArrayBuffer
 import org.teavm.jso.typedarrays.Uint8Array
-import java.io.InputStream
-import java.io.OutputStream
 
 /** @author zeganstyl */
 class TvmFile(override val path: String): IFile {
@@ -41,10 +38,7 @@ class TvmFile(override val path: String): IFile {
 
     override fun deleteDirectory(): Boolean = false
 
-    override fun checkAccess(access: Int): Boolean = when (access) {
-        FS.ReadAccess -> true
-        else -> false
-    }
+    override fun checkAccess(access: Int): Boolean = true
 
     override fun child(name: String): IFile =
         TvmFile(if (path.endsWith('/')) path + name else "$path/$name")
@@ -75,32 +69,12 @@ class TvmFile(override val path: String): IFile {
         return TvmFile(path.removeSuffix(name))
     }
 
-    override fun read(): InputStream {
-        TODO("Not yet implemented")
-    }
-
     override fun readText(charset: String, response: (status: Int, text: String) -> Unit) {
         val xhr = XMLHttpRequest.create()
         xhr.open("GET", path, true)
         xhr.onComplete {
             if (xhr.readyState == 4) {
                 response(xhr.status, xhr.responseText)
-            }
-        }
-        xhr.send()
-    }
-
-    override fun readByteData(out: IByteData, response: (status: Int, bytes: IByteData) -> Unit) {
-        val xhr = XMLHttpRequest.create()
-        xhr.open("GET", path, true)
-        xhr.responseType = "arraybuffer"
-        xhr.onComplete {
-            if (xhr.response != null) {
-                val array = Uint8Array.create(xhr.response as ArrayBuffer)
-                for (i in 0 until array.byteLength) {
-                    out.put(array[i].toByte())
-                }
-                response(xhr.status, out)
             }
         }
         xhr.send()
@@ -137,8 +111,6 @@ class TvmFile(override val path: String): IFile {
     override fun sibling(name: String): IFile =
         TvmFile(path.removeSuffix(this.name) + name)
 
-    override fun write(append: Boolean): OutputStream { throw NotImplementedError() }
-    override fun writeBytes(bytes: ByteArray, append: Boolean) {}
     override fun writeBytes(bytes: ByteArray, offset: Int, length: Int, append: Boolean) {}
     override fun writeBytes(bytes: IByteData) {}
     override fun writeText(text: String, append: Boolean, charset: String?) {}

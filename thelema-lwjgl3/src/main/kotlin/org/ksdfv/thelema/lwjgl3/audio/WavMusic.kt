@@ -17,7 +17,6 @@
 package org.ksdfv.thelema.lwjgl3.audio
 
 import org.ksdfv.thelema.fs.IFile
-import org.ksdfv.thelema.utils.StreamUtils
 import java.io.IOException
 
 class WavMusic(audio: OpenAL, file: IFile) : OpenALMusic(audio, file) {
@@ -35,7 +34,7 @@ class WavMusic(audio: OpenAL, file: IFile) : OpenALMusic(audio, file) {
     }
 
     override fun reset() {
-        StreamUtils.closeQuietly(input)
+        input?.close()
         input = null
     }
 

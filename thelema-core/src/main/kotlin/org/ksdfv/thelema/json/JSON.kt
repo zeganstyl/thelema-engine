@@ -16,16 +16,22 @@
 
 package org.ksdfv.thelema.json
 
+import org.ksdfv.thelema.kx.ThreadLocal
+
 /** @author zeganstyl */
+@ThreadLocal
 object JSON: IJSON {
-    lateinit var api: IJSON
+    lateinit var proxy: IJSON
 
-    override fun parseObject(text: String): IJsonObject = api.parseObject(text)
-    override fun parseArray(text: String): IJsonArray = api.parseArray(text)
+    override fun parseObject(text: String): IJsonObject = proxy.parseObject(text)
 
-    override fun printArray(context: IJsonArray.() -> Unit): String = api.printArray(context)
-    override fun printObject(context: IJsonObject.() -> Unit): String = api.printObject(context)
+    override fun parseArray(text: String): IJsonArray = proxy.parseArray(text)
 
-    override fun printObject(json: IJsonObjectIO): String = api.printObject(json)
-    override fun printArray(json: IJsonArrayIO): String = api.printArray(json)
+    override fun printArray(context: IJsonArray.() -> Unit): String = proxy.printArray(context)
+
+    override fun printObject(context: IJsonObject.() -> Unit): String = proxy.printObject(context)
+
+    override fun printObject(json: IJsonObjectIO): String = proxy.printObject(json)
+
+    override fun printArray(json: IJsonArrayIO): String = proxy.printArray(json)
 }

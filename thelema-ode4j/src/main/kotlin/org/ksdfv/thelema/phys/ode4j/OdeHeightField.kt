@@ -24,6 +24,7 @@ import org.ode4j.ode.DHeightfield
 import org.ode4j.ode.OdeHelper
 
 /** http://ode.org/wiki/index.php?title=Manual#Heightfield_Class
+ *
  * @author zeganstyl */
 class OdeHeightField(
     world: OdePhysicsWorld,

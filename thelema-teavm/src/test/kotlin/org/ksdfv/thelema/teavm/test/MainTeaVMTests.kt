@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Anton Trushkov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.ksdfv.thelema.teavm.test
 
 import org.ksdfv.thelema.gl.GL
@@ -7,7 +23,6 @@ import org.ksdfv.thelema.phys.PHYS
 import org.ksdfv.thelema.phys.ode4j.OdePhys
 import org.ksdfv.thelema.teavm.TeaVMApp
 import org.ksdfv.thelema.test.Tests
-import org.ksdfv.thelema.utils.LOG
 import org.teavm.jso.browser.Window
 import org.teavm.jso.dom.html.HTMLButtonElement
 import org.teavm.jso.dom.html.HTMLCanvasElement
@@ -41,11 +56,9 @@ object MainTeaVMTests: Tests() {
 
                 button.addEventListener("click", {
                     if (currentApp == null) {
-                        LOG.collectLogs = true
-
                         val canvas = document.getElementById("canvas") as HTMLCanvasElement
                         currentApp = TeaVMApp(canvas)
-                        PHYS.api = OdePhys()
+                        PHYS.proxy = OdePhys()
                     }
 
                     currentButton?.style?.setProperty("text-decoration", "none")
@@ -54,8 +67,8 @@ object MainTeaVMTests: Tests() {
 
                     KB.reset()
                     MOUSE.reset()
-                    GL.singleCallRequests.clear()
-                    GL.renderCallRequests.clear()
+                    GL.clearSingleCalls()
+                    GL.clearRenderCalls()
 
                     test.testMain()
                 }, false)

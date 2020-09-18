@@ -16,23 +16,32 @@
 
 package org.ksdfv.thelema.audio
 
-import org.ksdfv.thelema.audio.mock.MockAudio
 import org.ksdfv.thelema.fs.IFile
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** @author zeganstyl */
+@ThreadLocal
 object AL: IAL {
-    var api: IAL = MockAudio()
+    lateinit var proxy: IAL
 
     override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice =
-        api.newAudioDevice(samplingRate, channelsNum)
+        proxy.newAudioDevice(samplingRate, channelsNum)
 
-    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean) =
-        api.newAudioRecorder(samplingRate, isMono)
+    override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder =
+        proxy.newAudioRecorder(samplingRate, isMono)
 
-    override fun newSound(file: IFile) = api.newSound(file)
-    override fun newMusic(file: IFile) = api.newMusic(file)
+    override fun newSound(file: IFile): ISound =
+        proxy.newSound(file)
 
-    override fun getVersion(param: Int): String = api.getVersion(param)
+    override fun newMusic(file: IFile): IMusic =
+        proxy.newMusic(file)
 
-    override fun destroy() = api.destroy()
+    override fun getVersion(param: Int): String =
+        proxy.getVersion(param)
+
+    override fun update() =
+        proxy.update()
+
+    override fun destroy() =
+        proxy.destroy()
 }

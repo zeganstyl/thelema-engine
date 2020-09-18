@@ -16,6 +16,7 @@
 
 package org.ksdfv.thelema.lwjgl3
 
+import org.ksdfv.thelema.THELEMA
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.utils.Color
@@ -42,7 +43,7 @@ class Lwjgl3AppConf(
     windowIconPaths: Array<String>? = null,
     windowListener: Lwjgl3WindowListener? = null,
     fullscreenMode: Lwjgl3DisplayMode? = null,
-    title: String = "",
+    title: String = THELEMA.nameVer,
     initialBackgroundColor: IVec4 = Color.BLACK,
     initialVisible: Boolean = true,
     vSyncEnabled: Boolean = true,

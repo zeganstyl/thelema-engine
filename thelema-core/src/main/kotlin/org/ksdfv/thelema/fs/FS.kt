@@ -16,36 +16,27 @@
 
 package org.ksdfv.thelema.fs
 
-import org.ksdfv.thelema.fs.FS.api
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** File system abstraction layer. It is singleton and you can use it anywhere after initialization.
- * If you want multiple APIs, you may switch between them by setting [api].
+ * If you want multiple APIs, you may switch between them by setting.
  * By default used JVM file system implementation.
  * @author zeganstyl */
-object FS: IFS {
-    const val ReadAccess = 0
-    const val WriteAccess = 1
-    const val ListFilesAccess = 2
+@ThreadLocal
+object FS: IFileSystem {
+    const val ReadAccessFlag = 1
+    const val WriteAccessFlag = 2
 
-    lateinit var api: IFS
+    lateinit var proxy: IFileSystem
 
     override val externalStoragePath: String
-        get() = api.externalStoragePath
-
+        get() = proxy.externalStoragePath
     override val isExternalStorageAvailable: Boolean
-        get() = api.isExternalStorageAvailable
-
+        get() = proxy.isExternalStorageAvailable
     override val localStoragePath: String
-        get() = api.localStoragePath
-
+        get() = proxy.localStoragePath
     override val isLocalStorageAvailable: Boolean
-        get() = api.isLocalStorageAvailable
+        get() = proxy.isLocalStorageAvailable
 
-    override fun file(path: String, location: Int) = api.file(path, location)
-    override fun classpath(path: String) = api.classpath(path)
-    override fun internal(path: String) = api.internal(path)
-    override fun external(path: String) = api.external(path)
-    override fun absolute(path: String) = api.absolute(path)
-    override fun local(path: String) = api.local(path)
-
+    override fun file(path: String, location: Int): IFile = proxy.file(path, location)
 }

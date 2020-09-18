@@ -17,10 +17,10 @@
 package org.ksdfv.thelema.g2d
 
 import org.ksdfv.thelema.gl.GL_LINEAR
+import org.ksdfv.thelema.img.ITexture2D
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Vec4
-import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.utils.Color
 import kotlin.math.max
 
@@ -349,8 +349,8 @@ class NinePatch {
             while (i < n) {
                 val vx = (vertices[i] - worldOriginX) * scaleX
                 val vy = (vertices[i + 1] - worldOriginY) * scaleY
-                val cos = MATH.cosDeg(rotation)
-                val sin = MATH.sinDeg(rotation)
+                val cos = MATH.cos(rotation)
+                val sin = MATH.sin(rotation)
                 vertices[i] = cos * vx - sin * vy + worldOriginX
                 vertices[i + 1] = sin * vx + cos * vy + worldOriginY
                 i += 5

@@ -19,6 +19,7 @@ package org.ksdfv.thelema.phys.ode4j
 // https://stackoverflow.com/questions/24262897/integer-pair-add-to-hashset-java
 
 /** Used to handle collisions
+ *
  * @author zeganstyl */
 class BodyContactPair {
     lateinit var a: OdeRigidBody

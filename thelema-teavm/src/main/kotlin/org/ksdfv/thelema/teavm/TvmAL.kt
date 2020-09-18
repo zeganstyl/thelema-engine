@@ -37,6 +37,8 @@ class TvmAL: IAL {
 
     override fun getVersion(param: Int): String = "Web Audio API"
 
+    override fun update() {}
+
     override fun destroy() {
         context.close()
     }

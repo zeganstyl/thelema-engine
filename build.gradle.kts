@@ -4,14 +4,14 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10")
         classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.0")
     }
 }
 
 val thelemaGroup by extra("org.ksdfv.thelema")
-val thelemaVersion by extra("0.4.0")
+val thelemaVersion by extra("0.5.0")
 val gitRepositoryUrl by extra("https://github.com/zeganstyl/thelema-engine")
 
 allprojects {

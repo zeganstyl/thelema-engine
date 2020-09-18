@@ -16,7 +16,7 @@
 
 package org.ksdfv.thelema.lwjgl3.test
 
-import org.ksdfv.thelema.AppListener
+import org.ksdfv.thelema.app.AppListener
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.input.KB
@@ -33,6 +33,7 @@ import java.io.PrintStream
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.border.EmptyBorder
+import kotlin.system.exitProcess
 
 /** @author zeganstyl */
 object MainLwjgl3Tests {
@@ -79,19 +80,18 @@ object MainLwjgl3Tests {
                         Thread {
                             app = Lwjgl3App(Lwjgl3AppConf(
                                 windowWidth = 1280,
-                                windowHeight = 720,
-                                title = "Thelema tests"
+                                windowHeight = 720
                             ).apply {
                                 setWindowIcon("thelema-logo.png", fileLocation = FileLocation.Internal)
                             })
 
                             app?.addListener(object : AppListener {
                                 override fun destroy() {
-                                    //exitProcess(0)
+                                    exitProcess(0)
                                 }
                             })
 
-                            PHYS.api = OdePhys()
+                            PHYS.proxy = OdePhys()
 
                             LOG.info("=== Test: ${test.name} ===")
                             test.testMain()
@@ -105,7 +105,8 @@ object MainLwjgl3Tests {
                         GL.call {
                             KB.reset()
                             MOUSE.reset()
-                            GL.reset()
+                            GL.clearSingleCalls()
+                            GL.clearRenderCalls()
                             LOG.info("=== Test: ${test.name} ===")
                             test.testMain()
                             frame.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)

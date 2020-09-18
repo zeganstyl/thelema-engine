@@ -16,12 +16,12 @@
 
 package org.ksdfv.thelema.jvm
 
-import org.ksdfv.thelema.fs.IFS
+import org.ksdfv.thelema.fs.IFileSystem
 import org.ksdfv.thelema.fs.IFile
 import java.io.File
 
 /** @author zeganstyl */
-class JvmFS: IFS {
+class JvmFS: IFileSystem {
     override val externalStoragePath: String
         get() = externalPath
 

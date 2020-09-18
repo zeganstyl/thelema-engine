@@ -17,14 +17,15 @@
 package org.ksdfv.thelema.g2d
 
 import org.intellij.lang.annotations.Language
-import org.ksdfv.thelema.APP
+import org.ksdfv.thelema.app.APP
+import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.g2d.SpriteBatch.Companion.createDefaultShader
 import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.*
 import org.ksdfv.thelema.mesh.*
 import org.ksdfv.thelema.shader.IShader
 import org.ksdfv.thelema.shader.Shader
-import org.ksdfv.thelema.texture.ITexture2D
+import org.ksdfv.thelema.img.ITexture2D
 import org.ksdfv.thelema.utils.Color
 import kotlin.math.min
 
@@ -40,40 +41,40 @@ import kotlin.math.min
  * @param size The max number of sprites in a single batch. Max of 8191.
  * @param defaultShader The default shader to use. This is not owned by the SpriteBatch and must be disposed separately.
  *
- * @author mzechner
- * @author Nathan Sweet
+ * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
-    val verts = IVertexBuffer.build(
-        size,
+    val verts = MESH.vertexBuffer(
+        DATA.bytes(size * (2 + 4 + 2)),
         VertexInputs(
-            VertexInput(2, "aPosition", GL_FLOAT, false),
-            VertexInput(4, "aColor", GL_UNSIGNED_BYTE, true),
-            VertexInput(2, "aUV", GL_FLOAT, false)
+            VertexInput(2, "POSITION", GL_FLOAT, false),
+            VertexInput(4, "COLOR", GL_UNSIGNED_BYTE, true),
+            VertexInput(2, "UV", GL_FLOAT, false)
         )
-    ) {}
+    )
 
-    val vertices
-        get() = verts.floatBuffer
+    val vertices = verts.bytes.floatView()
 
-    private val mesh = IMesh.Build().apply {
+    private val mesh = MESH.mesh().apply {
         this.vertices = verts
 
-        indices = IndexBufferObject.shortBuffer(ShortArray(size * 6).apply {
-            val len = size * 6
-            var j = 0
-            var i = 0
-            while (i < len) {
-                this[i] = j.toShort()
-                this[i + 1] = (j + 1).toShort()
-                this[i + 2] = (j + 2).toShort()
-                this[i + 3] = (j + 2).toShort()
-                this[i + 4] = (j + 3).toShort()
-                this[i + 5] = this[i]
-                i += 6
-                j += 4
+        indices = MESH.indexBuffer(DATA.bytes(size * 6 * 2).apply {
+            shortView().apply {
+                val len = size * 6
+                var j = 0
+                var i = 0
+                while (i < len) {
+                    this[i] = j.toShort()
+                    this[i + 1] = (j + 1).toShort()
+                    this[i + 2] = (j + 2).toShort()
+                    this[i + 3] = (j + 2).toShort()
+                    this[i + 4] = (j + 3).toShort()
+                    this[i + 5] = this[i]
+                    i += 6
+                    j += 4
+                }
             }
-        })
+        }, GL_UNSIGNED_SHORT)
     }
 
     var idx = 0
@@ -188,8 +189,8 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         var y4: Float
         // rotate
         if (rotation != 0f) {
-            val cos = MATH.cosDeg(rotation)
-            val sin = MATH.sinDeg(rotation)
+            val cos = MATH.cos(rotation)
+            val sin = MATH.sin(rotation)
             x1 = cos * p1x - sin * p1y
             y1 = sin * p1x + cos * p1y
             x2 = cos * p2x - sin * p2y
@@ -518,8 +519,8 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         var y4: Float
         // rotate
         if (rotation != 0f) {
-            val cos = MATH.cosDeg(rotation)
-            val sin = MATH.sinDeg(rotation)
+            val cos = MATH.cos(rotation)
+            val sin = MATH.sin(rotation)
             x1 = cos * p1x - sin * p1y
             y1 = sin * p1x + cos * p1y
             x2 = cos * p2x - sin * p2y
@@ -617,8 +618,8 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         var y4: Float
         // rotate
         if (rotation != 0f) {
-            val cos = MATH.cosDeg(rotation)
-            val sin = MATH.sinDeg(rotation)
+            val cos = MATH.cos(rotation)
+            val sin = MATH.sin(rotation)
             x1 = cos * p1x - sin * p1y
             y1 = sin * p1x + cos * p1y
             x2 = cos * p2x - sin * p2y
@@ -797,7 +798,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
     }
 
     fun dispose() {
-        //mesh.dispose()
+        mesh.destroy()
         if (ownsShader) shader.destroy()
     }
 
@@ -822,18 +823,18 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         fun createDefaultShader(): Shader {
             @Language("GLSL")
             val vertexShader = """
-attribute vec2 aPosition;
-attribute vec4 aColor;
-attribute vec2 aUV;
+attribute vec2 POSITION;
+attribute vec4 COLOR;
+attribute vec2 UV;
 uniform mat4 u_projTrans;
 varying vec4 v_color;
 varying vec2 uv;
 
 void main() {
-    v_color = aColor;
+    v_color = COLOR;
     v_color.a = v_color.a * (255.0/254.0);
-    uv = aUV;
-    gl_Position =  u_projTrans * vec4(aPosition, 0.0, 1.0);
+    uv = UV;
+    gl_Position =  u_projTrans * vec4(POSITION, 0.0, 1.0);
 }"""
 
             @Language("GLSL")

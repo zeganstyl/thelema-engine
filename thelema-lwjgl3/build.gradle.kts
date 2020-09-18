@@ -99,13 +99,8 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets.main.get().allSource)
 }
 
-val dokkaJavadoc by tasks.registering(org.jetbrains.dokka.gradle.DokkaTask::class) {
-    outputFormat = "javadoc"
-    outputDirectory = "$buildDir/javadoc"
-}
-
 val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(dokkaJavadoc)
+    dependsOn(tasks.getByName("dokkaJavadoc"))
     archiveClassifier.set("javadoc")
     from("$buildDir/javadoc")
 }

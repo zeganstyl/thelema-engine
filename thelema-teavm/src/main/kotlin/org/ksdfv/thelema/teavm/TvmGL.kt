@@ -17,11 +17,12 @@
 package org.ksdfv.thelema.teavm
 
 import org.ksdfv.thelema.data.IByteData
-import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.gl.IGL
-import org.ksdfv.thelema.img.IImage
+import org.ksdfv.thelema.data.IFloatData
+import org.ksdfv.thelema.gl.AbstractGL
+import org.ksdfv.thelema.img.IImageData
 import org.teavm.jso.dom.html.HTMLImageElement
 import org.teavm.jso.typedarrays.ArrayBufferView
+import org.teavm.jso.typedarrays.Float32Array
 import org.teavm.jso.webgl.*
 
 /**
@@ -32,7 +33,7 @@ class TvmGL(
     override val majVer: Int = 1,
     override val minVer: Int = 0,
     override val glslVer: Int = 100
-): IGL {
+): AbstractGL() {
     val textures = GLObjectArray<WebGLTexture, TextureWrap> { TextureWrap(it) }
     val programs = GLObjectArray<WebGLProgram, ProgramWrap> { ProgramWrap(it) }
     val buffers = GLObjectArray<WebGLBuffer, BufferWrap> { BufferWrap(it) }
@@ -61,6 +62,50 @@ class TvmGL(
     override val isGLES: Boolean
         get() = true
 
+    override fun glActiveTextureBase(value: Int) {
+        gl.activeTexture(value)
+    }
+
+    override fun glUseProgramBase(value: Int) {
+        gl.useProgram(programs.gl(value))
+    }
+
+    override fun glBindBufferBase(target: Int, buffer: Int) {
+        gl.bindBuffer(target, buffers.gl(buffer))
+    }
+
+    override fun glBindVertexArrayBase(value: Int) {
+        gl.bindVertexArray(vertexArrays.gl(value))
+    }
+
+    override fun glCullFaceBase(value: Int) {
+        gl.cullFace(value)
+    }
+
+    override fun glBlendFuncBase(factorS: Int, factorD: Int) {
+        gl.blendFunc(factorS, factorD)
+    }
+
+    override fun glEnableBase(value: Int) {
+        gl.enable(value)
+    }
+
+    override fun glDisableBase(value: Int) {
+        gl.disable(value)
+    }
+
+    override fun glDepthFuncBase(value: Int) {
+        gl.depthFunc(value)
+    }
+
+    override fun glDepthMaskBase(value: Boolean) {
+        gl.depthMask(value)
+    }
+
+    override fun glBindTextureBase(target: Int, texture: Int) {
+        gl.bindTexture(target, textures.gl(texture))
+    }
+
     override fun isExtensionSupported(extension: String): Boolean =
         gl.supportedExtensionArray?.contains(extension) ?: false
 
@@ -81,18 +126,6 @@ class TvmGL(
 
     override fun glClearColor(red: Float, green: Float, blue: Float, alpha: Float) {
         gl.clearColor(red, green, blue, alpha)
-    }
-
-    override fun glUseProgram(program: Int) {
-        gl.useProgram(programs.gl(program))
-    }
-
-    override fun glCullFace(mode: Int) {
-        gl.cullFace(mode)
-    }
-
-    override fun glActiveTexture(texture: Int) {
-        gl.activeTexture(texture)
     }
 
     override fun glDeleteTexture(texture: Int) {
@@ -140,10 +173,6 @@ class TvmGL(
         } else -1
     }
 
-    override fun glBindTexture(target: Int, texture: Int) {
-        gl.bindTexture(target, textures.gl(texture))
-    }
-
     override fun glTexImage2D(
         target: Int,
         level: Int,
@@ -167,9 +196,9 @@ class TvmGL(
         border: Int,
         format: Int,
         type: Int,
-        image: IImage?
+        image: IImageData
     ) {
-        gl.texImage2D(target, level, internalformat, format, type, image?.sourceObject as HTMLImageElement?)
+        gl.texImage2D(target, level, internalformat, format, type, image.sourceObject as HTMLImageElement)
     }
 
     override fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: Int, level: Int) {
@@ -238,10 +267,6 @@ class TvmGL(
         return gl.getProgramInfoLog(programs.gl(program)) ?: ""
     }
 
-    override fun glBindBuffer(target: Int, buffer: Int) {
-        gl.bindBuffer(target, buffers.gl(buffer))
-    }
-
     override fun glGenBuffer(): Int {
         return buffers.new(gl.createBuffer())
     }
@@ -256,10 +281,6 @@ class TvmGL(
 
     override fun glBufferData(target: Int, size: Int, data: IByteData?, usage: Int) {
         gl.bufferData(target, data?.sourceObject as ArrayBufferView?, usage)
-    }
-
-    override fun glBlendFunc(sfactor: Int, dfactor: Int) {
-        gl.blendFunc(sfactor, dfactor)
     }
 
     override fun glGetIntegerv(pname: Int, params: IntArray) {
@@ -323,7 +344,7 @@ class TvmGL(
     }
 
     private fun uLoc(location: Int) =
-        programs.wrap(GL.shader)?.uniformLocations?.getOrNull(location)?.gl
+        programs.wrap(program)?.uniformLocations?.getOrNull(location)?.gl
 
     override fun glUniform1i(location: Int, x: Int) { gl.uniform1i(uLoc(location), x) }
     override fun glUniform2i(location: Int, x: Int, y: Int) { gl.uniform2i(uLoc(location), x, y) }
@@ -349,6 +370,10 @@ class TvmGL(
 
     override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) {
         gl.uniformMatrix4fv(uLoc(location), transpose, value)
+    }
+
+    override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) {
+        gl.uniformMatrix4fv(uLoc(location), transpose, value.sourceObject as Float32Array)
     }
 
     override fun glIsEnabled(cap: Int): Boolean = gl.isEnabled(cap)
@@ -412,10 +437,6 @@ class TvmGL(
 
     override fun glGenVertexArrays(): Int {
         return vertexArrays.new(gl.createVertexArray())
-    }
-
-    override fun glBindVertexArray(array: Int) {
-        gl.bindVertexArray(vertexArrays.gl(array))
     }
 
     override fun glIsVertexArray(array: Int): Boolean {

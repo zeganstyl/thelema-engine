@@ -1,8 +1,10 @@
 include(
-        "thelema-core",
-        "thelema-core-tests",
-        "thelema-jvm",
-        "thelema-lwjgl3",
-        "thelema-teavm",
-        "thelema-ode4j"
+"thelema-core",
+"thelema-jvm",
+"thelema-lwjgl3",
+"thelema-core-tests",
+"thelema-ode4j",
+"thelema-creator",
+"thelema-teavm"
 )
+include("thelema-kx")

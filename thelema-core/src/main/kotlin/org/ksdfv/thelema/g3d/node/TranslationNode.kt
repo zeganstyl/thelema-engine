@@ -17,6 +17,7 @@
 package org.ksdfv.thelema.g3d.node
 
 import org.ksdfv.thelema.math.*
+import org.ksdfv.thelema.kx.ThreadLocal
 
 /** Translation only node. This node does not store matrices, only vec3 for position
  *
@@ -27,10 +28,10 @@ class TranslationNode: ITransformNode {
     override val position: IVec3 = Vec3()
 
     override val rotation: IVec4
-        get() = IVec4.Zero3One1
+        get() = MATH.Zero3One1
 
     override val scale: IVec3
-        get() = IVec3.One
+        get() = MATH.One3
 
     override val worldMatrix: IMat4
         get() = tmp.setToTranslation(position)
@@ -50,6 +51,7 @@ class TranslationNode: ITransformNode {
 
     override fun copy(): ITransformNode = TranslationNode().set(this)
 
+    @ThreadLocal
     companion object {
         val tmp = Mat4()
     }

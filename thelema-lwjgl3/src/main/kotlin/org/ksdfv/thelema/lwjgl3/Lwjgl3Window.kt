@@ -18,7 +18,7 @@ package org.ksdfv.thelema.lwjgl3
 
 import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.gl.GL
-import org.ksdfv.thelema.img.IImage
+import org.ksdfv.thelema.img.IImageData
 import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.input.KB
 import org.ksdfv.thelema.input.MOUSE
@@ -143,9 +143,9 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
     fun create(windowHandle: Long) {
         this.windowHandle = windowHandle
         mouse = Lwjgl3Mouse(this)
-        MOUSE.api = mouse
+        MOUSE.proxy = mouse
         kb = Lwjgl3KB(this)
-        KB.api = kb
+        KB.proxy = kb
         graphics = Lwjgl3Graphics(this)
         GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback)
         GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback)
@@ -229,7 +229,7 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
      * @param image One or more images. The one closest to the system's desired size will be scaled. Good sizes include
      * 16x16, 32x32 and 48x48. The chosen image is copied, and the provided Pixmaps are not disposed.
      */
-    fun setIcon(vararg image: IImage) {
+    fun setIcon(vararg image: IImageData) {
         Companion.setIcon(windowHandle, image)
     }
 
@@ -276,7 +276,7 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
             }
             frames++
 
-            GL.doRenderCalls()
+            GL.runRenderCalls()
             GLFW.glfwSwapBuffers(windowHandle)
         }
         return shouldRender
@@ -291,8 +291,8 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
     }
 
     fun makeCurrent() {
-        MOUSE.api = mouse
-        KB.api = kb
+        MOUSE.proxy = mouse
+        KB.proxy = kb
         GLFW.glfwMakeContextCurrent(windowHandle)
     }
 
@@ -323,7 +323,7 @@ class Lwjgl3Window(val config: Lwjgl3AppConf) {
             setIcon(windowHandle, pixmaps)
         }
 
-        fun setIcon(windowHandle: Long, images: Array<out IImage>) {
+        fun setIcon(windowHandle: Long, images: Array<out IImageData>) {
             val buffer = GLFWImage.malloc(images.size)
             for (i in images.indices) {
                 val image = images[i]

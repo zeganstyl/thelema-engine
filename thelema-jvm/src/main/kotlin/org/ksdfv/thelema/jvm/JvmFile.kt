@@ -16,16 +16,15 @@
 
 package org.ksdfv.thelema.jvm
 
+import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.data.IByteData
-import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.fs.FileLocation
 import org.ksdfv.thelema.fs.IFile
 import org.ksdfv.thelema.net.NET
-import org.ksdfv.thelema.utils.StreamUtils
 import java.io.*
 import java.nio.ByteBuffer
 
-/** @author mzechner, Nathan Sweet, zeganstyl */
+/** @author Nathan Sweet, zeganstyl */
 class JvmFile(
         val file: File,
         override val location: Int = FileLocation.Absolute
@@ -71,7 +70,7 @@ class JvmFile(
         return JvmFile(parent, location)
     }
 
-    override fun read(): InputStream {
+    fun inputStream(): InputStream {
         return if (location == FileLocation.Classpath || location == FileLocation.Internal && !file.exists() || location == FileLocation.Local && !file.exists()) {
             JvmFile::class.java.getResourceAsStream("/" + file.path.replace('\\', '/')) ?: throw RuntimeException("File not found: ${file.path} ($location)")
         } else try {
@@ -85,15 +84,15 @@ class JvmFile(
     /** Returns a buffered stream for reading this file as bytes.
      * @throws RuntimeException if the file handle represents a directory, doesn't exist, or could not be read.
      */
-    fun read(bufferSize: Int): BufferedInputStream {
-        return BufferedInputStream(read(), bufferSize)
+    fun inputStream(bufferSize: Int): BufferedInputStream {
+        return BufferedInputStream(inputStream(), bufferSize)
     }
 
     override fun readText(charset: String, response: (status: Int, text: String) -> Unit) {
         val output = StringBuilder(estimateLength())
         var reader: InputStreamReader? = null
         try {
-            reader = InputStreamReader(read(), charset)
+            reader = InputStreamReader(inputStream(), charset)
             val buffer = CharArray(256)
             while (true) {
                 val length = reader.read(buffer)
@@ -108,8 +107,26 @@ class JvmFile(
         }
     }
 
+    override fun readByteData(response: (status: Int, data: IByteData) -> Unit) {
+        val stream = inputStream()
+        return try {
+            val length = length().toInt()
+            val data = DATA.bytes(length)
+            var bytesRead: Int
+            while (stream.read(StreamUtils.EMPTY_BYTES).also { bytesRead = it } != -1) {
+                data.put(StreamUtils.EMPTY_BYTES, bytesRead)
+            }
+            data.position = 0
+            response(NET.OK, data)
+        } catch (ex: IOException) {
+            throw RuntimeException("Error reading file: $path", ex)
+        } finally {
+            StreamUtils.closeQuietly(stream)
+        }
+    }
+
     override fun readBytes(response: (status: Int, bytes: ByteArray) -> Unit) {
-        val input = read()
+        val input = inputStream()
         try {
             val bytes = StreamUtils.copyStreamToByteArray(input, estimateLength())
             response(NET.OK, bytes)
@@ -125,25 +142,7 @@ class JvmFile(
         return if (length != 0) length else 512
     }
 
-    override fun readBytes(out: ByteArray, size: Int, offset: Int, response: (status: Int, bytes: ByteArray) -> Unit): Int {
-        val input = read()
-        var position = 0
-        try {
-            while (true) {
-                val count = input.read(out, offset + position, size - position)
-                if (count <= 0) break
-                position += count
-            }
-            response(NET.OK, out)
-        } catch (ex: IOException) {
-            throw RuntimeException("Error reading file: $this", ex)
-        } finally {
-            StreamUtils.closeQuietly(input)
-        }
-        return position - offset
-    }
-
-    override fun write(append: Boolean): OutputStream {
+    fun write(append: Boolean): OutputStream {
         if (location == FileLocation.Classpath) throw RuntimeException("Cannot write to a classpath file: $file")
         if (location == FileLocation.Internal) throw RuntimeException("Cannot write to an internal file: $file")
         parent().mkdirs()
@@ -155,7 +154,7 @@ class JvmFile(
         }
     }
 
-    override fun write(input: InputStream, append: Boolean) {
+    fun write(input: InputStream, append: Boolean) {
         var output: OutputStream? = null
         try {
             output = write(append)
@@ -190,17 +189,6 @@ class JvmFile(
             throw RuntimeException("Error writing file: $file ($location)", ex)
         } finally {
             StreamUtils.closeQuietly(writer)
-        }
-    }
-
-    override fun writeBytes(bytes: ByteArray, append: Boolean) {
-        val output = write(append)
-        try {
-            output.write(bytes)
-        } catch (ex: IOException) {
-            throw RuntimeException("Error writing file: $file ($location)", ex)
-        } finally {
-            StreamUtils.closeQuietly(output)
         }
     }
 
@@ -272,7 +260,7 @@ class JvmFile(
         var dest2 = dest
         if (!isDirectory) {
             if (dest2.isDirectory) dest2 = dest2.child(name)
-            copyFile(this, dest2)
+            copyFile(this, dest2 as JvmFile)
             return
         }
         if (dest2.exists()) {
@@ -281,7 +269,7 @@ class JvmFile(
             dest2.mkdirs()
             if (!dest2.isDirectory) throw RuntimeException("Destination directory cannot be created: $dest2")
         }
-        copyDirectory(this, dest2.child(name))
+        copyDirectory(this, dest2.child(name) as JvmFile)
     }
 
     override fun moveTo(dest: IFile) {
@@ -300,7 +288,7 @@ class JvmFile(
 
     override fun length(): Long {
         if (location == FileLocation.Classpath || location == FileLocation.Internal && !file.exists()) {
-            val input = read()
+            val input = inputStream()
             try {
                 return input.available().toLong()
             } catch (ignored: Exception) {
@@ -314,12 +302,7 @@ class JvmFile(
 
     override fun lastModified(): Long = file.lastModified()
 
-    override fun checkAccess(access: Int): Boolean = when (access) {
-        FS.ReadAccess -> file.canRead()
-        FS.WriteAccess -> file.canWrite()
-        FS.ListFilesAccess -> location != FileLocation.Classpath
-        else -> false
-    }
+    override fun checkAccess(access: Int): Boolean = true
 
     companion object {
         private fun emptyDirectory(file: File, preserveTree: Boolean) {
@@ -341,22 +324,22 @@ class JvmFile(
             return file.delete()
         }
 
-        private fun copyFile(source: IFile, dest: IFile) {
+        private fun copyFile(source: JvmFile, dest: JvmFile) {
             try {
-                dest.write(source.read(), false)
+                dest.write(source.inputStream(), false)
             } catch (ex: Exception) {
                 throw RuntimeException("Error copying source file: ${source.path} (${source.location}) to destination: ${dest.path} (${dest.location})", ex)
             }
         }
 
-        private fun copyDirectory(sourceDir: IFile, destDir: IFile) {
+        private fun copyDirectory(sourceDir: JvmFile, destDir: JvmFile) {
             destDir.mkdirs()
             val files = sourceDir.list()
             var i = 0
             val n = files.size
             while (i < n) {
-                val srcFile = files[i]
-                val destFile = destDir.child(srcFile.name)
+                val srcFile = files[i] as JvmFile
+                val destFile = destDir.child(srcFile.name) as JvmFile
                 if (srcFile.isDirectory) copyDirectory(srcFile, destFile) else copyFile(srcFile, destFile)
                 i++
             }

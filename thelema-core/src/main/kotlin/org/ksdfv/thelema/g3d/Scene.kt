@@ -20,11 +20,10 @@ import org.ksdfv.thelema.g3d.cam.ActiveCamera
 import org.ksdfv.thelema.g3d.light.ILight
 import org.ksdfv.thelema.g3d.node.ITransformNode
 import org.ksdfv.thelema.g3d.node.Node
+import org.ksdfv.thelema.gl.GL
+import org.ksdfv.thelema.kx.ThreadLocal
 import org.ksdfv.thelema.math.Vec3
 import org.ksdfv.thelema.shader.IShader
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 
 /** @author zeganstyl */
 open class Scene(
@@ -37,14 +36,14 @@ open class Scene(
     override var nodes: MutableList<ITransformNode> = ArrayList()
     override var scenes: MutableList<IScene> = ArrayList()
 
-    override var world: IWorld = IWorld.Default
+    override var world: IWorld = World()
 
     var objectSorter: Comparator<IObject3D> = Comparator { o1, o2 ->
         var result = 0
-        o1.node.getPosition(tmpV1, false)
-        o2.node.getPosition(tmpV2, false)
-        val mesh1Priority = o1.meshes.maxBy { it.material.translucentPriority }?.material?.translucentPriority
-        val mesh2Priority = o2.meshes.maxBy { it.material.translucentPriority }?.material?.translucentPriority
+        o1.node.getGlobalPosition(tmpV1)
+        o2.node.getGlobalPosition(tmpV2)
+        val mesh1Priority = o1.meshes.maxByOrNull { it.material.translucentPriority }?.material?.translucentPriority
+        val mesh2Priority = o2.meshes.maxByOrNull { it.material.translucentPriority }?.material?.translucentPriority
         if (mesh1Priority != null && mesh2Priority != null) {
             result = when {
                 mesh1Priority > mesh2Priority -> 1
@@ -60,7 +59,12 @@ open class Scene(
 
     override var shaderChannel: Int = -1
 
-    private var defaultRendering = true
+    val tmpV1 = Vec3()
+    val tmpV2 = Vec3()
+
+    private val objectsToUpdate = HashSet<IObject3D>()
+    private val armaturesToUpdate = HashSet<IArmature>()
+    private val shadersToUpdate = HashSet<IShader>()
 
     override fun updatePreviousTransform() {
         objects.forEach {
@@ -90,7 +94,7 @@ open class Scene(
         scenes.forEach { it.update(delta) }
     }
 
-    private fun prepareShaders(objects: List<IObject3D>) {
+    private fun getShadersToPrepare(objects: List<IObject3D>) {
         val shaderChannel = shaderChannel
         if (shaderChannel == -1) {
             for (i in objects.indices) {
@@ -111,7 +115,6 @@ open class Scene(
                 }
             }
         }
-        shadersToUpdate.forEach { it.prepareSceneData(this) }
     }
 
     override fun render() {
@@ -122,17 +125,20 @@ open class Scene(
         translucent.clear()
         getAllObjects(opaque, translucent)
 
-        prepareShaders(opaque)
-        prepareShaders(translucent)
+        getShadersToPrepare(opaque)
+        getShadersToPrepare(translucent)
+        shadersToUpdate.forEach { it.prepareSceneData(this) }
 
         for (i in opaque.indices) {
+            GL.resetTextureUnitCounter()
             opaque[i].render(shaderChannel)
         }
 
         if (translucent.size > 0) {
-            translucent.sortedWith(objectSorter)
+            translucent.sortWith(objectSorter)
 
             for (i in 0 until translucent.size) {
+                GL.resetTextureUnitCounter()
                 translucent[i].render(shaderChannel)
             }
         }
@@ -197,14 +203,8 @@ open class Scene(
         return newScene
     }
 
+    @ThreadLocal
     companion object {
-        val tmpV1 = Vec3()
-        val tmpV2 = Vec3()
-
-        private val objectsToUpdate = HashSet<IObject3D>()
-        private val armaturesToUpdate = HashSet<IArmature>()
-        private val shadersToUpdate = HashSet<IShader>()
-
         private val opaque = ArrayList<IObject3D>()
         private val translucent = ArrayList<IObject3D>()
     }

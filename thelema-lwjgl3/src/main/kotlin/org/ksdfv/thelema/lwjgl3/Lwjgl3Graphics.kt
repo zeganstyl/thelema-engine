@@ -24,7 +24,7 @@ import kotlin.math.min
 
 
 class Lwjgl3Graphics(val window: Lwjgl3Window) : Graphics {
-    val lwjglGL = LwjglGL()
+    val lwjglGL = Lwjgl3GL()
 
     @Volatile
     override var backBufferWidth = 0

@@ -16,11 +16,11 @@
 
 package org.ksdfv.thelema.g2d
 
+import org.ksdfv.thelema.img.ITexture2D
 import org.ksdfv.thelema.math.IVec4
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Rectangle
 import org.ksdfv.thelema.math.Vec4
-import org.ksdfv.thelema.texture.ITexture2D
 import org.ksdfv.thelema.utils.Color
 import kotlin.math.abs
 
@@ -31,7 +31,7 @@ import kotlin.math.abs
  * bottom left corner of that rectangle. A Sprite also has an origin around which rotations and scaling are performed (that is,
  * the origin is not modified by rotation and scaling). The origin is given relative to the bottom left corner of the Sprite, its
  * position.
- * @author mzechner, Nathan Sweet
+ * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class Sprite : TextureRegion {
     /** Returns the color of this sprite. If the returned instance is manipulated, [setColor] must be called
@@ -49,7 +49,7 @@ open class Sprite : TextureRegion {
         }
 
     val verts = FloatArray(SPRITE_SIZE).apply {
-        val c = Color.toFloatBits(IVec4.One)
+        val c = Color.toFloatBits(1f, 1f, 1f, 1f)
         this[Batch.C1] = c
         this[Batch.C2] = c
         this[Batch.C3] = c
@@ -93,8 +93,8 @@ open class Sprite : TextureRegion {
     /** The origin influences [setPosition], [rotation] and the expansion direction of scaling
      * [setScale]  */
     open var originY = 0f
-    /** the rotation of the sprite in degrees.
-     * Sets the rotation of the sprite in degrees. Rotation is centered on the origin set in [setOrigin] */
+    /** the rotation of the sprite in radians.
+     * Sets the rotation of the sprite in radians. Rotation is centered on the origin set in [setOrigin] */
     var rotation = 0f
         set(value) {
             field = value
@@ -155,7 +155,9 @@ open class Sprite : TextureRegion {
 
     /** Make this sprite a copy in every way of the specified sprite  */
     fun set(sprite: Sprite) {
-        System.arraycopy(sprite.verts, 0, verts, 0, SPRITE_SIZE)
+        for (i in 0 until SPRITE_SIZE) {
+            verts[i] = sprite.verts[i]
+        }
         texture = sprite.texture
         left = sprite.left
         bottom = sprite.bottom
@@ -284,17 +286,6 @@ open class Sprite : TextureRegion {
         vertices[Batch.C4] = color
     }
 
-    /** Sets the color of this sprite, expanding the alpha from 0-254 to 0-255.
-     * See [Color.toFloatBits] */
-    fun setPackedColor(packedColor: Float) {
-        Color.abgr8888ToColor(color, packedColor)
-        val vertices = verts
-        vertices[Batch.C1] = packedColor
-        vertices[Batch.C2] = packedColor
-        vertices[Batch.C3] = packedColor
-        vertices[Batch.C4] = packedColor
-    }
-
     /** Sets the origin in relation to the sprite's position for scaling and rotation.  */
     open fun setOrigin(originX: Float, originY: Float) {
         this.originX = originX
@@ -388,8 +379,8 @@ open class Sprite : TextureRegion {
                 localY2 *= scaleY
             }
             if (rotation != 0f) {
-                val cos = MATH.cosDeg(rotation)
-                val sin = MATH.sinDeg(rotation)
+                val cos = MATH.cos(rotation)
+                val sin = MATH.sin(rotation)
                 val localXCos = localX * cos
                 val localXSin = localX * sin
                 val localYCos = localY * cos

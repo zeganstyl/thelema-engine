@@ -41,7 +41,7 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     private var nextSoundId: Int = 0
     private val recentSounds = ArrayList<OpenALSound?>()
     private var mostRecentSound = -1
-    var music: ArrayList<OpenALMusic> = ArrayList()
+    val music: ArrayList<OpenALMusic> = ArrayList()
     val device: Long = ALC10.alcOpenDevice(null as ByteBuffer?)
     var context: Long
     var noDevice = false
@@ -161,17 +161,22 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         }
     }
 
-    fun update() {
+    override fun update() {
         if (noDevice) return
         if (checkAndValidatePlayingMusic) {
-            music.removeIf {
-                var b = false
-                if (it.removeRequest) {
-                    b = true
-                    it.removeRequest = false
+            tmpMusic.clear()
+            val music = music
+            for (i in music.indices) {
+                val mus = music[i]
+                if (mus.removeRequest) {
+                    tmpMusic.add(mus)
+                    mus.removeRequest = false
                 }
-                b
             }
+            for (i in tmpMusic.indices) {
+                music.remove(tmpMusic[i])
+            }
+            tmpMusic.clear()
             checkAndValidatePlayingMusic = false
         }
         for (i in 0 until music.size) music[i].update()
@@ -313,5 +318,9 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         for (i in 0 until 16) {
             recentSounds.add(null)
         }
+    }
+
+    companion object {
+        val tmpMusic = ArrayList<OpenALMusic>()
     }
 }

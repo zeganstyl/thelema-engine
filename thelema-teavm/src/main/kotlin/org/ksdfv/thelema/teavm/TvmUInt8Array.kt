@@ -30,6 +30,9 @@ class TvmUInt8Array(val byteArray: Uint8Array): IByteData, TvmArrayBufferView<By
 
     override var size: Int = byteArray.length
 
+    override val isAlive: Boolean
+        get() = true
+
     override fun set(index: Int, value: Byte) {
         byteArray[index] = (value.toInt() and 0xFF).toShort()
     }

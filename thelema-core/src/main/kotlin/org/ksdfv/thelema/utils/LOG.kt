@@ -16,39 +16,31 @@
 
 package org.ksdfv.thelema.utils
 
+import org.ksdfv.thelema.kx.ThreadLocal
+
 /** @author zeganstyl */
+@ThreadLocal
 object LOG: ILog {
-    var api: ILog = DefaultLog()
+    lateinit var proxy: ILog
 
     override var infoEnabled: Boolean
-        get() = api.infoEnabled
-        set(value) { api.infoEnabled = value }
+        get() = proxy.infoEnabled
+        set(value) { proxy.infoEnabled = value }
 
     override var debugEnabled: Boolean
-        get() = api.debugEnabled
-        set(value) { api.debugEnabled = value}
+        get() = proxy.debugEnabled
+        set(value) { proxy.debugEnabled = value }
 
     override var errorEnabled: Boolean
-        get() = api.errorEnabled
-        set(value) { api.errorEnabled = value }
-
-    override var collectLogs: Boolean
-        get() = api.collectLogs
-        set(value) { api.collectLogs = value }
-
-    override val logs: MutableList<String>
-        get() = api.logs
+        get() = proxy.errorEnabled
+        set(value) { proxy.errorEnabled = value }
 
     override fun info(message: String, exception: Throwable?, tag: String) =
-        api.info(message, exception, tag)
+        proxy.info(message, exception, tag)
 
     override fun debug(message: String, exception: Throwable?, tag: String) =
-        api.debug(message, exception, tag)
+        proxy.debug(message, exception, tag)
 
     override fun error(message: String, exception: Throwable?, tag: String) =
-        api.error(message, exception, tag)
-
-    override fun info(message: String, tag: String) = api.info(message, tag)
-    override fun debug(message: String, tag: String) = api.debug(message, tag)
-    override fun error(message: String, tag: String) = api.error(message, tag)
+        proxy.error(message, exception, tag)
 }

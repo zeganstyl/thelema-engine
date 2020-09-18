@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -9,37 +7,37 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="32mm"
-   height="32mm"
-   viewBox="0 0 32.000001 32.000001"
-   version="1.1"
-   id="svg8"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
-   sodipodi:docname="thelema-logo.svg"
+   inkscape:export-ydpi="130.048"
+   inkscape:export-xdpi="130.048"
    inkscape:export-filename="/home/q/bitmap.png"
-   inkscape:export-xdpi="65.024002"
-   inkscape:export-ydpi="65.024002">
+   sodipodi:docname="thelema-logo-white.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 100 100"
+   height="100mm"
+   width="100mm">
   <defs
      id="defs2" />
   <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="37.543137"
-     inkscape:cy="56.458977"
-     inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1920"
-     inkscape:window-height="1026"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:document-rotation="0"
      inkscape:window-maximized="1"
-     scale-x="1" />
+     inkscape:window-y="0"
+     inkscape:window-x="0"
+     inkscape:window-height="1026"
+     inkscape:window-width="1920"
+     showgrid="false"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="177.69776"
+     inkscape:cx="126.81796"
+     inkscape:zoom="1.4"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -53,15 +51,19 @@
     </rdf:RDF>
   </metadata>
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
+     transform="translate(0,-197)"
      id="layer1"
-     transform="translate(0,-401)">
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
     <path
-       style="opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.72343957;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       d="m 2.4017935,407.64805 12.0640765,3.44688 1.723439,-6.89376 1.72344,6.89376 12.064077,-3.44688 -12.064077,6.89376 5.170319,3.44688 -5.170319,-1.72344 -1.815564,13.78751 -1.631315,-13.78751 -5.1703183,1.72344 5.1703183,-3.44688 z"
-       id="path817"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="ccccccccccccc" />
+       sodipodi:nodetypes="ccccccc"
+       id="path831"
+       d="m 11.211549,218.93512 38.788452,12.92948 38.788453,-12.92948 -32.323711,25.85897 -6.464742,38.78845 -6.464742,-38.78845 z"
+       style="opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.87885;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:100;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       style="opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.87885;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:100;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 75.85897,251.25883 -25.858969,-6.46474 -25.858968,6.46474 19.394226,-12.92949 6.464742,-25.85896 6.464742,25.85896 z"
+       id="path831-2"
+       sodipodi:nodetypes="ccccccc" />
   </g>
 </svg>

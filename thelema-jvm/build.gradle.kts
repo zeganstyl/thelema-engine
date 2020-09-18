@@ -18,9 +18,6 @@ dependencies {
     api(project(":thelema-core"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
-    // https://mvnrepository.com/artifact/com.esotericsoftware/jsonbeans
-    api("com.esotericsoftware", "jsonbeans", "0.7")
-
     // https://mvnrepository.com/artifact/com.github.cliftonlabs/json-simple
     api("com.github.cliftonlabs", "json-simple", "3.1.1")
 }
@@ -31,13 +28,8 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets.main.get().allSource)
 }
 
-val dokkaJavadoc by tasks.registering(org.jetbrains.dokka.gradle.DokkaTask::class) {
-    outputFormat = "javadoc"
-    outputDirectory = "$buildDir/javadoc"
-}
-
 val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(dokkaJavadoc)
+    dependsOn(tasks.getByName("dokkaJavadoc"))
     archiveClassifier.set("javadoc")
     from("$buildDir/javadoc")
 }

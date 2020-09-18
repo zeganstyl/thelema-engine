@@ -16,17 +16,19 @@
 
 package org.ksdfv.thelema.lwjgl3
 
-import org.ksdfv.thelema.APP
-import org.ksdfv.thelema.AppListener
-import org.ksdfv.thelema.IApp
+import org.ksdfv.thelema.app.APP
+import org.ksdfv.thelema.app.AppListener
+import org.ksdfv.thelema.app.Cursor
+import org.ksdfv.thelema.app.IApp
 import org.ksdfv.thelema.audio.AL
 import org.ksdfv.thelema.data.DATA
 import org.ksdfv.thelema.fs.FS
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.img.IMG
 import org.ksdfv.thelema.json.JSON
-import org.ksdfv.thelema.json.jsonsimple3.JsonSimple3Api
 import org.ksdfv.thelema.jvm.JvmFS
+import org.ksdfv.thelema.jvm.JvmLog
+import org.ksdfv.thelema.jvm.json.JsonSimpleJson
 import org.ksdfv.thelema.lwjgl3.audio.OpenAL
 import org.ksdfv.thelema.utils.LOG
 import org.lwjgl.glfw.GLFW
@@ -67,19 +69,19 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
             GLFW.glfwSetClipboardString(mainWindow.windowHandle, value)
         }
 
-    override var defaultCursor: Int = APP.ArrowCursor
+    override var defaultCursor: Int = Cursor.Arrow
     override var cursor: Int = defaultCursor
         set(value) {
             if (field != value) {
                 field = value
 
                 val glfwCursor: Long = when (value) {
-                    APP.ArrowCursor -> getOrCreateSystemCursor(GLFW.GLFW_ARROW_CURSOR)
-                    APP.CrosshairCursor -> getOrCreateSystemCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
-                    APP.HandCursor -> getOrCreateSystemCursor(GLFW.GLFW_HAND_CURSOR)
-                    APP.HorizontalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_HRESIZE_CURSOR)
-                    APP.VerticalResizeCursor -> getOrCreateSystemCursor(GLFW.GLFW_VRESIZE_CURSOR)
-                    APP.IBeamCursor -> getOrCreateSystemCursor(GLFW.GLFW_IBEAM_CURSOR)
+                    Cursor.Arrow -> getOrCreateSystemCursor(GLFW.GLFW_ARROW_CURSOR)
+                    Cursor.Crosshair -> getOrCreateSystemCursor(GLFW.GLFW_CROSSHAIR_CURSOR)
+                    Cursor.Hand -> getOrCreateSystemCursor(GLFW.GLFW_HAND_CURSOR)
+                    Cursor.HorizontalResize -> getOrCreateSystemCursor(GLFW.GLFW_HRESIZE_CURSOR)
+                    Cursor.VerticalResize -> getOrCreateSystemCursor(GLFW.GLFW_VRESIZE_CURSOR)
+                    Cursor.IBeam -> getOrCreateSystemCursor(GLFW.GLFW_IBEAM_CURSOR)
                     else -> cursorMapping[value]!!
                 }
 
@@ -90,6 +92,9 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
     val cursorMapping = HashMap<Int, Long>()
 
     val listeners = ArrayList<AppListener>()
+
+    override val time: Long
+        get() = System.currentTimeMillis()
 
     override fun addListener(listener: AppListener) {
         listeners.add(listener)
@@ -117,12 +122,9 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
             width = mainWindow.graphics.logicalWidth
             height = mainWindow.graphics.logicalHeight
 
-            GL.doSingleCalls()
+            GL.runSingleCalls()
 
-            val audio = AL.api
-            if (audio is OpenAL) {
-                audio.update()
-            }
+            AL.update()
             closedWindows.clear()
             for (window in windows) {
                 window.makeCurrent()
@@ -362,14 +364,14 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
 
         running = false
 
-        destroySystemCursor(cursorMapping[APP.ArrowCursor])
-        destroySystemCursor(cursorMapping[APP.CrosshairCursor])
-        destroySystemCursor(cursorMapping[APP.HandCursor])
-        destroySystemCursor(cursorMapping[APP.HorizontalResizeCursor])
-        destroySystemCursor(cursorMapping[APP.VerticalResizeCursor])
-        destroySystemCursor(cursorMapping[APP.IBeamCursor])
+        destroySystemCursor(cursorMapping[Cursor.Arrow])
+        destroySystemCursor(cursorMapping[Cursor.Crosshair])
+        destroySystemCursor(cursorMapping[Cursor.Hand])
+        destroySystemCursor(cursorMapping[Cursor.HorizontalResize])
+        destroySystemCursor(cursorMapping[Cursor.VerticalResize])
+        destroySystemCursor(cursorMapping[Cursor.IBeam])
 
-        val audio = AL.api
+        val audio = AL.proxy
         if (audio is OpenAL) {
             audio.destroy()
         }
@@ -383,18 +385,19 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
     }
 
     init {
-        APP.api = this
-        FS.api = JvmFS()
-        JSON.api = JsonSimple3Api()
-        DATA.api = Lwjgl3Data()
-        IMG.api = StbIMG()
+        APP.proxy = this
+        LOG.proxy = JvmLog()
+        FS.proxy = JvmFS()
+        JSON.proxy = JsonSimpleJson()
+        DATA.proxy = Lwjgl3Data()
+        IMG.proxy = STBImg()
 
         initializeGlfw()
 
         this.conf = Lwjgl3AppConf.copy(config)
         if (!config.disableAudio) {
             try {
-                AL.api = OpenAL(config.audioDeviceSimultaneousSources,
+                AL.proxy = OpenAL(config.audioDeviceSimultaneousSources,
                     config.audioDeviceBufferCount, config.audioDeviceBufferSize)
 
             } catch (t: Throwable) {
@@ -407,13 +410,13 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
         width = mainWindow.graphics.logicalWidth
         height = mainWindow.graphics.logicalHeight
 
-        GL.api = mainWindow.graphics.lwjglGL
+        GL.proxy = mainWindow.graphics.lwjglGL
 
         //GLFW.glfwSetCursor(mainWindow.windowHandle, GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR))
 
         GL.initGL()
 
-        GL.doSingleCalls()
+        GL.runSingleCalls()
     }
 
     override fun loadPreferences(name: String): String {

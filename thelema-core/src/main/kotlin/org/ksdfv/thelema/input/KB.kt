@@ -16,12 +16,30 @@
 
 package org.ksdfv.thelema.input
 
+import org.ksdfv.thelema.kx.ThreadLocal
+
 /** Keyboard.
  *
  * @author mzechner, zeganstyl
  */
+@ThreadLocal
 object KB: IKB {
-    lateinit var api: IKB
+    lateinit var proxy: IKB
+
+    override val shift: Boolean
+        get() = proxy.shift
+    override val ctrl: Boolean
+        get() = proxy.ctrl
+    override val alt: Boolean
+        get() = proxy.alt
+
+    override fun isKeyPressed(keycode: Int): Boolean = proxy.isKeyPressed(keycode)
+
+    override fun addListener(listener: IKeyListener) = proxy.addListener(listener)
+
+    override fun removeListener(listener: IKeyListener) = proxy.removeListener(listener)
+
+    override fun reset() = proxy.reset()
 
     const val ANY_KEY = -1
     const val NUM_0 = 7
@@ -201,170 +219,4 @@ object KB: IKB {
     const val F10 = 253
     const val F11 = 254
     const val F12 = 255
-
-    override val shift
-        get() = api.shift
-
-    override val ctrl
-        get() = api.ctrl
-
-    override val alt
-        get() = api.alt
-
-    fun toString(keycode: Int): String {
-        require(keycode >= 0) { "keycode cannot be negative, keycode: $keycode" }
-        require(keycode <= 255) { "keycode cannot be greater than 255, keycode: $keycode" }
-        return when (keycode) {
-            UNKNOWN -> "Unknown"
-            SOFT_LEFT -> "Soft Left"
-            SOFT_RIGHT -> "Soft Right"
-            HOME -> "Home"
-            BACK -> "Back"
-            CALL -> "Call"
-            ENDCALL -> "End Call"
-            NUM_0 -> "0"
-            NUM_1 -> "1"
-            NUM_2 -> "2"
-            NUM_3 -> "3"
-            NUM_4 -> "4"
-            NUM_5 -> "5"
-            NUM_6 -> "6"
-            NUM_7 -> "7"
-            NUM_8 -> "8"
-            NUM_9 -> "9"
-            STAR -> "*"
-            POUND -> "#"
-            UP -> "Up"
-            DOWN -> "Down"
-            LEFT -> "Left"
-            RIGHT -> "Right"
-            CENTER -> "Center"
-            VOLUME_UP -> "Volume Up"
-            VOLUME_DOWN -> "Volume Down"
-            POWER -> "Power"
-            CAMERA -> "Camera"
-            CLEAR -> "Clear"
-            A -> "A"
-            B -> "B"
-            C -> "C"
-            D -> "D"
-            E -> "E"
-            F -> "F"
-            G -> "G"
-            H -> "H"
-            I -> "I"
-            J -> "J"
-            K -> "K"
-            L -> "L"
-            M -> "M"
-            N -> "N"
-            O -> "O"
-            P -> "P"
-            Q -> "Q"
-            R -> "R"
-            S -> "S"
-            T -> "T"
-            U -> "U"
-            V -> "V"
-            W -> "W"
-            X -> "X"
-            Y -> "Y"
-            Z -> "Z"
-            COMMA -> ","
-            PERIOD -> "."
-            ALT_LEFT -> "L-Alt"
-            ALT_RIGHT -> "R-Alt"
-            SHIFT_LEFT -> "L-Shift"
-            SHIFT_RIGHT -> "R-Shift"
-            TAB -> "Tab"
-            SPACE -> "Space"
-            SYM -> "SYM"
-            EXPLORER -> "Explorer"
-            ENVELOPE -> "Envelope"
-            ENTER -> "Enter"
-            DEL -> "Delete" // also BACKSPACE
-            GRAVE -> "`"
-            MINUS -> "-"
-            EQUALS -> "="
-            LEFT_BRACKET -> "["
-            RIGHT_BRACKET -> "]"
-            BACKSLASH -> "\\"
-            SEMICOLON -> ";"
-            APOSTROPHE -> "'"
-            SLASH -> "/"
-            AT -> "@"
-            NUM -> "Num"
-            HEADSETHOOK -> "Headset Hook"
-            FOCUS -> "Focus"
-            PLUS -> "Plus"
-            MENU -> "Menu"
-            NOTIFICATION -> "Notification"
-            SEARCH -> "Search"
-            MEDIA_PLAY_PAUSE -> "Play/Pause"
-            MEDIA_STOP -> "Stop Media"
-            MEDIA_NEXT -> "Next Media"
-            MEDIA_PREVIOUS -> "Prev Media"
-            MEDIA_REWIND -> "Rewind"
-            MEDIA_FAST_FORWARD -> "Fast Forward"
-            MUTE -> "Mute"
-            PAGE_UP -> "Page Up"
-            PAGE_DOWN -> "Page Down"
-            PICTSYMBOLS -> "PICTSYMBOLS"
-            SWITCH_CHARSET -> "SWITCH_CHARSET"
-            BUTTON_A -> "A Button"
-            BUTTON_B -> "B Button"
-            BUTTON_C -> "C Button"
-            BUTTON_X -> "X Button"
-            BUTTON_Y -> "Y Button"
-            BUTTON_Z -> "Z Button"
-            BUTTON_L1 -> "L1 Button"
-            BUTTON_R1 -> "R1 Button"
-            BUTTON_L2 -> "L2 Button"
-            BUTTON_R2 -> "R2 Button"
-            BUTTON_THUMBL -> "Left Thumb"
-            BUTTON_THUMBR -> "Right Thumb"
-            BUTTON_START -> "Start"
-            BUTTON_SELECT -> "Select"
-            BUTTON_MODE -> "Button Mode"
-            FORWARD_DEL -> "Forward Delete"
-            CONTROL_LEFT -> "L-Ctrl"
-            CONTROL_RIGHT -> "R-Ctrl"
-            ESCAPE -> "Escape"
-            END -> "End"
-            INSERT -> "Insert"
-            NUMPAD_0 -> "Numpad 0"
-            NUMPAD_1 -> "Numpad 1"
-            NUMPAD_2 -> "Numpad 2"
-            NUMPAD_3 -> "Numpad 3"
-            NUMPAD_4 -> "Numpad 4"
-            NUMPAD_5 -> "Numpad 5"
-            NUMPAD_6 -> "Numpad 6"
-            NUMPAD_7 -> "Numpad 7"
-            NUMPAD_8 -> "Numpad 8"
-            NUMPAD_9 -> "Numpad 9"
-            COLON -> ":"
-            F1 -> "F1"
-            F2 -> "F2"
-            F3 -> "F3"
-            F4 -> "F4"
-            F5 -> "F5"
-            F6 -> "F6"
-            F7 -> "F7"
-            F8 -> "F8"
-            F9 -> "F9"
-            F10 -> "F10"
-            F11 -> "F11"
-            F12 -> "F12"
-            else ->  // key name not found
-                ""
-        }
-    }
-
-    override fun isKeyPressed(keycode: Int): Boolean = api.isKeyPressed(keycode)
-
-    override fun addListener(listener: IKeyListener) = api.addListener(listener)
-
-    override fun removeListener(listener: IKeyListener) = api.removeListener(listener)
-
-    override fun reset() = api.reset()
 }

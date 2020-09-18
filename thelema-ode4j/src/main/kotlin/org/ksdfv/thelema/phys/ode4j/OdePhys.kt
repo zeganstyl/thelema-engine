@@ -28,7 +28,7 @@ class OdePhys: IPhys {
         OdeHelper.initODE2(0)
     }
 
-    override fun createWorld(): IPhysicsWorld = OdePhysicsWorld()
+    override fun world(): IPhysicsWorld = OdePhysicsWorld()
 
     override fun destroy() {
         OdeHelper.closeODE()

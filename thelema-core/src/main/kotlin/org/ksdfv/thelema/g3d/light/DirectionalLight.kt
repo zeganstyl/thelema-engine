@@ -16,18 +16,19 @@
 
 package org.ksdfv.thelema.g3d.light
 
-import org.ksdfv.thelema.g3d.cam.ActiveCamera
-import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.g3d.IScene
 import org.ksdfv.thelema.g3d.ShaderChannel
+import org.ksdfv.thelema.g3d.cam.ActiveCamera
+import org.ksdfv.thelema.g3d.cam.Camera
 import org.ksdfv.thelema.gl.GL
 import org.ksdfv.thelema.gl.GL_COLOR_BUFFER_BIT
 import org.ksdfv.thelema.gl.GL_DEPTH_BUFFER_BIT
-import org.ksdfv.thelema.math.IMat4
-import org.ksdfv.thelema.math.IVec3
-import org.ksdfv.thelema.math.Mat4
-import org.ksdfv.thelema.math.Vec3
-import org.ksdfv.thelema.texture.*
+import org.ksdfv.thelema.img.Attachments
+import org.ksdfv.thelema.img.FrameBuffer
+import org.ksdfv.thelema.img.IFrameBuffer
+import org.ksdfv.thelema.img.ITexture
+import org.ksdfv.thelema.kx.ThreadLocal
+import org.ksdfv.thelema.math.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -43,11 +44,11 @@ class DirectionalLight(
     override val lightType: Int
         get() = LightType.Directional
 
-    override var shadowMaps: Array<ITexture> = ShadowMapsCap
+    override var shadowMaps: Array<ITexture> = emptyArray()
 
-    override var viewProjectionMatrices: Array<IMat4> = ViewProjectionMatricesCap
+    override var viewProjectionMatrices: Array<IMat4> = emptyArray()
 
-    private var shadowFrameBuffers: Array<IFrameBuffer> = ShadowFrameBuffersCap
+    private var shadowFrameBuffers: Array<IFrameBuffer> = emptyArray()
 
     var shadowCascadesNum = 4
 
@@ -86,8 +87,8 @@ class DirectionalLight(
             val channel = scene.shaderChannel
             scene.shaderChannel = ShaderChannel.Depth
 
-            val tmp = ActiveCamera.api
-            ActiveCamera.api = tmpCam
+            val tmp = ActiveCamera.proxy
+            ActiveCamera.proxy = tmpCam
             tmpCam.direction.set(direction)
             tmpCam.near = 0f
             tmpCam.isOrthographic = true
@@ -123,7 +124,7 @@ class DirectionalLight(
                     var minZ = Float.MAX_VALUE
                     var maxZ = Float.MIN_VALUE
 
-                    lightViewTmp.setToLookAt(centroid, direction, IVec3.Y)
+                    lightViewTmp.setToLook(centroid, direction, MATH.Y)
 
                     for (j in 0 until 8) {
                         val vW = subFrustumPoints[j].mul(lightViewTmp)
@@ -148,7 +149,7 @@ class DirectionalLight(
                     )
 
                     lightPos.set(direction).scl(-maxZ - lightPositionOffset).add(centroid)
-                    lightViewTmp.setToLookAt(lightPos, direction, IVec3.Y)
+                    lightViewTmp.setToLook(lightPos, direction, MATH.Y)
 
                     lightMat.mul(lightViewTmp)
 
@@ -159,7 +160,7 @@ class DirectionalLight(
                 }
             }
 
-            ActiveCamera.api = tmp
+            ActiveCamera.proxy = tmp
 
             scene.shaderChannel = channel
         }
@@ -176,11 +177,8 @@ class DirectionalLight(
 
     override fun copy(): ILight = DirectionalLight().set(this)
 
+    @ThreadLocal
     companion object {
-        val ShadowMapsCap: Array<ITexture> = Array(0) { Texture2D() }
-        val ShadowFrameBuffersCap: Array<IFrameBuffer> = Array(0) { FrameBuffer() }
-        val ViewProjectionMatricesCap: Array<IMat4> = Array(0) { Mat4() }
-
         val lightViewTmp = Mat4()
         val lightPos = Vec3()
         val centroid = Vec3()

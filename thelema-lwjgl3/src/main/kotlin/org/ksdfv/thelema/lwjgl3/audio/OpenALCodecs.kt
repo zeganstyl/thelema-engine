@@ -28,5 +28,8 @@ object OpenALCodecs {
     init {
         sound["wav"] = { audio, file -> WavSound(audio, file) }
         music["wav"] = { audio, file -> WavMusic(audio, file) }
+
+        sound["ogg"] = { audio, file -> OggSound(audio, file) }
+        music["ogg"] = { audio, file -> OggMusic(audio, file) }
     }
 }
