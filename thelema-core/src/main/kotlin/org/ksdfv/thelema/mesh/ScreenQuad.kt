@@ -34,7 +34,7 @@ open class ScreenQuad(
     positionName: String = "POSITION",
     uvName: String = "UV"
 ): IScreenQuad {
-    override val mesh: IMesh = MESH.mesh().apply {
+    override val mesh: IMesh = MSH.mesh().apply {
         primitiveType = GL_TRIANGLE_FAN
 
         val vertexInputs = VertexInputs(
@@ -42,7 +42,7 @@ open class ScreenQuad(
             VertexInput(2, uvName, GL_FLOAT, true)
         )
 
-        vertices = MESH.vertexBuffer(
+        vertices = MSH.vertexBuffer(
             DATA.bytes(16 * 4).apply {
                 floatView().apply {
                     // x, y, z,   u, v

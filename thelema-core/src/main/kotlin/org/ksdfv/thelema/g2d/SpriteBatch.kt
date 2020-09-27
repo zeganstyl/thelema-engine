@@ -44,7 +44,7 @@ import kotlin.math.min
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
-    val verts = MESH.vertexBuffer(
+    val verts = MSH.vertexBuffer(
         DATA.bytes(size * (2 + 4 + 2)),
         VertexInputs(
             VertexInput(2, "POSITION", GL_FLOAT, false),
@@ -55,10 +55,10 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
 
     val vertices = verts.bytes.floatView()
 
-    private val mesh = MESH.mesh().apply {
+    private val mesh = MSH.mesh().apply {
         this.vertices = verts
 
-        indices = MESH.indexBuffer(DATA.bytes(size * 6 * 2).apply {
+        indices = MSH.indexBuffer(DATA.bytes(size * 6 * 2).apply {
             shortView().apply {
                 val len = size * 6
                 var j = 0

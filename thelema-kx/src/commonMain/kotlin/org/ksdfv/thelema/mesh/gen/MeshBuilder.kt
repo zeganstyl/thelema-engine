@@ -50,7 +50,7 @@ open class MeshBuilder {
 
     fun createVertices(verticesNum: Int, block: IByteData.() -> Unit): IVertexBuffer {
         val attributes = createAttributes()
-        return MESH.vertexBuffer(
+        return MSH.vertexBuffer(
             vertexInputs = attributes,
             bytes = DATA.bytes(verticesNum * attributes.bytesPerVertex).apply(block)
         )
@@ -70,7 +70,7 @@ open class MeshBuilder {
             else -> throw IllegalArgumentException()
         }
 
-        return MESH.indexBuffer(
+        return MSH.indexBuffer(
             bytes = DATA.bytes(bytesNum).apply(block), type
         )
     }
@@ -78,7 +78,7 @@ open class MeshBuilder {
     fun createIndicesShort(indicesNum: Int, block: IShortData.() -> Unit) =
         createIndices(indicesNum, GL_UNSIGNED_SHORT) { shortView().apply(block) }
 
-    open fun build(out: IMesh = MESH.mesh()): IMesh {
+    open fun build(out: IMesh = MSH.mesh()): IMesh {
         out.material = material
         return out
     }

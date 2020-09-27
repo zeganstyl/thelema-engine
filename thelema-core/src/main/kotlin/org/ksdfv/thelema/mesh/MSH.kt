@@ -20,7 +20,7 @@ import org.ksdfv.thelema.data.IByteData
 import org.ksdfv.thelema.kx.ThreadLocal
 
 @ThreadLocal
-object MESH: IMeshProvider {
+object MSH: IMeshProvider {
     var proxy: IMeshProvider = object : IMeshProvider{
         override fun mesh(): IMesh = Mesh()
         override fun vertexBuffer(bytes: IByteData, vertexInputs: IVertexInputs, initGpuObjects: Boolean): IVertexBuffer =

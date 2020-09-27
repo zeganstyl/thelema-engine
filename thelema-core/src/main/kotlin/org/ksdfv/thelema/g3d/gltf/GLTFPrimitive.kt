@@ -196,7 +196,7 @@ class GLTFPrimitive(
                     }
                 }
 
-                mesh.vertices = MESH.vertexBuffer(vertexBuffer, vertexInputs, initGpuObjects = false)
+                mesh.vertices = MSH.vertexBuffer(vertexBuffer, vertexInputs, initGpuObjects = false)
 
                 gltf.meshes[meshIndex].primitives.ready(elementIndex)
 

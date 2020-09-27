@@ -23,7 +23,7 @@ import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.math.MATH
 import org.ksdfv.thelema.math.Mat4
 import org.ksdfv.thelema.math.Vec3
-import org.ksdfv.thelema.mesh.MESH
+import org.ksdfv.thelema.mesh.MSH
 import org.ksdfv.thelema.mesh.Mesh
 import org.ksdfv.thelema.mesh.VertexInput
 import org.ksdfv.thelema.mesh.VertexInputs
@@ -42,7 +42,7 @@ class MeshCubeTest: Test {
             VertexInput(3, "POSITION", GL_FLOAT, true)
         )
 
-        mesh.vertices = MESH.vertexBuffer(DATA.bytes(8 * 3 * 4).apply {
+        mesh.vertices = MSH.vertexBuffer(DATA.bytes(8 * 3 * 4).apply {
             floatView().apply {
                 put(
                         // front
@@ -59,7 +59,7 @@ class MeshCubeTest: Test {
             }
         }, vertexInputs)
 
-        mesh.indices = MESH.indexBuffer(DATA.bytes(6 * 6 * 2).apply {
+        mesh.indices = MSH.indexBuffer(DATA.bytes(6 * 6 * 2).apply {
             shortView().apply {
                 put(
                         // front

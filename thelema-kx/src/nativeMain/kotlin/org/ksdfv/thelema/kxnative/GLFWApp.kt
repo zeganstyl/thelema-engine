@@ -201,13 +201,6 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : IApp {
                 closedWindow.destroy()
                 windows.remove(closedWindow)
             }
-
-            memScoped {
-                val time = alloc<timespec>()
-                time.tv_nsec = 1000000L / conf.idleFPS
-                val rem = alloc<timespec>()
-                nanosleep(time.ptr, rem.ptr)
-            }
         }
     }
 

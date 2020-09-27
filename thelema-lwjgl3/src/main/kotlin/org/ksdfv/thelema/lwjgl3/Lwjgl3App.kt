@@ -142,11 +142,6 @@ class Lwjgl3App(config: Lwjgl3AppConf = Lwjgl3AppConf()) : IApp {
                 closedWindow.destroy()
                 windows.remove(closedWindow)
             }
-
-            try {
-                Thread.sleep(1000 / conf.idleFPS.toLong())
-            } catch (e: InterruptedException) { // ignore
-            }
         }
     }
 

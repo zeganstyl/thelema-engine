@@ -23,7 +23,7 @@ import org.ksdfv.thelema.gl.*
 import org.ksdfv.thelema.img.ITexture2D
 import org.ksdfv.thelema.kx.Language
 import org.ksdfv.thelema.math.*
-import org.ksdfv.thelema.mesh.MESH
+import org.ksdfv.thelema.mesh.MSH
 import org.ksdfv.thelema.mesh.VertexInput
 import org.ksdfv.thelema.mesh.VertexInputs
 import org.ksdfv.thelema.shader.IShader
@@ -46,7 +46,7 @@ import kotlin.math.min
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
-    val verts = MESH.vertexBuffer(
+    val verts = MSH.vertexBuffer(
         DATA.bytes(size * (2 + 4 + 2)),
         VertexInputs(
             VertexInput(2, "POSITION", GL_FLOAT, false),
@@ -57,10 +57,10 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
 
     val vertices = verts.bytes.floatView()
 
-    private val mesh = MESH.mesh().apply {
+    private val mesh = MSH.mesh().apply {
         this.vertices = verts
 
-        indices = MESH.indexBuffer(DATA.bytes(size * 6 * 2).apply {
+        indices = MSH.indexBuffer(DATA.bytes(size * 6 * 2).apply {
             shortView().apply {
                 val len = size * 6
                 var j = 0
