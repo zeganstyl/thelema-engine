@@ -1,10 +1,16 @@
-include(
-"thelema-core",
-"thelema-jvm",
-"thelema-lwjgl3",
-"thelema-core-tests",
-"thelema-ode4j",
-"thelema-creator",
-"thelema-teavm"
-)
-include("thelema-kx")
+pluginManagement {
+    repositories {
+        google()
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.namespace == "com.android" || requested.id.name == "kotlin-android-extensions") {
+                useModule("com.android.tools.build:gradle:4.1.1")
+            }
+        }
+    }
+}
+rootProject.name = "thelema"
+include("tests")

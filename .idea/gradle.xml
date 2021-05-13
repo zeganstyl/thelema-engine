@@ -10,14 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/thelema-core" />
-            <option value="$PROJECT_DIR$/thelema-core-tests" />
-            <option value="$PROJECT_DIR$/thelema-creator" />
-            <option value="$PROJECT_DIR$/thelema-jvm" />
-            <option value="$PROJECT_DIR$/thelema-kx" />
-            <option value="$PROJECT_DIR$/thelema-lwjgl3" />
-            <option value="$PROJECT_DIR$/thelema-ode4j" />
-            <option value="$PROJECT_DIR$/thelema-teavm" />
+            <option value="$PROJECT_DIR$/tests" />
           </set>
         </option>
       </GradleProjectSettings>
