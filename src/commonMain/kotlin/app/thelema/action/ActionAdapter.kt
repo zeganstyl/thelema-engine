@@ -27,7 +27,7 @@ abstract class ActionAdapter: IAction {
 
     override var entityOrNull: IEntity? = null
         set(value) {
-            field?.getComponentOrNull<Action>()?.proxy = null
+            field?.componentOrNull<Action>()?.proxy = null
             field = value
             value?.component<Action>()?.proxy = this
         }
@@ -39,7 +39,7 @@ abstract class ActionAdapter: IAction {
     }
 
     inline fun <reified T: IEntityComponent> getContextComponent(): T? =
-        getContext()?.getComponentOrNull()
+        getContext()?.componentOrNull()
 
 
     override fun restart() {
@@ -51,6 +51,6 @@ abstract class ActionAdapter: IAction {
     }
 
     override fun destroy() {
-        entityOrNull?.getComponentOrNull<Action>()?.proxy = null
+        entityOrNull?.componentOrNull<Action>()?.proxy = null
     }
 }

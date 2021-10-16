@@ -17,99 +17,59 @@
 package app.thelema.test.shader.node
 
 import app.thelema.app.APP
-import app.thelema.g3d.Object3D
-import app.thelema.g3d.mesh.PlaneMeshBuilder
-import app.thelema.gltf.GLTFConf
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
+import app.thelema.g3d.material
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.img.GBuffer
 import app.thelema.input.IMouseListener
+import app.thelema.input.BUTTON
+import app.thelema.gltf.GLTF
+import app.thelema.img.renderCurrentScene
 import app.thelema.input.MOUSE
-import app.thelema.gl.TextureRenderer
-import app.thelema.img.render
-import app.thelema.shader.Shader
-import app.thelema.shader.node.CameraDataNode
-import app.thelema.shader.node.GBufferOutputNode
-import app.thelema.shader.node.GLSL
-import app.thelema.shader.node.VertexNode
+import app.thelema.shader.PBRShader
 import app.thelema.shader.post.SSAO
-import app.thelema.test.GLTFModel
-import app.thelema.test.Test
+import app.thelema.test.g3d.gltf.GLTFTestBase
 
 /** @author zeganstyl */
-class SSAOTest: Test {
+class SSAOTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override val name: String
         get() = "SSAO"
 
-    override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer < 3) {
-                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
-                return
-            } else {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
+    override fun loaded(mainScene: IEntity, gltf: GLTF) {
+        super.loaded(mainScene, gltf)
+
+        animate("anim")
+
+        mainScene.entity("plane") {
+            component<PlaneMesh> { setSize(5f) }
+            material {
+                shader = PBRShader(true) {}
             }
         }
+    }
 
-        val conf = GLTFConf().apply {
+    override fun testMain() {
+        GLTF.defaultConf {
             setupGBufferShader = true
             shaderVersion = 330
         }
 
-        val model = GLTFModel(conf = conf)
-
-        val screenQuad = TextureRenderer()
+        super.testMain()
 
         val gBuffer = GBuffer()
 
         val ssao = SSAO(gBuffer.colorMap, gBuffer.normalMap, gBuffer.positionMap)
 
-        model.scene.add(
-            Object3D().apply {
-                addMesh(PlaneMeshBuilder(5f, 5f).apply {
-                    positionName = "POSITION"
-                    material.shader = Shader(version = 330).apply {
-                        val vertexNode = addNode(VertexNode())
-                        vertexNode.positionName = "POSITION"
-                        val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                        addNode(GBufferOutputNode().apply {
-                            vertPosition = cameraDataNode.clipSpacePosition
-                            fragColor = GLSL.oneFloat
-                            fragNormal = vertexNode.normal
-                            fragPosition = cameraDataNode.viewSpacePosition
-                        })
-
-                        build()
-                    }
-                }.build())
-            }
-        )
-
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-
         MOUSE.addListener(object : IMouseListener {
             override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-                ssao.visualizeSsao = !ssao.visualizeSsao
+                if (button == BUTTON.LEFT) ssao.visualizeSsao = !ssao.visualizeSsao
             }
         })
 
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            gBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-                model.update()
-                model.render()
-            }
-
-            ssao.render(screenQuad, null)
+        APP.onRender = {
+            gBuffer.renderCurrentScene()
+            ssao.render(null)
         }
     }
 }

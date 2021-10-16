@@ -22,29 +22,9 @@ import kotlin.native.concurrent.ThreadLocal
  * @author zeganstyl */
 @ThreadLocal
 object GLSL {
-    /** Registered nodes. Key - node class id, node builder function */
-    val nodes = HashMap<String, () -> IShaderNode>()
-
+    val undefined = GLSLFloatInline(0f)
     val zeroFloat = GLSLFloatInline(0f)
     val oneFloat = GLSLFloatInline(1f)
 
     val defaultNormal = GLSLVec3Inline(0.5f, 0.5f, 1f)
-
-    init {
-        nodes[VertexNode.ClassId] = { VertexNode() }
-        nodes[CameraDataNode.ClassId] = { CameraDataNode() }
-        nodes[UVNode.ClassId] = { UVNode() }
-        nodes[OperationNode.ClassId] = { OperationNode() }
-        nodes[OutputNode.ClassId] = { OutputNode() }
-        nodes[TextureNode.ClassId] = { TextureNode() }
-        nodes[NormalMapNode.ClassId] = { NormalMapNode() }
-        nodes[PrincipledBSDF.ClassId] = { PrincipledBSDF() }
-        nodes[ToneMapNode.ClassId] = { ToneMapNode() }
-        nodes[GBufferOutputNode.ClassId] = { GBufferOutputNode() }
-        nodes[SplitVec4Node.ClassId] = { SplitVec4Node() }
-        nodes[MergeVec4.ClassId] = { MergeVec4() }
-        nodes[AttributeNode.ClassId] = { AttributeNode() }
-        nodes[SkyboxVertexNode.ClassId] = { SkyboxVertexNode() }
-        nodes[VelocityNode.ClassId] = { VelocityNode() }
-    }
 }

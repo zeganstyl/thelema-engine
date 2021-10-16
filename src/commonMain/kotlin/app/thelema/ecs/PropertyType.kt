@@ -22,6 +22,7 @@ class PropertyType(override val propertyTypeName: String): IPropertyType {
     companion object {
         val Unknown = PropertyType("thelema/Unknown")
         val String = PropertyType("thelema/String")
+        val StringEnum = PropertyType("thelema/StringEnum")
         val Bool = PropertyType("thelema/Bool")
         val Int = PropertyType("thelema/Int")
         val Float = PropertyType("thelema/Float")
@@ -30,6 +31,6 @@ class PropertyType(override val propertyTypeName: String): IPropertyType {
         val Vec4 = PropertyType("thelema/Vec4")
         val Mat3 = PropertyType("thelema/Mat3")
         val Mat4 = PropertyType("thelema/Mat4")
-        val URI = PropertyType("thelema/URI")
+        val File = PropertyType("thelema/File")
     }
 }

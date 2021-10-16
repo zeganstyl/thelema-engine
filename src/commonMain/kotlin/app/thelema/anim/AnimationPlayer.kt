@@ -16,11 +16,10 @@
 
 package app.thelema.anim
 
-import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.IEntityPrintDetails
-import app.thelema.g3d.node.ITransformNode
+import app.thelema.ecs.mainLoopOnUpdate
+import app.thelema.g3d.ITransformNode
 import app.thelema.math.*
 import app.thelema.utils.LOG
 import app.thelema.utils.Pool
@@ -30,6 +29,10 @@ import app.thelema.utils.Pool
 /** @author Xoppa, zeganstyl */
 class AnimationPlayer: IEntityComponent {
     override var entityOrNull: IEntity? = null
+        set(value) {
+            field = value
+            value?.mainLoopOnUpdate { update(it) }
+        }
 
     override val componentName: String
         get() = "AnimationPlayer"
@@ -65,30 +68,31 @@ class AnimationPlayer: IEntityComponent {
     val blendingRotation = HashMap<ITransformNode, IVec4>()
     val blendingScale = HashMap<ITransformNode, IVec3>()
     val nodes: MutableList<ITransformNode> = ArrayList()
+    val animations: MutableList<IAnimation> = ArrayList()
 
     override fun setComponent(other: IEntityComponent): IEntityComponent {
-        if (other.componentName == componentName && other != this) {
-            other as AnimationPlayer
-
+        if (other is AnimationPlayer && other != this) {
             nodes.clear()
             nodes.addAll(other.nodes)
 
             for (i in other.nodes.indices) {
                 val it = other.nodes[i]
                 val path = other.entity.getRelativePathTo((it as IEntityComponent).entity)
-                val node = entity.getEntityByPath(path)?.getComponentOrNull("TransformNode")
+                val node = entity.getEntityByPath(path)?.componentOrNull("TransformNode")
                 if (node != null) {
                     nodes[i] = node as ITransformNode
                 } else {
                     LOG.error("AnimPlayer: can't link node ${it.entityOrNull?.name} by path: $path")
                 }
             }
+
+            animations.clear()
+            animations.addAll(other.animations)
         }
         return this
     }
 
-    private fun obtain(animation: IAnimation?, offset: Float, duration: Float, loopCount: Int, speed: Float): AnimationAction? {
-        if (animation == null) return null
+    private fun obtain(animation: IAnimation, offset: Float, duration: Float, loopCount: Int, speed: Float): AnimationAction {
         val result = animationPool.get()
         result.animation = animation
         result.loopCount = loopCount
@@ -99,7 +103,7 @@ class AnimationPlayer: IEntityComponent {
         return result
     }
 
-    private fun obtain(animation: AnimationAction) = obtain(animation.animation, animation.offset, animation.duration, animation.loopCount, animation.speed)
+    private fun obtain(animation: AnimationAction) = obtain(animation.animation!!, animation.offset, animation.duration, animation.loopCount, animation.speed)
 
     /** Update any animations currently being played.
      * @param delta The time elapsed since last update, change this to alter the overall speed (can be negative).
@@ -173,12 +177,26 @@ class AnimationPlayer: IEntityComponent {
         offset: Float = 0f
     ) = setAnimation(obtain(animation, offset, duration, loopCount, speed))
 
+    fun getAnimation(name: String): IAnimation =
+        animations.firstOrNull { it.entityOrNull?.name == name } ?: throw IllegalArgumentException("AnimationPlayer: animation \"$name\" is not found")
+
+    fun getAnimationOrNull(name: String) =
+        animations.firstOrNull { it.entityOrNull?.name == name }
+
+    fun setAnimation(
+        name: String,
+        loopCount: Int = -1,
+        speed: Float = 1f,
+        duration: Float = -1f,
+        offset: Float = 0f
+    ): AnimationAction = setAnimation(obtain(getAnimation(name), offset, duration, loopCount, speed))
+
     /** Set the active animation, replacing any current animation.  */
-    fun setAnimation(animation: AnimationAction?): AnimationAction? {
+    fun setAnimation(animation: AnimationAction): AnimationAction {
         if (current == null)
             current = animation
         else {
-            if (!allowSameAnimation && animation != null && current!!.animation === animation.animation)
+            if (!allowSameAnimation && current!!.animation === animation.animation)
                 animation.time = current!!.time
             animationPool.free(current!!)
             current = animation
@@ -200,7 +218,7 @@ class AnimationPlayer: IEntityComponent {
      */
     fun animate(
         animation: IAnimation,
-        transitionTime: Float,
+        transitionTime: Float = 0.1f,
         offset: Float = 0f,
         duration: Float = -1f,
         loopCount: Int = 1,
@@ -243,7 +261,7 @@ class AnimationPlayer: IEntityComponent {
      */
     fun queue(
         animation: IAnimation,
-        transitionTime: Float,
+        transitionTime: Float = 0.1f,
         offset: Float = 0f,
         duration: Float = -1f,
         loopCount: Int = 1,
@@ -276,12 +294,21 @@ class AnimationPlayer: IEntityComponent {
      */
     fun action(
         animation: IAnimation,
-        transitionTime: Float,
+        transitionTime: Float = 0.1f,
         offset: Float = 0f,
         duration: Float = -1f,
         loopCount: Int = 1,
         speed: Float = 1f
-    ) = action(obtain(animation, offset, duration, loopCount, speed)!!, transitionTime)
+    ) = action(obtain(animation, offset, duration, loopCount, speed), transitionTime)
+
+    fun action(
+        name: String,
+        transitionTime: Float = 0.1f,
+        offset: Float = 0f,
+        duration: Float = -1f,
+        loopCount: Int = 1,
+        speed: Float = 1f
+    ) = action(getAnimation(name), transitionTime, offset, duration, loopCount, speed)
 
     /** Apply an action animation on top of the current animation.  */
     private fun action(animation: AnimationAction, transitionTime: Float): AnimationAction {

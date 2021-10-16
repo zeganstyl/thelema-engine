@@ -51,6 +51,14 @@ class GLStub: AbstractGL() {
     override fun glDepthFuncBase(value: Int) {}
     override fun glDepthMaskBase(value: Boolean) {}
     override fun glBindTextureBase(target: Int, texture: Int) {}
+    override fun glGenBufferBase(): Int = 1
+    override fun glGenFrameBufferBase(): Int = 1
+    override fun glGenRenderBufferBase(): Int = 1
+    override fun glGenTextureBase(): Int = 1
+    override fun glDeleteTextureBase(id: Int) {}
+    override fun glDeleteBufferBase(id: Int) {}
+    override fun glDeleteFrameBufferBase(id: Int) {}
+    override fun glDeleteRenderBufferBase(id: Int) {}
     override fun glDeleteVertexArrays(id: Int) {}
     override fun glGenVertexArrays(): Int = 1
     override fun glDrawArraysInstanced(mode: Int, first: Int, count: Int, instanceCount: Int) {}

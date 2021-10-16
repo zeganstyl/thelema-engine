@@ -35,7 +35,9 @@ interface IFrameBufferAttachment {
     val isRenderBuffer
         get() = target == GL_RENDERBUFFER
 
-    val texture: ITexture?
+    var texture: ITexture?
+
+    val mipmapLevel: Int
 
     /** Setup this attachment for frame buffer */
     fun setup(frameBuffer: IFrameBuffer)

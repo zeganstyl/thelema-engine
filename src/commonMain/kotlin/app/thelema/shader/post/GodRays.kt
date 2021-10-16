@@ -21,7 +21,7 @@ import app.thelema.g3d.cam.ICamera
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.math.Vec3
-import app.thelema.gl.IMesh
+import app.thelema.gl.ScreenQuad
 
 class GodRays: PostShader(
     fragCode = """
@@ -81,10 +81,13 @@ void main() {
 ) {
     val screenSpaceLightPos = Vec3()
 
+    /** This texture must contain pixels, that must emitting light shafts. */
+    var occlusionMap: ITexture? = null
+
     init {
         bind()
-        this["occlusionTexture"] = 0
-        this["sceneTexture"] = 1
+        this["sceneTexture"] = 0
+        this["occlusionTexture"] = 1
     }
 
     /** Light position is a point from which rays will be emitted.
@@ -103,16 +106,10 @@ void main() {
         set("screenSpaceLightPos", screenSpaceLightPos.x, screenSpaceLightPos.y)
     }
 
-    /**
-     * @param sceneColorMap contains whole scene rendered as normal
-     * @param occlusionTexture this texture must contain pixels, that must emitting light shafts.
-     * You can render a mesh representing the light onto this texture.
-     * */
-    fun render(screenQuad: IMesh, sceneColorMap: ITexture, occlusionTexture: ITexture, out: IFrameBuffer? = null) {
+    override fun render(inputMap: ITexture, out: IFrameBuffer?) {
         bind()
-        occlusionTexture.bind(0)
-        sceneColorMap.bind(1)
-        //screenQuad.render(this, out)
-        renderScreenQuad(screenQuad, out)
+        inputMap.bind(0)
+        (occlusionMap ?: throw IllegalStateException("GodRays: occlusionMap must be set")).bind(1)
+        ScreenQuad.render(this, out)
     }
 }

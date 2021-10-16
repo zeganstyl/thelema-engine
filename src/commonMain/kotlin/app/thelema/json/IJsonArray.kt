@@ -27,10 +27,10 @@ interface IJsonArray {
 
     fun obj(index: Int): IJsonObject
     fun objOrNull(index: Int): IJsonObject? = if (index in 0 until size) obj(index) else null
-    fun obj(index: Int, call: IJsonObject.() -> Unit): IJsonObject? = objOrNull(index)?.apply(call)
+    fun obj(index: Int, block: IJsonObject.() -> Unit): IJsonObject? = objOrNull(index)?.apply(block)
     fun array(index: Int): IJsonArray
     fun arrayOrNull(index: Int): IJsonArray? = if (index in 0 until size) array(index) else null
-    fun array(index: Int, call: IJsonArray.() -> Unit): IJsonArray? = arrayOrNull(index)?.apply(call)
+    fun array(index: Int, block: IJsonArray.() -> Unit): IJsonArray? = arrayOrNull(index)?.apply(block)
     fun string(index: Int): String
     fun float(index: Int): Float
     fun int(index: Int): Int
@@ -41,56 +41,56 @@ interface IJsonArray {
     fun int(index: Int, default: Int) = if (index in 0 until size) int(index) else default
     fun bool(index: Int, default: Boolean) = if (index in 0 until size) bool(index) else default
 
-    /** If [index] is not less than size, [call] will be called */
-    fun string(index: Int, call: (value: String) -> Unit) { if (index < size) call(string(index)) }
-    /** If [index] is not less than size, [call] will be called */
-    fun float(index: Int, call: (value: Float) -> Unit) { if (index < size) call(float(index)) }
-    /** If [index] is not less than size, [call] will be called */
-    fun int(index: Int, call: (value: Int) -> Unit) { if (index < size) call(int(index)) }
-    /** If [index] is not less than size, [call] will be called */
-    fun bool(index: Int, call: (value: Boolean) -> Unit) { if (index < size) call(bool(index)) }
+    /** If [index] is not less than size, [block] will be called */
+    fun string(index: Int, block: (value: String) -> Unit) { if (index < size) block(string(index)) }
+    /** If [index] is not less than size, [block] will be called */
+    fun float(index: Int, block: (value: Float) -> Unit) { if (index < size) block(float(index)) }
+    /** If [index] is not less than size, [block] will be called */
+    fun int(index: Int, block: (value: Int) -> Unit) { if (index < size) block(int(index)) }
+    /** If [index] is not less than size, [block] will be called */
+    fun bool(index: Int, block: (value: Boolean) -> Unit) { if (index < size) block(bool(index)) }
 
-    fun objs(call: IJsonObject.() -> Unit) {
+    fun forEachObject(block: IJsonObject.() -> Unit) {
         for (i in 0 until size) {
-            call(obj(i))
+            block(obj(i))
         }
     }
 
-    fun arrays(call: IJsonArray.() -> Unit) {
+    fun forEachArray(block: IJsonArray.() -> Unit) {
         for (i in 0 until size) {
-            call(array(i))
+            block(array(i))
         }
     }
 
-    fun ints(call: (value: Int) -> Unit) {
+    fun forEachInt(block: (value: Int) -> Unit) {
         for (i in 0 until size) {
-            call(int(i))
+            block(int(i))
         }
     }
 
-    fun strings(call: (value: String) -> Unit) {
+    fun forEachString(block: (value: String) -> Unit) {
         for (i in 0 until size) {
-            call(string(i))
+            block(string(i))
         }
     }
 
-    fun bools(call: (value: Boolean) -> Unit) {
+    fun forEachBool(block: (value: Boolean) -> Unit) {
         for (i in 0 until size) {
-            call(bool(i))
+            block(bool(i))
         }
     }
 
-    fun floats(call: (value: Float) -> Unit) {
+    fun forEachFloat(block: (value: Float) -> Unit) {
         for (i in 0 until size) {
-            call(float(i))
+            block(float(i))
         }
     }
 
     /** Get child JSON-object
-     * @param call will be called if object exists */
-    fun get(index: Int, call: IJsonObject.() -> Unit): IJsonObject? {
+     * @param block will be called if object exists */
+    fun get(index: Int, block: IJsonObject.() -> Unit): IJsonObject? {
         val json = objOrNull(index)
-        if (json != null) call(json)
+        if (json != null) block(json)
         return json
     }
 

@@ -17,6 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.Blending
+import app.thelema.g3d.IScene
 import app.thelema.gl.GL
 import app.thelema.gl.GL_BACK
 import app.thelema.img.GBuffer
@@ -25,15 +26,11 @@ import app.thelema.gl.IMesh
 
 /** For using with [GBuffer]
  * @author zeganstyl */
-class GBufferOutputNode: ShaderNode() {
+class GBufferOutputNode(): ShaderNode() {
+    constructor(block: GBufferOutputNode.() -> Unit): this() { block(this) }
+
     override val name: String
         get() = "G-Buffer Output"
-
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
 
     /** Clip space vertex position */
     var vertPosition
@@ -80,11 +77,11 @@ class GBufferOutputNode: ShaderNode() {
         out.append("layout (location = 2) out vec4 gPosition;\n")
     }
 
-    override fun prepareToDrawMesh(mesh: IMesh) {
-        super.prepareToDrawMesh(mesh)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
         GL.isBlendingEnabled = alphaMode == Blending.BLEND
-        if (GL.isBlendingEnabled) GL.setSimpleAlphaBlending()
+        if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
         GL.isCullFaceEnabled = GL.cullFaceMode == 0
         if (GL.isCullFaceEnabled) GL.cullFaceMode = cullFaceMode
     }
@@ -105,18 +102,9 @@ class GBufferOutputNode: ShaderNode() {
     }
 
     companion object {
-        const val ClassId = "gBufferOutput"
-
         const val VertPosition = "vertPosition"
         const val FragColor = "fragColor"
         const val FragNormal = "fragNormal"
         const val FragPosition = "fragPosition"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(VertPosition, GLSLType.Vec4)
-            put(FragColor, GLSLType.Vec4)
-            put(FragNormal, GLSLType.Vec4)
-            put(FragPosition, GLSLType.Vec4)
-        }
     }
 }

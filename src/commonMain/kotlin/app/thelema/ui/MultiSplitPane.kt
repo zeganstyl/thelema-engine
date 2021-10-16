@@ -21,6 +21,7 @@ import app.thelema.math.IRectangle
 import app.thelema.math.MATH
 import app.thelema.math.Rectangle
 import app.thelema.math.Vec2
+import app.thelema.utils.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -32,11 +33,11 @@ import kotlin.math.min
  */
 class MultiSplitPane(
         private var vertical: Boolean,
-        style: SplitPane.Style = SplitPane.Style.default("default-" + if (vertical) "vertical" else "horizontal")
+        style: SplitPaneStyle = SplitPaneStyle()
 ) : WidgetGroup() {
     constructor(
         vertical: Boolean,
-        style: SplitPane.Style = SplitPane.Style.default("default-" + if (vertical) "vertical" else "horizontal"),
+        style: SplitPaneStyle = SplitPaneStyle(),
         block: MultiSplitPane.() -> Unit
     ): this(vertical, style) {
         block(this)
@@ -46,7 +47,7 @@ class MultiSplitPane(
      * Returns the split pane's style. Modifying the returned style may not have an effect until [setStyle]
      * is called.
      */
-    var style: SplitPane.Style? = null
+    var style: SplitPaneStyle? = null
         set(style) {
             field = style
             invalidateHierarchy()
@@ -93,7 +94,7 @@ class MultiSplitPane(
                 val containingHandle = getHandleContaining(x, y)
                 if (containingHandle != null) {
                     handleOverIndex = handleBounds.indexOf(containingHandle)
-                    FocusManager.resetFocus(stage)
+                    FocusManager.resetFocus(headUpDisplay)
 
                     draggingPointer = pointer
                     lastPoint.set(x, y)
@@ -119,7 +120,7 @@ class MultiSplitPane(
                 val handle = this@MultiSplitPane.style!!.handle
                 if (!vertical) {
                     val delta = x - lastPoint.x
-                    val availWidth = width - handle.minWidth
+                    val availWidth = width - (handle?.minWidth ?: 0f)
                     var dragX = handlePosition.x + delta
                     handlePosition.x = dragX
                     dragX = max(0f, dragX)
@@ -129,7 +130,7 @@ class MultiSplitPane(
                     lastPoint.set(x, y)
                 } else {
                     val delta = y - lastPoint.y
-                    val availHeight = height - handle.minHeight
+                    val availHeight = height - (handle?.minHeight ?: 0f)
                     var dragY = handlePosition.y + delta
                     handlePosition.y = dragY
                     dragY = max(0f, dragY)
@@ -169,7 +170,7 @@ class MultiSplitPane(
             for (actor in children) {
                 width = if (actor is Layout) (actor as Layout).prefWidth else actor.width
             }
-            if (!vertical) width += handleBounds.size * this.style!!.handle.minWidth
+            if (!vertical) width += handleBounds.size * (this.style?.handle?.minWidth ?: 0f)
             return width
         }
 
@@ -180,7 +181,7 @@ class MultiSplitPane(
                 height = if (actor is Layout) (actor as Layout).prefHeight else actor.height
 
             }
-            if (vertical) height += handleBounds.size * this.style!!.handle.minHeight
+            if (vertical) height += handleBounds.size * (this.style?.handle?.minHeight ?: 0f)
             return height
         }
 
@@ -197,7 +198,7 @@ class MultiSplitPane(
     private fun calculateHorizBoundsAndPositions() {
         val height = height
         val width = width
-        val handleWidth = this.style!!.handle.minWidth
+        val handleWidth = this.style?.handle?.minWidth ?: 0f
 
         val availWidth = width - handleBounds.size * handleWidth
 
@@ -218,7 +219,7 @@ class MultiSplitPane(
     private fun calculateVertBoundsAndPositions() {
         val width = width
         val height = height
-        val handleHeight = this.style!!.handle.minHeight
+        val handleHeight = this.style?.handle?.minHeight ?: 0f
 
         val availHeight = height - handleBounds.size * handleHeight
 
@@ -248,19 +249,19 @@ class MultiSplitPane(
             val actor = actors[i]
             val bounds = widgetBounds[i]
             val scissor = scissors[i]
-            stage?.calculateScissors(bounds.x, bounds.y, bounds.width, bounds.height, scissor)
+            headUpDisplay?.calculateScissors(bounds.x, bounds.y, bounds.width, bounds.height, scissor)
             if (ScissorStack.pushScissors(scissor)) {
-                if (actor.isVisible) actor.draw(batch, parentAlpha * color.a)
+                if (actor.isVisible) actor.draw(batch, parentAlpha * Color.getAlpha(color))
                 batch.flush()
                 ScissorStack.popScissors()
             }
         }
 
-        batch.setColor(color.r, color.g, color.b, parentAlpha * color.a)
+        batch.setMulAlpha(color, parentAlpha)
 
         val handle = this.style!!.handle
         handleBounds.forEach {
-            handle.draw(batch, it.x, it.y, it.width, it.height)
+            handle?.draw(batch, it.x, it.y, it.width, it.height)
         }
         resetTransform(batch)
     }

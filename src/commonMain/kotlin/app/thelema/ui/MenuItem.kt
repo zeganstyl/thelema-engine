@@ -86,7 +86,7 @@ class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextB
     }
 
     fun showSubMenu() {
-        val stage = stage!!
+        val stage = headUpDisplay!!
         val subMenu = subMenu!!
         val pos = localToStageCoordinates(tmpVector.set(0f, 0f))
         val availableSpaceLeft = pos.x
@@ -132,10 +132,10 @@ class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextB
         return this
     }
 
-    override var stage: Stage?
-        get() = super.stage
+    override var headUpDisplay: HeadUpDisplay?
+        get() = super.headUpDisplay
         set(value) {
-            super.stage = value
+            super.headUpDisplay = value
             label.invalidate() //fixes issue with disappearing menu item after holding right mouse button and dragging down while opening menu
         }
 

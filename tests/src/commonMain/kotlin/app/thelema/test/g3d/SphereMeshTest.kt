@@ -18,6 +18,7 @@ package app.thelema.test.g3d
 
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.SphereMesh
 import app.thelema.gl.GL
 import app.thelema.math.MATH
@@ -34,22 +35,18 @@ class SphereMeshTest: Test {
     override fun testMain() {
         val sphere = SphereMesh { setSize(2f) }
 
-        val shader = SimpleShader3D {
-            positionName = sphere.builder.positionName
-            uvName = sphere.builder.uvName
-            renderAttributeName = uvName
-            worldMatrix = Mat4()
-        }
+        val shader = SimpleShader3D()
 
         ActiveCamera {
             lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
             updateCamera()
         }
 
-        APP.onRender = {
-            GL.glClear()
+        val control = OrbitCameraControl()
 
-            shader.worldMatrix?.rotate(1f, 1f, 0f, APP.deltaTime)
+        APP.onRender = {
+            control.update()
+            ActiveCamera.updateCamera()
 
             shader.render(sphere.mesh)
         }

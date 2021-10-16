@@ -16,10 +16,7 @@
 
 package app.thelema.action
 
-import app.thelema.ecs.Entity
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.getComponentOrNull
+import app.thelema.ecs.*
 
 /** @author zeganstyl */
 interface IAction: IEntityComponent {
@@ -43,16 +40,19 @@ interface IAction: IEntityComponent {
     fun update(delta: Float): Float
 
     fun getContext(): IEntity? =
-        entityOrNull?.parentEntity?.getComponentOrNull<IAction>()?.getContext()
+        entityOrNull?.parentEntity?.componentOrNull<IAction>()?.getContext()
 
     fun <T: IAction> action(actionComponentName: String, entityName: String? = null, block: T.() -> Unit): T {
         return if (entityName == null) {
             val child = Entity()
             child.name = actionComponentName
-            getOrCreateEntity().addEntityWithCorrectedName(child)
+            getOrCreateEntity().addEntity(child)
             child.componentTyped<T>(actionComponentName).apply(block)
         } else {
             getOrCreateEntity().entity(entityName).componentTyped<T>(actionComponentName).apply(block)
         }
     }
 }
+
+fun IEntity.action(block: IAction.() -> Unit) = component(block)
+fun IEntity.action() = component<IAction>()

@@ -19,24 +19,22 @@ package app.thelema.ui
 /** The style for a progress bar, see [ProgressBar].
  * @author mzechner, Nathan Sweet
  */
-open class ProgressBarStyle(
-    var background: Drawable? = null,
-    var knob: Drawable = SpriteDrawable()
-) {
+open class ProgressBarStyle {
     /** The progress bar background, stretched only in one direction. Optional.  */
+
+    var background: Drawable? = DSKIN.solidFrame
+    var knob: Drawable = DSKIN.white5x5
 
     /** Optional.  */
     var disabledBackground: Drawable? = null
     var disabledKnob: Drawable? = null
     /** Optional.  */
-    var knobBefore: Drawable? = null
+    var knobBefore: Drawable? = DSKIN.white5x5
     var knobAfter: Drawable? = null
     var disabledKnobBefore: Drawable? = null
     var disabledKnobAfter: Drawable? = null
 
     companion object {
-        const val GdxTypeName = "com.badlogic.gdx.scenes.scene2d.ui.ProgressBar\$ProgressBarStyle"
-
         var Default: ProgressBarStyle? = null
         fun default(styleName: String = "default-horizontal"): ProgressBarStyle {
             var style = Default

@@ -21,7 +21,7 @@ import app.thelema.data.IByteData
 class GLBuffer(override var bytes: IByteData, override var target: Int = GL_ARRAY_BUFFER): IGLBuffer {
     override var bufferHandle: Int = 0
 
-    override var isBufferLoadingRequested: Boolean = true
+    override var gpuUploadRequested: Boolean = true
 
     override var usage: Int = GL_STATIC_DRAW
 }

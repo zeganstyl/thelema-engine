@@ -16,7 +16,6 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IObject3D
 import app.thelema.g3d.IScene
 import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
@@ -75,9 +74,8 @@ abstract class ShaderNode: IShaderNode {
     }
 
     override fun shaderCompiled() {}
-    override fun prepareToDrawScene(scene: IScene) {}
-    override fun prepareObjectData(obj: IObject3D) {}
-    override fun prepareToDrawMesh(mesh: IMesh) {}
+
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {}
 
     override fun executionFrag(out: StringBuilder) = Unit
     override fun executionVert(out: StringBuilder) = Unit

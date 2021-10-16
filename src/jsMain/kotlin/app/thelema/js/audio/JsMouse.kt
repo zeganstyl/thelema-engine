@@ -18,7 +18,7 @@ package app.thelema.js.audio
 
 import app.thelema.input.IMouse
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 import app.thelema.js.MouseEvent
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
@@ -103,12 +103,12 @@ class JsMouse(canvas: HTMLCanvasElement): IMouse {
     }
 
     fun getButton(event: MouseEvent): Int = when (event.button.toInt()) {
-        0 -> MOUSE.LEFT
-        1 -> MOUSE.MIDDLE
-        2 -> MOUSE.RIGHT
-        3 -> MOUSE.BACK
-        4 -> MOUSE.FORWARD
-        else -> MOUSE.UNKNOWN
+        0 -> BUTTON.LEFT
+        1 -> BUTTON.MIDDLE
+        2 -> BUTTON.RIGHT
+        3 -> BUTTON.BACK
+        4 -> BUTTON.FORWARD
+        else -> BUTTON.UNKNOWN
     }
 
     fun updatePos(event: MouseEvent) {

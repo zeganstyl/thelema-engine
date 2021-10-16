@@ -16,36 +16,52 @@
 
 package app.thelema.ecs
 
+import app.thelema.fs.IFile
+import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.LoaderAdapter
+import app.thelema.res.RES
 import app.thelema.utils.LOG
 
 class EntityLoader: LoaderAdapter() {
-    override val runOnGLThreadRequest: Boolean
-        get() = false
-
-    var targetEntity: IEntity? = null
+    val targetEntity: IEntity = Entity()
 
     override val componentName: String
         get() = "EntityLoader"
 
-    override fun initProgress() {
-        currentProgress = 0
-        maxProgress = 1
-    }
-
-    override fun load() {
-        val resource = resource()
-        resource.file.readText {
+    override fun loadBase(file: IFile) {
+        file.readText {
             try {
                 val json = JSON.parseObject(it)
-                val newEntity = entity.entity(json.string("name", "Entity"))
-                newEntity.destroy()
-                newEntity.readJson(json)
-                targetEntity = newEntity
+                targetEntity.readJson(json)
             } catch (ex: Exception) {
-                LOG.error("Error while loading entity ${resource.uri}")
+                LOG.error("EntityLoader: can't load entity \"${file.path}\"")
+                ex.printStackTrace()
             }
         }
+
+        currentProgress = 1
+        stop()
+    }
+
+    fun saveTargetEntity() {
+        if (file == null) {
+            val fileName = entity.name + ext
+            file = RES.file?.parent()?.child(fileName)
+        }
+
+        file?.writeText(JSON.printObject(targetEntity))
+    }
+
+    override fun writeJson(json: IJsonObject) {
+        super.writeJson(json)
+        if (targetEntity.name.isNotEmpty()) saveTargetEntity()
+    }
+
+    companion object {
+        const val ext = ".entity"
     }
 }
+
+inline fun IEntity.entityLoader(block: EntityLoader.() -> Unit) = component(block)
+inline fun IEntity.entityLoader() = component<EntityLoader>()

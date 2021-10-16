@@ -65,7 +65,7 @@ open class Widget : Actor(), Layout {
         if (fillParent && parent != null) {
             val parentWidth: Float
             val parentHeight: Float
-            val stage = stage
+            val stage = headUpDisplay
             if (stage != null && parent === stage.root) {
                 parentWidth = stage.width
                 parentHeight = stage.height

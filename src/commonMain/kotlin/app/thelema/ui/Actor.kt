@@ -39,7 +39,7 @@ import kotlin.math.sin
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class Actor: IActor {
-    override var stage: Stage? = null
+    override var headUpDisplay: HeadUpDisplay? = null
     override var parent: Group? = null
     val listeners: ArrayList<EventListener> = ArrayList(0)
     val captureListeners: ArrayList<EventListener> = ArrayList(0)
@@ -102,11 +102,7 @@ open class Actor: IActor {
             }
         }
 
-    /** Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color.  */
-    open var color: IVec4 = Vec4(1f, 1f, 1f, 1f)
-        set(value) {
-            field.set(value)
-        }
+    open var color: Int = -1
 
     /** Returns an application specific object for convenience, or null.  */
     /** Sets an application specific object for convenience.  */
@@ -115,7 +111,7 @@ open class Actor: IActor {
     val isTouchable
         get() = touchable == Touchable.Enabled
 
-    /** Updates the actor based on time. Typically this is called each frame by [Stage.update]. */
+    /** Updates the actor based on time. Typically this is called each frame by [HeadUpDisplay.update]. */
     open fun act(delta: Float) {}
 
     /** Sets this actor as the event [target][Event.setTarget] and propagates the event to this actor and ancestor
@@ -133,7 +129,7 @@ open class Actor: IActor {
      * @return true if the event was [cancelled][Event.cancel].
      */
     fun fire(event: Event): Boolean {
-        if (event.stage == null) event.stage = stage
+        if (event.headUpDisplay == null) event.headUpDisplay = headUpDisplay
         event.target = this
         // Collect ancestors so event propagation is unaffected by hierarchy changes.
         val ancestors: ArrayList<Group> = groupsArrayPool.get()
@@ -182,7 +178,7 @@ open class Actor: IActor {
         if (listeners.size == 0) return event.isCancelled
         event.listenerActor = this
         event.isCapture = capture
-        if (event.stage == null) event.stage = stage
+        if (event.headUpDisplay == null) event.headUpDisplay = headUpDisplay
         try {
             var i = 0
             while (i < listeners.size) {
@@ -192,7 +188,7 @@ open class Actor: IActor {
                     if (event.eventType == EventType.Input) {
                         event as InputEvent
                         if (event.type == InputEventType.touchDown) {
-                            event.stage?.addTouchFocus(listener, this, event.target, event.pointer, event.button)
+                            event.headUpDisplay?.addTouchFocus(listener, this, event.target, event.pointer, event.button)
                         }
                     }
                 }
@@ -302,24 +298,24 @@ open class Actor: IActor {
         return true
     }
 
-    /** Returns true if this actor is the [keyboard focus][Stage.getKeyboardFocus] actor.  */
+    /** Returns true if this actor is the [keyboard focus][HeadUpDisplay.getKeyboardFocus] actor.  */
     fun hasKeyboardFocus(): Boolean {
-        val stage = stage
+        val stage = headUpDisplay
         return stage != null && stage.keyboardFocus === this
     }
 
-    /** Returns true if this actor is the [scroll focus][Stage.getScrollFocus] actor.  */
+    /** Returns true if this actor is the [scroll focus][HeadUpDisplay.getScrollFocus] actor.  */
     fun hasScrollFocus(): Boolean {
-        val stage = stage
+        val stage = headUpDisplay
         return stage != null && stage.scrollFocus === this
     }
 
     /** Returns true if this actor is a target actor for touch focus.
-     * @see Stage.addTouchFocus
+     * @see HeadUpDisplay.addTouchFocus
      */
     val isTouchFocusTarget: Boolean
         get() {
-            val stage = stage ?: return false
+            val stage = headUpDisplay ?: return false
             var i = 0
             val n = stage.touchFocuses.size
             while (i < n) {
@@ -330,11 +326,11 @@ open class Actor: IActor {
         }
 
     /** Returns true if this actor is a listener actor for touch focus.
-     * @see Stage.addTouchFocus
+     * @see HeadUpDisplay.addTouchFocus
      */
     val isTouchFocusListener: Boolean
         get() {
-            val stage = stage ?: return false
+            val stage = headUpDisplay ?: return false
             var i = 0
             val n = stage.touchFocuses.size
             while (i < n) {
@@ -524,10 +520,6 @@ open class Actor: IActor {
         }
     }
 
-    open fun setColor(r: Float, g: Float, b: Float, a: Float) {
-        color.set(r, g, b, a)
-    }
-
     /** Changes the z-order for this actor so it is in front of all siblings.  */
     fun toFront() {
         setZIndex(Int.MAX_VALUE)
@@ -564,33 +556,29 @@ open class Actor: IActor {
             val parent = parent ?: return -1
             return parent.children.indexOf(this)
         }
+
     /** Clips the specified screen aligned rectangle, specified relative to the transform matrix of the stage's Batch. The
-     * transform matrix and the stage's camera must not have rotational components. Calling this method must be followed by a call
-     * to [clipEnd] if true is returned.
-     * @return false if the clipping area is zero and no drawing should occur.
+     * transform matrix and the stage's camera must not have rotational components.
      * @see ScissorStack
      */
-    /** Calls [clipBegin] to clip this actor's bounds.  */
-    fun clipBegin(x: Float = this.x, y: Float = this.y, width: Float = this.width, height: Float = this.height): Boolean {
-        if (width <= 0 || height <= 0) return false
-        val stage = stage ?: return false
+    inline fun clipArea(x: Float, y: Float, width: Float, height: Float, block: () -> Unit) {
+        if (width <= 0 || height <= 0) return
+        val stage = headUpDisplay ?: return
         val scissorBounds = rectanglePool.get()
         stage.calculateScissors(x, y, width, height, scissorBounds)
-        if (ScissorStack.pushScissors(scissorBounds)) return true
-        rectanglePool.free(scissorBounds)
-        return false
-    }
-
-    /** Ends clipping begun by [clipBegin].  */
-    fun clipEnd() {
-        rectanglePool.free(ScissorStack.popScissors())
+        if (ScissorStack.pushScissors(scissorBounds)) {
+            block()
+            rectanglePool.free(ScissorStack.popScissors())
+        } else {
+            rectanglePool.free(scissorBounds)
+        }
     }
 
     /** Transforms the specified point in screen coordinates to the actor's local coordinate system.
-     * @see Stage.screenToStageCoordinates
+     * @see HeadUpDisplay.screenToStageCoordinates
      */
     fun screenToLocalCoordinates(screenCoords: IVec2): IVec2 {
-        val stage = stage ?: return screenCoords
+        val stage = headUpDisplay ?: return screenCoords
         return stageToLocalCoordinates(stage.screenToStageCoordinates(screenCoords))
     }
 
@@ -632,10 +620,10 @@ open class Actor: IActor {
     }
 
     /** Transforms the specified point in the actor's coordinates to be in screen coordinates.
-     * @see Stage.stageToScreenCoordinates
+     * @see HeadUpDisplay.stageToScreenCoordinates
      */
     fun localToScreenCoordinates(localCoords: IVec2): IVec2 {
-        val stage = stage ?: return localCoords
+        val stage = headUpDisplay ?: return localCoords
         return stage.stageToScreenCoordinates(localToAscendantCoordinates(null, localCoords))
     }
 

@@ -33,25 +33,7 @@ class BoxMeshTest: Test {
 
     override fun testMain() {
         val box = BoxMesh { setSize(2f, 1f, 1f) }
-
-        val shader = SimpleShader3D {
-            positionName = box.builder.positionName
-            uvName = box.builder.uvName
-            renderAttributeName = uvName
-            worldMatrix = Mat4()
-        }
-
-        ActiveCamera {
-            lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
-            updateCamera()
-        }
-
-        APP.onRender = {
-            GL.glClear()
-
-            shader.worldMatrix?.rotate(0f, 1f, 0f, APP.deltaTime)
-
-            shader.render(box.mesh)
-        }
+        val shader = SimpleShader3D()
+        APP.onRender = { shader.render(box.mesh) }
     }
 }

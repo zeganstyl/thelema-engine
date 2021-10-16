@@ -17,6 +17,7 @@
 package app.thelema.gl
 
 import app.thelema.data.IByteData
+import app.thelema.shader.IShader
 
 /** Vertex attribute input
  *
@@ -30,7 +31,7 @@ interface IVertexAttribute {
     val size: Int
 
     /** Name of input for shaders */
-    val name: String
+    var name: String
 
     /** Type of each component, e.g. GL_FLOAT, GL_INTEGER, GL_UNSIGNED_BYTE and etc. */
     val type: Int
@@ -74,6 +75,16 @@ interface IVertexAttribute {
      * [OpenGL API](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glVertexAttribDivisor.xhtml) */
     var divisor: Int
 
+    val aliases: List<String>
+
+    fun addAlias(name: String)
+
+    fun removeAlias(name: String)
+
+    fun bind(shader: IShader)
+
+    fun bind(location: Int)
+
     /** Get float without skipping vertex
      * @param byteOffset relative to [bytePosition] */
     fun getFloat(byteOffset: Int): Float
@@ -85,6 +96,8 @@ interface IVertexAttribute {
 
     /** Move cursor to the begin */
     fun rewind()
+
+    fun prepare(block: IVertexAttribute.() -> Unit)
 
     /** Move cursor to vertex by index */
     fun setVertexPosition(index: Int)
@@ -103,27 +116,29 @@ interface IVertexAttribute {
     fun putFloatNext(x: Float)
 
     /** Put float at the current vertex with offset */
-    fun putFloat(byteOffset: Int, x: Float)
+    fun setFloat(byteOffset: Int, x: Float)
 
     /** Put floats at the current vertex */
-    fun putFloats(vararg values: Float)
+    fun setFloats(vararg values: Float)
 
     /** @param step it means, that every [step] floats, cursor will be moved to next vertex */
     fun putFloatsWithStep(step: Int, vararg values: Float)
 
     fun putFloatsStart(index: Int, vararg values: Float) {
         setVertexPosition(index)
-        putFloats(*values)
+        setFloats(*values)
     }
 
     /** Put floats at the current vertex and move cursor to next vertex */
     fun putFloatsNext(vararg values: Float) {
-        putFloats(*values)
+        setFloats(*values)
         nextVertex()
     }
+
+    fun toFloatArray(out: FloatArray? = null): FloatArray
 }
 
 /** Get float value at the current vertex with offset, convert it to another value and put in same place */
 inline fun IVertexAttribute.mapFloat(byteOffset: Int, block: (value: Float) -> Float) {
-    putFloat(byteOffset, block(getFloat(byteOffset)))
+    setFloat(byteOffset, block(getFloat(byteOffset)))
 }

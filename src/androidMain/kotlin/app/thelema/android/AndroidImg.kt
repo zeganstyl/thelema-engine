@@ -9,21 +9,21 @@ import app.thelema.gl.GL_LUMINANCE
 import app.thelema.gl.GL_RGB
 import app.thelema.gl.GL_RGB565
 import app.thelema.gl.GL_RGBA
-import app.thelema.img.IImageData
-import app.thelema.img.IImg
+import app.thelema.img.IImage
+import app.thelema.img.IImageLoader
 import app.thelema.jvm.data.JvmByteBuffer
 import java.io.InputStream
 import java.nio.ByteBuffer
 
-class AndroidImg(val app: AndroidApp) : IImg {
+class AndroidImg(val app: AndroidApp) : IImageLoader {
     override fun load(
         uri: String,
         mimeType: String,
-        out: IImageData,
-        location: Int,
+        out: IImage,
+        location: String,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
+        ready: (img: IImage) -> Unit
+    ): IImage {
         load(AndroidFile(app.fs, uri, location).inputStream(), out)
         ready(out)
         return out
@@ -32,32 +32,31 @@ class AndroidImg(val app: AndroidApp) : IImg {
     override fun load(
         file: IFile,
         mimeType: String,
-        out: IImageData,
+        out: IImage,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
-        out.name = file.path
-        file.readBytes(error = error, ready = { load(it, mimeType, out, error = error, ready = ready) } )
+        ready: (img: IImage) -> Unit
+    ): IImage {
+        file.readBytes(error = error, ready = { decode(it, mimeType, out, error = error, ready = ready) } )
         return out
     }
 
-    private fun loadFromBitmap(bitmap: Bitmap, out: IImageData) {
+    private fun loadFromBitmap(bitmap: Bitmap, out: IImage) {
         when (bitmap.config) {
             Bitmap.Config.ALPHA_8 -> {
-                out.glInternalFormat = GL_LUMINANCE
-                out.glPixelFormat = GL_LUMINANCE
+                out.internalFormat = GL_LUMINANCE
+                out.pixelFormat = GL_LUMINANCE
             }
             Bitmap.Config.ARGB_8888 -> {
-                out.glInternalFormat = GL_RGBA
-                out.glPixelFormat = GL_RGBA
+                out.internalFormat = GL_RGBA
+                out.pixelFormat = GL_RGBA
             }
 //            Bitmap.Config.RGBA_F16 -> {
 //                out.glInternalFormat = GL_RGBA16F
 //                out.glPixelFormat = GL_RGBA
 //            }
             Bitmap.Config.RGB_565 -> {
-                out.glInternalFormat = GL_RGB565
-                out.glPixelFormat = GL_RGB
+                out.internalFormat = GL_RGB565
+                out.pixelFormat = GL_RGB
             }
             else -> throw IllegalArgumentException("Unknown image format")
         }
@@ -74,17 +73,17 @@ class AndroidImg(val app: AndroidApp) : IImg {
         out.bytes = JvmByteBuffer(byteBuffer)
     }
 
-    private fun load(stream: InputStream, out: IImageData) {
+    private fun load(stream: InputStream, out: IImage) {
         loadFromBitmap(BitmapFactory.decodeStream(stream), out)
     }
 
-    override fun load(
+    override fun decode(
         data: IByteData,
         mimeType: String,
-        out: IImageData,
+        out: IImage,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
+        ready: (img: IImage) -> Unit
+    ): IImage {
         load(ByteBufferBackedInputStream(data.sourceObject as ByteBuffer), out)
         ready(out)
         return out

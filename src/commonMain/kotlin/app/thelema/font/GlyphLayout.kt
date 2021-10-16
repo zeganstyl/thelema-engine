@@ -16,9 +16,7 @@
 
 package app.thelema.font
 
-import app.thelema.math.IVec4
 import kotlin.math.max
-
 
 /** Stores [runs][GlyphRun] of glyphs for a piece of text. The text may contain newlines and color markup tags.
  * @author Nathan Sweet, davebaol, Alexander Dorokhov
@@ -27,29 +25,7 @@ class GlyphLayout {
     val runs: ArrayList<GlyphRun> = ArrayList()
     var width = 0f
     var height = 0f
-    private val colorStack: ArrayList<IVec4> = ArrayList()
-
-    /** Creates an empty GlyphLayout.  */
-    constructor()
-
-    /** @see .setText
-     */
-    constructor(font: BitmapFont, str: CharSequence) {
-        setText(font, str)
-    }
-
-    /** @see .setText
-     */
-    constructor(font: BitmapFont, str: CharSequence, color: IVec4, targetWidth: Float, halign: Int, wrap: Boolean) {
-        setText(font, str, color, targetWidth, halign, wrap)
-    }
-
-    /** @see .setText
-     */
-    constructor(font: BitmapFont, str: CharSequence, start: Int, end: Int, color: IVec4, targetWidth: Float, halign: Int,
-                wrap: Boolean, truncate: String?) {
-        setText(font, str, start, end, color, targetWidth, halign, wrap, truncate)
-    }
+    private val colorStack: ArrayList<Int> = ArrayList()
 
     /** Calls [setText][setText] with the whole
      * string, the font's current color, and no alignment or wrapping.  */
@@ -59,7 +35,7 @@ class GlyphLayout {
 
     /** Calls [setText][setText] with the whole
      * string and no truncation.  */
-    fun setText(font: BitmapFont, str: CharSequence, color: IVec4, targetWidth: Float, halign: Int, wrap: Boolean) {
+    fun setText(font: BitmapFont, str: CharSequence, color: Int, targetWidth: Float, halign: Int, wrap: Boolean) {
         setText(font, str, 0, str.length, color, targetWidth, halign, wrap, null)
     }
 
@@ -70,7 +46,7 @@ class GlyphLayout {
      * specified truncate string are placed at the end. Empty string can be used to truncate without adding glyphs.
      * Truncate should not be used with text that contains multiple lines. Wrap is ignored if truncate is not null.
      */
-    fun setText(font: BitmapFont, str: CharSequence, start: Int, end: Int, color: IVec4, targetWidth: Float, halign: Int,
+    fun setText(font: BitmapFont, str: CharSequence, start: Int, end: Int, color: Int, targetWidth: Float, halign: Int,
                 wrap: Boolean, truncate: String?) {
         var start = start
         var color = color
@@ -111,7 +87,7 @@ class GlyphLayout {
                     // Eg, when a color tag is at text start or a line is "\n".
                     // Store the run that has ended.
                     var run = GlyphRun()
-                    run.color.set(color)
+                    run.color = color
                     font.getGlyphs(run, str, runStart, runEnd, lastGlyph)
                     if (run.glyphs.size == 0) {
                         break
@@ -349,7 +325,7 @@ class GlyphLayout {
         var second: GlyphRun? = null
         if (secondStart < glyphCount) {
             second = GlyphRun()
-            second.color.set(first.color)
+            second.color = first.color
             val glyphs1 = second.glyphs // Starts empty.
             glyphs1.addAll(glyphs2, 0, firstEnd)
             glyphs2.removeRange(0, secondStart - 1)

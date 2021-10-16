@@ -16,12 +16,13 @@
 
 package app.thelema.json
 
-/** This must be implemented by object, which must to be serialized to/from JSON.
+/** This interface must be implemented by object, which needs to be serialized to/from JSON.
+ *
  * @author zeganstyl  */
 interface IJsonArrayIO {
-    /** @param json this object's json */
+    /** @param json JSON-array to read from */
     fun readJson(json: IJsonArray)
 
-    /** @param json this object's json */
+    /** @param json JSON-array to write to */
     fun writeJson(json: IJsonArray)
 }

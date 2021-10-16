@@ -17,19 +17,45 @@
 package app.thelema.ecs
 
 interface IComponentDescriptorList {
-    val descriptors: List<ComponentDescriptor<*>>
+    val descriptors: List<ComponentDescriptor<IEntityComponent>>
 
     /** Set descriptor */
-    fun <T: IEntityComponent> descriptor(descriptor: ComponentDescriptor<T>)
+    fun addDescriptor(descriptor: ComponentDescriptor<IEntityComponent>)
 
     /** Set descriptor */
-    fun descriptor(typeName: String, create: () -> IEntityComponent) =
-        descriptor(ComponentDescriptor(typeName, create))
+    fun descriptor(name: String, create: () -> IEntityComponent) =
+        ComponentDescriptor(name, create).also { addDescriptor(it) }
 
     /** Set descriptor */
+    @Suppress("UNCHECKED_CAST")
     fun <T: IEntityComponent> descriptor(
-        typeName: String,
+        name: String,
         create: () -> T,
         block: ComponentDescriptor<T>.() -> Unit
-    ) = descriptor(ComponentDescriptor(typeName, create, block))
+    ) = ComponentDescriptor(name, create, block).also { addDescriptor(it as ComponentDescriptor<IEntityComponent>) }
+
+    fun removeDescriptor(descriptor: ComponentDescriptor<IEntityComponent>)
+
+    fun removeDescriptor(name: String) {
+        descriptors.firstOrNull { it.componentName == name }?.also { removeDescriptor(it) }
+    }
+
+    fun replaceDescriptor(name: String, newDescriptor: ComponentDescriptor<IEntityComponent>) {
+        removeDescriptor(name)
+        addDescriptor(newDescriptor)
+    }
+}
+
+/** @param I interface type */
+inline fun <reified I: IEntityComponent, reified New: IEntityComponent> IComponentDescriptorList.replaceDescriptor(noinline create: () -> New) {
+    replaceDescriptor(I::class.simpleName!!, descriptor(New::class.simpleName!!, create))
+}
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified New: IEntityComponent> IComponentDescriptorList.replaceDescriptor(
+    name: String,
+    noinline create: () -> New,
+    noinline block: ComponentDescriptor<New>.() -> Unit
+) {
+    replaceDescriptor(name, descriptor(name, create, block) as ComponentDescriptor<IEntityComponent>)
 }

@@ -19,14 +19,15 @@ package app.thelema.lwjgl3
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
 import app.thelema.gl.GL
-import app.thelema.img.IImageData
+import app.thelema.img.IImage
 import app.thelema.img.IMG
+import app.thelema.img.Image
 import app.thelema.input.KB
 import app.thelema.input.MOUSE
+import app.thelema.utils.iterate
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.*
 import java.nio.ByteBuffer
-
 
 class Lwjgl3Window(val config: Lwjgl3WindowConf) {
     lateinit var app: JvmApp
@@ -102,44 +103,31 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
                 files.add(app.fs.absolute(getName(names, i)))
             }
             postRunnable {
-                for (i in listeners.indices) {
-                    listeners[i].filesDropped(files)
-                }
-
-                for (i in app.listeners.indices) {
-                    app.listeners[i].filesDropped(files)
-                }
+                listeners.iterate { it.filesDropped(files) }
+                app.listeners.iterate { it.filesDropped(files) }
             }
         }
     }
     private val refreshCallback = object : GLFWWindowRefreshCallback() {
         override fun invoke(windowHandle: Long) {
             postRunnable {
-                for (i in listeners.indices) {
-                    listeners[i].refreshRequested()
-                }
+                listeners.iterate { it.refreshRequested() }
             }
         }
     }
 
     private val posCallback = object: GLFWWindowPosCallback() {
         override fun invoke(p0: Long, p1: Int, p2: Int) {
-            for (i in listeners.indices) {
-                listeners[i].positionChanged(p1, p2)
-            }
+            listeners.iterate { it.positionChanged(p1, p2) }
         }
     }
 
     private val sizeCallback = object: GLFWWindowSizeCallback() {
         override fun invoke(p0: Long, p1: Int, p2: Int) {
-            for (i in listeners.indices) {
-                listeners[i].sizeChanged(p1, p2)
-            }
+            listeners.iterate { it.sizeChanged(p1, p2) }
 
             if (app.mainWindow == this@Lwjgl3Window) {
-                for (i in app.listeners.indices) {
-                    app.listeners[i].resized(p1, p2)
-                }
+                app.listeners.iterate { it.resized(p1, p2) }
             }
         }
     }
@@ -151,9 +139,9 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
     fun create(windowHandle: Long) {
         this.windowHandle = windowHandle
         mouse = Lwjgl3Mouse(this)
-        MOUSE.proxy = mouse
+        MOUSE = mouse
         kb = Lwjgl3KB(this)
-        KB.proxy = kb
+        KB = kb
         graphics = Lwjgl3Graphics(this)
         GLFW.glfwSetWindowFocusCallback(windowHandle, focusCallback)
         GLFW.glfwSetWindowIconifyCallback(windowHandle, iconifyCallback)
@@ -163,9 +151,7 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
         GLFW.glfwSetWindowSizeCallback(windowHandle, sizeCallback)
         GLFW.glfwSetDropCallback(windowHandle, dropCallback)
         GLFW.glfwSetWindowRefreshCallback(windowHandle, refreshCallback)
-        for (i in listeners.indices) {
-            listeners[i].created(this)
-        }
+        listeners.iterate { it.created(this) }
     }
 
     /** Post a [Runnable] to this window's event queue. Instead of [GL.call]. */
@@ -237,7 +223,7 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
      * @param image One or more images. The one closest to the system's desired size will be scaled. Good sizes include
      * 16x16, 32x32 and 48x48. The chosen image is copied, and the provided Pixmaps are not disposed.
      */
-    fun setIcon(vararg image: IImageData) {
+    fun setIcon(vararg image: IImage) {
         Companion.setIcon(windowHandle, image)
     }
 
@@ -287,8 +273,8 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
     }
 
     fun makeCurrent() {
-        MOUSE.proxy = mouse
-        KB.proxy = kb
+        MOUSE = mouse
+        KB = kb
         GLFW.glfwMakeContextCurrent(windowHandle)
     }
 
@@ -312,14 +298,14 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
     }
 
     companion object {
-        fun setIcon(windowHandle: Long, imagePaths: Array<String>, imageFileLocation: Int) {
+        fun setIcon(windowHandle: Long, imagePaths: Array<String>, imageFileLocation: String) {
             val pixmaps = Array(imagePaths.size) {
-                IMG.load(FS.file(imagePaths[it], imageFileLocation), ready = {})
+                IMG.load(FS.file(imagePaths[it], imageFileLocation), out = Image(), ready = {})
             }
             setIcon(windowHandle, pixmaps)
         }
 
-        fun setIcon(windowHandle: Long, images: Array<out IImageData>) {
+        fun setIcon(windowHandle: Long, images: Array<out IImage>) {
             val buffer = GLFWImage.malloc(images.size)
             for (i in images.indices) {
                 val image = images[i]

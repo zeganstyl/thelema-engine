@@ -16,15 +16,12 @@
 
 package app.thelema.shader.post
 
-import app.thelema.gl.GL
-import app.thelema.gl.GL_RGBA
-import app.thelema.gl.GL_UNSIGNED_BYTE
+import app.thelema.gl.*
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.math.IVec2
 import app.thelema.math.Vec2
-import app.thelema.gl.IScreenQuad
 import kotlin.math.pow
 
 // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
@@ -39,14 +36,14 @@ class Bloom(
     pixelFormat: Int = GL_RGBA,
     internalFormat: Int = GL_RGBA,
     pixelChannelType: Int = GL_UNSIGNED_BYTE
-) {
+): IPostEffect {
     private var downBuffers = Array(iterations) {
         val div = 2f.pow(it + 1).toInt() * iterationsStep
         SimpleFrameBuffer(
             width / div,
             height / div,
-            pixelFormat,
             internalFormat,
+            pixelFormat,
             pixelChannelType,
             hasDepth = false
         )
@@ -57,8 +54,8 @@ class Bloom(
         SimpleFrameBuffer(
             width / div,
             height / div,
-            pixelFormat,
             internalFormat,
+            pixelFormat,
             pixelChannelType,
             hasDepth = false
         )
@@ -76,6 +73,8 @@ class Bloom(
             blurUp.bind()
             blurUp["uIntensity"] = intensity
         }
+
+    var brightnessMap: ITexture? = null
 
     init {
         blurDown.bind()
@@ -111,8 +110,8 @@ class Bloom(
             SimpleFrameBuffer(
                 width / div,
                 height / div,
-                pixelFormat,
                 internalFormat,
+                pixelFormat,
                 pixelType,
                 hasDepth = false
             )
@@ -123,8 +122,8 @@ class Bloom(
             SimpleFrameBuffer(
                 width / div,
                 height / div,
-                pixelFormat,
                 internalFormat,
+                pixelFormat,
                 pixelType,
                 hasDepth = false
             )
@@ -133,7 +132,7 @@ class Bloom(
         texelSizes = Array(iterations) { Vec2(1f / downBuffers[it].width, 1f / downBuffers[it].height) }
     }
 
-    fun render(screenQuad: IScreenQuad, sceneMap: ITexture, brightnessMap: ITexture, out: IFrameBuffer?) {
+    override fun render(inputMap: ITexture, out: IFrameBuffer?) {
         val downBuffers = downBuffers
         val upBuffers = upBuffers
         val texelSizes = texelSizes
@@ -142,13 +141,12 @@ class Bloom(
         blurDown.bind()
         blurDown["uDelta"] = 1f
 
-        var prevMap = brightnessMap
+        var prevMap = brightnessMap ?: throw IllegalStateException("Bloom: Brightness map must be set")
         for (i in downBuffers.indices) {
             val buffer = downBuffers[i]
-            screenQuad.render(blurDown, buffer) {
-                blurDown["uTexelSize"] = texelSizes[i]
-                prevMap.bind(0)
-            }
+            blurDown["uTexelSize"] = texelSizes[i]
+            prevMap.bind(0)
+            ScreenQuad.render(blurDown, buffer)
             prevMap = buffer.getTexture(0)
         }
 
@@ -158,20 +156,17 @@ class Bloom(
 
         var i = downBuffers.size - 1
         while (i > 0) {
-            screenQuad.render(blurUp, upBuffers[i-1], clearMask = null) {
-                blurUp["uTexelSize"] = texelSizes[i-1]
-                downBuffers[i].getTexture(0).bind(0)
-                upBuffers[i].getTexture(0).bind(1)
-            }
-
+            blurUp["uTexelSize"] = texelSizes[i-1]
+            downBuffers[i].getTexture(0).bind(0)
+            upBuffers[i].getTexture(0).bind(1)
+            ScreenQuad.render(blurUp, upBuffers[i-1], clearMask = null)
             i--
         }
 
-        screenQuad.render(blurUp, out) {
-            blurUp.set("uTexelSize", 1f / (out?.width ?: GL.mainFrameBufferWidth), 1f / (out?.height ?: GL.mainFrameBufferHeight))
-            upBuffers[0].getTexture(0).bind(0)
-            sceneMap.bind(1)
-        }
+        blurUp.set("uTexelSize", 1f / (out?.width ?: GL.mainFrameBufferWidth), 1f / (out?.height ?: GL.mainFrameBufferHeight))
+        upBuffers[0].getTexture(0).bind(0)
+        inputMap.bind(1)
+        ScreenQuad.render(blurUp, out)
     }
 
     fun destroy() {

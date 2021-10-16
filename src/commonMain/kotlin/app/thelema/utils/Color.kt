@@ -23,42 +23,44 @@ import app.thelema.math.Vec4
 object Color {
     fun int(rgba8888: Int): IVec4 {
         val newVec = Vec4()
-        newVec.r = (rgba8888 and -0x1000000 ushr 24) / 255f
-        newVec.g = (rgba8888 and 0x00ff0000 ushr 16) / 255f
-        newVec.b = (rgba8888 and 0x0000ff00 ushr 8) / 255f
-        newVec.a = (rgba8888 and 0x000000ff) / 255f
+        newVec.r = (rgba8888 and -0x1000000 ushr 24) * inv255
+        newVec.g = (rgba8888 and 0x00ff0000 ushr 16) * inv255
+        newVec.b = (rgba8888 and 0x0000ff00 ushr 8) * inv255
+        newVec.a = (rgba8888 and 0x000000ff) * inv255
         return newVec
     }
 
     fun int(r: Int, g: Int, b: Int, a: Int = 255): IVec4 =
-        Vec4(r.toFloat() / 255, g.toFloat() / 255, b.toFloat() / 255, a.toFloat() / 255)
-
-    fun float(r: Float, g: Float, b: Float, a: Float = 1f): IVec4 = Vec4(r, g, b, a)
+        Vec4(r * inv255, g * inv255, b * inv255, a * inv255)
 
     /** Returns color from a hex string with the format RRGGBBAA. */
     fun hex(hex: String): IVec4 {
         var hex1 = hex
         hex1 = if (hex1[0] == '#') hex1.substring(1) else hex1
         val newVec = Vec4()
-        newVec.r = hex1.substring(0, 2).toInt(16) / 255f
-        newVec.g = hex1.substring(2, 4).toInt(16) / 255f
-        newVec.b = hex1.substring(4, 6).toInt(16) / 255f
-        newVec.a = if (hex1.length != 8) 1f else hex1.substring(6, 8).toInt(16) / 255f
+        newVec.r = hex1.substring(0, 2).toInt(16) * inv255
+        newVec.g = hex1.substring(2, 4).toInt(16) * inv255
+        newVec.b = hex1.substring(4, 6).toInt(16) * inv255
+        newVec.a = if (hex1.length != 8) 1f else hex1.substring(6, 8).toInt(16) * inv255
         return newVec
     }
 
     val WHITE: IVec4 by lazy { Vec4(1f, 1f, 1f, 1f) }
     val BLACK: IVec4 by lazy { Vec4(0f, 0f, 0f, 1f) }
+    const val BLACK_INT: Int = 0x000000FF
 
     /** vec4(0, 0, 0, 0) */
     val CLEAR: IVec4 by lazy { Vec4(0f, 0f, 0f, 0f) }
 
-    val WHITE_FLOAT: Float by lazy { toFloatBits(WHITE) }
+    const val WHITE_INT = -1
     val LIGHT_GRAY: IVec4 by lazy { int(-0x40404001) }
+    const val LIGHT_GRAY_INT: Int = -0x40404001
     val GRAY: IVec4 by lazy { int(0x7f7f7fff) }
+    const val GRAY_INT: Int = 0x7f7f7fff
     val DARK_GRAY: IVec4 by lazy { int(0x3f3f3fff) }
+    const val DARK_GRAY_INT: Int = 0x3f3f3fff
 
-    val BLUE: IVec4 by lazy { Vec4(0f, 0f, 0f, 1f) }
+    val BLUE: IVec4 by lazy { Vec4(0f, 0f, 1f, 1f) }
     val NAVY: IVec4 by lazy { Vec4(0f, 0f, 0.5f, 1f) }
     val ROYAL: IVec4 by lazy { int(0x4169e1ff) }
     val SLATE: IVec4 by lazy { int(0x708090ff) }
@@ -66,11 +68,13 @@ object Color {
     val CYAN: IVec4 by lazy { Vec4(0f, 1f, 1f, 1f) }
     val TEAL: IVec4 by lazy { Vec4(0f, 0.5f, 0.5f, 1f) }
     val GREEN: IVec4 by lazy { int(0x00ff00ff) }
-    val CHARTREUSE: IVec4 by lazy {  float(0.5f, 1f, 0f) }
+    const val GREEN_INT: Int = 0x00ff00ff
+    val CHARTREUSE: IVec4 by lazy {  int(0x7fff00ff) }
     val LIME: IVec4 by lazy { int(0x32cd32ff) }
     val FOREST: IVec4 by lazy { int(0x228b22ff) }
     val OLIVE: IVec4 by lazy { int(0x6b8e23ff) }
     val YELLOW: IVec4 by lazy { int(-0xff01) }
+    const val YELLOW_INT: Int = -0xff01
     val GOLD: IVec4 by lazy { int(-0x28ff01) }
     val GOLDENROD: IVec4 by lazy { int(-0x255adf01) }
     val ORANGE: IVec4 by lazy { int(255, 128, 0) }
@@ -78,6 +82,7 @@ object Color {
     val TAN: IVec4 by lazy { int(-0x2d4b7301) }
     val FIREBRICK: IVec4 by lazy { int(-0x4ddddd01) }
     val RED: IVec4 by lazy { int(255, 0, 0) }
+    const val RED_INT: Int = 0xFF0000FF.toInt()
     val SCARLET: IVec4 by lazy { int(255, 36, 0) }
     val CORAL: IVec4 by lazy { int(-0x80af01) }
     val SALMON: IVec4 by lazy { int(-0x57f8d01) }
@@ -87,32 +92,12 @@ object Color {
     val VIOLET: IVec4 by lazy { int(-0x117d1101) }
     val MAROON: IVec4 by lazy { int(-0x4fcf9f01) }
 
-    /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float. Note that no range
-     * checking is performed for higher performance.
-     * See [intToFloatColor]
-     * @param r the red component, 0 - 255
-     * @param g the green component, 0 - 255
-     * @param b the blue component, 0 - 255
-     * @param a the alpha component, 0 - 255
-     * @return the packed color as a float
-     */
-    fun toFloatBits(r: Int, g: Int, b: Int, a: Int): Float {
-        val color = a shl 24 or (b shl 16) or (g shl 8) or r
-        return intToFloatColor(color)
-    }
-
     /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float.
      * See [intToFloatColor]
      * @return the packed color as a 32-bit float
      */
     fun toFloatBits(r: Float, g: Float, b: Float, a: Float): Float {
-        val color = (255 * a).toInt() shl 24 or ((255 * b).toInt() shl 16) or ((255 * g).toInt() shl 8) or (255 * r).toInt()
-        return intToFloatColor(color)
-    }
-
-    fun toFloatBits(vec: IVec4): Float {
-        val color = (255 * vec.a).toLong() shl 24 or ((255 * vec.b).toLong() shl 16) or ((255 * vec.g).toLong() shl 8) or (255 * vec.r).toLong()
-        return intToFloatColor(color.toInt())
+        return Float.fromBits(toIntBits(r, g, b, a))
     }
 
     /** Packs the color components into a 32-bit integer with the format ABGR. Note that no range checking is performed for higher
@@ -124,12 +109,13 @@ object Color {
      * @return the packed color as a 32-bit int
      */
     fun toIntBits(r: Int, g: Int, b: Int, a: Int): Int {
-        return a shl 24 or (b shl 16) or (g shl 8) or r
+        return r shl 24 or (g shl 16) or (b shl 8) or a
     }
 
-    fun alpha(alpha: Float): Int {
-        return (alpha * 255.0f).toInt()
-    }
+    fun toIntBits(r: Float, g: Float, b: Float, a: Float): Int =
+        toIntBits((r * 255f).toInt(), (g * 255f).toInt(), (b * 255f).toInt(), (a * 255f).toInt())
+
+    fun toIntBits(color: IVec4): Int = toIntBits(color.r, color.g, color.b, color.a)
 
     fun luminanceAlpha(luminance: Float, alpha: Float): Int {
         return (luminance * 255.0f).toInt() shl 8 or (alpha * 255).toInt()
@@ -148,11 +134,11 @@ object Color {
     }
 
     fun rgba8888(r: Float, g: Float, b: Float, a: Float): Int {
-        return (r * 255).toInt() shl 24 or ((g * 255).toInt() shl 16) or ((b * 255).toInt() shl 8) or (a * 255).toInt()
+        return (r * 255f).toInt() shl 24 or ((g * 255f).toInt() shl 16) or ((b * 255f).toInt() shl 8) or (a * 255f).toInt()
     }
 
     fun argb8888(a: Float, r: Float, g: Float, b: Float): Int {
-        return (a * 255).toInt() shl 24 or ((r * 255).toInt() shl 16) or ((g * 255).toInt() shl 8) or (b * 255).toInt()
+        return (a * 255f).toInt() shl 24 or ((r * 255f).toInt() shl 16) or ((g * 255f).toInt() shl 8) or (b * 255f).toInt()
     }
 
     fun rgb565(color: IVec4): Int {
@@ -207,9 +193,9 @@ object Color {
      * @param value An integer color value in RGB888 format.
      */
     fun rgb888ToColor(color: IVec4, value: Int) {
-        color.r = (value and 0x00ff0000 ushr 16) / 255f
-        color.g = (value and 0x0000ff00 ushr 8) / 255f
-        color.b = (value and 0x000000ff) / 255f
+        color.r = (value and 0x00ff0000 ushr 16) * inv255
+        color.g = (value and 0x0000ff00 ushr 8) * inv255
+        color.b = (value and 0x000000ff) * inv255
     }
 
     /** Sets the Color components using the specified integer value in the format RGBA8888. This is inverse to the rgba8888(r, g,
@@ -219,16 +205,41 @@ object Color {
      * @param value An integer color value in RGBA8888 format.
      */
     fun rgba8888ToColor(color: IVec4, value: Int) {
-        color.r = (value and -0x1000000 ushr 24) / 255f
-        color.g = (value and 0x00ff0000 ushr 16) / 255f
-        color.b = (value and 0x0000ff00 ushr 8) / 255f
-        color.a = (value and 0x000000ff) / 255f
+        color.r = (value and redMask ushr 24) * inv255
+        color.g = (value and greenMask ushr 16) * inv255
+        color.b = (value and blueMask ushr 8) * inv255
+        color.a = (value and alphaMask) * inv255
     }
 
     /** Encodes the ABGR int color as a float. The alpha is compressed to 0-254 to avoid using bits in the NaN range (see
      * [java.lang.Float.intBitsToFloat] javadocs). Rendering which uses colors encoded as floats should expand the 0-254 back to
      * 0-255.  */
-    fun intToFloatColor(value: Int): Float = Float.fromBits(value)
+    fun intToFloatColor(value: Int): Float {
+        return Float.fromBits(toIntBits(getAlpha(value), getBlue(value), getGreen(value), getRed(value)))
+    }
 
     fun floatToIntColor(value: Float): Int = value.toBits()
+
+    fun getRed(color: Int): Int = (color and redMask ushr 24)
+    fun getGreen(color: Int): Int = (color and greenMask ushr 16)
+    fun getBlue(color: Int): Int = (color and blueMask ushr 8)
+    fun getAlpha(color: Int): Int = (color and alphaMask)
+
+    fun setAlpha(color: Int, a: Float): Int = (color and rgbMask) or ((255f * a).toInt())
+
+    fun mulAlpha(color: Int, a: Float) = (color and rgbMask) or ((getAlpha(color) * a).toInt())
+
+    fun mulColors(color1: Int, color2: Int): Int = toIntBits(
+        getRed(color1) * getRed(color2) / 255,
+        getGreen(color1) * getGreen(color2) / 255,
+        getBlue(color1) * getBlue(color2) / 255,
+        getAlpha(color1) * getAlpha(color2) / 255
+    )
+
+    const val inv255 = 1f / 255f
+    const val redMask = -0x1000000
+    const val greenMask = 0x00ff0000
+    const val blueMask = 0x0000ff00
+    const val alphaMask = 0x000000ff
+    const val rgbMask = 0xffffff00.toInt()
 }

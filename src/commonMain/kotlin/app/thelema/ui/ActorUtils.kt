@@ -28,19 +28,19 @@ object ActorUtils {
      * @throws IllegalStateException if actor does not belong to any stage.
      */
     fun keepWithinStage(actor: Actor) {
-        val stage = actor.stage
+        val stage = actor.headUpDisplay
                 ?: throw IllegalStateException("keepWithinStage cannot be used on Actor that doesn't belong to any stage. ")
-        keepWithinStage(actor.stage!!, actor)
+        keepWithinStage(actor.headUpDisplay!!, actor)
     }
 
     /**
      * Makes sures that actor will be fully visible in stage. If it's necessary actor position will be changed to fit it
      * on screen.
      */
-    fun keepWithinStage(stage: Stage, actor: Actor) { //taken from scene2d.ui Window
-        val camera = stage.camera
-        val parentWidth = stage.width
-        val parentHeight = stage.height
+    fun keepWithinStage(headUpDisplay: HeadUpDisplay, actor: Actor) { //taken from scene2d.ui Window
+        val camera = headUpDisplay.camera
+        val parentWidth = headUpDisplay.width
+        val parentHeight = headUpDisplay.height
         if (actor.getX(Align.right) - camera.position.x > parentWidth / 2 / camera.zoom) actor.setPosition(camera.position.x + parentWidth / 2 / camera.zoom, actor.getY(Align.right), Align.right)
         if (actor.getX(Align.left) - camera.position.x < -parentWidth / 2 / camera.zoom) actor.setPosition(camera.position.x - parentWidth / 2 / camera.zoom, actor.getY(Align.left), Align.left)
         if (actor.getY(Align.top) - camera.position.y > parentHeight / 2 / camera.zoom) actor.setPosition(actor.getX(Align.top), camera.position.y + parentHeight / 2 / camera.zoom, Align.top)

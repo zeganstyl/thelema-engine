@@ -18,7 +18,7 @@ package app.thelema.lwjgl3
 
 import app.thelema.input.IMouse
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWCursorPosCallback
 import org.lwjgl.glfw.GLFWMouseButtonCallback
@@ -123,11 +123,11 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
         }
 
         private fun toGdxButton(button: Int): Int {
-            if (button == 0) return MOUSE.LEFT
-            if (button == 1) return MOUSE.RIGHT
-            if (button == 2) return MOUSE.MIDDLE
-            if (button == 3) return MOUSE.BACK
-            return if (button == 4) MOUSE.FORWARD else -1
+            if (button == 0) return BUTTON.LEFT
+            if (button == 1) return BUTTON.RIGHT
+            if (button == 2) return BUTTON.MIDDLE
+            if (button == 3) return BUTTON.BACK
+            return if (button == 4) BUTTON.FORWARD else -1
         }
     }
 

@@ -17,25 +17,22 @@
 package app.thelema.ui
 
 import app.thelema.g2d.Batch
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.math.Vec2
 import kotlin.math.max
 import kotlin.math.min
 
 /** @author Nathan Sweet */
-class SelectBoxList<T>(
-    private val selectBox: SelectBox<T>,
-    items: List<T> = ArrayList()
-) : ScrollPane(null, style = selectBox.style.scrollStyle) {
+class SelectBoxList<T>(private val selectBox: SelectBox<T>) : ScrollPane(null, style = selectBox.style.scrollStyle) {
     var maxListHeight: Float = 0f
     private val screenPosition = Vec2()
-    val list = UIList<T>(items = items, style = selectBox.style.listStyle)
+    val list = UIList<T>(style = selectBox.style.listStyle)
     private val hideListener: InputListener
     private var previousScrollFocus: Actor? = null
-    fun show(stage: Stage) {
-        stage.addActor(this)
-        stage.addCaptureListener(hideListener)
-        stage.addListener(list.keyListener!!)
+    fun show(headUpDisplay: HeadUpDisplay) {
+        headUpDisplay.addActor(this)
+        headUpDisplay.addCaptureListener(hideListener)
+        headUpDisplay.addListener(list.keyListener!!)
         selectBox.localToStageCoordinates(screenPosition.set(0f, 0f))
         // Show the list above or below the select box, limited to a number of items and the available height in the stage.
         list.updateLayout()
@@ -52,7 +49,7 @@ class SelectBoxList<T>(
         val listBackground = list.style.background
         if (listBackground != null) height += listBackground.topHeight + listBackground.bottomHeight
         val heightBelow = screenPosition.y
-        val heightAbove = stage.camera.viewportHeight - screenPosition.y - selectBox.height
+        val heightAbove = headUpDisplay.camera.viewportHeight - screenPosition.y - selectBox.height
         var below = true
         if (height > heightBelow) {
             if (heightAbove > heightBelow) {
@@ -71,11 +68,11 @@ class SelectBoxList<T>(
         scrollTo(0f, list.height - list.selectedIndex * itemHeight - itemHeight / 2, 0f, 0f, true, true)
         updateVisualScroll()
         previousScrollFocus = null
-        val actor = stage.scrollFocus
+        val actor = headUpDisplay.scrollFocus
         if (actor != null && !actor.isDescendantOf(this)) previousScrollFocus = actor
-        stage.scrollFocus = this
+        headUpDisplay.scrollFocus = this
         list.touchable = Touchable.Enabled
-        list.selection.set(selectBox.getSelected())
+        list.selection.setSelected(selectBox.getSelected())
 
         isVisible = true
     }
@@ -83,11 +80,11 @@ class SelectBoxList<T>(
     fun hide() {
         if (parent == null) return
         list.touchable = Touchable.Disabled
-        val stage = stage
+        val stage = headUpDisplay
         if (stage != null) {
             stage.removeCaptureListener(hideListener)
             stage.removeListener(list.keyListener!!)
-            if (previousScrollFocus != null && previousScrollFocus!!.stage == null) previousScrollFocus = null
+            if (previousScrollFocus != null && previousScrollFocus!!.headUpDisplay == null) previousScrollFocus = null
             val actor = stage.scrollFocus
             if (actor == null || isAscendantOf(actor)) stage.scrollFocus = previousScrollFocus
         }
@@ -107,14 +104,14 @@ class SelectBoxList<T>(
         toFront()
     }
 
-    override var stage: Stage?
-        get() = super.stage
+    override var headUpDisplay: HeadUpDisplay?
+        get() = super.headUpDisplay
         set(value) {
             if (value != null) {
                 value.removeCaptureListener(hideListener)
                 value.removeListener(list.keyListener!!)
             }
-            super.stage = value
+            super.headUpDisplay = value
         }
 
     init {
@@ -133,27 +130,27 @@ class SelectBoxList<T>(
         })
         addListener(object : InputListener {
             override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                if (toActor == null || !isAscendantOf(toActor)) list.selection.set(list.selection.lastSelected)
+                if (toActor == null || !isAscendantOf(toActor)) list.selection.setSelected(list.selection.lastSelected)
             }
         })
         hideListener = object : InputListener {
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 val target = event.target
                 if (isAscendantOf(target!!)) return false
-                list.selection.set(list.selection.lastSelected)
+                list.selection.setSelected(list.selection.lastSelected)
                 hide()
                 return false
             }
 
             override fun keyDown(event: InputEvent, keycode: Int): Boolean {
                 when (keycode) {
-                    KB.ENTER -> {
+                    KEY.ENTER -> {
                         list.selection.choose(list.selected)
                         hide()
                         event.stop()
                         return true
                     }
-                    KB.ESCAPE -> {
+                    KEY.ESCAPE -> {
                         hide()
                         event.stop()
                         return true

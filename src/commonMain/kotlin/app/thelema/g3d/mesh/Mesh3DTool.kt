@@ -18,6 +18,7 @@ package app.thelema.g3d.mesh
 
 import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexAttribute
+import app.thelema.gl.forEachTriangle
 import app.thelema.math.MATH
 
 object Mesh3DTool {
@@ -32,7 +33,7 @@ object Mesh3DTool {
     }
 
     /** After calculate tangent, it is recommended to use [orthogonalizeTangents] */
-    fun calculateTangents(
+    inline fun calculateTangents(
         mesh: IMesh,
         positions: IVertexAttribute,
         uvs: IVertexAttribute,
@@ -54,7 +55,7 @@ object Mesh3DTool {
         tangents.rewind()
     }
 
-    fun orthogonalizeTangents(tangents: IVertexAttribute, normals: IVertexAttribute, afterEachVertex: () -> Unit = {}) {
+    inline fun orthogonalizeTangents(tangents: IVertexAttribute, normals: IVertexAttribute, afterEachVertex: () -> Unit = {}) {
         tangents.rewind()
         normals.rewind()
 
@@ -83,7 +84,7 @@ object Mesh3DTool {
             ty -= ny * dot
             tz -= nz * dot
 
-            tangents.putFloats(tx, ty, tz)
+            tangents.setFloats(tx, ty, tz)
 
             tangents.nextVertex()
             normals.nextVertex()
@@ -141,6 +142,8 @@ object Mesh3DTool {
         normals.putFloatsStart(v3, x, y, z)
     }
 
+    /** @param tangents Attribute where tangents will be written.
+     * @param bitangents Attribute where bi-tangents will be written. If not set, will not be calculated */
     fun calculateTangent(
         v1: Int,
         v2: Int,
@@ -152,6 +155,7 @@ object Mesh3DTool {
     ) {
         // http://www.opengl-tutorial.org/ru/intermediate-tutorials/tutorial-13-normal-mapping/
 
+        //println(v1)
         positions.setVertexPosition(v1)
         val x1 = positions.getFloat(0)
         val y1 = positions.getFloat(4)

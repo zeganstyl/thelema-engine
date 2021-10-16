@@ -19,6 +19,7 @@ package app.thelema.ui
 import app.thelema.font.BitmapFont
 import app.thelema.math.IVec4
 import app.thelema.math.Vec4
+import app.thelema.utils.Color
 
 /** The style for a text field, see [TextField].
  * @author mzechner
@@ -26,21 +27,21 @@ import app.thelema.math.Vec4
  */
 open class TextFieldStyle(
     var font: BitmapFont = DSKIN.font(),
-    var fontColor: IVec4 = Vec4(1f, 1f, 1f, 1f),
+    var fontColor: Int = -1,
     var cursor: Drawable? = DSKIN.green1x1,
     var selection: Drawable? = DSKIN.white5x5SemiTransparent,
     var background: Drawable? = DSKIN.solidFrame
 ) {
     /** Optional.  */
-    var focusedFontColor: IVec4? = null
-    var disabledFontColor: IVec4? = null
+    var focusedFontColor: Int? = null
+    var disabledFontColor: Int? = null
     /** Optional.  */
     var focusedBackground: Drawable? = null
     var disabledBackground: Drawable? = null
     /** Optional.  */
     var messageFont: BitmapFont? = null
     /** Optional.  */
-    var messageFontColor: IVec4? = Vec4(0.5f, 0.5f, 0.5f, 1f)
+    var messageFontColor: Int? = Color.GRAY_INT
     var errorBorder: Drawable? = null
 
     var focusBorder: Drawable? = null

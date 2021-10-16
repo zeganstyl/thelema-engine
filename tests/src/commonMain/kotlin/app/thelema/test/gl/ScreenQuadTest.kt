@@ -17,6 +17,7 @@
 package app.thelema.test.gl
 
 
+import app.thelema.app.APP
 import app.thelema.gl.GL
 import app.thelema.gl.ScreenQuad
 import app.thelema.shader.Shader
@@ -28,7 +29,6 @@ class ScreenQuadTest: Test {
         get() = "Screen Quad"
 
     override fun testMain() {
-
         val shader = Shader(
                 vertCode = """
 attribute vec2 POSITION;
@@ -46,11 +46,8 @@ void main() {
     gl_FragColor = vec4(uv, 1.0, 1.0);
 }""")
 
-        val screenQuad = ScreenQuad(positionName = "POSITION", uvName = "UV")
-
-        GL.render {
-            shader.bind()
-            screenQuad.render(shader)
+        APP.onRender = {
+            ScreenQuad.render(shader)
         }
     }
 }

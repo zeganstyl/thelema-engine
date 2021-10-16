@@ -31,14 +31,11 @@ class JvmData: IData {
     override fun decodeURI(uri: String): String = URLDecoder.decode(uri, "UTF-8")
     override fun encodeURI(uri: String): String = URLEncoder.encode(uri, "UTF-8")
 
-    override fun decodeBase64(text: String): ByteArray = Base64.getDecoder().decode(text)
-
-    override fun decodeBase64(text: String, out: IByteData): IByteData {
-        out.put(Base64.getDecoder().decode(text))
-        return out
+    override fun decodeBase64(text: String): IByteData {
+        val buffer = bytes(text.length * 3 / 4)
+        buffer.put(Base64.getDecoder().decode(text))
+        return buffer
     }
-
-    override fun encodeBase64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
 
     override fun encodeBase64(data: IByteData): String {
         val array = ByteArray(data.limit)
@@ -51,7 +48,7 @@ class JvmData: IData {
     }
 
     override fun bytes(capacity: Int): IByteData =
-        JvmByteBuffer(ByteBuffer.allocate(capacity).order(ByteOrder.nativeOrder()))
+        JvmByteBuffer(ByteBuffer.allocateDirect(capacity))
 
     override fun bytes(text: String): IByteData = JvmByteBuffer(Charsets.UTF_8.encode(text))
 

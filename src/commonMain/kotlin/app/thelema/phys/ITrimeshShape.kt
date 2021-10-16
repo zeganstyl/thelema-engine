@@ -16,23 +16,18 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
 import app.thelema.gl.IMesh
 
 /** @author zeganstyl */
-interface ITrimeshShape: IEntityComponent {
-    val shape: IShape
-
+interface ITrimeshShape: IShape {
     var mesh: IMesh?
 
     override val componentName: String
-        get() = Name
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "TrimeshShape"
-    }
+        get() = "TrimeshShape"
 }
+
+fun IEntity.trimeshShape(block: ITrimeshShape.() -> Unit) = component(block)
+fun IEntity.trimeshShape() = component<ITrimeshShape>()

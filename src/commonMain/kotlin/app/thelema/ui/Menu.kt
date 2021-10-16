@@ -35,7 +35,7 @@ class Menu(val title: String) : PopupMenu() {
     private fun showMenu() {
         val pos: IVec2 = openButton.localToStageCoordinates(Vec2(0f, 0f))
         setPosition(pos.x, pos.y - height)
-        openButton.stage?.addActor(this)
+        openButton.headUpDisplay?.addActor(this)
         menuBar?.setCurrentMenu(this)
     }
 

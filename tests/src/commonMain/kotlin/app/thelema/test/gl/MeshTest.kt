@@ -45,7 +45,7 @@ class MeshTest: Test {
             setIndexBuffer {
                 indexType = GL_UNSIGNED_SHORT
                 initIndexBuffer(6) {
-                    putShorts(
+                    putIndices(
                         0, 1, 2,
                         0, 2, 3
                     )

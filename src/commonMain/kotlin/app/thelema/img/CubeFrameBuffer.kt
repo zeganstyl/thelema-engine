@@ -16,93 +16,80 @@
 
 package app.thelema.img
 
-import app.thelema.data.IByteData
+import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.cam.Camera
+import app.thelema.g3d.cam.ICamera
 import app.thelema.gl.*
-import app.thelema.utils.LOG
+import app.thelema.math.IVec3
+import app.thelema.math.MATH
+import app.thelema.math.Mat4
+import app.thelema.math.Vec3
 
 /** @author zeganstyl */
 class CubeFrameBuffer(
-    override var width: Int,
-    override var height: Int,
+    resolution: Int = 1024,
     pixelFormat: Int = GL_RGBA,
     internalFormat: Int = pixelFormat,
     type: Int = GL_UNSIGNED_BYTE,
-    useDepth: Boolean = true,
-    initGpuObjects: Boolean = true
-): IFrameBuffer {
-    override var isBound: Boolean = false
+    useDepth: Boolean = false
+): FrameBufferAdapter() {
+    var texture = TextureCube()
 
-    override var frameBufferHandle: Int = if (initGpuObjects) GL.glGenFramebuffer() else 0
-
-    override val attachments = ArrayList<IFrameBufferAttachment>()
-
-    val texture = TextureCube()
+    val captureProjection = Mat4().setToProjection(0.1f, 10f, 90f, 1f)
+    val cameras: Array<ICamera> = arrayOf(
+        createCam(Vec3(1f, 0f, 0f), Vec3(0f, -1f, 0f), resolution),
+        createCam(Vec3(-1f, 0f, 0f), Vec3(0f, -1f, 0f), resolution),
+        createCam(Vec3(0f, 1f, 0f), Vec3(0f, 0f, 1f), resolution),
+        createCam(Vec3(0f, -1f, 0f), Vec3(0f, 0f, -1f), resolution),
+        createCam(Vec3(0f, 0f, 1f), Vec3(0f, -1f, 0f), resolution),
+        createCam(Vec3(0f, 0f, -1f), Vec3(0f, -1f, 0f), resolution)
+    )
 
     init {
-        texture.bind()
-        texture.width = width
-        texture.height = height
-        for (i in 0 until 6) {
-            GL.glTexImage2D(
-                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0,
-                internalFormat,
-                width,
-                height,
-                0,
-                pixelFormat,
-                type,
-                null as IByteData?
-            )
-        }
-        texture.sWrap = GL_CLAMP_TO_EDGE
-        texture.tWrap = GL_CLAMP_TO_EDGE
-        texture.rWrap = GL_CLAMP_TO_EDGE
-        texture.minFilter = GL_NEAREST
-        texture.magFilter = GL_NEAREST
+        setResolution(resolution, resolution)
 
-        for (i in 0 until 6) {
-//            attachments.add(FrameBufferAttachment(
-//                glHandle = texture.textureHandle,
-//                texture = texture,
-//                target = GL_FRAMEBUFFER,
-//                attachment = GL_COLOR_ATTACHMENT0,
-//                texTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-//                pixelFormat = pixelFormat,
-//                internalFormat = internalFormat,
-//                type = type,
-//                mipmapLevel = 0
-//            ))
-        }
+        texture.setupAsRenderTarget(resolution, pixelFormat, internalFormat, type, 0)
 
         if (useDepth) {
-            attachments.add(Attachments.depthRenderBuffer())
+            addAttachment(Attachments.depthRenderBuffer())
         }
 
         buildAttachments()
     }
 
-    fun renderCube(block: (side: Int) -> Unit) {
-        GL.glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle)
-        GL.glViewport(0, 0, width, height)
-
-        for (i in 0 until 6) {
-            //val a = attachments[i]
-            //GL.glFramebufferTexture2D(a.target, a.attachment, a.texTarget, a.glHandle, a.mipmapLevel)
-
-            val status = GL.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)
-            if (status != GL_FRAMEBUFFER_COMPLETE) LOG.info("Status error: $status")
-
-            block(i)
-        }
-
-        GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
-        GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
+    private fun createCam(target: IVec3, up: IVec3, resolution: Int): ICamera = Camera {
+        fov = 90f
+        viewportWidth = resolution.toFloat()
+        viewportHeight = resolution.toFloat()
+        lookAt(MATH.Zero3, target, up)
+        updateCamera()
     }
 
     override fun setResolution(width: Int, height: Int) {
-        this.width = width
-        this.height = height
+        if (width != height) throw IllegalStateException("CubeFrameBuffer: width and height must be equal")
         super.setResolution(width, height)
     }
+
+    inline fun renderCube(width: Int, height: Int, mipLevel: Int, block: (side: Int) -> Unit) {
+        GL.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferHandle)
+        GL.glViewport(0, 0, width, height)
+
+        val camera = ActiveCamera
+
+        for (i in 0 until 6) {
+            GL.glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, texture.textureHandle, mipLevel)
+            GL.glClear()
+            ActiveCamera = cameras[i]
+            block(i)
+        }
+
+        ActiveCamera = camera
+
+        GL.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GL.mainFrameBufferHandle)
+        GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
+    }
+
+    inline fun renderCube(resolution: Int, mipLevel: Int, block: (side: Int) -> Unit) = renderCube(resolution, resolution, mipLevel, block)
+
+    inline fun renderCube(block: (side: Int) -> Unit) = renderCube(width, height, 0, block)
 }

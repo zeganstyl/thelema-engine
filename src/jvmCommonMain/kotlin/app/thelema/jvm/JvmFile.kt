@@ -20,31 +20,31 @@ import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
+import app.thelema.res.RES
 import java.io.*
 import java.nio.ByteBuffer
-import java.util.*
+import java.nio.channels.Channels
 import kotlin.collections.ArrayList
-import kotlin.math.min
 
 /** @author Nathan Sweet, zeganstyl */
 class JvmFile(
         val file: File,
-        override val location: Int = FileLocation.Absolute
+        override val path: String,
+        override val location: String
 ): IFile {
-    constructor(path: String, location: Int) : this(
+    constructor(path: String, location: String) : this(
         when (location) {
             FileLocation.External -> File(JvmFS.externalPath, path)
             FileLocation.Local -> File(JvmFS.localPath, path)
+            FileLocation.Project -> File((RES.absoluteDirectory as JvmFile).file, path)
             else -> File(path)
         },
+        path.replace('\\', '/'),
         location
     )
 
     override val sourceObject: Any
         get() = file
-
-    override val path: String
-        get() = file.path.replace('\\', '/')
 
     override val name: String
         get() = file.name
@@ -55,27 +55,18 @@ class JvmFile(
     override val isDirectory: Boolean
         get() = if (location == FileLocation.Classpath) false else file.isDirectory
 
-    override fun child(name: String): IFile {
-        return if (file.path.isEmpty()) JvmFile(File(name), location) else JvmFile(File(file, name), location)
-    }
+    override val platformPath: String
+        get() = file.path
 
-    override fun sibling(name: String): IFile {
-        if (file.path.isEmpty()) throw RuntimeException("Cannot get the sibling of the root.")
-        return JvmFile(File(file.parent, name), location)
-    }
-
-    override fun parent(): IFile {
-        var parent = file.parentFile
-        if (parent == null) {
-            parent = if (location == FileLocation.Absolute) File("/") else File("")
-        }
-        return JvmFile(parent, location)
-    }
+    private fun isInternal(): Boolean = location == FileLocation.Classpath ||
+            location == FileLocation.Internal && !file.exists() ||
+            location == FileLocation.Local && !file.exists() ||
+            (location == FileLocation.Project && RES.file.location == FileLocation.Internal)
 
     fun inputStream(): InputStream {
-        return if (location == FileLocation.Classpath || location == FileLocation.Internal && !file.exists() || location == FileLocation.Local && !file.exists()) {
-            val path = "/" + file.path.replace('\\', '/')
-            JvmFile::class.java.getResourceAsStream(path) ?: throw RuntimeException("File not found: ${file.path}")
+        return if (isInternal()) {
+            val path = "/$path"
+            JvmFile::class.java.getResourceAsStream(path) ?: throw RuntimeException("File not found: $path")
         } else try {
             FileInputStream(file)
         } catch (ex: Exception) {
@@ -105,21 +96,17 @@ class JvmFile(
 
     override fun readBytes(error: (status: Int) -> Unit, ready: (data: IByteData) -> Unit) {
         val stream = inputStream()
+        val channel = Channels.newChannel(stream)
         return try {
             val length = length().toInt()
             val data = DATA.bytes(length)
-
-            var i = 0
-            while (i < length) {
-                data.putByte(stream.read())
-                i++
-            }
-
+            channel.read(data.sourceObject as ByteBuffer)
             data.rewind()
             ready(data)
         } catch (ex: IOException) {
             throw RuntimeException("Error reading file: $path", ex)
         } finally {
+            channel.close()
             stream.close()
         }
     }
@@ -189,7 +176,7 @@ class JvmFile(
         }
     }
 
-    override fun list(): MutableList<IFile> {
+    override fun list(): List<IFile> {
         if (location == FileLocation.Classpath) throw RuntimeException("Cannot list a classpath directory: $file")
         val relativePaths = file.list() as Array<String>
         val files = ArrayList<IFile>(relativePaths.size)
@@ -207,7 +194,17 @@ class JvmFile(
     }
 
     override fun exists(): Boolean = when (location) {
-        FileLocation.Internal -> if (file.exists()) true else JvmFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
+        FileLocation.Internal -> {
+            if (file.exists()) true else JvmFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
+        }
+        FileLocation.Project -> {
+            if (RES.file.location == FileLocation.Internal) {
+                val projectDir = if (RES.absoluteDirectory.path.isNotEmpty()) RES.absoluteDirectory.path + "/" else ""
+                if (file.exists()) true else JvmFile::class.java.getResource("/$projectDir$path") != null
+            } else {
+                file.exists()
+            }
+        }
         FileLocation.Classpath -> JvmFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
         else -> file.exists()
     }
@@ -263,7 +260,7 @@ class JvmFile(
     }
 
     override fun length(): Long {
-        if (location == FileLocation.Classpath || location == FileLocation.Internal && !file.exists()) {
+        if (isInternal()) {
             val input = inputStream()
             try {
                 return input.available().toLong()

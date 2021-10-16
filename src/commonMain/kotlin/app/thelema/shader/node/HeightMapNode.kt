@@ -16,6 +16,7 @@
 
 package app.thelema.shader.node
 
+import app.thelema.g3d.IScene
 import app.thelema.img.ITexture
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
@@ -28,12 +29,6 @@ class HeightMapNode(
 ): ShaderNode() {
     override val name: String
         get() = "Height Map"
-
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = TODO("Not yet implemented")
 
     /** Component from [vertexPosition] will be used as U texture coordinate */
     var u = "x"
@@ -58,8 +53,8 @@ class HeightMapNode(
         setInput("vertexPosition", vertexPosition)
     }
 
-    override fun prepareToDrawMesh(mesh: IMesh) {
-        super.prepareToDrawMesh(mesh)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
         if (unit >= 0) texture?.bind(unit)
     }
 
@@ -82,9 +77,5 @@ class HeightMapNode(
         out.append("${textureValue.ref} = texture2D(${sampler.ref}, vec2($pos.$u / ${mapWorldSize.x} + 0.5, $pos.$v / ${mapWorldSize.z} + 0.5) * $uvScale);\n")
         out.append("${height.ref} = ${textureValue.ref}.x * ${mapWorldSize.y};\n")
         out.append("${vertexPosition.ref}.y = ${height.ref};\n")
-    }
-
-    companion object {
-        const val ClassId = "heightMap"
     }
 }

@@ -18,7 +18,6 @@ package app.thelema.test.ui
 
 import app.thelema.app.APP
 import app.thelema.g2d.Sprite
-import app.thelema.g2d.SpriteBatch
 import app.thelema.gl.GL
 import app.thelema.img.Texture2D
 import app.thelema.input.KB
@@ -33,7 +32,7 @@ class UITest: Test {
         get() = "UI test"
 
     override fun testMain() {
-        val stage = Stage(ScreenViewport()) {
+        val stage = HeadUpDisplay {
             KB.addListener(this)
             MOUSE.addListener(this)
 
@@ -55,19 +54,19 @@ class UITest: Test {
             addActor(Stack {
                 fillParent = true
 
-                val tex = Texture2D().load("thelema-logo.png")
+                val tex = Texture2D("thelema-logo.png")
 
                 addActor(Table {
                     defaults().pad(5f)
 
                     add(Button {
-                        addAction {
+                        onClick {
                             LOG.info("Button clicked")
                         }
                     }).width(20f).height(20f)
 
                     add(TextButton("TextButton") {
-                        addAction {
+                        onClick {
                             LOG.info("TextButton clicked")
                         }
                     })
@@ -93,18 +92,19 @@ class UITest: Test {
                     slider.value = 0.4f
                     add(slider).width(100f)
 
-                    add(UIImage(TextureRegionDrawable(tex)))
+                    add(UIImage(Sprite(tex)))
 
                     val imageButton = ImageButton()
-                    imageButton.overlayImage = TextureRegionDrawable(tex)
+                    imageButton.overlayImage = Sprite(tex)
                     add(imageButton)
 
                     row()
 
                     val list = listOf("sdfsdf", "123123")
-                    add(UIList(list))
+                    add(UIList<String> { items = list })
 
-                    add(SelectBox(list).apply {
+                    add(SelectBox<String> {
+                        items = list
                         setSelected(list[1])
                     })
 
@@ -124,22 +124,22 @@ class UITest: Test {
                             menu("open") {
                                 menu("recent") {
                                     item("path1") {
-                                        addAction { LOG.info("clicked item: recent/path1") }
+                                        onClick { LOG.info("clicked item: recent/path1") }
                                     }
                                     item("path2") {
-                                        addAction { LOG.info("clicked item: recent/path2") }
+                                        onClick { LOG.info("clicked item: recent/path2") }
                                     }
                                     item("path3") {
-                                        addAction { LOG.info("clicked item: recent/path3") }
+                                        onClick { LOG.info("clicked item: recent/path3") }
                                     }
                                 }
                             }
                             separator()
                             item("save") {
-                                addAction { LOG.info("clicked item: save") }
+                                onClick { LOG.info("clicked item: save") }
                             }
                             item("exit") {
-                                addAction { LOG.info("clicked item: exit") }
+                                onClick { LOG.info("clicked item: exit") }
                             }
                         }
                         menu("Edit") {}

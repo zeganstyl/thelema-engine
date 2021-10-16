@@ -18,7 +18,7 @@ package app.thelema.shader.node
 
 /** @author zeganstyl */
 class GLSLVec4(override var name: String): ShaderData() {
-    override val type: Int
+    override val type: String
         get() = GLSLType.Vec4
 
     override fun asFloat(): String = "$ref.x"

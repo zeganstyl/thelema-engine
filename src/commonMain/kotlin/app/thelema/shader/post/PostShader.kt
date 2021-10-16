@@ -16,13 +16,10 @@
 
 package app.thelema.shader.post
 
-import app.thelema.app.APP
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.IFrameBuffer
-import app.thelema.gl.IMesh
-import app.thelema.img.render
+import app.thelema.img.ITexture
 import app.thelema.shader.Shader
 
 /** @author zeganstyl */
@@ -30,7 +27,7 @@ open class PostShader(
     fragCode: String,
     name: String = "",
     compile: Boolean = true,
-    defaultPrecision: String = if (APP.platformType != APP.Desktop) "precision mediump float;\n" else "",
+    defaultPrecision: String = if (GL.isGLES) "precision mediump float;\n" else "",
     uvName: String = "uv",
     attributeUVName: String = "UV",
     attributePositionName: String = "POSITION",
@@ -51,16 +48,11 @@ void main() {
         compile = compile,
         floatPrecision = defaultPrecision,
         version = version
-    )
+    ), IPostEffect
 {
-    protected open fun renderScreenQuad(screenQuad: IMesh, out: IFrameBuffer?) {
-        if (out != null) {
-            out.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                screenQuad.render(this@PostShader)
-            }
-        } else {
-            screenQuad.render(this@PostShader)
-        }
+    override fun render(inputMap: ITexture, out: IFrameBuffer?) {
+        bind()
+        inputMap.bind(0)
+        ScreenQuad.render(this, out)
     }
 }

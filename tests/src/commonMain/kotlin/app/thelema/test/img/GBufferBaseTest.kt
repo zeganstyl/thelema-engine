@@ -19,16 +19,14 @@ package app.thelema.test.img
 
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.gl.TextureRenderer
 import app.thelema.img.GBuffer
+import app.thelema.img.render
 import app.thelema.math.MATH
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.gl.TextureRenderer
-import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.test.Test
 
@@ -38,19 +36,6 @@ class GBufferBaseTest: Test {
         get() = "G-Buffer base"
 
     override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer < 3) {
-                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
-                return
-            }
-            if (GL.glesMajVer == 3) {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
-            }
-        }
-
         val screenQuad = TextureRenderer(0f, 0f, 0.5f, 0.5f)
 
         val gBuffer = GBuffer()
@@ -96,21 +81,15 @@ gNormal = vec4(vNormal, 1.0);
 gPosition = vec4(vPosition, 1.0);
 }""")
 
-        val cube = BoxMeshBuilder().build()
+        val cube = BoxMesh { setSize(2f) }
 
         val cubeMatrix = Mat4()
 
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-
         GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
             cubeMatrix.rotate(0f, 1f, 0f, APP.deltaTime)
 
             gBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+                GL.glClear()
 
                 shader.bind()
                 shader["world"] = cubeMatrix

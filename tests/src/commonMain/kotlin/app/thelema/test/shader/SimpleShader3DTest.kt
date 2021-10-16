@@ -16,35 +16,36 @@
 
 package app.thelema.test.shader
 
+import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.gl.GL
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.SphereMesh
+import app.thelema.img.Texture2D
+import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
+import app.thelema.utils.Color
+import app.thelema.utils.LOG
 
 class SimpleShader3DTest: Test {
     override val name: String
         get() = "Simple 3D shader"
 
     override fun testMain() {
-        val box = BoxMeshBuilder(2f, 2f, 2f).build()
+        val box = BoxMesh { setSize(2f) }
 
-        val shader = SimpleShader3D {
-            renderAttributeName = uvName
-        }
+        val shader = SimpleShader3D()
 
-        val control = OrbitCameraControl()
-        control.listenToMouse()
+        LOG.info(shader.printCode())
 
-        GL.isDepthTestEnabled = true
-        GL.render {
-            GL.glClear()
+        val orbitCameraControl = OrbitCameraControl()
 
-            control.update()
+        APP.onRender = {
+            orbitCameraControl.update()
             ActiveCamera.updateCamera()
 
-            shader.render(box)
+            box.render(shader)
         }
     }
 }

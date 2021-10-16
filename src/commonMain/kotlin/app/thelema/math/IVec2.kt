@@ -204,6 +204,13 @@ interface IVec2: IVec {
         return this
     }
 
+    fun prj(mat: IMat4): IVec2 {
+        val w = 1f / (x * mat.m30 + y * mat.m31 + mat.m33)
+        return set(
+            (x * mat.m00 + y * mat.m01 + mat.m03) * w,
+            (x * mat.m10 + y * mat.m11 + mat.m13) * w)
+    }
+
     /** Calculates the cross product between this and the given vector. */
     fun crs(other: IVec2): Float {
         return x * other.y - y * other.x

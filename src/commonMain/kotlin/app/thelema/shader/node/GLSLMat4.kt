@@ -18,7 +18,7 @@ package app.thelema.shader.node
 
 /** @author zeganstyl */
 class GLSLMat4(override var name: String): ShaderData() {
-    override val type: Int
+    override val type: String
         get() = GLSLType.Mat4
 
     override fun asFloat(): String = "$fRef.x"

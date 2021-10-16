@@ -16,18 +16,15 @@
 
 package app.thelema.test.shader.post
 
-
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.gl.GL_RGB
+import app.thelema.app.APP
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.render
-import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.PostShader
-import app.thelema.test.CubeModel
 import app.thelema.test.Test
+import app.thelema.utils.Color
 
 /** @author zeganstyl */
 class SobelBaseTest: Test {
@@ -35,29 +32,12 @@ class SobelBaseTest: Test {
         get() = "Sobel filter"
 
     override fun testMain() {
-        val model = CubeModel(
-            Shader(
-                vertCode = """            
-attribute vec3 POSITION;
-varying vec3 vPosition;
-uniform mat4 projViewModelTrans;
+        val box = BoxMesh { setSize(2f) }
+        val boxShader = SimpleShader3D {
+            color = Color.WHITE
+        }
 
-void main() {
-    vPosition = POSITION.xyz;
-    gl_Position = projViewModelTrans * vec4(POSITION, 1.0);
-}""",
-                fragCode = """
-varying vec3 vPosition;
-void main() {
-    gl_FragColor = vec4(1.0);
-}""")
-        )
-
-        val frameBuffer = SimpleFrameBuffer(
-            width = GL.mainFrameBufferWidth,
-            height = GL.mainFrameBufferHeight,
-            pixelFormat = GL_RGB
-        )
+        val frameBuffer = SimpleFrameBuffer()
 
         val sobel = PostShader(
             fragCode = """
@@ -99,22 +79,13 @@ void main(void)
         sobel["width"] = frameBuffer.width.toFloat()
         sobel["height"] = frameBuffer.height.toFloat()
 
-        val screenQuad = ScreenQuad()
-
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             frameBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.update()
-                model.render()
+                box.render(boxShader)
             }
 
             frameBuffer.getTexture(0).bind(0)
-            screenQuad.render(sobel)
+            ScreenQuad.render(sobel)
         }
     }
 }

@@ -17,12 +17,10 @@
 package app.thelema.gltf
 
 import app.thelema.anim.AnimationPlayer
-import app.thelema.ecs.ECS
-import app.thelema.ecs.Entity
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
+import app.thelema.ecs.*
 import app.thelema.g3d.*
-import app.thelema.g3d.node.ITransformNode
+import app.thelema.g3d.ITransformNode
+import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
@@ -35,21 +33,27 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     override val defaultName: String
         get() = "Scene"
 
-    val scene: IScene = gltf.scenesEntity.entity("${defaultName}_$elementIndex").component()
+    val loader = gltf.scenesEntity.entity("${defaultName}_$elementIndex").entityLoader {
+        separateThread = false
+        file = gltf.directory.child(entity.name + EntityLoader.ext)
+    }
+    val scene: IEntity = loader.targetEntity
 
     fun writeEntity(entity: IEntity) {
-        entity.name = name
+        if (name.isNotEmpty()) scene.name = name
+        entity.component<ITransformNode>()
 
         val newNodes = HashMap<Int, ITransformNode>()
         val skins = ArrayList<Pair<Int, ITransformNode>>()
 
         for (i in nodes.indices) {
-            entity.addEntityWithCorrectedName(
+            entity.addEntity(
                 getOrCreateNode(entity, gltf.nodes[nodes[i]] as GLTFNode, newNodes, skins)
             )
         }
 
         val preparedSkins = HashMap<Int, IEntity>()
+        val preparedMeshInstances = HashSet<IEntity>()
         skins.forEach { pair ->
             gltf.skins.getOrWait(pair.first) { gltfSkin ->
                 gltfSkin as GLTFSkin
@@ -66,7 +70,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                         skinEntity = Entity()
                         skinEntity.name = gltfSkin.name
                         gltfSkin.writeEntity(skinEntity, newNodes)
-                        entity.addEntityWithCorrectedName(skinEntity)
+                        entity.addEntity(skinEntity)
                     }
 
                     preparedSkins[pair.first] = skinEntity
@@ -74,33 +78,43 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                     skinEntity = preparedSkin
                 }
 
-                val obj = pair.second.entity.component<IObject3D>()
-                val skin = skinEntity.component<IArmature>()
-                obj.armature = skin
-                obj.meshes.forEach { mesh ->
-                    mesh?.material?.shader?.apply {
-                        val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                        vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                        vertexNode.worldTransformType = TransformDataType.None
-                    }
+                if (!preparedMeshInstances.contains(pair.second.entity)) {
+                    var meshPrepared = false
+                    pair.second.entity.forEachChildEntity {
+                        val instance = it.component<IMesh>()
+                        val skin = skinEntity.component<IArmature>()
+                        instance.armature = skin
 
-                    if (gltf.conf.setupVelocityShader) {
-                        mesh?.material?.shaderChannels?.get(ShaderChannel.Velocity)?.apply {
-                            val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                            vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                            vertexNode.worldTransformType = TransformDataType.None
+                        if (!meshPrepared) {
+                            meshPrepared = true
+                            instance.inheritedMesh?.apply {
+                                armature = skin
+                                material?.shader?.apply {
+                                    val vertexNode = nodes.first { it is VertexNode } as VertexNode
+                                    vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
+                                    vertexNode.worldTransformType = TransformDataType.None
+                                }
 
-                            val velocityNode = nodes.first { it is VelocityNode } as VelocityNode
-                            velocityNode.maxBones = max(skin.bones.size, velocityNode.maxBones)
-                            velocityNode.worldTransformType = TransformDataType.None
-                        }
-                    }
+                                if (gltf.conf.setupVelocityShader) {
+                                    material?.shaderChannels?.get(ShaderChannel.Velocity)?.apply {
+                                        val vertexNode = nodes.first { it is VertexNode } as VertexNode
+                                        vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
+                                        vertexNode.worldTransformType = TransformDataType.None
 
-                    if (gltf.conf.setupDepthRendering) {
-                        mesh?.material?.shaderChannels?.get(ShaderChannel.Depth)?.apply {
-                            val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                            vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                            vertexNode.worldTransformType = TransformDataType.None
+                                        val velocityNode = nodes.first { it is VelocityNode } as VelocityNode
+                                        velocityNode.maxBones = max(skin.bones.size, velocityNode.maxBones)
+                                        velocityNode.worldTransformType = TransformDataType.None
+                                    }
+                                }
+
+                                if (gltf.conf.setupDepthRendering) {
+                                    material?.shaderChannels?.get(ShaderChannel.Depth)?.apply {
+                                        val vertexNode = nodes.first { it is VertexNode } as VertexNode
+                                        vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
+                                        vertexNode.worldTransformType = TransformDataType.None
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -114,6 +128,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 player.nodes.add(it.value)
             }
             player.nodes.sortBy { node -> newNodes.entries.first { it.value == node }.key }
+            player.animations.addAll(gltf.animations.map { (it as GLTFAnimation).animation })
         }
     }
 
@@ -122,12 +137,12 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         nodes.clear()
         json.array("nodes") {
-            ints { nodeIndex -> nodes.add(nodeIndex) }
+            forEachInt { nodeIndex -> nodes.add(nodeIndex) }
         }
 
-        if (name != defaultName) scene.entity.name = gltf.scenesEntity.makeChildName(name)
+        writeEntity(scene)
 
-        writeEntity(scene.entity)
+        scene.scene {}
 
         ready()
     }
@@ -142,6 +157,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         if (newNode == null) {
             val entity = Entity()
             entity.name = gltfNode.name
+            if (entity.name.isEmpty()) entity.name = "Node"
             newNode = entity.component()
             newNodes[gltfNode.elementIndex] = newNode
             newNode.position.set(gltfNode.translation)
@@ -150,7 +166,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             newNode.isTransformUpdateRequested = true
 
             for (i in gltfNode.children.indices) {
-                entity.addEntityWithCorrectedName(
+                entity.addEntity(
                     getOrCreateNode(sceneEntity, gltf.nodes[gltfNode.children[i]] as GLTFNode, newNodes, skins)
                 )
             }

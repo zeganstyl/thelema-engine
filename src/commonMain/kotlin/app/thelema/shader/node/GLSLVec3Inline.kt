@@ -27,7 +27,7 @@ class GLSLVec3Inline(
         get() = asVec3()
         set(_) {}
 
-    override val type: Int
+    override val type: String
         get() = GLSLType.Vec3
 
     override var scope: Int

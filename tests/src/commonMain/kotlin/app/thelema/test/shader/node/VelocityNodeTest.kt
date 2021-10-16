@@ -16,22 +16,20 @@
 
 package app.thelema.test.shader.node
 
-import app.thelema.g3d.Object3D
+import app.thelema.ecs.Entity
+import app.thelema.ecs.component
+import app.thelema.g3d.Material
 import app.thelema.g3d.Scene
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
-import app.thelema.g3d.mesh.BoxMeshBuilder
 import app.thelema.shader.Shader
 import app.thelema.shader.node.CameraDataNode
 import app.thelema.shader.node.OutputNode
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
 import app.thelema.test.Test
-import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 class VelocityNodeTest: Test {
@@ -40,50 +38,33 @@ class VelocityNodeTest: Test {
 
     override fun testMain() {
         ActiveCamera {
+            enablePreviousMatrix()
             lookAt(Vec3(5f, 5f, 5f), MATH.Zero3)
-            near = 0.1f
-            far = 100f
-            updateCamera()
         }
 
-        val scene = Scene()
+        Entity {
+            makeCurrent()
+            component<Scene>()
 
-        scene.objects.add(Object3D().apply {
-            node.position.set(2f, 0f, 0f)
-            node.updateTransform()
+            entity("obj") {
+                component<BoxMesh> { setSize(2f) }
+                component<Material> {
+                    shader = Shader {
+                        val vertexNode = addNode(VertexNode())
+                        val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
+                        val velocityNode = addNode(VelocityNode {
+                            worldSpacePosition = vertexNode.position
+                            clipSpacePosition = cameraDataNode.clipSpacePosition
+                            previousViewProjectionMatrix = cameraDataNode.previousViewProjectionMatrix
+                            normal = vertexNode.normal
+                        })
 
-            addMesh(BoxMeshBuilder().apply {
-                positionName = "POSITION"
-                material.shader = Shader().apply {
-                    val vertexNode = addNode(VertexNode())
-                    vertexNode.positionName = "POSITION"
-                    val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                    val velocityNode = addNode(VelocityNode(
-                        worldSpacePosition = vertexNode.position,
-                        clipSpacePosition = cameraDataNode.clipSpacePosition,
-                        previousViewProjectionMatrix = cameraDataNode.previousViewProjectionMatrix,
-                        normal = vertexNode.normal
-                    ))
-                    velocityNode.aPositionName = "POSITION"
+                        addNode(OutputNode(velocityNode.stretchedClipSpacePosition, velocityNode.velocity))
 
-                    addNode(OutputNode(velocityNode.stretchedClipSpacePosition, velocityNode.velocity))
-
-                    build()
-                    LOG.info(printCode())
+                        build()
+                    }
                 }
-            }.build())
-        })
-
-        GL.isDepthTestEnabled = true
-
-        // we update transform only once
-        scene.updatePreviousTransform()
-        ActiveCamera.updatePreviousTransform()
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            scene.render()
+            }
         }
     }
 }

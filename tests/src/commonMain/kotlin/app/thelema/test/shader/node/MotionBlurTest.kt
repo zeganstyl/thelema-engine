@@ -17,98 +17,77 @@
 package app.thelema.test.shader.node
 
 import app.thelema.app.APP
+import app.thelema.ecs.IEntity
 import app.thelema.g3d.ShaderChannel
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
-import app.thelema.gl.TextureRenderer
-import app.thelema.gltf.GLTFMaterial
+import app.thelema.input.BUTTON
+import app.thelema.gltf.GLTF
 import app.thelema.img.render
+import app.thelema.img.renderCurrentScene
+import app.thelema.input.MOUSE
 import app.thelema.shader.post.MotionBlur
-import app.thelema.test.GLTFModel
-import app.thelema.test.Test
-import app.thelema.math.Vec3
-import app.thelema.utils.LOG
+import app.thelema.test.g3d.gltf.GLTFTestBase
+import app.thelema.utils.Color
 
 /** @author zeganstyl */
-class MotionBlurTest: Test {
+class MotionBlurTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override val name: String
         get() = "Motion Blur"
 
+    override fun configure(gltf: GLTF) {
+        super.configure(gltf)
+        gltf.conf.setupVelocityShader = true
+    }
+
+    override fun loaded(mainScene: IEntity, gltf: GLTF) {
+        super.loaded(mainScene, gltf)
+        animate("anim", speed = 3f)
+    }
+
     override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer == 3) {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
-            }
+        super.testMain()
+
+        ActiveCamera {
+            enablePreviousMatrix()
         }
 
-        val screenQuad = TextureRenderer()
-
-        val velocityBuffer = SimpleFrameBuffer(APP.width, APP.height, GL_RGBA, GL_RGBA16F, GL_FLOAT, hasDepth = true)
+        val velocityBuffer = SimpleFrameBuffer(APP.width, APP.height, GL_RGBA16F, GL_RGBA, GL_FLOAT, hasDepth = true)
         val sceneColorBuffer = SimpleFrameBuffer()
 
         val motionBlur = MotionBlur(
-            sceneColorBuffer.getTexture(0),
-            velocityBuffer.getTexture(0),
             1f,
-            16
+            16,
+            visualizeVelocity = 0f // change this to visualize velocity
         )
 
-        ActiveCamera {
-            lookAt(Vec3(3f, 3f, 3f), Vec3(0f, 0f, 0f))
-            updateCamera()
-        }
-
-        val model = GLTFModel()
-        model.rotate = false
-
-        model.gltf.materials.forEach {
-            it as GLTFMaterial
-            LOG.info(it.material.shaderChannels[ShaderChannel.Velocity]?.printCode() ?: "")
-        }
-
-        ActiveCamera.updateCamera()
-
-        GL.isDepthTestEnabled = true
+        motionBlur.velocityMap = velocityBuffer.texture
 
         var moveEnabled = true
 
         MOUSE.addListener(object : IMouseListener {
             override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-                moveEnabled = !moveEnabled
+                if (button == BUTTON.LEFT) moveEnabled = !moveEnabled
             }
         })
 
-        println("Click on screen to pause/resume")
+        println("Click left mouse button on screen to pause/resume")
 
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             if (moveEnabled) {
-                model.scene.updatePreviousTransform()
-                ActiveCamera.updatePreviousTransform() // camera must be updated separately
-
-                model.update(APP.deltaTime * 3f)
-
+                GL.glClearColor(Color.BLACK)
                 velocityBuffer.render {
-                    GL.glClearColor(0f, 0f, 0f, 1f)
-                    GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                    model.render(ShaderChannel.Velocity)
+
                 }
+                velocityBuffer.renderCurrentScene(ShaderChannel.Velocity)
+
+                GL.glClearColor(Color.SKY)
+                sceneColorBuffer.renderCurrentScene()
             }
 
-            sceneColorBuffer.render {
-                GL.glClearColor(0f, 0f, 0f, 1f)
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.render()
-            }
-
-            motionBlur.render(screenQuad, null)
+            motionBlur.render(sceneColorBuffer.texture, null)
         }
     }
 }

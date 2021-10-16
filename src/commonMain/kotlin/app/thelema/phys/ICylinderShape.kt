@@ -16,23 +16,11 @@
 
 package app.thelema.phys
 
-import app.thelema.ecs.IEntityComponent
-
 /** @author zeganstyl */
-interface ICylinderShape: IEntityComponent {
+interface ICylinderShape: IShape {
     var radius: Float
     var length: Float
 
-    val shape: IShape
-
     override val componentName: String
-        get() = Name
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "CylinderShape"
-    }
+        get() = "CylinderShape"
 }

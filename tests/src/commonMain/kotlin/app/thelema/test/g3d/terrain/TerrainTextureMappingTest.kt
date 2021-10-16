@@ -161,32 +161,15 @@ void main() {
         terrainShader["gChannel"] = colorChannelGUnit
         terrainShader["gChannelDisp"] = colorChannelGDispUnit
 
-        val cracked = Texture2D()
-        cracked.load("terrain/Ground031_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val crackedDisp = Texture2D()
-        crackedDisp.load("terrain/Ground031_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val grass = Texture2D()
-        grass.load("terrain/Ground013_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val grassDisp = Texture2D()
-        grassDisp.load("terrain/Ground013_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val rock = Texture2D()
-        rock.load("terrain/Rock037_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val rockDisp = Texture2D()
-        rockDisp.load("terrain/Rock037_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val normalMap = Texture2D()
-        normalMap.load("terrain/normalmap.png", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val heightMap = Texture2D()
-        heightMap.load("terrain/heightmap.png")
-
-        val splatMap = Texture2D()
-        splatMap.load("terrain/splatmap.png", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
+        val cracked = Texture2D("terrain/Ground031_2K_Color.jpg")
+        val crackedDisp = Texture2D("terrain/Ground031_2K_Displacement.jpg")
+        val grass = Texture2D("terrain/Ground013_2K_Color.jpg")
+        val grassDisp = Texture2D("terrain/Ground013_2K_Displacement.jpg")
+        val rock = Texture2D("terrain/Rock037_2K_Color.jpg")
+        val rockDisp = Texture2D("terrain/Rock037_2K_Displacement.jpg")
+        val normalMap = Texture2D("terrain/normalmap.jpg")
+        val heightMap = Texture2D("terrain/heightmap.png")
+        val splatMap = Texture2D("terrain/splatmap.png")
 
         val terrain = Terrain(minTileSize, 25, numLevelOfDetail, vertexPositionName = "POSITION")
         terrain.minY = terrainMinY
@@ -206,15 +189,9 @@ void main() {
         }
 
         val control = OrbitCameraControl()
-        control.listenToMouse()
 
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            control.update(APP.deltaTime)
-            ActiveCamera.updateCamera()
+        APP.onRender = {
+            control.updateNow()
 
             terrain.update(ActiveCamera.position)
 

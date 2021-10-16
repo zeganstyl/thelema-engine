@@ -52,27 +52,27 @@ class JsJsonArray(val source: ArrayList<Any> = ArrayList()): IJsonArray {
 
     override fun bool(index: Int): Boolean = source[index] as Boolean
 
-    override fun ints(call: (value: Int) -> Unit) {
+    override fun forEachInt(block: (value: Int) -> Unit) {
         for (i in source.indices) {
-            call(source[i] as Int)
+            block(source[i] as Int)
         }
     }
 
-    override fun strings(call: (value: String) -> Unit) {
+    override fun forEachString(block: (value: String) -> Unit) {
         for (i in source.indices) {
-            call(source[i] as String)
+            block(source[i] as String)
         }
     }
 
-    override fun bools(call: (value: Boolean) -> Unit) {
+    override fun forEachBool(block: (value: Boolean) -> Unit) {
         for (i in source.indices) {
-            call(source[i] as Boolean)
+            block(source[i] as Boolean)
         }
     }
 
-    override fun floats(call: (value: Float) -> Unit) {
+    override fun forEachFloat(block: (value: Float) -> Unit) {
         for (i in source.indices) {
-            call(source[i] as Float)
+            block(source[i] as Float)
         }
     }
 
@@ -100,15 +100,15 @@ class JsJsonArray(val source: ArrayList<Any> = ArrayList()): IJsonArray {
         source.add(array.sourceObject)
     }
 
-    override fun objs(call: IJsonObject.() -> Unit) {
+    override fun forEachObject(block: IJsonObject.() -> Unit) {
         for (i in source.indices) {
-            call(JsJsonObject(source[i] as Json))
+            block(JsJsonObject(source[i] as Json))
         }
     }
 
-    override fun arrays(call: IJsonArray.() -> Unit) {
+    override fun forEachArray(block: IJsonArray.() -> Unit) {
         for (i in source.indices) {
-            call(JsJsonArray(source[i] as Array<dynamic>))
+            block(JsJsonArray(source[i] as Array<dynamic>))
         }
     }
 

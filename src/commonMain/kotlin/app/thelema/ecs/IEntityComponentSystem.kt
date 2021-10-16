@@ -17,44 +17,28 @@
 package app.thelema.ecs
 
 interface IEntityComponentSystem: IComponentDescriptorList {
-    val systems: List<IEntitySystem>
+    val systems: List<IComponentSystem>
 
-    fun addSystem(name: String, updateBlock: IEntity.(delta: Float) -> Unit, renderBlock: IEntity.() -> Unit) {
-        addSystem(object : IEntitySystem {
-            override val systemName: String
-                get() = name
+    /** These entities will be rendered and updated with ECS */
+    val entities: List<IEntity>
 
-            override fun update(entity: IEntity, delta: Float) {
-                updateBlock(entity, delta)
-            }
+    /** First entity of [entities] or null */
+    var currentEntity: IEntity?
 
-            override fun render(entity: IEntity) {
-                renderBlock(entity)
-            }
-        })
-    }
+    /** Add entity to render and update it with ECS */
+    fun addEntity(entity: IEntity)
 
-    fun addSystem(name: String, updateBlock: IEntity.(delta: Float) -> Unit) {
-        addSystem(object : IEntitySystem {
-            override val systemName: String
-                get() = name
+    /** Remove entity from rendering and updating */
+    fun removeEntity(entity: IEntity)
 
-            override fun update(entity: IEntity, delta: Float) {
-                updateBlock(entity, delta)
-            }
-        })
-    }
-
-    fun addSystem(system: IEntitySystem)
-    fun setSystem(index: Int, system: IEntitySystem)
-    fun removeSystem(system: IEntitySystem)
+    fun addSystem(system: IComponentSystem)
+    fun setSystem(index: Int, system: IComponentSystem)
+    fun removeSystem(system: IComponentSystem)
     fun removeSystem(index: Int)
 
     fun getDescriptor(typeName: String): ComponentDescriptor<IEntityComponent>?
-    fun getDescriptor(typeName: String, block: ComponentDescriptor<IEntityComponent>.() -> Unit) {
-        getDescriptor(typeName)?.apply(block)
-    }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T: IEntityComponent> getDescriptorTyped(typeName: String): ComponentDescriptor<T>? =
         getDescriptor(typeName) as ComponentDescriptor<T>?
 
@@ -64,24 +48,26 @@ interface IEntityComponentSystem: IComponentDescriptorList {
 
     fun createComponent(typeName: String): IEntityComponent {
         val desc = getDescriptorTyped<IEntityComponent>(typeName)
-        return (desc ?: throw IllegalArgumentException("Can't find entity type: $typeName")).create()
+        return (desc ?: throw IllegalArgumentException("Can't find component type: $typeName")).create()
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> createComponentTyped(typeName: String) =
         createComponent(typeName) as T
 
-    fun entity(name: String, block: IEntity.() -> Unit): IEntity
-    fun entity(name: String): IEntity = entity(name) {}
-    fun entity() = entity("") {}
+    fun update(delta: Float)
 
-    fun update(entity: IEntity, delta: Float)
-
-    fun render(entity: IEntity)
+    fun render(shaderChannel: String? = null)
 }
 
 inline fun <reified T: IEntityComponent> IEntityComponentSystem.getDescriptor(): ComponentDescriptor<T>? =
     getDescriptorTyped(T::class.simpleName!!)
 
+/** Get component descriptor by type and configure descriptor. */
 inline fun <reified T: IEntityComponent> IEntityComponentSystem.getDescriptor(block: ComponentDescriptor<T>.() -> Unit) {
     getDescriptorTyped<T>(T::class.simpleName!!)?.apply(block)
+}
+
+inline fun <reified T: IEntityComponent> IEntityComponentSystem.createComponent(): T {
+    return (getDescriptor<T>() ?: throw IllegalArgumentException("Can't find component type: ${T::class.simpleName!!}")).create()
 }

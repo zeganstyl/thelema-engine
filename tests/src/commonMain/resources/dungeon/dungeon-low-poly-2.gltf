@@ -1,0 +1,364 @@
+{
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v1.2.75",
+        "version" : "2.0"
+    },
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                7
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "mesh" : 0,
+            "name" : "mergedBlocks__defaultMat_0"
+        },
+        {
+            "mesh" : 1,
+            "name" : "mergedBlocks_stoneDark_0"
+        },
+        {
+            "mesh" : 2,
+            "name" : "mergedBlocks_stoneLight_0"
+        },
+        {
+            "children" : [
+                0,
+                1,
+                2
+            ],
+            "name" : "mergedBlocks"
+        },
+        {
+            "children" : [
+                3
+            ],
+            "name" : "RootNode"
+        },
+        {
+            "children" : [
+                4
+            ],
+            "name" : "dungeon_room2.fbx",
+            "rotation" : [
+                0.7071068286895752,
+                0,
+                0,
+                0.7071068286895752
+            ]
+        },
+        {
+            "children" : [
+                5
+            ],
+            "name" : "RootNode (model correction matrix)"
+        },
+        {
+            "children" : [
+                6
+            ],
+            "name" : "RootNode (gltf orientation matrix)",
+            "rotation" : [
+                -0.7071067690849304,
+                0,
+                0,
+                0.7071067690849304
+            ]
+        }
+    ],
+    "materials" : [
+        {
+            "doubleSided" : true,
+            "emissiveFactor" : [
+                0,
+                0,
+                0
+            ],
+            "name" : "defaultMat",
+            "pbrMetallicRoughness" : {
+                "baseColorFactor" : [
+                    0.0689999982714653,
+                    0.0689999982714653,
+                    0.0689999982714653,
+                    1
+                ],
+                "metallicFactor" : 0,
+                "roughnessFactor" : 0.9577051401138306
+            }
+        },
+        {
+            "doubleSided" : true,
+            "emissiveFactor" : [
+                0,
+                0,
+                0
+            ],
+            "name" : "stoneDark",
+            "pbrMetallicRoughness" : {
+                "baseColorTexture" : {
+                    "index" : 0,
+                    "texCoord" : 0
+                },
+                "metallicFactor" : 0,
+                "roughnessFactor" : 0.9577051401138306
+            }
+        },
+        {
+            "doubleSided" : true,
+            "emissiveFactor" : [
+                0,
+                0,
+                0
+            ],
+            "name" : "stoneLight",
+            "pbrMetallicRoughness" : {
+                "baseColorTexture" : {
+                    "index" : 1,
+                    "texCoord" : 0
+                },
+                "metallicFactor" : 0,
+                "roughnessFactor" : 0.9577051401138306
+            }
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "mergedBlocks__defaultMat_0",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0,
+                        "NORMAL" : 1,
+                        "TEXCOORD_0" : 2
+                    },
+                    "indices" : 3,
+                    "material" : 0
+                }
+            ]
+        },
+        {
+            "name" : "mergedBlocks_stoneDark_0",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 4,
+                        "NORMAL" : 5,
+                        "TEXCOORD_0" : 6
+                    },
+                    "indices" : 7,
+                    "material" : 1
+                }
+            ]
+        },
+        {
+            "name" : "mergedBlocks_stoneLight_0",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 8,
+                        "NORMAL" : 9,
+                        "TEXCOORD_0" : 10
+                    },
+                    "indices" : 11,
+                    "material" : 2
+                }
+            ]
+        }
+    ],
+    "textures" : [
+        {
+            "source" : 0
+        },
+        {
+            "source" : 1
+        }
+    ],
+    "images" : [
+        {
+            "mimeType" : "image/png",
+            "name" : "stoneDark_baseColor",
+            "uri" : "stoneDark_baseColor.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "stoneLight_baseColor",
+            "uri" : "stoneLight_baseColor.png"
+        }
+    ],
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 638,
+            "max" : [
+                25,
+                8.25,
+                75
+            ],
+            "min" : [
+                -285,
+                -10,
+                -125
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 638,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5126,
+            "count" : 638,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5123,
+            "count" : 1161,
+            "type" : "SCALAR"
+        },
+        {
+            "bufferView" : 4,
+            "componentType" : 5126,
+            "count" : 3892,
+            "max" : [
+                21.000030517578125,
+                8.25,
+                71.00005340576172
+            ],
+            "min" : [
+                -281,
+                3.5,
+                -121
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 5,
+            "componentType" : 5126,
+            "count" : 3892,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 6,
+            "componentType" : 5126,
+            "count" : 3892,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 7,
+            "componentType" : 5123,
+            "count" : 6726,
+            "type" : "SCALAR"
+        },
+        {
+            "bufferView" : 8,
+            "componentType" : 5126,
+            "count" : 20779,
+            "max" : [
+                21.500030517578125,
+                10,
+                71.50005340576172
+            ],
+            "min" : [
+                -281.5,
+                -6.218934872279092e-14,
+                -121.5
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 9,
+            "componentType" : 5126,
+            "count" : 20779,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 10,
+            "componentType" : 5126,
+            "count" : 20779,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 11,
+            "componentType" : 5123,
+            "count" : 37470,
+            "type" : "SCALAR"
+        }
+    ],
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 7656,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 7656,
+            "byteOffset" : 7656
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 5104,
+            "byteOffset" : 15312
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 2322,
+            "byteOffset" : 20416
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 46704,
+            "byteOffset" : 22740
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 46704,
+            "byteOffset" : 69444
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 31136,
+            "byteOffset" : 116148
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 13452,
+            "byteOffset" : 147284
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 249348,
+            "byteOffset" : 160736
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 249348,
+            "byteOffset" : 410084
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 166232,
+            "byteOffset" : 659432
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 74940,
+            "byteOffset" : 825664
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 900604,
+            "uri" : "dungeon-low-poly-2.bin"
+        }
+    ]
+}

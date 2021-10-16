@@ -23,27 +23,27 @@ interface IGLBuffer {
 
     var bytes: IByteData
 
-    /** If true, [loadBufferToGpu] will be called on next binding */
-    var isBufferLoadingRequested: Boolean
+    /** If true, [uploadBufferToGpu] will be called on next binding */
+    var gpuUploadRequested: Boolean
 
     var usage: Int
 
     var target: Int
 
-    fun requestBufferLoading() {
-        isBufferLoadingRequested = true
+    fun requestBufferUploading() {
+        gpuUploadRequested = true
     }
 
     fun bind() {
-        if (isBufferLoadingRequested) loadBufferToGpu()
+        if (gpuUploadRequested) uploadBufferToGpu()
         if (bufferHandle > 0) GL.glBindBuffer(target, bufferHandle)
     }
 
-    fun loadBufferToGpu() {
+    fun uploadBufferToGpu() {
         if (bufferHandle == 0) bufferHandle = GL.glGenBuffer()
         GL.glBindBuffer(target, bufferHandle)
         GL.glBufferData(target, bytes.limit, bytes, usage)
-        isBufferLoadingRequested = false
+        gpuUploadRequested = false
     }
 
     /** Release all resources (in CPU and GPU memory) */

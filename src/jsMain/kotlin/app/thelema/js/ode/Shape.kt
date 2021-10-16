@@ -17,35 +17,29 @@
 package app.thelema.js.ode
 
 import app.thelema.ecs.IEntity
+import app.thelema.math.IMat4
+import app.thelema.phys.IRigidBody
 import app.thelema.phys.IShape
 
 /** @author zeganstyl */
 class Shape: IShape {
-    override val spaces: List<String>
-        get() = spacesInternal
+    override var shapeOffset: IMat4?
+        get() = TODO("Not yet implemented")
+        set(value) {}
 
-    private val spacesInternal = ArrayList<String>()
+    override var mass: Float
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    override val componentName: String
+        get() = "Shape"
 
     override var entityOrNull: IEntity? = null
-
-    override var friction: Float = 1f
-    override var userObject: Any = this
-    override var influenceOtherBodies: Boolean = true
-
-    override val shapeType: String = ""
 
     override val sourceObject: Any
         get() = this
 
-    override var categoryBits: Long = 0
+    //var proxy: SpecificShape? = null
 
-    override var collideBits: Long = 0
-
-    override fun addSpace(name: String) {
-        spacesInternal.add(name)
-    }
-
-    override fun removeSpace(name: String) {
-        spacesInternal.remove(name)
-    }
+    override var body: IRigidBody? = null
 }

@@ -19,7 +19,7 @@ package app.thelema.test.g3d.terrain
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.FrustumMeshBuilder
+import app.thelema.g3d.mesh.FrustumMesh
 import app.thelema.g3d.terrain.Terrain
 import app.thelema.g3d.terrain.TerrainLevel
 import app.thelema.g3d.terrain.TerrainListener
@@ -27,6 +27,7 @@ import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.input.IKeyListener
 import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.math.Frustum
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
@@ -81,7 +82,7 @@ void main() {
             }
         })
 
-        val sourcePlaneIndices = terrain.planeMesh.indices!!
+        val sourcePlaneIndices = terrain.plane.mesh.indices!!
         val wireframePlaneIndices = sourcePlaneIndices.trianglesToWireframe()
         val sourceIndexBuffers = terrain.frameIndexBuffers.map { it.bytes }
         val wireframeIndexBuffers = terrain.frameIndexBuffers.map { it.trianglesToWireframe().bytes }
@@ -100,57 +101,51 @@ void main() {
         val frustum = Frustum(ActiveCamera.inverseViewProjectionMatrix)
         terrain.frustum = frustum
 
-        val frustumMesh = FrustumMeshBuilder(frustum).build()
+        val frustumMesh = FrustumMesh(frustum)
 
         KB.addListener(object : IKeyListener {
             override fun keyDown(keycode: Int) {
                 when (keycode) {
-                    KB.SPACE -> {
+                    KEY.SPACE -> {
                         // update frustum
                         cameraPosition.set(ActiveCamera.position)
                         frustum.setFromMatrix(ActiveCamera.inverseViewProjectionMatrix)
-                        FrustumMeshBuilder.updateMesh(frustumMesh, frustum)
-                        frustumMesh.vertexBuffers.forEach { it.loadBufferToGpu() }
+                        frustumMesh.frustumPoints = frustum.points
+                        frustumMesh.updateMesh()
                     }
-                    KB.NUM_1 -> {
+                    KEY.NUM_1 -> {
                         // switch to normal mode
-                        terrain.planeMesh.primitiveType = GL_TRIANGLES
-                        terrain.planeMesh.indices = sourcePlaneIndices
+                        terrain.plane.mesh.primitiveType = GL_TRIANGLES
+                        terrain.plane.mesh.indices = sourcePlaneIndices
                         terrain.frameMesh.primitiveType = GL_TRIANGLES
                         for (i in terrain.frameIndexBuffers.indices) {
                             val buffer = terrain.frameIndexBuffers[i]
                             buffer.bytes = sourceIndexBuffers[i]
-                            buffer.loadBufferToGpu()
+                            buffer.uploadBufferToGpu()
                         }
                     }
-                    KB.NUM_2 -> {
+                    KEY.NUM_2 -> {
                         // switch to wireframe mode
-                        terrain.planeMesh.primitiveType = GL_LINES
-                        terrain.planeMesh.indices = wireframePlaneIndices
+                        terrain.plane.mesh.primitiveType = GL_LINES
+                        terrain.plane.mesh.indices = wireframePlaneIndices
                         terrain.frameMesh.primitiveType = GL_LINES
                         for (i in terrain.frameIndexBuffers.indices) {
                             val buffer = terrain.frameIndexBuffers[i]
                             buffer.bytes = wireframeIndexBuffers[i]
-                            buffer.loadBufferToGpu()
+                            buffer.uploadBufferToGpu()
                         }
                     }
-                    KB.NUM_3 -> updateCameraPositionOnSpacePress = false
-                    KB.NUM_4 -> updateCameraPositionOnSpacePress = true
+                    KEY.NUM_3 -> updateCameraPositionOnSpacePress = false
+                    KEY.NUM_4 -> updateCameraPositionOnSpacePress = true
                 }
             }
         })
 
-        val control = OrbitCameraControl(camera = ActiveCamera)
-        control.listenToMouse()
+        val control = OrbitCameraControl()
 
-        val heightMap = Texture2D()
-        heightMap.load("terrain/heightmap.png", sWrap = GL_REPEAT, tWrap = GL_REPEAT)
+        val heightMap = Texture2D("terrain/heightmap.png")
 
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 

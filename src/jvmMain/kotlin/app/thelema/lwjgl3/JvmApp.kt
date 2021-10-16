@@ -36,9 +36,12 @@ import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.*
 import org.lwjgl.system.Callback
 import app.thelema.app.*
-import app.thelema.audio.mock.MockAudio
+import app.thelema.concurrency.ATOM
+import app.thelema.jvm.concurrency.AtomicProviderJvm
+import app.thelema.jvm.ode.RigidBodyPhysicsWorld
 import app.thelema.res.RES
 import java.nio.IntBuffer
+import java.util.concurrent.CountDownLatch
 import javax.swing.JOptionPane
 import kotlin.math.max
 import kotlin.math.min
@@ -56,7 +59,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
     private var running = true
 
     override val platformType
-        get() = APP.Desktop
+        get() = DesktopApp
 
     override var clipboardString: String
         get() = GLFW.glfwGetClipboardString(mainWindow.windowHandle) ?: ""
@@ -95,27 +98,27 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
     init {
         ECS.setupDefaultComponents()
 
-        APP.proxy = this
-        LOG.proxy = JvmLog()
-        FS.proxy = fs
-        JSON.proxy = JsonSimpleJson()
-        DATA.proxy = data
-        IMG.proxy = STBImg()
+        ATOM = AtomicProviderJvm()
+        APP = this
+        LOG = JvmLog()
+        FS = fs
+        JSON = JsonSimpleJson()
+        DATA = data
+        IMG = STBImageLoader()
 
         val client = KtorHttpClient()
-        WS.proxy = client
-        HTTP.proxy = client
+        WS = client
+        HTTP = client
 
         initializeGlfw()
 
         if (!conf.disableAudio) {
             try {
-                AL.proxy = OpenAL(conf.audioDeviceSimultaneousSources,
+                AL = OpenAL(conf.audioDeviceSimultaneousSources,
                     conf.audioDeviceBufferCount, conf.audioDeviceBufferSize)
             } catch (t: Throwable) {
                 LOG.info("Couldn't initialize audio, disabling audio")
                 t.printStackTrace()
-                AL.proxy = MockAudio()
             }
         }
 
@@ -127,7 +130,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
         cachedWidth = width
         cachedHeight = height
 
-        GL.proxy = mainWindow.graphics.lwjglGL
+        GL = mainWindow.graphics.lwjglGL
 
         //GLFW.glfwSetCursor(mainWindow.windowHandle, GLFW.glfwCreateStandardCursor(GLFW.GLFW_CROSSHAIR_CURSOR))
 
@@ -136,6 +139,10 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
         GL.runSingleCalls()
 
         performDefaultSetup()
+    }
+
+    override fun setupPhysicsComponents() {
+        RigidBodyPhysicsWorld.initOdeComponents()
     }
 
     private fun getOrCreateSystemCursor(shape: Int): Long {
@@ -152,8 +159,36 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
     private val closedWindows = ArrayList<Lwjgl3Window>()
 
+    var maxAdditionalThreads = 1
+        set(value) {
+            if (field != value) {
+                field = value
+                threads = Array(value) { Thread() }
+                threadStopped = Array(value) { ATOM.bool(true) }
+            }
+        }
+    var threads = Array(maxAdditionalThreads) { Thread() }
+    var threadStopped = Array(maxAdditionalThreads) { ATOM.bool(true) }
+    val threadBlocks = ArrayList<() -> Unit>()
+
     override fun thread(block: () -> Unit) {
-        Thread { block() }.start()
+        var index: Int = -1
+        for (i in threads.indices) {
+            if (!threads[i].isAlive) {
+                index = i
+                break
+            }
+        }
+        if (index == -1) {
+            threadBlocks.add(block)
+        } else {
+            val stopped = threadStopped[index]
+            stopped.value = false
+            threads[index] = Thread {
+                block()
+                stopped.value = true
+            }.apply { start() }
+        }
     }
 
     private fun loop() {
@@ -164,6 +199,20 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
             updateDeltaTime()
 
             update()
+
+            if (threadBlocks.size > 0) {
+                for (i in threads.indices) {
+                    val stopped = threadStopped[i]
+                    if (stopped.value) {
+                        stopped.value = false
+                        val block = threadBlocks.removeLast()
+                        threads[i] = Thread {
+                            block()
+                            stopped.value = true
+                        }.apply { start() }
+                    }
+                }
+            }
 
             closedWindows.clear()
             for (i in 0 until windows.size) {
@@ -264,10 +313,10 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
         fun createGlfwWindow(config: Lwjgl3WindowConf, sharedContextWindow: Long): Long {
             GLFW.glfwDefaultWindowHints()
-            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE)
-            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, if (config.resizable) GLFW.GLFW_TRUE else GLFW.GLFW_FALSE)
-            GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, if (config.maximized) GLFW.GLFW_TRUE else GLFW.GLFW_FALSE)
-            GLFW.glfwWindowHint(GLFW.GLFW_AUTO_ICONIFY, if (config.autoIconify) GLFW.GLFW_TRUE else GLFW.GLFW_FALSE)
+            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, 0)
+            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, if (config.resizable) 1 else 0)
+            GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, if (config.maximized) 1 else 0)
+            GLFW.glfwWindowHint(GLFW.GLFW_AUTO_ICONIFY, if (config.autoIconify) 1 else 0)
             if (sharedContextWindow == 0L) {
                 GLFW.glfwWindowHint(GLFW.GLFW_RED_BITS, config.redBits)
                 GLFW.glfwWindowHint(GLFW.GLFW_GREEN_BITS, config.greenBits)
@@ -288,17 +337,17 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 ////                }
 //            }
             if (config.transparentFramebuffer) {
-                GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE)
+                GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, 1)
             }
             if (config.debug) {
-                GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE)
+                GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, 1)
             }
             val fullscreenMode = config.fullscreenMode
             val windowHandle = if (fullscreenMode != null) {
                 GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, fullscreenMode.refreshRate)
                 GLFW.glfwCreateWindow(fullscreenMode.width, fullscreenMode.height, config.title, fullscreenMode.monitor, sharedContextWindow)
             } else {
-                GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, if (config.decorated) GLFW.GLFW_TRUE else GLFW.GLFW_FALSE)
+                GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, if (config.decorated) 1 else 0)
                 GLFW.glfwCreateWindow(config.width, config.height, config.title, 0, sharedContextWindow)
             }
             if (windowHandle == 0L) {
@@ -328,7 +377,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
             val windowIconPaths = config.iconPaths
             if (windowIconPaths != null) {
-                Lwjgl3Window.setIcon(windowHandle, windowIconPaths, config.iconFileLocation!!)
+                Lwjgl3Window.setIcon(windowHandle, windowIconPaths, config.iconFileLocation)
             }
             GLFW.glfwMakeContextCurrent(windowHandle)
             GLFW.glfwSwapInterval(if (config.vSyncEnabled) 1 else 0)
@@ -342,7 +391,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 //            }
             if (config.debug) {
                 glDebugCallback = GLUtil.setupDebugMessageCallback(config.debugStream)
-                setGLDebugMessageControl(GLDebugMessageSeverity.NOTIFICATION, false)
+                setGLDebugMessageControl(GLDebugMessageSeverity.HIGH, false)
             }
             return windowHandle
         }
@@ -397,7 +446,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
             listeners[i].destroy()
         }
 
-        RES.project.entity.destroy()
+        RES.entity.destroy()
 
         if (destroyBuffersOnExit) {
             val buffers = ArrayList(data.allocatedBuffers.keys)
@@ -412,6 +461,8 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
         destroySystemCursor(cursorMapping[Cursor.HorizontalResize])
         destroySystemCursor(cursorMapping[Cursor.VerticalResize])
         destroySystemCursor(cursorMapping[Cursor.IBeam])
+
+        mainWindow.graphics.lwjglGL.destroy()
 
         AL.destroy()
         errorCallback!!.free()

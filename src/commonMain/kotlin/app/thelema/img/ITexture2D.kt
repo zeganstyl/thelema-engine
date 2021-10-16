@@ -18,93 +18,77 @@ package app.thelema.img
 
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
-import app.thelema.fs.IFile
 import app.thelema.gl.*
+import app.thelema.res.RES
+import app.thelema.res.load
 
 /** @author zeganstyl */
 interface ITexture2D: ITexture {
     override val depth: Int
         get() = 0
 
-    var image: IImageData?
+    var image: IImage?
 
     val internalFormat: Int
-
     val pixelFormat: Int
-
     val pixelChannelType: Int
 
-    fun load(
-        uri: String,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean? = null,
-        error: (status: Int) -> Unit = {},
-        ready: ITexture2D.() -> Unit = {}
-    ): ITexture2D
+    val texelSizeX
+        get() = 1f / width
+
+    val texelSizeY
+        get() = 1f / height
+
+    fun load(uri: String, mipLevel: Int = 0, error: (status: Int) -> Unit = {}, ready: ITexture2D.() -> Unit = {}): ITexture2D {
+        image = RES.load(uri)
+        return this
+    }
 
     fun load(
-        file: IFile,
-        generateMipmaps: Boolean? = null,
-        error: (status: Int) -> Unit = {},
-        ready: ITexture2D.() -> Unit = {}
-    ): ITexture2D
-
-    fun load(
-        image: IImageData,
-        generateMipmaps: Boolean? = null,
-        error: (status: Int) -> Unit = {},
+        image: IImage,
+        mipLevel: Int = image.mipmapLevel,
         ready: ITexture2D.() -> Unit = {}
     ): ITexture2D
 
     fun load(
         width: Int,
         height: Int,
-        pixels: IByteData? = null,
-        mipmapLevel: Int = 0,
-        internalFormat: Int = GL_RGBA,
-        pixelFormat: Int = GL_RGBA,
-        type: Int = GL_UNSIGNED_BYTE,
-        minFilter: Int = this.minFilter,
-        magFilter: Int = this.magFilter,
-        sWrap: Int = this.sWrap,
-        tWrap: Int = this.tWrap,
-        anisotropicFilter: Float = this.anisotropicFilter,
-        generateMipmaps: Boolean? = null
+        pixels: IByteData?,
+        internalFormat: Int,
+        pixelFormat: Int,
+        pixelChannelType: Int,
+        mipmapLevel: Int
     ): ITexture2D
 
-    override fun initTexture() {
-        if (textureHandle == 0) {
-            textureHandle = GL.glGenTexture()
-        }
+    fun load(
+        width: Int,
+        height: Int,
+        pixels: IByteData?,
+        mipmapLevel: Int = 0
+    ): ITexture2D = load(width, height, pixels, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, mipmapLevel)
 
-        bind()
-        minFilter = GL_NEAREST
-        magFilter = GL_NEAREST
-        val pixels = DATA.bytes(1)
-        pixels[0] = 127
-        GL.glTexImage2D(glTarget, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels)
-        pixels.destroy()
+    fun load(
+        width: Int,
+        height: Int,
+        mipmapLevel: Int = 0,
+        block: IByteData.() -> Unit
+    ): ITexture2D {
+        val bytes = DATA.bytes(width * height * 4, block)
+        val tex = load(width, height, bytes, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, mipmapLevel)
+        bytes.destroy()
+        return tex
     }
 
-    /** Init texture and load to GPU one pixel data with given color (r, g, b, a) */
-    fun initOnePixelTexture(r: Float, g: Float, b: Float, a: Float = 1f) {
+    override fun initTexture(color: Int) {
         if (textureHandle == 0) {
             textureHandle = GL.glGenTexture()
         }
 
         bind()
-        minFilter = GL_NEAREST
-        magFilter = GL_NEAREST
+
         val pixels = DATA.bytes(4)
-        pixels[0] = (r * 255).toInt().toByte()
-        pixels[1] = (g * 255).toInt().toByte()
-        pixels[2] = (b * 255).toInt().toByte()
-        pixels[3] = (a * 255).toInt().toByte()
-        GL.glTexImage2D(glTarget, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+        pixels.putRGBA(0, color)
+        GL.glTexImage2D(glTarget, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
         pixels.destroy()
     }
 }

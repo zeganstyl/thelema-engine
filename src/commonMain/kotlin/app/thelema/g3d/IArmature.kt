@@ -17,7 +17,6 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.node.ITransformNode
 import app.thelema.math.IMat4
 
 /** @author zeganstyl */
@@ -33,6 +32,10 @@ interface IArmature: IEntityComponent {
 
     val bones: List<ITransformNode?>
 
+    var isPreviousBoneMatricesEnabled: Boolean
+
+    var inheritedArmature: IArmature?
+
     fun addBone(bone: ITransformNode?, inverseBindMatrix: IMat4)
 
     fun setBone(index: Int, bone: ITransformNode?)
@@ -45,9 +48,9 @@ interface IArmature: IEntityComponent {
 
     fun initBones(bonesNum: Int)
 
-    fun updatePreviousTransform()
-
     fun preUpdateBoneMatrices()
+
+    fun updatePreviousBoneMatrices()
 
     fun updateBoneMatrices()
 }

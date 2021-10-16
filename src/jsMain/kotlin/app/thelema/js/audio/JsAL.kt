@@ -20,7 +20,7 @@ import app.thelema.audio.*
 import app.thelema.fs.IFile
 
 /** @author zeganstyl */
-class JsAL: IAL {
+class JsAL: IAudio {
     val context = AudioContext()
 
     override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice =

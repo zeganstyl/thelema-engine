@@ -16,9 +16,6 @@
 
 package app.thelema.gl
 
-import app.thelema.data.DATA
-import app.thelema.data.IByteData
-
 /** Representation of element array
  *
  * @author zeganstyl */
@@ -35,12 +32,14 @@ interface IIndexBuffer: IGLBuffer {
         }
 
     /** Maximum number of indices this IndexBufferObject can store. */
-    val size
+    val count: Int
         get() = bytes.limit / bytesPerIndex
 
     val bytePosition: Int
 
     val indexPosition: Int
+
+    var primitiveType: Int
 
     fun rewind()
 
@@ -50,93 +49,29 @@ interface IIndexBuffer: IGLBuffer {
 
     fun setPositionToIndex(indexOfIndex: Int)
 
-    fun initIndexBuffer(indicesNum: Int, block: IByteData.() -> Unit) {
-        bytes.destroy()
-        bytes = DATA.bytes(indicesNum * bytesPerIndex)
-        block(bytes)
-        bytes.rewind()
-    }
+    fun initIndexBuffer(indicesNum: Int, block: IIndexBuffer.() -> Unit = {})
+
+    /** Firstly rewind, then do something with indices in [block], then rewind again and request loading to GPU */
+    fun prepare(block: IIndexBuffer.() -> Unit)
+
+    /** You can use this independently of index type. */
+    fun putIndex(index: Int)
+
+    /** You can use this independently of index type. */
+    fun putIndex(offset: Int, index: Int)
+
+    /** You can use this independently of index type. */
+    fun putIndices(vararg indices: Int)
+
+    /** You can use this independently of index type. */
+    fun putIndicesWithOffset(offset: Int, vararg indices: Int)
+
+    /** You can use this independently of index type. */
+    fun toIntArray(out: IntArray? = null): IntArray
 
     /** Create index buffer with converted triangle indices to line indices.
      * This buffer must contain triplets of indices, that represents triangles.
      *
      * You can use this for debug purpose. */
-    fun trianglesToWireframe(): IIndexBuffer {
-        val triangleIndicesNum = size
-        val triangleBytes = bytes
-        var lineIndexType = GL_UNSIGNED_SHORT
-
-        val lineBytes: IByteData
-        if (triangleIndicesNum * 2 > 32768) {
-            lineIndexType = GL_UNSIGNED_INT
-            lineBytes = DATA.bytes(triangleIndicesNum * 8)
-            when (indexType) {
-                GL_UNSIGNED_SHORT -> {
-                    val triangleIndices = triangleBytes.shortView()
-                    var i = 0
-                    while (i < triangleIndicesNum) {
-                        val v1 = triangleIndices[i]
-                        val v2 = triangleIndices[i + 1]
-                        val v3 = triangleIndices[i + 2]
-                        lineBytes.putShorts(
-                            v1.toInt(), v2.toInt(),
-                            v2.toInt(), v3.toInt(),
-                            v1.toInt(), v3.toInt()
-                        )
-                        i += 3
-                    }
-                }
-                GL_UNSIGNED_INT -> {
-                    val triangleIndices = triangleBytes.intView()
-                    var i = 0
-                    while (i < triangleIndicesNum) {
-                        val v1 = triangleIndices[i]
-                        val v2 = triangleIndices[i + 1]
-                        val v3 = triangleIndices[i + 2]
-                        lineBytes.putInts(
-                            v1, v2,
-                            v2, v3,
-                            v1, v3
-                        )
-                        i += 3
-                    }
-                }
-            }
-        } else {
-            lineBytes = DATA.bytes(triangleIndicesNum * 4)
-            val lineIndices = lineBytes.shortView()
-            when (indexType) {
-                GL_UNSIGNED_SHORT -> {
-                    val triangleIndices = triangleBytes.shortView()
-                    var i = 0
-                    while (i < triangleIndicesNum) {
-                        val v1 = triangleIndices[i]
-                        val v2 = triangleIndices[i + 1]
-                        val v3 = triangleIndices[i + 2]
-                        lineIndices.put(
-                            v1, v2,
-                            v2, v3,
-                            v1, v3
-                        )
-                        i += 3
-                    }
-                }
-                GL_UNSIGNED_INT -> {
-                    val triangleIndices = triangleBytes.intView()
-                    var i = 0
-                    while (i < triangleIndicesNum) {
-                        val v1 = triangleIndices[i]
-                        val v2 = triangleIndices[i + 1]
-                        val v3 = triangleIndices[i + 2]
-
-                        lineIndices.put(v1.toShort(), v2.toShort())
-                        lineIndices.put(v2.toShort(), v3.toShort())
-                        lineIndices.put(v1.toShort(), v3.toShort())
-                        i += 3
-                    }
-                }
-            }
-        }
-        return IndexBuffer(lineBytes).apply { indexType = lineIndexType }
-    }
+    fun trianglesToWireframe(): IIndexBuffer
 }

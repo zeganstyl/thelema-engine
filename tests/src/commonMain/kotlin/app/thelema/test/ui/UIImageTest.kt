@@ -17,6 +17,7 @@
 package app.thelema.test.ui
 
 import app.thelema.app.APP
+import app.thelema.g2d.Sprite
 import app.thelema.gl.GL
 import app.thelema.img.Texture2D
 import app.thelema.test.Test
@@ -28,37 +29,11 @@ class UIImageTest: Test {
         get() = "UI Image"
 
     override fun testMain() {
-        val stage = Stage(ScreenViewport())
+        val stage = HeadUpDisplay()
 
-        val tex = Texture2D().load("thelema-logo-128.png")
+        val image = Sprite(Texture2D("thelema-logo-256.png"))
 
-        stage.addActor(Table {
-            fillParent = true
-
-            val image = TextureRegionDrawable(tex)
-
-            add(Table {
-                background = DSKIN.transparentFrame
-                add(UIImage(image))
-                add(UIImage(image)).width(50f)
-                add(UIImage{
-                    drawable = image
-                    scaling = Scaling.fit
-                }).width(50f)
-                add(UIImage{
-                    drawable = image
-                    scaling = Scaling.fill
-                }).width(50f)
-            })
-            row()
-            add(Table {
-                background = DSKIN.transparentFrame
-                add(UIImage{
-                    drawable = image
-                    scaling = Scaling.none
-                }).width(50f)
-            })
-        })
+        stage.addActor(UIImage(image))
 
         GL.glClearColor(Color.GRAY)
 

@@ -16,38 +16,27 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
-import app.thelema.phys.IShape
 import app.thelema.phys.ISphereShape
+import org.ode4j.ode.DMass
 import org.ode4j.ode.DSphere
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class SphereShape: ISphereShape {
-    var sphere: DSphere? = null
-
-    override var radius: Float
-        get() = sphere?.radius?.toFloat() ?: 0f
-        set(value) {
-            sphere?.radius = value.toDouble()
-        }
-
-    override var entityOrNull: IEntity? = null
+class SphereShape: SpecificShape<DSphere>(), ISphereShape {
+    override var radius: Float = 0f
         set(value) {
             field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = sphere
+            geom?.radius = value.toDouble()
         }
 
-    override var shape: IShape = Shape().also { it.geom = sphere }
-
-    override fun startSimulation() {
-        endSimulation()
-        sphere = OdeHelper.createSphere(radius.toDouble())
+    override fun setSize(radius: Float) {
+        this.radius = radius
     }
 
-    override fun endSimulation() {
-        sphere?.destroy()
-        sphere = null
+    override fun createGeom(): DSphere =
+        OdeHelper.createSphere(getSpace(), radius.toDouble())
+
+    override fun setupMass(density: Double, mass: DMass) {
+        mass.setSphere(density, radius.toDouble())
     }
 }

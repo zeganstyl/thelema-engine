@@ -23,12 +23,6 @@ class TerrainVertexNode: ShaderNode() {
     override val name: String
         get() = "Terrain Vertex"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     var heightMap: ITexture? = null
 
     var terrain: Terrain? = null
@@ -42,22 +36,11 @@ class TerrainVertexNode: ShaderNode() {
     val terrainUV = defOut(GLSLVec3("terrainUV"))
 
     companion object {
-        const val ClassId = "terrainVertex"
-
         const val NormalizedViewVector = "normalizedViewVector"
         const val VertexPosition = "vertexPosition"
         const val UV = "uv"
         const val NormalScale = "normalScale"
         const val NormalColor = "normalColor"
         const val TBN = "tbn"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(NormalizedViewVector, GLSLType.Vec3)
-            put(VertexPosition, GLSLType.Vec3)
-            put(UV, GLSLType.Vec2)
-            put(NormalScale, GLSLType.Float)
-            put(NormalColor, GLSLType.Vec3)
-            put(TBN, GLSLType.Mat3)
-        }
     }
 }

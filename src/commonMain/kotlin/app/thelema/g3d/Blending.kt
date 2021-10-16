@@ -25,12 +25,5 @@ object Blending {
     const val BLEND = "BLEND"
     const val HASHED = "HASHED"
 
-    val items: MutableList<String> = ArrayList()
-
-    init {
-        items.add(OPAQUE)
-        items.add(MASK)
-        items.add(BLEND)
-        items.add(HASHED)
-    }
+    val items: MutableList<String> = mutableListOf(OPAQUE, MASK, BLEND, HASHED)
 }

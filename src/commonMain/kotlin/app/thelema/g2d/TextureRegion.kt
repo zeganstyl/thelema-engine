@@ -26,72 +26,41 @@ import kotlin.math.round
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class TextureRegion constructor(
-    texture: ITexture2D = Texture2D(0),
+    texture: ITexture2D = Texture2D(),
     left: Float = 0f,
     bottom: Float = 0f,
     right: Float = 1f,
     top: Float = 1f
 ) {
     open var texture: ITexture2D = texture
-        set(value) {
-            field = value
-            regionWidth = round(abs(right - left) * value.width).toInt()
-            regionHeight = round(abs(right - left) * value.width).toInt()
-        }
 
-    open var left = left
-        set(value) {
-            if (field != value) {
-                field = value
-                regionWidth = round(abs(right - left) * texture.width).toInt()
-            }
-        }
-    open var bottom = bottom
-        set(value) {
-            if (field != value) {
-                field = value
-                regionHeight = round(abs(top - bottom) * texture.height).toInt()
-            }
-        }
-    open var right = right
-        set(value) {
-            if (field != value) {
-                field = value
-                regionWidth = round(abs(right - left) * texture.width).toInt()
-            }
-        }
+    /** Left texture coordinate */
+    var u = left
+        private set
 
-    open var top = top
-        set(value) {
-            if (field != value) {
-                field = value
-                regionHeight = round(abs(top - bottom) * texture.height).toInt()
-            }
-        }
+    /** Bottom texture coordinate */
+    var v = bottom
+        private set
 
-    var regionX: Int
-        get() = round(left * texture.width).toInt()
-        set(x) {
-            left = x / texture.width.toFloat()
-        }
+    /** Right texture coordinate */
+    var u2 = right
+        private set
 
-    var regionY: Int
-        get() = round(bottom * texture.height).toInt()
-        set(y) {
-            bottom = y / texture.height.toFloat()
-        }
+    /** Top texture coordinate */
+    var v2 = top
+        private set
+
+    val regionX: Int
+        get() = round(u * texture.width).toInt()
+
+    val regionY: Int
+        get() = round(v * texture.height).toInt()
 
     var regionWidth: Int = round(abs(right - left) * texture.width).toInt()
         private set
 
     var regionHeight: Int = round(abs(top - bottom) * texture.height).toInt()
         private set
-
-    val isFlipX: Boolean
-        get() = left > right
-
-    val isFlipY: Boolean
-        get() = bottom > top
 
     /** Sets the texture and sets the coordinates to the size of the specified texture.  */
     fun setRegion(texture: ITexture2D): TextureRegion {
@@ -129,17 +98,27 @@ open class TextureRegion constructor(
             vvar += adjustY
             v2var -= adjustY
         }
-        this.left = uvar
-        this.bottom = vvar
-        this.right = u2var
-        this.top = v2var
+        this.u = uvar
+        this.v = vvar
+        this.u2 = u2var
+        this.v2 = v2var
         return this
+    }
+
+    fun preventInterpolationOnEdge() {
+        val tx = texture.texelSizeX * 0.5f
+        val ty = texture.texelSizeY * 0.5f
+
+        if (u != 0f) u += tx
+        if (v != 0f) v += ty
+        if (u2 != 0f) u2 -= tx
+        if (v2 != 0f) v2 -= ty
     }
 
     /** Sets the texture and coordinates to the specified region.  */
     fun setRegion(region: TextureRegion): TextureRegion {
         texture = region.texture
-        return setRegion(region.left, region.bottom, region.right, region.top)
+        return setRegion(region.u, region.v, region.u2, region.v2)
     }
 
     /** Sets the texture to that of the specified region and sets the coordinates relative to the specified region.  */
@@ -150,14 +129,14 @@ open class TextureRegion constructor(
 
     open fun flip(x: Boolean, y: Boolean) {
         if (x) {
-            val temp = left
-            left = right
-            right = temp
+            val temp = u
+            u = u2
+            u2 = temp
         }
         if (y) {
-            val temp = bottom
-            bottom = top
-            top = temp
+            val temp = v
+            v = v2
+            v2 = temp
         }
     }
 
@@ -168,14 +147,14 @@ open class TextureRegion constructor(
      */
     open fun scroll(xAmount: Float, yAmount: Float) {
         if (xAmount != 0f) {
-            val width = (right - left) * texture.width
-            left = (left + xAmount) % 1
-            right = left + width / texture.width
+            val width = (u2 - u) * texture.width
+            u = (u + xAmount) % 1
+            u2 = u + width / texture.width
         }
         if (yAmount != 0f) {
-            val height = (top - bottom) * texture.height
-            bottom = (bottom + yAmount) % 1
-            top = bottom + height / texture.height
+            val height = (v2 - v) * texture.height
+            v = (v + yAmount) % 1
+            v2 = v + height / texture.height
         }
     }
 

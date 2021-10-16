@@ -16,16 +16,14 @@
 
 package app.thelema.test.gl
 
-
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
-import app.thelema.gl.*
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
-import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 class InstancingTest: Test {
@@ -34,32 +32,26 @@ class InstancingTest: Test {
 
     override fun testMain() {
 
-        val simpleShader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-uniform mat4 viewProj;
-
-void main() {
-    gl_Position = viewProj * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-void main() {
-    gl_FragColor = vec4(1.0);
-}""")
-
+        val simpleShader = SimpleShader3D()
 
         val instancedShader = Shader(
             vertCode = """
 attribute vec3 POSITION;
+attribute vec2 UV;
 attribute vec3 INSTANCE_POSITION;
 uniform mat4 viewProj;
 
+varying vec2 uv;
+
 void main() {
+    uv = UV;
     gl_Position = viewProj * vec4(POSITION + INSTANCE_POSITION, 1.0);
 }""",
             fragCode = """
+varying vec2 uv;
+
 void main() {
-    gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
+    gl_FragColor = vec4(uv, 1.0, 1.0);
 }""")
 
         val stepX = 5f
@@ -72,18 +64,15 @@ void main() {
 
         val cubesY = 1f
 
-        val plane = PlaneMeshBuilder(width = 1000f, height = 1000f).apply {
-            positionName = "POSITION"
-        }.build()
+        val plane = PlaneMesh { setSize(1000f) }
 
-        val cubes = BoxMeshBuilder().apply {
-            positionName = "POSITION"
-        }.build()
+        val cubes = BoxMesh { setSize(2f) }
 
-        cubes.instancesCountToRender = numX * numZ
-        cubes.addVertexBuffer {
+        cubes.mesh.instancesCountToRender = numX * numZ
+        cubes.mesh.addVertexBuffer {
             addAttribute(3, "INSTANCE_POSITION")
             initVertexBuffer(numX * numZ) {
+                // fill buffer with positions
                 var xi = startX
                 val endX = startX + stepX * numX
                 while (xi < endX) {
@@ -101,34 +90,24 @@ void main() {
 
             setDivisor()
 
-            loadBufferToGpu()
+            uploadBufferToGpu()
         }
-
-        GL.isDepthTestEnabled = true
 
         ActiveCamera {
-            near = 0.1f
-            far = 1000f
+            setNearFar(0.1f, 1000f)
         }
 
-        val control = OrbitCameraControl(targetDistance = 100f, camera = ActiveCamera)
-        control.listenToMouse()
-        LOG.info(control.help)
+        val control = OrbitCameraControl { targetDistance = 100f }
 
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
-            simpleShader.bind()
-            simpleShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            plane.render(simpleShader)
+            plane.mesh.render(simpleShader)
 
             instancedShader.bind()
             instancedShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            cubes.render(instancedShader)
+            cubes.mesh.render(instancedShader)
         }
     }
 }

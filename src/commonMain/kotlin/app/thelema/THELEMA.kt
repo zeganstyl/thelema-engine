@@ -19,7 +19,7 @@ package app.thelema
 /** @author zeganstyl */
 object THELEMA {
     const val majVer = 0
-    const val minVer = 6
+    const val minVer = 7
     const val relVer = 0
 
     const val verStr = "$majVer.$minVer.$relVer"

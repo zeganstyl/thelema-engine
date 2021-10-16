@@ -20,6 +20,7 @@ import app.thelema.font.BitmapFont
 import app.thelema.font.GlyphLayout
 import app.thelema.g2d.Batch
 import app.thelema.math.Vec2
+import app.thelema.utils.Color
 import kotlin.math.max
 
 
@@ -34,13 +35,11 @@ import kotlin.math.max
  * [SelectBoxStyle.background].
  * @author mzechner, Nathan Sweet, zeganstyl
  */
-open class SelectBox<T>(
-    items: List<T> = ArrayList(),
-    itemToString: (item: T) -> String = { "" },
-    var getSelected: () -> T? = { null },
-    var setSelected: (item: T?) -> Unit = {},
-    style: SelectBoxStyle = SelectBoxStyle.default()
-) : Widget() {
+open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
+    constructor(block: SelectBox<T>.() -> Unit): this() {
+        block(this)
+    }
+
     var style: SelectBoxStyle = style
         set(value) {
             field = value
@@ -48,6 +47,8 @@ open class SelectBox<T>(
             selectBoxList.list.style = style.listStyle
             invalidateHierarchy()
         }
+
+    var selectedItem: T? = null
 
     var items: List<T>
         get() = selectBoxList.list.items
@@ -58,7 +59,7 @@ open class SelectBox<T>(
             if (oldPrefWidth != prefWidth) invalidateHierarchy()
         }
 
-    val selectBoxList: SelectBoxList<T> = SelectBoxList(selectBox = this, items = items)
+    val selectBoxList: SelectBoxList<T> = SelectBoxList(this)
 
     override val prefWidth: Float
         get() {
@@ -98,11 +99,11 @@ open class SelectBox<T>(
     /** Alignment of the selected item in the select box */
     var alignment = Align.left
 
-    override var stage: Stage?
-        get() = super.stage
+    override var headUpDisplay: HeadUpDisplay?
+        get() = super.headUpDisplay
         set(value) {
             if (value == null) selectBoxList.hide()
-            super.stage = value
+            super.headUpDisplay = value
         }
 
     var itemToString
@@ -110,6 +111,9 @@ open class SelectBox<T>(
         set(value) {
             selectBoxList.list.itemToString = value
         }
+
+    var getSelected: () -> T? = { selectedItem }
+    var setSelected: (item: T?) -> Unit = { selectedItem = it }
 
     init {
         this.style = style
@@ -161,13 +165,13 @@ open class SelectBox<T>(
         } else null
 
         val font = style.font
-        val fontColor = if (isDisabled && style.disabledFontColor != null) style.disabledFontColor else style.fontColor
+        val fontColor = if (isDisabled && style.disabledFontColor != null) style.disabledFontColor!! else style.fontColor
         val color = color
         var x = x
         var y = y
         var width = width
         var height = height
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.setMulAlpha(color, parentAlpha)
         background?.draw(batch, x, y, width, height)
         val selected = getSelected()
         if (selected != null) {
@@ -179,7 +183,7 @@ open class SelectBox<T>(
             } else {
                 y += (height / 2f + font.capHeight / 2f).toInt().toFloat()
             }
-            font.setColor(fontColor!!.r, fontColor.g, fontColor.b, fontColor.a * parentAlpha)
+            font.color = Color.mulAlpha(fontColor, parentAlpha)
             drawItem(batch, font, selected, x, y, width)
         }
     }
@@ -191,7 +195,7 @@ open class SelectBox<T>(
 
     fun showList() {
         if (items.isEmpty()) return
-        if (stage != null) selectBoxList.show(stage!!)
+        if (headUpDisplay != null) selectBoxList.show(headUpDisplay!!)
     }
 
     fun hideList() {

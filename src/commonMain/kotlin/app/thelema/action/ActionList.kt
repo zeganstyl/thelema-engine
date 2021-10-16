@@ -52,7 +52,7 @@ class ActionList(): ActionAdapter() {
         return customContext ?: super.getContext()
     }
 
-    override fun addedComponentToChildEntity(component: IEntityComponent) {
+    override fun addedChildComponent(component: IEntityComponent) {
         if (component.componentName == "Action") {
             childActionsInternal.add(component as IAction)
         }

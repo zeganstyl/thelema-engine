@@ -111,11 +111,9 @@ open class Table() : WidgetGroup() {
                 batch.flush()
                 val padLeft = padLeftValue[this]
                 val padBottom = padBottomValue[this]
-                if (clipBegin(padLeft, padBottom, width - padLeft - padRightValue[this],
-                                height - padBottom - padTopValue[this])) {
+                clipArea(padLeft, padBottom, width - padLeft - padRightValue[this], height - padBottom - padTopValue[this]) {
                     drawChildren(batch, parentAlpha)
                     batch.flush()
-                    clipEnd()
                 }
             } else drawChildren(batch, parentAlpha)
             resetTransform(batch)
@@ -130,8 +128,8 @@ open class Table() : WidgetGroup() {
     protected open fun drawBackground(batch: Batch, parentAlpha: Float, x: Float, y: Float) {
         if (background == null) return
         val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
-        background!!.draw(batch, x, y, width, height)
+        batch.setMulAlpha(color, parentAlpha)
+        background?.draw(batch, x, y, width, height)
     }
 
     override fun hit(x: Float, y: Float, touchable: Boolean): Actor? {

@@ -18,7 +18,6 @@ package app.thelema.font
 
 import app.thelema.g2d.Batch
 import app.thelema.math.IVec4
-import app.thelema.math.Vec4
 import app.thelema.utils.Color
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -41,12 +40,9 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
 
     /** Returns the color used for subsequently added text. Modifying the color affects text subsequently added to the cache, but
      * does not affect existing text currently in the cache.  */
-    var color: IVec4 = Vec4(1f, 1f, 1f, 1f)
-        set(value) {
-            field.set(value)
-        }
+    var color: Int = -1
 
-    private var currentTint = 0f
+    private var currentTint = 0
     /** Vertex data per page.  */
     private var pageVertices: Array<FloatArray> = emptyArray()
     /** Number of vertex data entries per page.  */
@@ -56,6 +52,9 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
     private var pageGlyphIndices: Array<ArrayList<Int>>? = null
     /** Used internally to ensure a correct capacity for multi-page font vertex data.  */
     private var tempGlyphCount: IntArray = IntArray(0)
+
+    val vertices: FloatArray
+        get() = getVertices(0)
 
     /** Sets the position of the text, relative to the position when the cached text was created.
      * @param x The x coordinate
@@ -70,15 +69,15 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
      * @param yAmount The amount in y to move the text
      */
     fun translate(xAmount: Float, yAmount: Float) {
-        var xAmount = xAmount
-        var yAmount = yAmount
-        if (xAmount == 0f && yAmount == 0f) return
+        var xa = xAmount
+        var ya = yAmount
+        if (xa == 0f && ya == 0f) return
         if (integer) {
-            xAmount = xAmount.roundToInt().toFloat()
-            yAmount = yAmount.roundToInt().toFloat()
+            xa = xa.roundToInt().toFloat()
+            ya = ya.roundToInt().toFloat()
         }
-        x += xAmount
-        y += yAmount
+        x += xa
+        y += ya
         val pageVertices = pageVertices
         var i = 0
         val n = pageVertices.size
@@ -87,8 +86,8 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             var ii = 0
             val nn = idx[i]
             while (ii < nn) {
-                vertices[ii] += xAmount
-                vertices[ii + 1] += yAmount
+                vertices[ii] += xa
+                vertices[ii + 1] += ya
                 ii += 5
             }
             i++
@@ -96,10 +95,9 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
     }
 
     /** Tints all text currently in the cache. Does not affect subsequently added text.  */
-    fun tint(tint: IVec4) {
-        val newTint = Color.toFloatBits(tint)
-        if (currentTint == newTint) return
-        currentTint = newTint
+    fun tint(tint: Int) {
+        if (currentTint == tint) return
+        currentTint = tint
         val tempGlyphCount = tempGlyphCount
         run {
             var i = 0
@@ -118,13 +116,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             while (ii < nn) {
                 val run = layout.runs[ii]
                 val glyphs = run.glyphs
-                //val colorFloat = Color.toFloatBits(tempColor.set(run.color).scl(tint))
-                val colorFloat = Color.toFloatBits(
-                    run.color.x * tint.x,
-                    run.color.y * tint.y,
-                    run.color.z * tint.z,
-                    run.color.w * tint.w
-                )
+                val colorFloat = Color.intToFloatColor(Color.mulColors(run.color, tint))
                 var iii = 0
                 val nnn = glyphs.size
                 while (iii < nnn) {
@@ -191,20 +183,19 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
     }
 
     /** Sets the color of all text currently in the cache. Does not affect subsequently added text.  */
-    fun setColors(tint: IVec4) {
-        setColors(Color.toFloatBits(tint))
+    fun setColors(tint: Int) {
+        setColors(Color.intToFloatColor(tint))
     }
 
     /** Sets the color of all text currently in the cache. Does not affect subsequently added text.  */
     fun setColors(r: Float, g: Float, b: Float, a: Float) {
-        val intBits = (255 * a).toInt() shl 24 or ((255 * b).toInt() shl 16) or ((255 * g).toInt() shl 8) or (255 * r).toInt()
-        setColors(Color.intToFloatColor(intBits))
+        setColors(Color.toIntBits(r, g, b, a))
     }
 
     /** Sets the color of the specified characters. This may only be called after [setText] and
      * is reset every time setText is called.  */
     fun setColors(tint: IVec4, start: Int, end: Int) {
-        setColors(Color.toFloatBits(tint), start, end)
+        setColors(Color.toFloatBits(tint.r, tint.g, tint.b, tint.a), start, end)
     }
 
     /** Sets the color of the specified characters. This may only be called after [setText] and
@@ -244,11 +235,6 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
         }
     }
 
-    /** A convenience method for setting the cache color. The color can also be set by modifying [getColor].  */
-    fun setColor(r: Float, g: Float, b: Float, a: Float) {
-        color.set(r, g, b, a)
-    }
-
     open fun draw(spriteBatch: Batch) {
         val regions = font.regions
         var j = 0
@@ -256,7 +242,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
         while (j < n) {
             if (idx[j] > 0) { // ignore if this texture has no glyphs
                 val vertices = pageVertices[j]
-                spriteBatch.draw(regions!![j].texture, vertices, 0, idx[j])
+                spriteBatch.draw(regions[j].texture, vertices, 0, idx[j])
             }
             j++
         }
@@ -295,7 +281,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
                 continue
             }
             // Render the page vertex data with the offset and count.
-            spriteBatch.draw(regions!![i].texture, pageVertices[i], offset * 20, count * 20)
+            spriteBatch.draw(regions[i].texture, pageVertices[i], offset * 20, count * 20)
             i++
         }
     }
@@ -305,12 +291,8 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             draw(spriteBatch)
             return
         }
-        val color = color
-        val oldAlpha = color.a
-        color.a *= alphaModulation
-        setColors(color)
+        setColors(Color.mulAlpha(color, alphaModulation))
         draw(spriteBatch)
-        color.a = oldAlpha
         setColors(color)
     }
 
@@ -376,13 +358,12 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
 
     private fun requirePageGlyphs(page: Int, glyphCount: Int) {
         if (pageGlyphIndices != null) {
-            if (glyphCount > pageGlyphIndices!![page].size) pageGlyphIndices!![page].ensureCapacity(glyphCount - pageGlyphIndices!![page].size)
+            val p = pageGlyphIndices!![page]
+            if (glyphCount > p.size) p.ensureCapacity(glyphCount - p.size)
         }
         val vertexCount = idx[page] + glyphCount * 20
         val vertices = pageVertices[page]
-        if (vertices == null) {
-            pageVertices[page] = FloatArray(vertexCount)
-        } else if (vertices.size < vertexCount) {
+        if (vertices.size < vertexCount) {
             val newVertices = FloatArray(vertexCount)
             arraycopy(vertices, 0, newVertices, 0, idx[page])
             pageVertices[page] = newVertices
@@ -404,15 +385,12 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
     private fun addToCache(layout: GlyphLayout, x: Float, y: Float) { // Check if the number of font pages has changed.
         val pageCount = font.regions.size
         if (pageVertices.size < pageCount) {
-            val newPageVertices = arrayOfNulls<FloatArray>(pageCount)
-            for (i in pageVertices.indices) {
-                newPageVertices[i] = pageVertices[i]
-            }
-            pageVertices = newPageVertices as Array<FloatArray>
+            val newPageVertices = Array(pageCount) { pageVertices.getOrNull(it) ?: FloatArray(0) }
+            pageVertices = newPageVertices
             val newIdx = IntArray(pageCount)
             arraycopy(idx, 0, newIdx, 0, idx.size)
             idx = newIdx
-            val newPageGlyphIndices = arrayOfNulls<ArrayList<Int>>(pageCount)
+            val newPageGlyphIndices = Array<ArrayList<Int>>(pageCount) { ArrayList() }
             var pageGlyphIndicesLength = 0
             if (pageGlyphIndices != null) {
                 pageGlyphIndicesLength = pageGlyphIndices!!.size
@@ -422,7 +400,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
                 }
             }
             for (i in pageGlyphIndicesLength until pageCount) newPageGlyphIndices[i] = ArrayList()
-            pageGlyphIndices = newPageGlyphIndices as Array<ArrayList<Int>>
+            pageGlyphIndices = newPageGlyphIndices
             tempGlyphCount = IntArray(pageCount)
         }
         layouts.add(layout)
@@ -433,7 +411,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             val run = layout.runs[i]
             val glyphs = run.glyphs
             val xAdvances = run.xAdvances
-            val color = Color.toFloatBits(run.color)
+            val color = Color.intToFloatColor(run.color)
             var gx = x + run.x
             val gy = y + run.y
             var ii = 0
@@ -446,17 +424,17 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             }
             i++
         }
-        currentTint = Color.toFloatBits(1f, 1f, 1f, 1f) // Cached glyphs have changed, reset the current tint.
+        currentTint = -1 // Cached glyphs have changed, reset the current tint.
     }
 
     private fun addGlyph(glyph: Glyph, x: Float, y: Float, color: Float) {
-        if (idx.size > 0) {
-            var x = x
-            var y = y
+        if (idx.isNotEmpty()) {
+            var xOffset = x
+            var yOffset = y
             val scaleX = font.scaleX
             val scaleY = font.scaleY
-            x += glyph.xoffset * scaleX
-            y += glyph.yoffset * scaleY
+            xOffset += glyph.xoffset * scaleX
+            yOffset += glyph.yoffset * scaleY
             var width = glyph.width * scaleX
             var height = glyph.height * scaleY
             val u = glyph.u
@@ -464,24 +442,24 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             val v = glyph.v
             val v2 = glyph.v2
             if (integer) {
-                x = x.roundToInt().toFloat()
-                y = y.roundToInt().toFloat()
+                xOffset = xOffset.roundToInt().toFloat()
+                yOffset = yOffset.roundToInt().toFloat()
                 width = width.roundToInt().toFloat()
                 height = height.roundToInt().toFloat()
             }
-            val x2 = x + width
-            val y2 = y + height
+            val x2 = xOffset + width
+            val y2 = yOffset + height
             val page = glyph.page
             var idx = idx[page]
             this.idx[page] += 20
             if (pageGlyphIndices != null) pageGlyphIndices!![page].add(glyphCount++)
             val vertices = pageVertices[page]
-            vertices[idx++] = x
-            vertices[idx++] = y
+            vertices[idx++] = xOffset
+            vertices[idx++] = yOffset
             vertices[idx++] = color
             vertices[idx++] = u
             vertices[idx++] = v
-            vertices[idx++] = x
+            vertices[idx++] = xOffset
             vertices[idx++] = y2
             vertices[idx++] = color
             vertices[idx++] = u
@@ -492,7 +470,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             vertices[idx++] = u2
             vertices[idx++] = v2
             vertices[idx++] = x2
-            vertices[idx++] = y
+            vertices[idx++] = yOffset
             vertices[idx++] = color
             vertices[idx++] = u2
             vertices[idx] = v
@@ -553,17 +531,11 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
      * @param start The first character of the string to draw.
      * @param end The last character of the string to draw (exclusive).
      * @param targetWidth The width of the area the text will be drawn, for wrapping or truncation.
-     * @param halign Horizontal alignment of the text, see [Align].
+     * @param halign Horizontal alignment of the text, -1 = left, 0 = middle, 1 = right.
      * @param wrap If true, the text will be wrapped within targetWidth.
      * @param truncate If not null, the text will be truncated within targetWidth with this string appended. May be an empty
      * string.
      * @return The glyph layout for the cached string (the layout's height is the distance from y to the baseline).
-     */
-    /** Adds glyphs for the specified text.
-     * @see .addText
-     */
-    /** Adds glyphs for the specified text.
-     * @see .addText
      */
     fun addText(str: CharSequence, x: Float, y: Float, start: Int = 0, end: Int = str.length, targetWidth: Float = 0f, halign: Int = -1,
                 wrap: Boolean = false, truncate: String? = null): GlyphLayout {
@@ -592,25 +564,11 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
         return integer
     }
 
-    val vertices: FloatArray
-        get() = getVertices(0)
-
     fun getVertices(page: Int): FloatArray {
         return pageVertices[page]
     }
 
     fun getVertexCount(page: Int): Int {
         return idx[page]
-    }
-
-    fun initCache() {
-        val pageCount = font.regions.size
-        require(pageCount != 0) { "The specified font must contain at least one texture page." }
-        pageVertices = Array(pageCount) { FloatArray(0) }
-        idx = IntArray(pageCount)
-        if (pageCount > 1) { // Contains the indices of the glyph in the cache as they are added.
-            pageGlyphIndices = Array(pageCount) { ArrayList() }
-        }
-        tempGlyphCount = IntArray(pageCount)
     }
 }

@@ -16,6 +16,8 @@
 
 package app.thelema.g3d
 
+import app.thelema.img.ITexture
+import app.thelema.img.TextureCube
 import app.thelema.math.IVec3
 import app.thelema.math.IVec4
 
@@ -28,4 +30,9 @@ interface IWorld {
     var ambientColor: IVec3
 
     var exposure: Float
+
+    var environmentPrefilterMap: TextureCube?
+    var environmentPrefilterMipCount: Int
+    var environmentIrradianceMap: TextureCube?
+    var brdfLUTMap: ITexture?
 }

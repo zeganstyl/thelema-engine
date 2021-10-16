@@ -16,23 +16,25 @@
 
 package app.thelema.gltf
 
+import app.thelema.ecs.component
+import app.thelema.ecs.sibling
 import app.thelema.gl.*
-import app.thelema.img.Texture2D
+import app.thelema.img.ITexture2D
 
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-texture)
  *
  * @author zeganstyl */
-class GLTFTexture(
-    override val array: IGLTFArray,
-    var texture: Texture2D = Texture2D(0)
-): GLTFArrayElementAdapter(array) {
+class GLTFTexture(override val array: IGLTFArray): GLTFArrayElementAdapter(array) {
     var sampler: Int = -1
     var source: Int = -1
 
+    override val defaultName: String
+        get() = "Texture"
+
+    val texture: ITexture2D = gltf.texturesEntity.entity("${defaultName}_$elementIndex").component()
+
     override fun readJson() {
         super.readJson()
-
-        texture.name = name
 
         var minFilter = gltf.conf.defaultTextureMinFilter
         var magFilter = gltf.conf.defaultTextureMagFilter
@@ -48,7 +50,6 @@ class GLTFTexture(
             tWrap = sampler.wrapT
         }
 
-        // magFilter can't have mipmap magnification
         val generateMipmaps = when (minFilter) {
             GL_LINEAR_MIPMAP_LINEAR,
             GL_NEAREST_MIPMAP_NEAREST,
@@ -62,15 +63,14 @@ class GLTFTexture(
 
             gltf.images.getOrWait(source) { image ->
                 image as GLTFImage
-
+                texture.image = image.image
                 gltf.runGLCall {
-                    texture.load(image.image, generateMipmaps = generateMipmaps) {
-                        bind()
-                        this.minFilter = minFilter
-                        this.magFilter = minFilter
-                        this.sWrap = sWrap
-                        this.tWrap = tWrap
-                    }
+                    texture.bind()
+                    texture.minFilter = minFilter
+                    texture.magFilter = magFilter
+                    texture.sWrap = sWrap
+                    texture.tWrap = tWrap
+                    if (generateMipmaps) texture.generateMipmapsGPU()
                 }
             }
 
@@ -96,13 +96,6 @@ class GLTFTexture(
         }
 
         ready()
-    }
-
-    override fun writeJson() {
-        super.writeJson()
-
-        if (sampler >= 0) json["sampler"] = sampler
-        if (source >= 0) json["source"] = source
     }
 
     override fun destroy() {

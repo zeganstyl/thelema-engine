@@ -16,7 +16,7 @@
 
 package app.thelema.ui
 
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 import app.thelema.utils.Color
 
 /**
@@ -282,8 +282,8 @@ class TabbedPane (private val style: Style = Style()) {
         var vertical: Boolean = false,
         var draggable: Boolean = true
     ) {
-        var closeButton: ImageButton.Style = ImageButton.Style()
-        var closeActiveButton: ImageButton.Style = ImageButton.Style()
+        var closeButton: ImageButton.ImageButtonStyle = ImageButton.ImageButtonStyle()
+        var closeActiveButton: ImageButton.ImageButtonStyle = ImageButton.ImageButtonStyle()
     }
 
     class TabbedPaneTable(val tabbedPane: TabbedPane) : Table() {
@@ -299,7 +299,7 @@ class TabbedPane (private val style: Style = Style()) {
         }
     }
 
-    private inner class TabButtonTable(val tab: Tab, private var closeButtonStyle: ImageButton.Style) : Table() {
+    private inner class TabButtonTable(val tab: Tab, private var closeButtonStyle: ImageButton.ImageButtonStyle) : Table() {
         var button: TextButton
         private val buttonStyle: TextButtonStyle
         var closeButton = ImageButton(closeButtonStyle)
@@ -312,15 +312,15 @@ class TabbedPane (private val style: Style = Style()) {
             })
             button.addListener(object : InputListener {
                 private var isDown = false
-                override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, mouseButton: Int): Boolean {
-                    if (button.isDisabled) {
+                override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                    if (this@TabButtonTable.button.isDisabled) {
                         return false
                     }
                     isDown = true
-                    if (MOUSE.isButtonPressed(MOUSE.LEFT)) {
+                    if (BUTTON.isPressed(BUTTON.LEFT)) {
                         setDraggedUpImage()
                     }
-                    if (mouseButton == MOUSE.MIDDLE) {
+                    if (button == BUTTON.MIDDLE) {
                         closeTabAsUser()
                     }
                     return true
@@ -424,12 +424,12 @@ class TabbedPane (private val style: Style = Style()) {
             }
             button.setProgrammaticChangeEvents(false)
             closeButton.image.scaling = Scaling.fill
-            closeButton.image.color = Color.RED
+            closeButton.image.color = Color.RED_INT
             addListeners()
             //buttonStyle = TextButtonStyle(button.style as TextButtonStyle)
             buttonStyle = TextButtonStyle()
             button.style = buttonStyle
-            closeButtonStyle = closeButton.style as ImageButton.Style
+            closeButtonStyle = closeButton.style as ImageButton.ImageButtonStyle
             up = buttonStyle.up
             add(button)
             if (tab.isCloseableByUser) {

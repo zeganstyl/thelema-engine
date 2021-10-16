@@ -16,13 +16,13 @@
 
 package app.thelema.gltf
 
-import app.thelema.ecs.ECS
+import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
-import app.thelema.g3d.IObject3D
+import app.thelema.g3d.ITransformNode
+import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexBuffer
 import app.thelema.json.IJsonObject
-import app.thelema.math.Mat4
 
 /** [glTF 2.0 specification - mesh](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#meshes)
  *
@@ -39,15 +39,24 @@ class GLTFMesh(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     /** Key - position attribute accessor index */
     val normalsMap = HashMap<Int, IVertexBuffer>()
 
+    override val defaultName: String
+        get() = "PrimitiveGroup"
+
     val entity: IEntity
         get() = gltf.meshesEntity.entity(name)
 
     fun writeEntity(entity: IEntity) {
-        val obj = entity.component<IObject3D>()
-        for (i in primitives.indices) {
-            obj.addMesh((primitives[i] as GLTFPrimitive).mesh)
+        entity.component<ITransformNode> {
+            if (gltf.conf.setupVelocityShader) enablePreviousMatrix()
         }
-        if (gltf.conf.setupVelocityShader) obj.node.transformData.previousWorldMatrix = Mat4()
+
+        for (i in primitives.indices) {
+            val primitive = primitives[i] as GLTFPrimitive
+            entity.addEntity(Entity {
+                name = primitive.name
+                component<IMesh>().inheritedMesh = primitive.mesh
+            })
+        }
     }
 
     override fun setJson(json: IJsonObject) {

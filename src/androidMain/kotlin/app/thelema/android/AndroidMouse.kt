@@ -4,7 +4,7 @@ import android.view.MotionEvent
 import android.view.MotionEvent.INVALID_POINTER_ID
 import app.thelema.input.IMouse
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 
 class AndroidMouse(val app: AndroidApp): IMouse {
     override var deltaX: Int = 0
@@ -22,7 +22,7 @@ class AndroidMouse(val app: AndroidApp): IMouse {
 
     val listeners = ArrayList<IMouseListener>()
 
-    var defaultButton = MOUSE.LEFT
+    var defaultButton = BUTTON.LEFT
 
     var lastTouchX: Float = 0f
     var lastTouchY: Float = 0f

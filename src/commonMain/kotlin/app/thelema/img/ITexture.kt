@@ -16,15 +16,13 @@
 
 package app.thelema.img
 
-import app.thelema.app.APP
+import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.GL
 
 /**
  * @author zeganstyl
  */
-interface ITexture {
-    var name: String
-
+interface ITexture: IEntityComponent {
     /** The target of this texture, used when binding the texture, e.g. GL_TEXTURE_2D. */
     var glTarget: Int
 
@@ -56,25 +54,34 @@ interface ITexture {
     val height: Int
     val depth: Int
 
+    /** If texture handle is not generated, texture will be initiated with one pixel */
+    var initOnBind: Boolean
+
     /** Init texture with default data */
-    fun initTexture()
+    fun initTexture(color: Int = -1)
 
     /** Binds this texture. The texture will be bound to the currently active texture unit. */
     fun bind() {
+        if (textureHandle == 0 && initOnBind) initTexture()
         GL.glBindTexture(glTarget, textureHandle)
+    }
+
+    fun unbind() {
+        GL.glBindTexture(glTarget, 0)
     }
 
     /** Sets active texture unit and binds texture to the given unit.
      * @param unit check size of [GL.textureUnits] to know how many units you can use.
      */
     fun bind(unit: Int) {
+        if (textureHandle == 0 && initOnBind) initTexture()
         GL.activeTexture = unit
         GL.glBindTexture(glTarget, textureHandle)
     }
 
     /** Texture must be bound */
     fun generateMipmapsGPU() {
-        if (APP.platformType != APP.Desktop) {
+        if (GL.isGLES) {
             GL.glGenerateMipmap(glTarget)
         } else {
             if (GL.isExtensionSupported("GL_ARB_framebuffer_object") || GL.isExtensionSupported("GL_EXT_framebuffer_object")) {
@@ -85,10 +92,11 @@ interface ITexture {
         }
     }
 
-    fun destroy() {
+    override fun destroy() {
         if (textureHandle != 0) {
             GL.glDeleteTexture(textureHandle)
             textureHandle = 0
         }
+        super.destroy()
     }
 }

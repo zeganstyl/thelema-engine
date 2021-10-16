@@ -17,14 +17,11 @@
 package app.thelema.test.shader.post
 
 import app.thelema.app.APP
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.img.SimpleFrameBuffer
-import app.thelema.gl.ScreenQuad
 import app.thelema.img.render
+import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.Bloom
-import app.thelema.test.CubeModel
 import app.thelema.test.Test
 
 // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/
@@ -35,37 +32,22 @@ class BloomTest: Test {
         get() = "Bloom"
 
     override fun testMain() {
-        val model = CubeModel()
+        val box = BoxMesh { setSize(2f) }
+        val boxShader = SimpleShader3D {
+            renderAttributeName = positionsName
+        }
 
-        val sceneBuffer = SimpleFrameBuffer(
-            width = APP.width,
-            height = APP.height,
-            hasDepth = true
-        )
+        val frameBuffer = SimpleFrameBuffer(hasDepth = true)
 
-        val screenQuad = ScreenQuad()
+        val bloom = Bloom(frameBuffer.width, frameBuffer.height)
+        bloom.brightnessMap = frameBuffer.texture
 
-        val bloom = Bloom(
-            sceneBuffer.width,
-            sceneBuffer.height,
-            iterations = 6,
-            iterationsStep = 2
-        )
-
-        GL.isDepthTestEnabled = true
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            model.update()
-
-            sceneBuffer.render {
-                GL.glClearColor(0f, 0f, 0f, 1f)
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.render()
+        APP.onRender = {
+            frameBuffer.render {
+                box.render(boxShader)
             }
 
-            bloom.render(screenQuad, sceneBuffer.getTexture(0), sceneBuffer.getTexture(0), null)
+            bloom.render(frameBuffer.texture, null)
         }
     }
 }

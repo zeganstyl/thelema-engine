@@ -30,7 +30,23 @@ class TextureRenderer(
     uvName: String = "UV",
     flipY: Boolean = false,
     uvScale: Float = 1f
-) : ScreenQuad(x, y, width, height, positionName, uvName) {
+) {
+    val mesh: IMesh by lazy {
+        Mesh {
+            primitiveType = GL_TRIANGLE_FAN
+
+            addVertexBuffer {
+                addAttribute(2, positionName)
+                addAttribute(2, uvName)
+                initVertexBuffer(4) {
+                    putFloats(x - width, y - height,  0f, 0f)
+                    putFloats(x + width, y - height,  1f, 0f)
+                    putFloats(x + width, y + height,  1f, 1f)
+                    putFloats(x - width, y + height,  0f, 1f)
+                }
+            }
+        }
+    }
 
     val shader = Shader(
         vertCode = """
@@ -73,13 +89,15 @@ void main() {
         shader.set("scale", x, y)
     }
 
-    fun render(
+    inline fun render(
         texture: ITexture,
         out: IFrameBuffer? = null,
         clearMask: Int? = GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT,
         set: TextureRenderer.() -> Unit = {}
     ) {
+        shader.bind()
         texture.bind(0)
-        render(shader, out, clearMask) { set() }
+        set()
+        ScreenQuad.render(shader, out, clearMask)
     }
 }

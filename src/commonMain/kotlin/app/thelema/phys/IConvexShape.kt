@@ -18,5 +18,4 @@ package app.thelema.phys
 
 /** @author zeganstyl */
 interface IConvexShape {
-    val shape: IShape
 }

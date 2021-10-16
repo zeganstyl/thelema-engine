@@ -16,12 +16,8 @@
 
 package app.thelema.test.g3d
 
-import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.app.APP
 import app.thelema.g3d.mesh.PlaneMesh
-import app.thelema.gl.GL
-import app.thelema.math.MATH
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
@@ -32,34 +28,12 @@ class PlaneMeshTest: Test {
 
     override fun testMain() {
         val plane = PlaneMesh {
-            width = 4f
-            height = 4f
-            xDivisions = 5
-            yDivisions = 5
+            setSize(4f)
+            setDivisions(5)
         }
 
-        val shader = SimpleShader3D {
-            positionName = plane.builder.positionName
-            uvName = plane.builder.uvName
-            renderAttributeName = uvName
-            worldMatrix = Mat4()
-        }
+        val shader = SimpleShader3D()
 
-        ActiveCamera {
-            lookAt(Vec3(1f, 3f, 1f), MATH.Zero3)
-            near = 0.1f
-            far = 100f
-            updateCamera()
-        }
-
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear()
-
-            shader.worldMatrix?.rotate(0f, 1f, 0f, 0.01f)
-
-            shader.render(plane.mesh)
-        }
+        APP.onRender = { shader.render(plane.mesh) }
     }
 }

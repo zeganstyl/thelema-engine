@@ -16,25 +16,20 @@
 
 package app.thelema.test.shader
 
-
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
+import app.thelema.g3d.mesh.*
 import app.thelema.gl.*
-import app.thelema.img.Attachments
-import app.thelema.img.FrameBuffer
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.FrustumMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
 import app.thelema.gl.TextureRenderer
+import app.thelema.img.DepthFrameBuffer
 import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.test.Test
 import app.thelema.utils.Color
-import app.thelema.utils.LOG
 
 /** [learnopengl.com](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping)
  *
@@ -44,7 +39,6 @@ class ShadowMappingBaseTest: Test {
         get() = "Shadow mapping base"
 
     override fun testMain() {
-
         val sceneObjectShader = Shader(
             vertCode = """
 attribute vec3 POSITION;
@@ -113,14 +107,7 @@ void main() {
             far = 500f
         }
 
-        val depthBuffer = FrameBuffer(1024, 1024)
-        depthBuffer.attachments.add(Attachments.depth())
-        depthBuffer.buildAttachments()
-        depthBuffer.getTexture(0).apply {
-            bind()
-            minFilter = GL_NEAREST
-            magFilter = GL_NEAREST
-        }
+        val depthBuffer = DepthFrameBuffer(1024, 1024)
 
         val lightMatrix = Mat4()
         val halfWidth = 50f
@@ -139,25 +126,20 @@ void main() {
             up = Vec3(0f, 1f, 0f)
         ))
 
-        val cube = BoxMeshBuilder(xSize = 2f, ySize = 2f, zSize = 2f).build()
-        val plane = PlaneMeshBuilder(width = 500f, height = 500f).build()
+        val cube = BoxMesh { setSize(2f) }
+        val plane = PlaneMesh { setSize(500f) }
 
         // visualize light field bounds
-        val lightFrustumMesh = FrustumMeshBuilder(Mat4().set(lightMatrix).inv()).build()
+        val lightFrustumMesh = FrustumMesh(Mat4().set(lightMatrix).inv())
 
         val cubeColor = Vec4(1f, 0.5f, 0f, 1f)
 
-        GL.isDepthTestEnabled = true
-
-        val control = OrbitCameraControl(
-            camera = ActiveCamera,
-            zenith = 1f,
-            azimuth = 0f,
-            target = Vec3(10f, 3f, 0f),
+        val control = OrbitCameraControl {
+            zenith = 1f
+            azimuth = 0f
+            target = Vec3(10f, 3f, 0f)
             targetDistance = 10f
-        )
-        control.listenToMouse()
-        LOG.info(control.help)
+        }
 
         // create screen quad for debugging
         val screenQuad = TextureRenderer()
@@ -172,15 +154,11 @@ void main() {
 
         val cubesY = 1f
 
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            control.update(APP.deltaTime)
+        APP.onRender = {
+            control.update()
             ActiveCamera.updateCamera()
 
             depthBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
                 GL.cullFaceMode = GL_FRONT
 
                 val shader = depthRenderShader

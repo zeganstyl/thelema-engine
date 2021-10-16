@@ -16,6 +16,8 @@
 
 package app.thelema.g3d
 
+import app.thelema.img.ITexture
+import app.thelema.img.TextureCube
 import app.thelema.math.IVec3
 import app.thelema.math.IVec4
 import app.thelema.math.Vec3
@@ -30,4 +32,9 @@ class World: IWorld {
     override var ambientColor: IVec3 = Vec3(0.03f)
 
     override var exposure: Float = 1f
+
+    override var environmentPrefilterMap: TextureCube? = null
+    override var environmentPrefilterMipCount: Int = 0
+    override var environmentIrradianceMap: TextureCube? = null
+    override var brdfLUTMap: ITexture? = null
 }

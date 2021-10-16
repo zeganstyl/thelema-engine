@@ -16,13 +16,13 @@
 
 package app.thelema.test.g3d.mesh
 
+import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.DebugMesh
-import app.thelema.gl.GL
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.MeshVisualizer
 import app.thelema.math.Vec4
-import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
 class DebugMeshTest: Test {
@@ -30,56 +30,32 @@ class DebugMeshTest: Test {
         get() = "Debug mesh"
 
     override fun testMain() {
-        val box = BoxMeshBuilder(2f, 2f, 2f).build()
+        val box = BoxMesh { setSize(2f) }
+        val boxShader = SimpleShader3D()
 
-        val shader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-
-varying vec3 color;
-uniform mat4 viewProj;
-
-void main() {
-    color = POSITION;
-    gl_Position = viewProj * vec4(POSITION, 1.0);
-}
-""",
-            fragCode = """
-varying vec3 color;
-
-void main() {
-    gl_FragColor = vec4(color, 1.0);
-}
-""")
-
-        val debugMesh = DebugMesh {
+        val debugMesh = MeshVisualizer {
             addVectors3D(
-                box.getAttribute("POSITION"),
-                box.getAttribute("NORMAL"),
+                box.mesh.getAttribute("POSITION"),
+                box.mesh.getAttribute("NORMAL"),
                 Vec4(0f, 0f, 1f, 1f),
                 0.5f
             )
 
             addVectors3D(
-                box.getAttribute("POSITION"),
-                box.getAttribute("POSITION"),
+                box.mesh.getAttribute("POSITION"),
+                box.mesh.getAttribute("POSITION"),
                 Vec4(1f, 1f, 1f, 1f),
                 0.25f
             )
         }
 
         val control = OrbitCameraControl()
-        control.listenToMouse()
 
-        GL.isDepthTestEnabled = true
-        GL.render {
-            GL.glClear()
-
+        APP.onRender = {
             control.update()
             ActiveCamera.updateCamera()
 
-            shader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            box.render(shader)
+            box.render(boxShader)
 
             debugMesh.render()
         }

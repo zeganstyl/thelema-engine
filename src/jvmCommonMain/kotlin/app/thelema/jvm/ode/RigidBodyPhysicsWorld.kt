@@ -16,12 +16,14 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
+import app.thelema.ecs.*
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 import app.thelema.phys.*
 import app.thelema.utils.Pool
+import app.thelema.utils.iterate
 import org.ode4j.math.DVector3
+import org.ode4j.math.DVector3C
 import org.ode4j.ode.*
 import kotlin.math.max
 
@@ -29,12 +31,44 @@ import kotlin.math.max
  *
  * @author zeganstyl */
 class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
+    init {
+        OdeHelper.initODE()
+    }
+
+    val simulationListener = object : SimulationListener {
+        override fun startSimulation() {
+            this@RigidBodyPhysicsWorld.startSimulation()
+        }
+
+        override fun stopSimulation() {
+            this@RigidBodyPhysicsWorld.stopSimulation()
+        }
+    }
+
     override var entityOrNull: IEntity? = null
+        set(value) {
+            field?.component<SimulationNode>()?.removeSimulationListener(simulationListener)
+            field = value
+            value?.forEachComponent { addedSiblingComponent(it) }
+            value?.forEachComponentInBranch { addedComponentToBranch(it) }
+            value?.component<SimulationNode>()?.addSimulationListener(simulationListener)
+        }
 
-    val tmp = DVector3()
+    var simulationRequest: Int = 0
 
-    val bodyPairsPool = Pool { BodyContactPair() }
-    val geomPairsPool = Pool { GeomContactPair() }
+    override var isSimulationRunning: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value
+                simulationRequest = if (value) 1 else -1
+            }
+        }
+
+    private val tmp = DVector3()
+
+    val bodies = ArrayList<RigidBody>()
+
+    val bodyPairsPool = Pool { BodyContact(RigidBody(), RigidBody(), Vec3(), Vec3(), 0f) }
 
     val world = OdeHelper.createWorld().apply {
         // https://ode.org/ode-latest-userguide.html#sec_3_7_0
@@ -42,6 +76,8 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
         // https://ode.org/ode-latest-userguide.html#sec_3_8_2
         cfm = 0.0001
+
+        quickStepNumIterations = 10
     }
 
     var space = OdeHelper.createHashSpace(null)
@@ -49,32 +85,27 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     var maxContacts = 40
 
-    /** After contact life time spending, contact will be ended and removed */
-    var contactMaxLifeTime = 0.1f
-    val aliveContacts = HashMap<BodyContactPair, BodyContactPair>()
-    val newContacts = HashSet<BodyContactPair>()
-    val oldContacts = HashSet<BodyContactPair>()
-
-    val geomAliveContacts = HashMap<GeomContactPair, GeomContactPair>()
-    val geomNewContacts = HashSet<GeomContactPair>()
-    val geomOldContacts = HashSet<GeomContactPair>()
+    val newContacts = HashSet<BodyContact>()
+    val currentContacts = HashSet<BodyContact>()
+    val currentContactsMap = HashMap<Int, BodyContact>()
+    val oldContacts = HashSet<BodyContact>()
 
     val listeners = ArrayList<IPhysicsWorldListener>()
 
-    var minStep = 0.02
+    override val fixedDelta: Float = 0.02f
 
     var nearCallback = DGeom.DNearCallback { _, o1, o2 ->
-        val g1 = o1.data as Shape
-        val g2 = o2.data as Shape
+        val g1 = o1.data as IShape
+        val g2 = o2.data as IShape
         val b1 = o1.body
         val b2 = o2.body
-        val contacts = DContactBuffer(maxContacts) // up to MAX_CONTACTS contacts per box-box
         if (b1 != null && b2 != null && OdeHelper.areConnectedExcluding(b1, b2, DContactJoint::class.java)) return@DNearCallback
-        val bm1 = b1?.data as RigidBody?
-        val bm2 = b2?.data as RigidBody?
+        val bm1 = (b1?.data ?: g1.body) as RigidBody?
+        val bm2 = (b2?.data ?: g2.body) as RigidBody?
+        val contacts = DContactBuffer(maxContacts) // up to MAX_CONTACTS contacts per box-box
         for (i in 0 until maxContacts) {
             val contact = contacts[i]
-            contact.surface.mu = max(bm1?.friction ?: g1.friction, bm2?.friction ?: g2.friction).toDouble()
+            contact.surface.mu = max(bm1?.friction ?: 1f, bm2?.friction ?: 1f).toDouble()
 
             contact.surface.mode = OdeConstants.dContactBounce or OdeConstants.dContactSoftCFM
             contact.surface.mu2 = 0.0
@@ -89,8 +120,8 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
                 val contact = contacts[i]
                 val c: DJoint = OdeHelper.createContactJoint(world, contactGroup, contact)
 
-                val influence1 = bm1?.influenceOtherBodies ?: g1.influenceOtherBodies
-                val influence2 = bm2?.influenceOtherBodies ?: g2.influenceOtherBodies
+                val influence1 = bm1?.influenceOtherBodies ?: true
+                val influence2 = bm2?.influenceOtherBodies ?: true
 
                 // http://ode.org/wiki/index.php?title=Manual#How_do_I_make_.22one_way.22_collision_interaction
                 when {
@@ -107,34 +138,8 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
                 }
 
                 // <Collect collisions> ================================================================================
-                val geomPair = geomPairsPool.get()
-                geomPair.a = g1
-                geomPair.b = g2
-                geomPair.depth = contact.contactGeom.depth
-                geomPair.lifeTime = contactMaxLifeTime
-                val geomAlivePair = geomAliveContacts[geomPair]
-                if (geomAlivePair == null) {
-                    geomNewContacts.add(geomPair)
-                } else {
-                    // we need only hash from new pair and we will get current alive pair
-                    geomAlivePair.lifeTime = contactMaxLifeTime
-                    geomAlivePair.depth = geomPair.depth
-                }
-
                 if (bm1 != null && bm2 != null) {
-                    val pair = bodyPairsPool.get()
-                    pair.a = bm1
-                    pair.b = bm2
-                    pair.depth = contact.contactGeom.depth
-                    pair.lifeTime = contactMaxLifeTime
-                    val alivePair = aliveContacts[pair]
-                    if (alivePair == null) {
-                        newContacts.add(pair)
-                    } else {
-                        // we need only hash from new pair and we will get current alive pair
-                        alivePair.lifeTime = contactMaxLifeTime
-                        alivePair.depth = pair.depth
-                    }
+                    newContacts.add(bodyPairsPool.getOrCreate { BodyContact(bm1, bm2, contact) })
                 }
                 // </Collect collisions> ===============================================================================
             }
@@ -143,6 +148,29 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     override val sourceObject: Any
         get() = world
+
+    override fun addedEntityToBranch(entity: IEntity) {
+        entity.forEachChildEntity { child ->
+            child.forEachComponentInBranch { addedComponentToBranch(it) }
+        }
+    }
+
+    override fun removedEntityFromBranch(entity: IEntity) {
+        entity.forEachChildEntity { child ->
+            child.forEachComponentInBranch { removedComponentFromBranch(it) }
+        }
+    }
+
+    override fun addedComponentToBranch(component: IEntityComponent) {
+        if (component is RigidBody) {
+            bodies.add(component)
+            component.isSimulationRunning = isSimulationRunning
+        }
+    }
+
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        addedComponentToBranch(component)
+    }
 
     override fun setGravity(x: Float, y: Float, z: Float) {
         world.setGravity(x.toDouble(), y.toDouble(), z.toDouble())
@@ -162,100 +190,95 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         listeners.remove(listener)
     }
 
-    override fun checkCollision(
-        shape1: IShape,
-        shape2: IShape,
-        out: MutableList<IContactInfo>
-    ): MutableList<IContactInfo> {
-        val contacts = DContactBuffer(maxContacts)
-        shape1 as Shape
-        shape2 as Shape
-        val numContacts = OdeHelper.collide(shape1.geom, shape2.geom, maxContacts, contacts.geomBuffer)
-        for (i in 0 until numContacts) {
-            val contact = contacts[i]
-            val pos = contact.contactGeom.pos
-            val nor = contact.contactGeom.normal
-            out.add(
-                ContactInfo(
-                Vec3(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat()),
-                Vec3(nor.get0().toFloat(), nor.get1().toFloat(), nor.get2().toFloat()),
-                contact.contactGeom.depth.toFloat()
-            )
-            )
-        }
-        return out
-    }
+    override fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact? =
+        currentContactsMap[BodyContact.contactHash(body1, body2)]
 
     override fun step(delta: Float) {
-        newContacts.clear()
-        space.collide(null, nearCallback)
-        world.quickStep(minStep)
+        if (simulationRequest != 0) {
+            isSimulationRunning = simulationRequest == 1
+            simulationRequest = 0
+            bodies.forEach { it.isSimulationRunning = isSimulationRunning }
+        }
 
-        contactGroup.empty()
+        if (isSimulationRunning) {
+            space.collide(null, nearCallback)
 
-        // remove old contacts
-        oldContacts.clear()
-        oldContacts.addAll(aliveContacts.values)
-        oldContacts.forEach { pair ->
-            pair.lifeTime -= delta
-            if (pair.lifeTime < 0f) {
-                aliveContacts.remove(pair)
-                for (i in listeners.indices) {
-                    listeners[i].collisionEnd(pair.a, pair.b)
+            oldContacts.clear()
+            oldContacts.addAll(currentContacts)
+
+            currentContacts.clear()
+            currentContacts.addAll(newContacts)
+
+            currentContactsMap.clear()
+            currentContacts.forEach { currentContactsMap[it.hashCode()] = it }
+
+            newContacts.removeAll(oldContacts)
+            oldContacts.removeAll(currentContacts)
+
+            val iterations = max((delta / fixedDelta).toInt(), 1)
+            for (i in 0 until iterations) {
+                world.quickStep((if (fixedDelta > 0f) fixedDelta else delta).toDouble())
+            }
+
+            contactGroup.empty()
+
+            oldContacts.forEach { contact ->
+                bodyPairsPool.free(contact)
+                for (j in listeners.indices) {
+                    listeners[j].collisionEnd(contact)
                 }
-                bodyPairsPool.free(pair)
             }
-        }
+            oldContacts.clear()
 
-        // add new contacts
-        newContacts.removeAll(aliveContacts.values)
-        newContacts.forEach { pair ->
-            aliveContacts[pair] = pair
-            for (i in listeners.indices) {
-                listeners[i].collisionBegin(pair.a, pair.b, pair.depth.toFloat())
-            }
-        }
-
-        // remove old contacts
-        geomOldContacts.clear()
-        geomOldContacts.addAll(geomAliveContacts.values)
-        geomOldContacts.forEach { pair ->
-            pair.lifeTime -= delta
-            if (pair.lifeTime < 0f) {
-                geomAliveContacts.remove(pair)
-                for (i in listeners.indices) {
-                    listeners[i].collisionEnd(pair.a, pair.b)
+            newContacts.forEach { contact ->
+                listeners.iterate { listener ->
+                    listener.collisionBegin(contact)
+                    contact.body1.collided(contact, contact.body1, contact.body2)
+                    contact.body2.collided(contact, contact.body2, contact.body1)
                 }
-                geomPairsPool.free(pair)
             }
-        }
+            newContacts.clear()
 
-        // add new contacts
-        geomNewContacts.removeAll(geomAliveContacts.values)
-        geomNewContacts.forEach { pair ->
-            geomAliveContacts[pair] = pair
-            for (i in listeners.indices) {
-                listeners[i].collisionBegin(pair.a, pair.b, pair.depth.toFloat())
-            }
+            bodies.iterate { it.update() }
         }
     }
-
-    override fun rigidBody(block: IRigidBody.() -> Unit): IRigidBody = RigidBody().apply(block)
-
-    override fun rayShape(block: IRayShape.() -> Unit): IRayShape = RayShape().apply(block)
-    override fun heightField(block: IHeightField.() -> Unit): IHeightField = HeightField().apply(block)
-    override fun boxShape(block: IBoxShape.() -> Unit): IBoxShape = BoxShape().apply(block)
-    override fun sphereShape(block: ISphereShape.() -> Unit): ISphereShape = SphereShape().apply(block)
-    override fun capsuleShape(block: ICapsuleShape.() -> Unit): ICapsuleShape = CapsuleShape().apply(block)
-    override fun cylinderShape(block: ICylinderShape.() -> Unit): ICylinderShape = CylinderShape().apply(block)
-    override fun trimeshShape(block: ITrimeshShape.() -> Unit): ITrimeshShape = TrimeshShape().apply(block)
-    override fun planeShape(block: IPlaneShape.() -> Unit): IPlaneShape = PlaneShape().apply(block)
-
-    override fun isContactExist(body1: IRigidBody, body2: IRigidBody): Boolean = false
 
     override fun destroy() {
         contactGroup.destroy()
         space.destroy()
         world.destroy()
     }
+
+    companion object {
+        fun initOdeComponents() {
+            ECS.descriptor({ RigidBodyPhysicsWorld() }) {
+                setAliases(IRigidBodyPhysicsWorld::class)
+
+                descriptor({ BoxShape() }) {
+                    setAliases(IBoxShape::class)
+                    float("xSize", { xSize }) { xSize = it }
+                    float("ySize", { ySize }) { ySize = it }
+                    float("zSize", { zSize }) { zSize = it }
+                }
+                descriptor({ SphereShape() }) {
+                    setAliases(ISphereShape::class)
+                    float("radius", { radius }) { radius = it }
+                }
+                descriptor({ TrimeshShape() }) {
+                    setAliases(ITrimeshShape::class)
+                    ref("mesh", { mesh }) { mesh }
+                }
+                descriptor({ RigidBody() }) {
+                    setAliases(IRigidBody::class)
+                    float("friction", { friction }) { friction = it }
+                    bool("isStatic", { isStatic }) { isStatic = it }
+                    bool("influenceOtherBodies", { influenceOtherBodies }) { influenceOtherBodies = it }
+                }
+            }
+        }
+    }
+}
+
+fun DVector3C.toVec3(out: IVec3 = Vec3()): IVec3 {
+    return out.set(get0().toFloat(), get1().toFloat(), get2().toFloat())
 }

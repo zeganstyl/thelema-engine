@@ -17,6 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.Blending
+import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
@@ -35,20 +36,14 @@ class OutputNode(
     override val name: String
         get() = "Output"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     /** Clip space vertex position */
     var vertPosition
-        get() = input[VertPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(VertPosition, value)
+        get() = input["vertPosition"] ?: GLSL.zeroFloat
+        set(value) = setInput("vertPosition", value)
 
     var fragColor
-        get() = input[FragColor] ?: GLSL.oneFloat
-        set(value) = setInput(FragColor, value)
+        get() = input["fragColor"] ?: GLSL.oneFloat
+        set(value) = setInput("fragColor", value)
 
     var alphaMode: String = Blending.OPAQUE
     var alphaCutoff: Float = 0.5f
@@ -62,16 +57,8 @@ class OutputNode(
     private var cameraFarCached = -1f
 
     init {
-        setInput(VertPosition, vertPosition)
-        setInput(FragColor, fragColor)
-    }
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        alphaMode = json.string("alphaMode", Blending.OPAQUE)
-        alphaCutoff = json.float("alphaCutoff", 0.5f)
-        cullFaceMode = json.int("cullFaceMode", GL_BACK)
+        setInput("vertPosition", vertPosition)
+        setInput("fragColor", fragColor)
     }
 
     override fun writeJson(json: IJsonObject) {
@@ -82,8 +69,8 @@ class OutputNode(
         json["cullFaceMode"] = cullFaceMode
     }
 
-    override fun prepareToDrawMesh(mesh: IMesh) {
-        super.prepareToDrawMesh(mesh)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
         if (fadeStart in 0f..1f) {
             if (cameraFarCached != ActiveCamera.far) {
@@ -94,9 +81,11 @@ class OutputNode(
         }
 
         GL.isBlendingEnabled = alphaMode == Blending.BLEND || fadeStart in 0f..1f
-        if (GL.isBlendingEnabled) GL.setSimpleAlphaBlending()
-        GL.isCullFaceEnabled = GL.cullFaceMode == 0
-        if (GL.isCullFaceEnabled) GL.cullFaceMode = cullFaceMode
+        if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
+
+        val cullFace = cullFaceMode != 0
+        GL.isCullFaceEnabled = cullFace
+        if (cullFace) GL.cullFaceMode = cullFaceMode
     }
 
     override fun declarationVert(out: StringBuilder) {
@@ -117,32 +106,20 @@ class OutputNode(
         out.append("gl_Position = ${vertPosition.asVec4()};")
 
         if (fadeStart in 0f..1f) {
-            out.append("depthForFade = gl_Position.w;\n")
+            out.append("\ndepthForFade = gl_Position.w;")
         }
     }
 
     override fun executionFrag(out: StringBuilder) {
-        out.append("gl_FragColor = ${fragColor.asVec4()};\n")
+        out.append("gl_FragColor = ${fragColor.asVec4()};")
 
         if (alphaMode == Blending.MASK) {
-            out.append("if (gl_FragColor.a < 0.001 || gl_FragColor.a < $alphaCutoff) { discard; }\n")
-            out.append("gl_FragColor.a = 1.0;\n")
+            out.append("\nif (gl_FragColor.a < 0.001 || gl_FragColor.a < $alphaCutoff) { discard; }")
+            out.append("\ngl_FragColor.a = 1.0;")
         }
 
         if (fadeStart in 0f..1f) {
-            out.append("gl_FragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);\n")
-        }
-    }
-
-    companion object {
-        const val ClassId = "output"
-
-        const val VertPosition = "vertPosition"
-        const val FragColor = "fragColor"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(VertPosition, GLSLType.Vec4)
-            put(FragColor, GLSLType.Vec4)
+            out.append("\ngl_FragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);")
         }
     }
 }

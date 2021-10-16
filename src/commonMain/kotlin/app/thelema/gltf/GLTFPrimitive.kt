@@ -17,8 +17,8 @@
 package app.thelema.gltf
 
 import app.thelema.data.DATA
-import app.thelema.ecs.ECS
 import app.thelema.ecs.component
+import app.thelema.g3d.SphereBoundings
 import app.thelema.g3d.mesh.Mesh3DTool
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
@@ -82,12 +82,18 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
                 mesh.indices = indices
 
-                gltf.runGLCall { indices.loadBufferToGpu() }
+                gltf.runGLCall { indices.uploadBufferToGpu() }
 
                 if (gltf.conf.mergeVertexAttributes) mergeBuffers(json) else addBuffersAsIs(json)
             }
         } else {
             if (gltf.conf.mergeVertexAttributes) mergeBuffers(json) else addBuffersAsIs(json)
+        }
+    }
+
+    private fun setupBoundings() {
+        if (!mesh.containsAttribute("JOINTS_0")) {
+            mesh.boundings = SphereBoundings().apply { setVertices(mesh, "POSITION") }
         }
     }
 
@@ -101,7 +107,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         var hasTangents = false
 
         json.get("attributes") {
-            ints { attributeName, accessorIndex ->
+            forEachInt { attributeName, accessorIndex ->
                 val accessor = gltf.accessors[accessorIndex] as GLTFAccessor
 
                 attributesMap[attributeName] = accessorIndex
@@ -155,9 +161,17 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 if (!hasNormals) calcNormals()
                 if (!hasTangents) calcTangents()
 
+                setupBoundings()
+
                 ready()
 
-                gltf.runGLCall { vertices.loadBufferToGpu() }
+                gltf.runGLCall {
+                    vertices.uploadBufferToGpu()
+                    if (!gltf.conf.saveMeshesInCPUMem) {
+                        vertices.bytes.destroy()
+                        mesh.indices?.bytes?.destroy()
+                    }
+                }
             }
 
             if (attributeAccessor == null) {
@@ -218,7 +232,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 calcNormals()
             }
 
-            if (mesh.containsInput("TEXCOORD_0") && !json.obj("attributes").contains("TANGENT")) {
+            if (mesh.containsAttribute("TEXCOORD_0") && !json.obj("attributes").contains("TANGENT")) {
                 val positionAccessor = json.obj("attributes").int("POSITION")
                 val buffer = gltfMesh.tangentsMap[positionAccessor]
                 if (buffer != null) {
@@ -232,9 +246,17 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 calcTangents()
             }
 
+            setupBoundings()
+
             ready()
 
-            gltf.runGLCall { mesh.vertexBuffers.forEach { it.loadBufferToGpu() } }
+            gltf.runGLCall {
+                mesh.vertexBuffers.forEach { it.uploadBufferToGpu() }
+                if (!gltf.conf.saveMeshesInCPUMem) {
+                    mesh.vertexBuffers.forEach { it.bytes.destroy() }
+                    mesh.indices?.bytes?.destroy()
+                }
+            }
         }
 
         json.get("attributes") {
@@ -242,7 +264,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
             val attributesCount = size
 
-            ints { attributeName, accessorIndex ->
+            forEachInt { attributeName, accessorIndex ->
                 val accessor = gltf.accessors[accessorIndex] as GLTFAccessor
 
                 mesh.verticesCount = accessor.count
@@ -250,6 +272,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 accessor.getOrWaitSetupBuffer { bytes ->
                     val buffer = gltfMesh.buffersMap[accessorIndex]
                     if (buffer != null) {
+                        buffer.vertexAttributes[0].addAlias(attributeName)
                         mesh.addVertexBuffer(buffer)
                     } else {
                         gltfMesh.buffersMap[accessorIndex] = mesh.addVertexBuffer {
@@ -295,7 +318,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     fun calcTangents() {
         val mesh = mesh
 
-        if (mesh.containsInput("TEXCOORD_0") && mesh.primitiveType == GL_TRIANGLES) {
+        if (mesh.containsAttribute("TEXCOORD_0") && mesh.primitiveType == GL_TRIANGLES) {
             Mesh3DTool.calculateTangents(
                 mesh,
                 mesh.getAttribute("POSITION"),

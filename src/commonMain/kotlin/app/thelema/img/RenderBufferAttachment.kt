@@ -31,8 +31,12 @@ class RenderBufferAttachment(
     override val isRenderBuffer: Boolean
         get() = true
 
-    override val texture: ITexture?
+    override var texture: ITexture?
         get() = null
+        set(_) {}
+
+    override val mipmapLevel: Int
+        get() = 0
 
     override fun setup(frameBuffer: IFrameBuffer) {
         if (glHandle == 0) glHandle = GL.glGenRenderbuffer()

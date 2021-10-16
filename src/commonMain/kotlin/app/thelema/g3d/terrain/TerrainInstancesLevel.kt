@@ -105,7 +105,7 @@ class TerrainInstancesLevel(var imageSampler: ImageSampler, block: IVertexBuffer
                 }
                 floatView.rewind()
 
-                buffer.loadBufferToGpu()
+                buffer.uploadBufferToGpu()
                 //buffer.instancesToRender = instancesNum
 
                 tileZ += tileSize

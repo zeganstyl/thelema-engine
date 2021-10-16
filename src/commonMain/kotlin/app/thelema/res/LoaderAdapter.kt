@@ -16,75 +16,83 @@
 
 package app.thelema.res
 
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
+import app.thelema.concurrency.ATOM
+import app.thelema.ecs.*
+import app.thelema.fs.IFile
 
 abstract class LoaderAdapter: ILoader {
-    protected val listeners = ArrayList<ResourceListener>()
+    override var file: IFile?
+        get() = loader.file
+        set(value) { loader.file = value }
 
-    protected var uriInternal: String = ""
-    override val uri: String
-        get() = uriInternal
+    protected val currentProgressInternal = ATOM.int(0)
+    override var currentProgress: Int
+        get() = currentProgressInternal.value
+        set(value) { currentProgressInternal.value = value }
 
-    override var currentProgress: Long = 0
-    override var maxProgress: Long = 1
+    protected val maxProgressInternal = ATOM.int(0)
+    override var maxProgress: Int
+        get() = maxProgressInternal.value
+        set(value) { maxProgressInternal.value = value }
 
-    protected var holdersInternal = ArrayList<Any>()
     override val holders: List<Any>
-        get() = holdersInternal
+        get() = loader.holders
 
-    override var loadOnSeparateThread: Boolean = false
+    override var separateThread: Boolean?
+        get() = loader.separateThread
+        set(value) { loader.separateThread = value }
+
+    override var runOnGLThreadRequest: Boolean
+        get() = loader.runOnGLThreadRequest
+        set(value) { loader.runOnGLThreadRequest = value }
 
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            value?.component<Resource>()?.loaderOrNull = this
+            loader = value?.component() ?: Loader()
+            loader.proxy = this
         }
 
-    fun resource(): Resource = entity.component()
+    override val isLoaded: Boolean
+        get() = loader.isLoaded
+
+    override val isLoading: Boolean
+        get() = loader.isLoading
+
+    var loader = Loader()
+
+    override fun stop(status: Int) {
+        loader.stop(status)
+    }
+
+    override fun load() {
+        loader.load()
+    }
+
+    override fun reload() {
+        loader.reload()
+    }
 
     override fun initProgress() {
         currentProgress = 0
         maxProgress = 1
     }
 
-    protected open fun notifyLoaded() {
-        notifyAndCleanListeners { it.loaded(this) }
-    }
-
-    private fun notifyAndCleanListeners(block: (listener: ResourceListener) -> Unit) {
-        val toRemove = ArrayList<ResourceListener>()
-
-        for (i in listeners.indices) {
-            val listener = listeners[i]
-            block(listener)
-            if (listener.removeListenerOnLoaded()) toRemove.add(listener)
-        }
-
-        for (i in toRemove.indices) {
-            listeners.remove(toRemove[i])
-        }
-    }
-
-    protected open fun notifyError(status: Int) {
-        notifyAndCleanListeners { it.error(this, status) }
-    }
-
     override fun hold(holder: Any) {
-        holdersInternal.add(holder)
+        loader.hold(holder)
     }
 
     override fun release(holder: Any) {
-        holdersInternal.remove(holder)
+        loader.release(holder)
     }
 
     override fun updateProgress() {}
 
-    override fun addResourceListener(listener: ResourceListener) {
-        listeners.add(listener)
+    override fun addLoaderListener(listener: LoaderListener) {
+        loader.addLoaderListener(listener)
     }
 
-    override fun removeResourceListener(listener: ResourceListener) {
-        listeners.remove(listener)
+    override fun removeLoaderListener(listener: LoaderListener) {
+        loader.removeLoaderListener(listener)
     }
 }

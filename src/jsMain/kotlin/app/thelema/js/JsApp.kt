@@ -18,14 +18,13 @@ package app.thelema.js
 
 import kotlinx.browser.window
 import app.thelema.audio.AL
-import app.thelema.audio.mock.MockAudio
+import app.thelema.audio.mock.AudioStub
 import app.thelema.data.DATA
 import app.thelema.ecs.ECS
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
 import app.thelema.gl.GL
-import app.thelema.input.KB
-import app.thelema.input.MOUSE
+import app.thelema.input.KEY
 import app.thelema.json.JSON
 import app.thelema.js.audio.JsAL
 import app.thelema.js.audio.JsMouse
@@ -39,7 +38,12 @@ import org.w3c.dom.DragEvent
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.get
 import app.thelema.app.*
-import app.thelema.js.ode.ODE
+import app.thelema.ecs.replaceDescriptor
+import app.thelema.img.IImage
+import app.thelema.img.IImageLoader
+import app.thelema.img.Image
+import app.thelema.input.KB
+import app.thelema.input.MOUSE
 import kotlin.js.Date
 
 /**
@@ -64,8 +68,8 @@ class JsApp(
         startLoop()
     }
 
-    override val platformType: Int
-        get() = APP.WebGL
+    override val platformType: String
+        get() = WebGLApp
 
     override val width: Int
         get() = canvas.clientWidth
@@ -110,14 +114,20 @@ class JsApp(
 
         ECS.setupDefaultComponents()
 
-        APP.proxy = this
-        LOG.proxy = JsLog()
-        HTTP.proxy = JsHttp()
-
-        println(ODE.ready)
-        ODE.readyPromise.then {
-            println(ODE.ready)
+        ECS.removeDescriptor("Image")
+        ECS.removeDescriptor("IImage")
+        ECS.descriptor<Image>({ HtmlImage() }) {
+            setAliases(IImage::class)
         }
+
+        APP = this
+        LOG = JsLog()
+        HTTP = JsHttp()
+
+//        println(ODE.ready)
+//        ODE.readyPromise.then {
+//            println(ODE.ready)
+//        }
 
         canvas.addEventListener("dragenter", { it.stopPropagation(); it.preventDefault() }, false)
         canvas.addEventListener("dragover", { it.stopPropagation(); it.preventDefault() }, false)
@@ -192,15 +202,14 @@ class JsApp(
             }
         }
 
-        GL.proxy = JsGL(gl, ver, glslVer = if (ver == 2) 300 else 100)
-        IMG.proxy = JsImg
-        DATA.proxy = JsData()
-        FS.proxy = fs
-        LOG.proxy = JsLog()
-        JSON.proxy = JsJson()
-        MOUSE.proxy = JsMouse(canvas)
-        KB.proxy = JsKB()
-        JSON.proxy = JsJson()
+        GL = JsGL(this, gl, ver, glslVer = if (ver == 2) 300 else 100)
+        IMG = JsImg
+        DATA = JsData()
+        FS = fs
+        LOG = JsLog()
+        JSON = JsJson()
+        MOUSE = JsMouse(canvas)
+        KB = JsKB()
 
         if (initAudio) initiateAudio()
 
@@ -210,8 +219,6 @@ class JsApp(
         GL.runSingleCalls()
 
         performDefaultSetup()
-
-        startLoop()
     }
 
     fun traverseFileTree(entry: FileSystemEntry, path: String, files: MutableList<IFile>, ready: () -> Unit) {
@@ -241,7 +248,7 @@ class JsApp(
 
     fun initiateAudio() {
         if (!audioInitiated) {
-            AL.proxy = JsAL()
+            AL = JsAL()
             audioInitiated = true
         }
     }
@@ -265,6 +272,6 @@ class JsApp(
     override fun destroy() {
         isEnabled = false
         AL.destroy()
-        AL.proxy = MockAudio()
+        AL = AudioStub()
     }
 }

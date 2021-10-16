@@ -16,22 +16,19 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
 
 /** @author zeganstyl */
-interface ISphereShape: IEntityComponent {
+interface ISphereShape: IShape {
     var radius: Float
 
-    val shape: IShape
-
     override val componentName: String
-        get() = Name
+        get() = "SphereShape"
 
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "SphereShape"
-    }
+    fun setSize(radius: Float)
 }
+
+fun IEntity.sphereShape(block: ISphereShape.() -> Unit) = component(block)
+fun IEntity.sphereShape() = component<ISphereShape>()

@@ -19,9 +19,8 @@ package app.thelema.js
 import app.thelema.data.IByteData
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
-import app.thelema.net.HTTP
-import app.thelema.img.IImageData
-import app.thelema.img.IImg
+import app.thelema.img.IImage
+import app.thelema.img.IImageLoader
 import app.thelema.utils.LOG
 import kotlinx.browser.document
 import org.khronos.webgl.Uint8Array
@@ -31,18 +30,15 @@ import org.w3c.files.Blob
 import org.w3c.files.BlobPropertyBag
 
 /** @author zeganstyl */
-object JsImg: IImg {
-    override fun image(): IImageData =
-        HtmlImageData(document.createElement("img") as HTMLImageElement)
-
+object JsImg: IImageLoader {
     override fun load(
         uri: String,
         mimeType: String,
-        out: IImageData,
-        location: Int,
+        out: IImage,
+        location: String,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
+        ready: (img: IImage) -> Unit
+    ): IImage {
         val img = out.sourceObject as HTMLImageElement
         img.src = uri
 
@@ -51,7 +47,7 @@ object JsImg: IImg {
             ready(out)
         } else {
             img.onload = { ready(out) }
-            img.onerror = { b, s, i, i2, any -> error(HTTP.NotFound) }
+            img.onerror = { b, s, i, i2, any -> error(404) }
         }
         return out
     }
@@ -59,10 +55,10 @@ object JsImg: IImg {
     override fun load(
         file: IFile,
         mimeType: String,
-        out: IImageData,
+        out: IImage,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
+        ready: (img: IImage) -> Unit
+    ): IImage {
         val img = out.sourceObject as HTMLImageElement
 
         if (file.location == FileLocation.External) {
@@ -82,18 +78,18 @@ object JsImg: IImg {
             ready(out)
         } else {
             img.onload = { ready(out) }
-            img.onerror = { b, s, i, i2, any -> error(HTTP.NotFound) }
+            img.onerror = { b, s, i, i2, any -> error(404) }
         }
         return out
     }
 
-    override fun load(
+    override fun decode(
         data: IByteData,
         mimeType: String,
-        out: IImageData,
+        out: IImage,
         error: (status: Int) -> Unit,
-        ready: (img: IImageData) -> Unit
-    ): IImageData {
+        ready: (img: IImage) -> Unit
+    ): IImage {
         val img = out.sourceObject as HTMLImageElement
 
         val arrayBufferView = data.sourceObject as Uint8Array
@@ -109,7 +105,7 @@ object JsImg: IImg {
             ready(out)
         } else {
             img.onload = { ready(out) }
-            img.onerror = { b, s, i, i2, any -> error(HTTP.NotFound) }
+            img.onerror = { b, s, i, i2, any -> error(404) }
         }
 
         return out

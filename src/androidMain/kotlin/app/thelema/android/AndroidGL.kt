@@ -27,6 +27,30 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
     override val mainFrameBufferHeight: Int
         get() = app.view.holder.surfaceFrame.height()
 
+    override fun glGenTextureBase(): Int = arrayToInt { GLES30.glGenTextures(1, it, 0) }
+
+    override fun glGenBufferBase(): Int = arrayToInt { GLES30.glGenBuffers(1, it, 0) }
+
+    override fun glGenFrameBufferBase(): Int = arrayToInt { GLES30.glGenFramebuffers(1, it, 0) }
+
+    override fun glGenRenderBufferBase(): Int = arrayToInt { GLES30.glGenRenderbuffers(1, it, 0) }
+
+    override fun glDeleteTextureBase(id: Int) {
+        GLES30.glDeleteTextures(1, intToArray(id), 0)
+    }
+
+    override fun glDeleteBufferBase(id: Int) {
+        GLES30.glDeleteBuffers(1, intToArray(id), 0)
+    }
+
+    override fun glDeleteFrameBufferBase(id: Int) {
+        GLES30.glDeleteFramebuffers(1, intToArray(id), 0)
+    }
+
+    override fun glDeleteRenderBufferBase(id: Int) {
+        GLES30.glDeleteRenderbuffers(1, intToArray(id), 0)
+    }
+
     override fun enableExtension(extension: String): Boolean {
         return GLES30.glGetString(GLES30.GL_EXTENSIONS).contains(extension)
     }
@@ -127,24 +151,12 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
         return ints
     }
 
-    override fun glDeleteBuffer(buffer: Int) {
-        GLES30.glDeleteBuffers(1, intToArray(buffer), 0)
-    }
-
     override fun glDeleteProgram(program: Int) {
         GLES30.glDeleteProgram(program)
     }
 
-    override fun glDeleteRenderbuffer(renderbuffer: Int) {
-        GLES30.glDeleteRenderbuffers(1, intToArray(renderbuffer), 0)
-    }
-
     override fun glDeleteShader(shader: Int) {
         GLES30.glDeleteShader(shader)
-    }
-
-    override fun glDeleteTexture(texture: Int) {
-        GLES30.glDeleteTextures(1, intToArray(texture), 0)
     }
 
     override fun glDeleteVertexArrays(id: Int) {
@@ -180,14 +192,6 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
         block(ints)
         return ints[0]
     }
-
-    override fun glGenBuffer(): Int = arrayToInt { GLES30.glGenBuffers(1, it, 0) }
-
-    override fun glGenFramebuffer(): Int = arrayToInt { GLES30.glGenFramebuffers(1, it, 0) }
-
-    override fun glGenRenderbuffer(): Int = arrayToInt { GLES30.glGenRenderbuffers(1, it, 0) }
-
-    override fun glGenTexture(): Int = arrayToInt { GLES30.glGenTextures(1, it, 0) }
 
     override fun glGenVertexArrays(): Int = arrayToInt { GLES30.glGenVertexArrays(1, it, 0) }
 

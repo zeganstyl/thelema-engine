@@ -16,12 +16,11 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.node.ITransformNode
-import app.thelema.math.IMat4
+import app.thelema.ecs.component
+import app.thelema.g3d.ITransformNode
 import app.thelema.math.IVec3
-import app.thelema.math.IVec4
-import app.thelema.math.Mat3
 
 /** @author zeganstyl */
 interface IRigidBody: IEntityComponent {
@@ -30,15 +29,11 @@ interface IRigidBody: IEntityComponent {
 
     var userObject: Any
 
-    var userObjectType: Int
-
     var isGravityEnabled: Boolean
 
     var isEnabled: Boolean
 
     var maxAngularSpeed: Float
-
-    var mass: Float
 
     /** Usually must be 1.0 by default */
     var friction: Float
@@ -48,18 +43,40 @@ interface IRigidBody: IEntityComponent {
     /** If false this body will not push other bodies, but will be pushed by other bodies */
     var influenceOtherBodies: Boolean
 
+    /** Categories in what this object participate */
+    var categoryBits: Long
+
+    /** Categories with what this object interact */
+    var collideBits: Long
+
     var isStatic: Boolean
 
     override val componentName: String
-        get() = Name
+        get() = "RigidBody"
 
     val node: ITransformNode
 
-    val shape: IShape
+    val spaces: List<String>
 
-    fun startSimulation()
+    var isSimulationRunning: Boolean
 
-    fun endSimulation()
+    fun addListener(listener: RigidBodyListener)
+
+    fun removeListener(listener: RigidBodyListener)
+
+    fun addSpace(name: String)
+
+    fun removeSpace(name: String)
+
+    fun startSimulation() {
+        isSimulationRunning = true
+    }
+
+    fun endSimulation() {
+        isSimulationRunning = false
+    }
+
+    fun update()
 
     fun setLinearVelocity(x: Double, y: Double, z: Double)
     fun setLinearVelocity(x: Float, y: Float, z: Float) = setLinearVelocity(x.toDouble(), y.toDouble(), z.toDouble())
@@ -87,7 +104,21 @@ interface IRigidBody: IEntityComponent {
     fun addTorque(x: Float, y: Float, z: Float) = addTorque(x.toDouble(), y.toDouble(), z.toDouble())
     fun addTorque(torque: IVec3) = addTorque(torque.x, torque.y, torque.z)
 
-    companion object {
-        const val Name = "RigidBody"
+    override fun destroy() {
+        endSimulation()
+        super.destroy()
     }
+}
+
+fun IEntity.rigidBody(block: IRigidBody.() -> Unit) = component(block)
+fun IEntity.rigidBody() = component<IRigidBody>()
+
+fun IRigidBody.onCollision(block: (contact: IBodyContact, body: IRigidBody, other: IRigidBody) -> Unit): RigidBodyListener {
+    val listener = object : RigidBodyListener {
+        override fun collisionBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
+            block(contact, body, other)
+        }
+    }
+    addListener(listener)
+    return listener
 }

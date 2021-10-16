@@ -21,12 +21,6 @@ class SplitVec4Node(vector: IShaderData = GLSL.zeroFloat): ShaderNode() {
     override val name: String
         get() = "Split Vec4"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     var vector
         get() = input[Vector] ?: GLSL.zeroFloat
         set(value) = setInput(Vector, value)
@@ -75,12 +69,6 @@ class SplitVec4Node(vector: IShaderData = GLSL.zeroFloat): ShaderNode() {
     }
 
     companion object {
-        const val ClassId = "splitVec4"
-
         const val Vector = "vector"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(Vector, GLSLType.Vec4)
-        }
     }
 }

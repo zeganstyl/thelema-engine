@@ -16,14 +16,14 @@
 
 package app.thelema.lwjgl3
 
-import app.thelema.input.IKB
+import app.thelema.input.IKeyboard
 import app.thelema.input.IKeyListener
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWCharCallback
 import org.lwjgl.glfw.GLFWKeyCallback
 
-class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
+class Lwjgl3KB(private val window: Lwjgl3Window): IKeyboard {
     val listeners = ArrayList<IKeyListener>()
     private var pressedKeys = 0
     private var lastCharacter = 0.toChar()
@@ -81,8 +81,8 @@ class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
     }
 
     override fun isKeyPressed(key: Int): Boolean {
-        if (key == KB.ANY_KEY) return pressedKeys > 0
-        return if (key == KB.SYM) {
+        if (key == KEY.ANY_KEY) return pressedKeys > 0
+        return if (key == KEY.SYM) {
             GLFW.glfwGetKey(window.windowHandle, GLFW.GLFW_KEY_LEFT_SUPER) == GLFW.GLFW_PRESS ||
                     GLFW.glfwGetKey(window.windowHandle, GLFW.GLFW_KEY_RIGHT_SUPER) == GLFW.GLFW_PRESS
         } else GLFW.glfwGetKey(window.windowHandle, getGlfwKeyCode(key)) == GLFW.GLFW_PRESS
@@ -96,219 +96,219 @@ class Lwjgl3KB(private val window: Lwjgl3Window): IKB {
     companion object {
         fun characterForKeyCode(key: Int): Char { // Map certain key codes to character codes.
             when (key) {
-                KB.BACKSPACE -> return 8.toChar()
-                KB.TAB -> return '\t'
-                KB.FORWARD_DEL -> return 127.toChar()
-                KB.ENTER -> return '\n'
+                KEY.BACKSPACE -> return 8.toChar()
+                KEY.TAB -> return '\t'
+                KEY.FORWARD_DEL -> return 127.toChar()
+                KEY.ENTER -> return '\n'
             }
             return 0.toChar()
         }
 
         fun getGdxKeyCode(lwjglKeyCode: Int): Int {
             return when (lwjglKeyCode) {
-                GLFW.GLFW_KEY_SPACE -> KB.SPACE
-                GLFW.GLFW_KEY_APOSTROPHE -> KB.APOSTROPHE
-                GLFW.GLFW_KEY_COMMA -> KB.COMMA
-                GLFW.GLFW_KEY_MINUS -> KB.MINUS
-                GLFW.GLFW_KEY_PERIOD -> KB.PERIOD
-                GLFW.GLFW_KEY_SLASH -> KB.SLASH
-                GLFW.GLFW_KEY_0 -> KB.NUM_0
-                GLFW.GLFW_KEY_1 -> KB.NUM_1
-                GLFW.GLFW_KEY_2 -> KB.NUM_2
-                GLFW.GLFW_KEY_3 -> KB.NUM_3
-                GLFW.GLFW_KEY_4 -> KB.NUM_4
-                GLFW.GLFW_KEY_5 -> KB.NUM_5
-                GLFW.GLFW_KEY_6 -> KB.NUM_6
-                GLFW.GLFW_KEY_7 -> KB.NUM_7
-                GLFW.GLFW_KEY_8 -> KB.NUM_8
-                GLFW.GLFW_KEY_9 -> KB.NUM_9
-                GLFW.GLFW_KEY_SEMICOLON -> KB.SEMICOLON
-                GLFW.GLFW_KEY_EQUAL -> KB.EQUALS
-                GLFW.GLFW_KEY_A -> KB.A
-                GLFW.GLFW_KEY_B -> KB.B
-                GLFW.GLFW_KEY_C -> KB.C
-                GLFW.GLFW_KEY_D -> KB.D
-                GLFW.GLFW_KEY_E -> KB.E
-                GLFW.GLFW_KEY_F -> KB.F
-                GLFW.GLFW_KEY_G -> KB.G
-                GLFW.GLFW_KEY_H -> KB.H
-                GLFW.GLFW_KEY_I -> KB.I
-                GLFW.GLFW_KEY_J -> KB.J
-                GLFW.GLFW_KEY_K -> KB.K
-                GLFW.GLFW_KEY_L -> KB.L
-                GLFW.GLFW_KEY_M -> KB.M
-                GLFW.GLFW_KEY_N -> KB.N
-                GLFW.GLFW_KEY_O -> KB.O
-                GLFW.GLFW_KEY_P -> KB.P
-                GLFW.GLFW_KEY_Q -> KB.Q
-                GLFW.GLFW_KEY_R -> KB.R
-                GLFW.GLFW_KEY_S -> KB.S
-                GLFW.GLFW_KEY_T -> KB.T
-                GLFW.GLFW_KEY_U -> KB.U
-                GLFW.GLFW_KEY_V -> KB.V
-                GLFW.GLFW_KEY_W -> KB.W
-                GLFW.GLFW_KEY_X -> KB.X
-                GLFW.GLFW_KEY_Y -> KB.Y
-                GLFW.GLFW_KEY_Z -> KB.Z
-                GLFW.GLFW_KEY_LEFT_BRACKET -> KB.LEFT_BRACKET
-                GLFW.GLFW_KEY_BACKSLASH -> KB.BACKSLASH
-                GLFW.GLFW_KEY_RIGHT_BRACKET -> KB.RIGHT_BRACKET
-                GLFW.GLFW_KEY_GRAVE_ACCENT -> KB.GRAVE
-                GLFW.GLFW_KEY_WORLD_1, GLFW.GLFW_KEY_WORLD_2 -> KB.UNKNOWN
-                GLFW.GLFW_KEY_ESCAPE -> KB.ESCAPE
-                GLFW.GLFW_KEY_ENTER -> KB.ENTER
-                GLFW.GLFW_KEY_TAB -> KB.TAB
-                GLFW.GLFW_KEY_BACKSPACE -> KB.BACKSPACE
-                GLFW.GLFW_KEY_INSERT -> KB.INSERT
-                GLFW.GLFW_KEY_DELETE -> KB.FORWARD_DEL
-                GLFW.GLFW_KEY_RIGHT -> KB.RIGHT
-                GLFW.GLFW_KEY_LEFT -> KB.LEFT
-                GLFW.GLFW_KEY_DOWN -> KB.DOWN
-                GLFW.GLFW_KEY_UP -> KB.UP
-                GLFW.GLFW_KEY_PAGE_UP -> KB.PAGE_UP
-                GLFW.GLFW_KEY_PAGE_DOWN -> KB.PAGE_DOWN
-                GLFW.GLFW_KEY_HOME -> KB.HOME
-                GLFW.GLFW_KEY_END -> KB.END
-                GLFW.GLFW_KEY_CAPS_LOCK, GLFW.GLFW_KEY_SCROLL_LOCK, GLFW.GLFW_KEY_NUM_LOCK, GLFW.GLFW_KEY_PRINT_SCREEN, GLFW.GLFW_KEY_PAUSE -> KB.UNKNOWN
-                GLFW.GLFW_KEY_F1 -> KB.F1
-                GLFW.GLFW_KEY_F2 -> KB.F2
-                GLFW.GLFW_KEY_F3 -> KB.F3
-                GLFW.GLFW_KEY_F4 -> KB.F4
-                GLFW.GLFW_KEY_F5 -> KB.F5
-                GLFW.GLFW_KEY_F6 -> KB.F6
-                GLFW.GLFW_KEY_F7 -> KB.F7
-                GLFW.GLFW_KEY_F8 -> KB.F8
-                GLFW.GLFW_KEY_F9 -> KB.F9
-                GLFW.GLFW_KEY_F10 -> KB.F10
-                GLFW.GLFW_KEY_F11 -> KB.F11
-                GLFW.GLFW_KEY_F12 -> KB.F12
-                GLFW.GLFW_KEY_F13, GLFW.GLFW_KEY_F14, GLFW.GLFW_KEY_F15, GLFW.GLFW_KEY_F16, GLFW.GLFW_KEY_F17, GLFW.GLFW_KEY_F18, GLFW.GLFW_KEY_F19, GLFW.GLFW_KEY_F20, GLFW.GLFW_KEY_F21, GLFW.GLFW_KEY_F22, GLFW.GLFW_KEY_F23, GLFW.GLFW_KEY_F24, GLFW.GLFW_KEY_F25 -> KB.UNKNOWN
-                GLFW.GLFW_KEY_KP_0 -> KB.NUMPAD_0
-                GLFW.GLFW_KEY_KP_1 -> KB.NUMPAD_1
-                GLFW.GLFW_KEY_KP_2 -> KB.NUMPAD_2
-                GLFW.GLFW_KEY_KP_3 -> KB.NUMPAD_3
-                GLFW.GLFW_KEY_KP_4 -> KB.NUMPAD_4
-                GLFW.GLFW_KEY_KP_5 -> KB.NUMPAD_5
-                GLFW.GLFW_KEY_KP_6 -> KB.NUMPAD_6
-                GLFW.GLFW_KEY_KP_7 -> KB.NUMPAD_7
-                GLFW.GLFW_KEY_KP_8 -> KB.NUMPAD_8
-                GLFW.GLFW_KEY_KP_9 -> KB.NUMPAD_9
-                GLFW.GLFW_KEY_KP_DECIMAL -> KB.PERIOD
-                GLFW.GLFW_KEY_KP_DIVIDE -> KB.SLASH
-                GLFW.GLFW_KEY_KP_MULTIPLY -> KB.STAR
-                GLFW.GLFW_KEY_KP_SUBTRACT -> KB.MINUS
-                GLFW.GLFW_KEY_KP_ADD -> KB.PLUS
-                GLFW.GLFW_KEY_KP_ENTER -> KB.ENTER
-                GLFW.GLFW_KEY_KP_EQUAL -> KB.EQUALS
-                GLFW.GLFW_KEY_LEFT_SHIFT -> KB.SHIFT_LEFT
-                GLFW.GLFW_KEY_LEFT_CONTROL -> KB.CONTROL_LEFT
-                GLFW.GLFW_KEY_LEFT_ALT -> KB.ALT_LEFT
-                GLFW.GLFW_KEY_LEFT_SUPER -> KB.SYM
-                GLFW.GLFW_KEY_RIGHT_SHIFT -> KB.SHIFT_RIGHT
-                GLFW.GLFW_KEY_RIGHT_CONTROL -> KB.CONTROL_RIGHT
-                GLFW.GLFW_KEY_RIGHT_ALT -> KB.ALT_RIGHT
-                GLFW.GLFW_KEY_RIGHT_SUPER -> KB.SYM
-                GLFW.GLFW_KEY_MENU -> KB.MENU
-                else -> KB.UNKNOWN
+                GLFW.GLFW_KEY_SPACE -> KEY.SPACE
+                GLFW.GLFW_KEY_APOSTROPHE -> KEY.APOSTROPHE
+                GLFW.GLFW_KEY_COMMA -> KEY.COMMA
+                GLFW.GLFW_KEY_MINUS -> KEY.MINUS
+                GLFW.GLFW_KEY_PERIOD -> KEY.PERIOD
+                GLFW.GLFW_KEY_SLASH -> KEY.SLASH
+                GLFW.GLFW_KEY_0 -> KEY.NUM_0
+                GLFW.GLFW_KEY_1 -> KEY.NUM_1
+                GLFW.GLFW_KEY_2 -> KEY.NUM_2
+                GLFW.GLFW_KEY_3 -> KEY.NUM_3
+                GLFW.GLFW_KEY_4 -> KEY.NUM_4
+                GLFW.GLFW_KEY_5 -> KEY.NUM_5
+                GLFW.GLFW_KEY_6 -> KEY.NUM_6
+                GLFW.GLFW_KEY_7 -> KEY.NUM_7
+                GLFW.GLFW_KEY_8 -> KEY.NUM_8
+                GLFW.GLFW_KEY_9 -> KEY.NUM_9
+                GLFW.GLFW_KEY_SEMICOLON -> KEY.SEMICOLON
+                GLFW.GLFW_KEY_EQUAL -> KEY.EQUALS
+                GLFW.GLFW_KEY_A -> KEY.A
+                GLFW.GLFW_KEY_B -> KEY.B
+                GLFW.GLFW_KEY_C -> KEY.C
+                GLFW.GLFW_KEY_D -> KEY.D
+                GLFW.GLFW_KEY_E -> KEY.E
+                GLFW.GLFW_KEY_F -> KEY.F
+                GLFW.GLFW_KEY_G -> KEY.G
+                GLFW.GLFW_KEY_H -> KEY.H
+                GLFW.GLFW_KEY_I -> KEY.I
+                GLFW.GLFW_KEY_J -> KEY.J
+                GLFW.GLFW_KEY_K -> KEY.K
+                GLFW.GLFW_KEY_L -> KEY.L
+                GLFW.GLFW_KEY_M -> KEY.M
+                GLFW.GLFW_KEY_N -> KEY.N
+                GLFW.GLFW_KEY_O -> KEY.O
+                GLFW.GLFW_KEY_P -> KEY.P
+                GLFW.GLFW_KEY_Q -> KEY.Q
+                GLFW.GLFW_KEY_R -> KEY.R
+                GLFW.GLFW_KEY_S -> KEY.S
+                GLFW.GLFW_KEY_T -> KEY.T
+                GLFW.GLFW_KEY_U -> KEY.U
+                GLFW.GLFW_KEY_V -> KEY.V
+                GLFW.GLFW_KEY_W -> KEY.W
+                GLFW.GLFW_KEY_X -> KEY.X
+                GLFW.GLFW_KEY_Y -> KEY.Y
+                GLFW.GLFW_KEY_Z -> KEY.Z
+                GLFW.GLFW_KEY_LEFT_BRACKET -> KEY.LEFT_BRACKET
+                GLFW.GLFW_KEY_BACKSLASH -> KEY.BACKSLASH
+                GLFW.GLFW_KEY_RIGHT_BRACKET -> KEY.RIGHT_BRACKET
+                GLFW.GLFW_KEY_GRAVE_ACCENT -> KEY.GRAVE
+                GLFW.GLFW_KEY_WORLD_1, GLFW.GLFW_KEY_WORLD_2 -> KEY.UNKNOWN
+                GLFW.GLFW_KEY_ESCAPE -> KEY.ESCAPE
+                GLFW.GLFW_KEY_ENTER -> KEY.ENTER
+                GLFW.GLFW_KEY_TAB -> KEY.TAB
+                GLFW.GLFW_KEY_BACKSPACE -> KEY.BACKSPACE
+                GLFW.GLFW_KEY_INSERT -> KEY.INSERT
+                GLFW.GLFW_KEY_DELETE -> KEY.FORWARD_DEL
+                GLFW.GLFW_KEY_RIGHT -> KEY.RIGHT
+                GLFW.GLFW_KEY_LEFT -> KEY.LEFT
+                GLFW.GLFW_KEY_DOWN -> KEY.DOWN
+                GLFW.GLFW_KEY_UP -> KEY.UP
+                GLFW.GLFW_KEY_PAGE_UP -> KEY.PAGE_UP
+                GLFW.GLFW_KEY_PAGE_DOWN -> KEY.PAGE_DOWN
+                GLFW.GLFW_KEY_HOME -> KEY.HOME
+                GLFW.GLFW_KEY_END -> KEY.END
+                GLFW.GLFW_KEY_CAPS_LOCK, GLFW.GLFW_KEY_SCROLL_LOCK, GLFW.GLFW_KEY_NUM_LOCK, GLFW.GLFW_KEY_PRINT_SCREEN, GLFW.GLFW_KEY_PAUSE -> KEY.UNKNOWN
+                GLFW.GLFW_KEY_F1 -> KEY.F1
+                GLFW.GLFW_KEY_F2 -> KEY.F2
+                GLFW.GLFW_KEY_F3 -> KEY.F3
+                GLFW.GLFW_KEY_F4 -> KEY.F4
+                GLFW.GLFW_KEY_F5 -> KEY.F5
+                GLFW.GLFW_KEY_F6 -> KEY.F6
+                GLFW.GLFW_KEY_F7 -> KEY.F7
+                GLFW.GLFW_KEY_F8 -> KEY.F8
+                GLFW.GLFW_KEY_F9 -> KEY.F9
+                GLFW.GLFW_KEY_F10 -> KEY.F10
+                GLFW.GLFW_KEY_F11 -> KEY.F11
+                GLFW.GLFW_KEY_F12 -> KEY.F12
+                GLFW.GLFW_KEY_F13, GLFW.GLFW_KEY_F14, GLFW.GLFW_KEY_F15, GLFW.GLFW_KEY_F16, GLFW.GLFW_KEY_F17, GLFW.GLFW_KEY_F18, GLFW.GLFW_KEY_F19, GLFW.GLFW_KEY_F20, GLFW.GLFW_KEY_F21, GLFW.GLFW_KEY_F22, GLFW.GLFW_KEY_F23, GLFW.GLFW_KEY_F24, GLFW.GLFW_KEY_F25 -> KEY.UNKNOWN
+                GLFW.GLFW_KEY_KP_0 -> KEY.NUMPAD_0
+                GLFW.GLFW_KEY_KP_1 -> KEY.NUMPAD_1
+                GLFW.GLFW_KEY_KP_2 -> KEY.NUMPAD_2
+                GLFW.GLFW_KEY_KP_3 -> KEY.NUMPAD_3
+                GLFW.GLFW_KEY_KP_4 -> KEY.NUMPAD_4
+                GLFW.GLFW_KEY_KP_5 -> KEY.NUMPAD_5
+                GLFW.GLFW_KEY_KP_6 -> KEY.NUMPAD_6
+                GLFW.GLFW_KEY_KP_7 -> KEY.NUMPAD_7
+                GLFW.GLFW_KEY_KP_8 -> KEY.NUMPAD_8
+                GLFW.GLFW_KEY_KP_9 -> KEY.NUMPAD_9
+                GLFW.GLFW_KEY_KP_DECIMAL -> KEY.PERIOD
+                GLFW.GLFW_KEY_KP_DIVIDE -> KEY.SLASH
+                GLFW.GLFW_KEY_KP_MULTIPLY -> KEY.STAR
+                GLFW.GLFW_KEY_KP_SUBTRACT -> KEY.MINUS
+                GLFW.GLFW_KEY_KP_ADD -> KEY.PLUS
+                GLFW.GLFW_KEY_KP_ENTER -> KEY.ENTER
+                GLFW.GLFW_KEY_KP_EQUAL -> KEY.EQUALS
+                GLFW.GLFW_KEY_LEFT_SHIFT -> KEY.SHIFT_LEFT
+                GLFW.GLFW_KEY_LEFT_CONTROL -> KEY.CONTROL_LEFT
+                GLFW.GLFW_KEY_LEFT_ALT -> KEY.ALT_LEFT
+                GLFW.GLFW_KEY_LEFT_SUPER -> KEY.SYM
+                GLFW.GLFW_KEY_RIGHT_SHIFT -> KEY.SHIFT_RIGHT
+                GLFW.GLFW_KEY_RIGHT_CONTROL -> KEY.CONTROL_RIGHT
+                GLFW.GLFW_KEY_RIGHT_ALT -> KEY.ALT_RIGHT
+                GLFW.GLFW_KEY_RIGHT_SUPER -> KEY.SYM
+                GLFW.GLFW_KEY_MENU -> KEY.MENU
+                else -> KEY.UNKNOWN
             }
         }
 
         fun getGlfwKeyCode(gdxKeyCode: Int): Int {
             return when (gdxKeyCode) {
-                KB.SPACE -> GLFW.GLFW_KEY_SPACE
-                KB.APOSTROPHE -> GLFW.GLFW_KEY_APOSTROPHE
-                KB.COMMA -> GLFW.GLFW_KEY_COMMA
-                KB.PERIOD -> GLFW.GLFW_KEY_PERIOD
-                KB.NUM_0 -> GLFW.GLFW_KEY_0
-                KB.NUM_1 -> GLFW.GLFW_KEY_1
-                KB.NUM_2 -> GLFW.GLFW_KEY_2
-                KB.NUM_3 -> GLFW.GLFW_KEY_3
-                KB.NUM_4 -> GLFW.GLFW_KEY_4
-                KB.NUM_5 -> GLFW.GLFW_KEY_5
-                KB.NUM_6 -> GLFW.GLFW_KEY_6
-                KB.NUM_7 -> GLFW.GLFW_KEY_7
-                KB.NUM_8 -> GLFW.GLFW_KEY_8
-                KB.NUM_9 -> GLFW.GLFW_KEY_9
-                KB.SEMICOLON -> GLFW.GLFW_KEY_SEMICOLON
-                KB.EQUALS -> GLFW.GLFW_KEY_EQUAL
-                KB.A -> GLFW.GLFW_KEY_A
-                KB.B -> GLFW.GLFW_KEY_B
-                KB.C -> GLFW.GLFW_KEY_C
-                KB.D -> GLFW.GLFW_KEY_D
-                KB.E -> GLFW.GLFW_KEY_E
-                KB.F -> GLFW.GLFW_KEY_F
-                KB.G -> GLFW.GLFW_KEY_G
-                KB.H -> GLFW.GLFW_KEY_H
-                KB.I -> GLFW.GLFW_KEY_I
-                KB.J -> GLFW.GLFW_KEY_J
-                KB.K -> GLFW.GLFW_KEY_K
-                KB.L -> GLFW.GLFW_KEY_L
-                KB.M -> GLFW.GLFW_KEY_M
-                KB.N -> GLFW.GLFW_KEY_N
-                KB.O -> GLFW.GLFW_KEY_O
-                KB.P -> GLFW.GLFW_KEY_P
-                KB.Q -> GLFW.GLFW_KEY_Q
-                KB.R -> GLFW.GLFW_KEY_R
-                KB.S -> GLFW.GLFW_KEY_S
-                KB.T -> GLFW.GLFW_KEY_T
-                KB.U -> GLFW.GLFW_KEY_U
-                KB.V -> GLFW.GLFW_KEY_V
-                KB.W -> GLFW.GLFW_KEY_W
-                KB.X -> GLFW.GLFW_KEY_X
-                KB.Y -> GLFW.GLFW_KEY_Y
-                KB.Z -> GLFW.GLFW_KEY_Z
-                KB.LEFT_BRACKET -> GLFW.GLFW_KEY_LEFT_BRACKET
-                KB.BACKSLASH -> GLFW.GLFW_KEY_BACKSLASH
-                KB.RIGHT_BRACKET -> GLFW.GLFW_KEY_RIGHT_BRACKET
-                KB.GRAVE -> GLFW.GLFW_KEY_GRAVE_ACCENT
-                KB.ESCAPE -> GLFW.GLFW_KEY_ESCAPE
-                KB.ENTER -> GLFW.GLFW_KEY_ENTER
-                KB.TAB -> GLFW.GLFW_KEY_TAB
-                KB.BACKSPACE -> GLFW.GLFW_KEY_BACKSPACE
-                KB.INSERT -> GLFW.GLFW_KEY_INSERT
-                KB.FORWARD_DEL -> GLFW.GLFW_KEY_DELETE
-                KB.RIGHT -> GLFW.GLFW_KEY_RIGHT
-                KB.LEFT -> GLFW.GLFW_KEY_LEFT
-                KB.DOWN -> GLFW.GLFW_KEY_DOWN
-                KB.UP -> GLFW.GLFW_KEY_UP
-                KB.PAGE_UP -> GLFW.GLFW_KEY_PAGE_UP
-                KB.PAGE_DOWN -> GLFW.GLFW_KEY_PAGE_DOWN
-                KB.HOME -> GLFW.GLFW_KEY_HOME
-                KB.END -> GLFW.GLFW_KEY_END
-                KB.F1 -> GLFW.GLFW_KEY_F1
-                KB.F2 -> GLFW.GLFW_KEY_F2
-                KB.F3 -> GLFW.GLFW_KEY_F3
-                KB.F4 -> GLFW.GLFW_KEY_F4
-                KB.F5 -> GLFW.GLFW_KEY_F5
-                KB.F6 -> GLFW.GLFW_KEY_F6
-                KB.F7 -> GLFW.GLFW_KEY_F7
-                KB.F8 -> GLFW.GLFW_KEY_F8
-                KB.F9 -> GLFW.GLFW_KEY_F9
-                KB.F10 -> GLFW.GLFW_KEY_F10
-                KB.F11 -> GLFW.GLFW_KEY_F11
-                KB.F12 -> GLFW.GLFW_KEY_F12
-                KB.NUMPAD_0 -> GLFW.GLFW_KEY_KP_0
-                KB.NUMPAD_1 -> GLFW.GLFW_KEY_KP_1
-                KB.NUMPAD_2 -> GLFW.GLFW_KEY_KP_2
-                KB.NUMPAD_3 -> GLFW.GLFW_KEY_KP_3
-                KB.NUMPAD_4 -> GLFW.GLFW_KEY_KP_4
-                KB.NUMPAD_5 -> GLFW.GLFW_KEY_KP_5
-                KB.NUMPAD_6 -> GLFW.GLFW_KEY_KP_6
-                KB.NUMPAD_7 -> GLFW.GLFW_KEY_KP_7
-                KB.NUMPAD_8 -> GLFW.GLFW_KEY_KP_8
-                KB.NUMPAD_9 -> GLFW.GLFW_KEY_KP_9
-                KB.SLASH -> GLFW.GLFW_KEY_KP_DIVIDE
-                KB.STAR -> GLFW.GLFW_KEY_KP_MULTIPLY
-                KB.MINUS -> GLFW.GLFW_KEY_KP_SUBTRACT
-                KB.PLUS -> GLFW.GLFW_KEY_KP_ADD
-                KB.SHIFT_LEFT -> GLFW.GLFW_KEY_LEFT_SHIFT
-                KB.CONTROL_LEFT -> GLFW.GLFW_KEY_LEFT_CONTROL
-                KB.ALT_LEFT -> GLFW.GLFW_KEY_LEFT_ALT
-                KB.SYM -> GLFW.GLFW_KEY_LEFT_SUPER
-                KB.SHIFT_RIGHT -> GLFW.GLFW_KEY_RIGHT_SHIFT
-                KB.CONTROL_RIGHT -> GLFW.GLFW_KEY_RIGHT_CONTROL
-                KB.ALT_RIGHT -> GLFW.GLFW_KEY_RIGHT_ALT
-                KB.MENU -> GLFW.GLFW_KEY_MENU
+                KEY.SPACE -> GLFW.GLFW_KEY_SPACE
+                KEY.APOSTROPHE -> GLFW.GLFW_KEY_APOSTROPHE
+                KEY.COMMA -> GLFW.GLFW_KEY_COMMA
+                KEY.PERIOD -> GLFW.GLFW_KEY_PERIOD
+                KEY.NUM_0 -> GLFW.GLFW_KEY_0
+                KEY.NUM_1 -> GLFW.GLFW_KEY_1
+                KEY.NUM_2 -> GLFW.GLFW_KEY_2
+                KEY.NUM_3 -> GLFW.GLFW_KEY_3
+                KEY.NUM_4 -> GLFW.GLFW_KEY_4
+                KEY.NUM_5 -> GLFW.GLFW_KEY_5
+                KEY.NUM_6 -> GLFW.GLFW_KEY_6
+                KEY.NUM_7 -> GLFW.GLFW_KEY_7
+                KEY.NUM_8 -> GLFW.GLFW_KEY_8
+                KEY.NUM_9 -> GLFW.GLFW_KEY_9
+                KEY.SEMICOLON -> GLFW.GLFW_KEY_SEMICOLON
+                KEY.EQUALS -> GLFW.GLFW_KEY_EQUAL
+                KEY.A -> GLFW.GLFW_KEY_A
+                KEY.B -> GLFW.GLFW_KEY_B
+                KEY.C -> GLFW.GLFW_KEY_C
+                KEY.D -> GLFW.GLFW_KEY_D
+                KEY.E -> GLFW.GLFW_KEY_E
+                KEY.F -> GLFW.GLFW_KEY_F
+                KEY.G -> GLFW.GLFW_KEY_G
+                KEY.H -> GLFW.GLFW_KEY_H
+                KEY.I -> GLFW.GLFW_KEY_I
+                KEY.J -> GLFW.GLFW_KEY_J
+                KEY.K -> GLFW.GLFW_KEY_K
+                KEY.L -> GLFW.GLFW_KEY_L
+                KEY.M -> GLFW.GLFW_KEY_M
+                KEY.N -> GLFW.GLFW_KEY_N
+                KEY.O -> GLFW.GLFW_KEY_O
+                KEY.P -> GLFW.GLFW_KEY_P
+                KEY.Q -> GLFW.GLFW_KEY_Q
+                KEY.R -> GLFW.GLFW_KEY_R
+                KEY.S -> GLFW.GLFW_KEY_S
+                KEY.T -> GLFW.GLFW_KEY_T
+                KEY.U -> GLFW.GLFW_KEY_U
+                KEY.V -> GLFW.GLFW_KEY_V
+                KEY.W -> GLFW.GLFW_KEY_W
+                KEY.X -> GLFW.GLFW_KEY_X
+                KEY.Y -> GLFW.GLFW_KEY_Y
+                KEY.Z -> GLFW.GLFW_KEY_Z
+                KEY.LEFT_BRACKET -> GLFW.GLFW_KEY_LEFT_BRACKET
+                KEY.BACKSLASH -> GLFW.GLFW_KEY_BACKSLASH
+                KEY.RIGHT_BRACKET -> GLFW.GLFW_KEY_RIGHT_BRACKET
+                KEY.GRAVE -> GLFW.GLFW_KEY_GRAVE_ACCENT
+                KEY.ESCAPE -> GLFW.GLFW_KEY_ESCAPE
+                KEY.ENTER -> GLFW.GLFW_KEY_ENTER
+                KEY.TAB -> GLFW.GLFW_KEY_TAB
+                KEY.BACKSPACE -> GLFW.GLFW_KEY_BACKSPACE
+                KEY.INSERT -> GLFW.GLFW_KEY_INSERT
+                KEY.FORWARD_DEL -> GLFW.GLFW_KEY_DELETE
+                KEY.RIGHT -> GLFW.GLFW_KEY_RIGHT
+                KEY.LEFT -> GLFW.GLFW_KEY_LEFT
+                KEY.DOWN -> GLFW.GLFW_KEY_DOWN
+                KEY.UP -> GLFW.GLFW_KEY_UP
+                KEY.PAGE_UP -> GLFW.GLFW_KEY_PAGE_UP
+                KEY.PAGE_DOWN -> GLFW.GLFW_KEY_PAGE_DOWN
+                KEY.HOME -> GLFW.GLFW_KEY_HOME
+                KEY.END -> GLFW.GLFW_KEY_END
+                KEY.F1 -> GLFW.GLFW_KEY_F1
+                KEY.F2 -> GLFW.GLFW_KEY_F2
+                KEY.F3 -> GLFW.GLFW_KEY_F3
+                KEY.F4 -> GLFW.GLFW_KEY_F4
+                KEY.F5 -> GLFW.GLFW_KEY_F5
+                KEY.F6 -> GLFW.GLFW_KEY_F6
+                KEY.F7 -> GLFW.GLFW_KEY_F7
+                KEY.F8 -> GLFW.GLFW_KEY_F8
+                KEY.F9 -> GLFW.GLFW_KEY_F9
+                KEY.F10 -> GLFW.GLFW_KEY_F10
+                KEY.F11 -> GLFW.GLFW_KEY_F11
+                KEY.F12 -> GLFW.GLFW_KEY_F12
+                KEY.NUMPAD_0 -> GLFW.GLFW_KEY_KP_0
+                KEY.NUMPAD_1 -> GLFW.GLFW_KEY_KP_1
+                KEY.NUMPAD_2 -> GLFW.GLFW_KEY_KP_2
+                KEY.NUMPAD_3 -> GLFW.GLFW_KEY_KP_3
+                KEY.NUMPAD_4 -> GLFW.GLFW_KEY_KP_4
+                KEY.NUMPAD_5 -> GLFW.GLFW_KEY_KP_5
+                KEY.NUMPAD_6 -> GLFW.GLFW_KEY_KP_6
+                KEY.NUMPAD_7 -> GLFW.GLFW_KEY_KP_7
+                KEY.NUMPAD_8 -> GLFW.GLFW_KEY_KP_8
+                KEY.NUMPAD_9 -> GLFW.GLFW_KEY_KP_9
+                KEY.SLASH -> GLFW.GLFW_KEY_KP_DIVIDE
+                KEY.STAR -> GLFW.GLFW_KEY_KP_MULTIPLY
+                KEY.MINUS -> GLFW.GLFW_KEY_KP_SUBTRACT
+                KEY.PLUS -> GLFW.GLFW_KEY_KP_ADD
+                KEY.SHIFT_LEFT -> GLFW.GLFW_KEY_LEFT_SHIFT
+                KEY.CONTROL_LEFT -> GLFW.GLFW_KEY_LEFT_CONTROL
+                KEY.ALT_LEFT -> GLFW.GLFW_KEY_LEFT_ALT
+                KEY.SYM -> GLFW.GLFW_KEY_LEFT_SUPER
+                KEY.SHIFT_RIGHT -> GLFW.GLFW_KEY_RIGHT_SHIFT
+                KEY.CONTROL_RIGHT -> GLFW.GLFW_KEY_RIGHT_CONTROL
+                KEY.ALT_RIGHT -> GLFW.GLFW_KEY_RIGHT_ALT
+                KEY.MENU -> GLFW.GLFW_KEY_MENU
                 else -> 0
             }
         }

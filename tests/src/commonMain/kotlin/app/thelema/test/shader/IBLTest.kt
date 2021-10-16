@@ -16,167 +16,76 @@
 
 package app.thelema.test.shader
 
-
-import app.thelema.app.APP
-import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.gl.GL_RGBA
+import app.thelema.ecs.Entity
+import app.thelema.ecs.component
+import app.thelema.g3d.*
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.light.directionalLight
+import app.thelema.gl.GL_FLOAT
+import app.thelema.gl.GL_RGB
+import app.thelema.gl.GL_RGB16F
+import app.thelema.gltf.GLTF
+import app.thelema.gltf.gltf
 import app.thelema.img.CubeFrameBuffer
-import app.thelema.img.TextureCube
-import app.thelema.math.IMat4
-import app.thelema.math.MATH
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
-import app.thelema.shader.Shader
+import app.thelema.img.Texture2D
+import app.thelema.res.RES
+import app.thelema.res.load
+import app.thelema.shader.EquirectangularToCubemapConverter
 import app.thelema.test.Test
-import app.thelema.utils.LOG
+import app.thelema.utils.Color
 
-/** @author zeganstyl */
 class IBLTest: Test {
     override val name: String
         get() = "IBL"
 
     override fun testMain() {
+        val conv = EquirectangularToCubemapConverter()
 
-        val skyboxVert = """
-attribute vec3 POSITION;
-varying vec3 vPosition;
+        val tex = Texture2D("hdri/eilenriede_park_1k.hdr")
 
-uniform mat4 viewProj;
-uniform vec3 camPos;
-uniform float camFar;
+        val skyboxTextureFrameBuffer = CubeFrameBuffer(512, GL_RGB, GL_RGB16F, GL_FLOAT)
 
-void main () {
-    vPosition = POSITION;
-    gl_Position = viewProj * vec4(POSITION * camFar + camPos, 1.0);
-}"""
+        conv.render(tex, skyboxTextureFrameBuffer)
 
+        val skyboxTexture = skyboxTextureFrameBuffer.texture
 
-        val simpleSkyboxShader = Shader(
-            vertCode = skyboxVert,
-            fragCode = """
-varying vec3 vPosition;
-uniform samplerCube texture;
+        val baker = IBLMapBaker()
+        baker.generateBrdfLUT()
+        baker.environment = skyboxTexture
+        baker.render()
 
-void main () {
-    gl_FragColor = textureCube(texture, vPosition);
-}""")
+        Entity {
+            makeCurrent()
+            scene {
+                world = World().apply {
+                    environmentIrradianceMap = baker.irradianceMap
+                    environmentPrefilterMap = baker.prefilterMap
+                    brdfLUTMap = baker.brdfLUT
+                }
+            }
+            orbitCameraControl()
 
-        simpleSkyboxShader["texture"] = 0
+            entity("skybox") {
+                simpleSkybox {
+                    texture = skyboxTexture
+                }
+            }
 
+            entity("light") {
+                directionalLight {
+                    setDirectionFromPosition(0f, 1f, 0f)
+                    color.set(Color.SKY)
+                    intensity = 5f
+                }
+            }
 
-        val irradianceShader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-varying vec3 vPosition;
-uniform mat4 viewProj;
-
-void main () {
-    vPosition = POSITION;
-    gl_Position = viewProj * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-varying vec3 vPosition;
-uniform samplerCube texture;
-
-const float PI = 3.14159265359;
-
-void main () {
-    // the sample direction equals the hemisphere's orientation 
-    vec3 normal = normalize(vPosition);
-
-    vec3 irradiance = vec3(0.0);
-
-    vec3 up    = vec3(0.0, 1.0, 0.0);
-    vec3 right = cross(up, normal);
-    up         = cross(normal, right);
-
-    float sampleDelta = 0.025;
-    float nrSamples = 0.0; 
-    for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta) {
-        for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta) {
-            // spherical to cartesian (in tangent space)
-            vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
-            // tangent space to world
-            vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
-
-            irradiance += textureCube(texture, sampleVec).rgb * cos(theta) * sin(theta);
-            nrSamples++;
-        }
-    }
-    irradiance = PI * irradiance * (1.0 / float(nrSamples));
-
-    gl_FragColor = vec4(irradiance, 1.0);
-}""")
-
-        val irradianceBuffer = CubeFrameBuffer(
-            width = 512,
-            height = 512,
-            pixelFormat = GL_RGBA
-        )
-        irradianceBuffer.checkErrors()
-
-        irradianceShader["texture"] = 0
-
-        val textureCube = TextureCube()
-
-        textureCube.load(
-            positiveX = "clouds1/clouds1_east.jpg",
-            negativeX = "clouds1/clouds1_west.jpg",
-            positiveY = "clouds1/clouds1_up.jpg",
-            negativeY = "clouds1/clouds1_down.jpg",
-            positiveZ = "clouds1/clouds1_north.jpg",
-            negativeZ = "clouds1/clouds1_south.jpg"
-        )
-
-        val skyboxMesh = BoxMeshBuilder(
-            xSize = 0.5f,
-            ySize = 0.5f,
-            zSize = 0.5f
-        ).build()
-
-        val control = OrbitCameraControl()
-        control.listenToMouse()
-        LOG.info(control.help)
-
-        //GL.isDepthTestEnabled = true
-
-        val captureProjection = Mat4().setToProjection(0.1f, 10f, 90f, 1f)
-        val captureViews: Array<IMat4> = arrayOf(
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(1f, 0f, 0f), Vec3(0f, -1f, 0f))),
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(-1f, 0f, 0f), Vec3(0f, -1f, 0f))),
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(0f, 1f, 0f), Vec3(0f, 0f, 1f))),
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(0f, -1f, 0f), Vec3(0f, 0f, -1f))),
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(0f, 0f, 1f), Vec3(0f, -1f, 0f))),
-            Mat4().set(captureProjection).mul(Mat4().setToLook(MATH.Zero3, Vec3(0f, 0f, -1f), Vec3(0f, -1f, 0f)))
-        )
-
-        irradianceShader.bind()
-        textureCube.bind(0)
-
-        irradianceBuffer.renderCube {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-            //GL.glViewport(0, 0, 32, 32)
-            irradianceShader["viewProj"] = captureViews[it]
-            skyboxMesh.render(irradianceShader)
-        }
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            control.update(APP.deltaTime)
-            ActiveCamera.updateCamera()
-
-            simpleSkyboxShader.bind()
-            simpleSkyboxShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            simpleSkyboxShader["camFar"] = ActiveCamera.far
-            simpleSkyboxShader["camPos"] = ActiveCamera.position
-            irradianceBuffer.texture.bind(0)
-            skyboxMesh.render(simpleSkyboxShader)
+            RES.gltf("gltf/DamagedHelmet.glb") {
+                conf.ibl = true
+                conf.iblMaxMipLevels = baker.maxMipLevels
+                onLoaded {
+                    addEntity(scene.copyDeep())
+                }
+            }
         }
     }
 }

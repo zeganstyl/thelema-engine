@@ -72,7 +72,7 @@ interface InputListener : EventListener {
     }
 
     /** Called when a mouse button or a finger touch goes down on the actor. If true is returned, this listener will have
-     * [touch focus][Stage.addTouchFocus], so it will receive all touchDragged and
+     * [touch focus][HeadUpDisplay.addTouchFocus], so it will receive all touchDragged and
      * touchUp events, even those not over this actor, until touchUp is received. Also when true is returned, the event is
      * [handled][Event.handle].
      * @see InputEvent

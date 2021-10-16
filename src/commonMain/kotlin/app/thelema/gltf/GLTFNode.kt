@@ -41,7 +41,7 @@ class GLTFNode(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         super.readJson()
 
         children.clear()
-        json.array("children") { ints { children.add(it) } }
+        json.array("children") { forEachInt { children.add(it) } }
 
         translation.set(0f, 0f, 0f)
         rotation.set(0f, 0f, 0f, 1f)
@@ -52,7 +52,7 @@ class GLTFNode(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             matrix = mat
             json.array("matrix") {
                 var i = 0
-                floats {
+                forEachFloat {
                     mat.values[i] = it
                     i++
                 }
@@ -67,7 +67,7 @@ class GLTFNode(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         }
 
         weights.clear()
-        json.floats("weights") { weights.add(it) }
+        json.forEachFloat("weights") { weights.add(it) }
 
         camera = json.int("camera", -1)
 

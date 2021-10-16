@@ -102,7 +102,7 @@ open class ProgressBar(
         val knobHeight: Float = knob?.minHeight ?: 0f
         val knobWidth: Float = knob?.minWidth ?: 0f
         val percent = visualPercent
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.setMulAlpha(color, parentAlpha)
         if (isVertical) {
             var positionHeight = height
             var bgTopHeight = 0f

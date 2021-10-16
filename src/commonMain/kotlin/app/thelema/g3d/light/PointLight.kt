@@ -20,8 +20,8 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.g3d.IScene
-import app.thelema.g3d.node.ITransformNode
-import app.thelema.g3d.node.TransformNode
+import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.TransformNode
 import app.thelema.img.ITexture
 import app.thelema.math.IMat4
 import app.thelema.math.IVec3
@@ -41,13 +41,18 @@ class PointLight: ILight {
         get() = LightType.Point
 
     override val componentName: String
-        get() = Name
+        get() = "PointLight"
 
     override var isLightEnabled: Boolean = true
-    override var lightIntensity = 1f
+    override var intensity = 1f
     override var color: IVec3 = Vec3(1f, 1f, 1f)
 
-    var range = 100f
+    override var range = 100f
+
+    override val direction: IVec3 = Vec3()
+
+    override var innerConeCos: Float = 0f
+    override var outerConeCos: Float = 0f
 
     override var isShadowEnabled: Boolean = false
 
@@ -66,9 +71,5 @@ class PointLight: ILight {
         set(other as ILight)
         range = other.range
         return this
-    }
-
-    companion object {
-        const val Name = "PointLight"
     }
 }

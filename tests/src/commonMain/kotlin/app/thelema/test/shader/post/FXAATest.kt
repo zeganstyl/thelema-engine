@@ -16,15 +16,12 @@
 
 package app.thelema.test.shader.post
 
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.gl.GL_RGB
+import app.thelema.app.APP
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.img.SimpleFrameBuffer
-import app.thelema.gl.ScreenQuad
 import app.thelema.img.render
+import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.FXAA
-import app.thelema.test.CubeModel
 import app.thelema.test.Test
 
 /** @author zeganstyl */
@@ -33,32 +30,19 @@ class FXAATest: Test {
         get() = "FXAA"
 
     override fun testMain() {
-        val model = CubeModel()
+        val box = BoxMesh { setSize(2f) }
+        val boxShader = SimpleShader3D()
 
-        val frameBuffer = SimpleFrameBuffer(
-            width = GL.mainFrameBufferWidth,
-            height = GL.mainFrameBufferHeight,
-            pixelFormat = GL_RGB,
-            hasDepth = true
-        )
+        val frameBuffer = SimpleFrameBuffer()
 
         val fxaa = FXAA()
 
-        val screenQuad = ScreenQuad()
-
-        GL.isDepthTestEnabled = true
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            model.update()
-
+        APP.onRender = {
             frameBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.render()
+                box.render(boxShader)
             }
 
-            fxaa.render(screenQuad, frameBuffer.getTexture(0), null)
+            fxaa.render(frameBuffer.texture, null)
         }
     }
 }

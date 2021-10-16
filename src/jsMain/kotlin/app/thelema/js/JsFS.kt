@@ -36,7 +36,7 @@ class JsFS: IFileSystem {
 
     val blobs = HashMap<String, JsBlobFile>()
 
-    override fun file(path: String, location: Int): IFile {
+    override fun file(path: String, location: String): IFile {
         return if (location == FileLocation.External) {
             blobs[path] ?: JsBlobFile(null, path, this)
         } else JsFile(path)

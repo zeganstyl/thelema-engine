@@ -23,10 +23,13 @@ import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
 
 class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertexPositionName: String = "POSITION") {
-    val planeMesh = TerrainTileMeshBuilder(1f, tileDivisions * 2, 1).apply {
-        uv = false
-        positionName = vertexPositionName
-    }.build()
+    val plane = TerrainTileMesh {
+        divisions = tileDivisions * 2
+        padding = 1
+        tileSize = 1f
+        builder.uvs = false
+        builder.positionName = vertexPositionName
+    }
 
     val levels = Array(levelsNum) { TerrainLevel(this, minTileSize, it) }
 
@@ -43,14 +46,16 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
     val listeners: MutableList<TerrainListener> = ArrayList()
 
     init {
-        val builder = TerrainLodFrame2to1MeshBuilder().apply {
+        val builder = TerrainLodFrame2to1Mesh {
             frameSize = 1f
             outerLodDivisions = tileDivisions
-            uv = false
-            positionName = vertexPositionName
+            builder.uvs = false
+            builder.positionName = vertexPositionName
+            setSideFlags(left = false, right = false, top = false, bottom = false)
         }
 
-        frameMesh = builder.setSideFlags(left = false, right = false, top = false, bottom = false).build()
+        frameMesh = builder.mesh
+
         val center = frameMesh.indices!!
         val leftTop = builder.setSideFlags(left = true, right = false, top = true, bottom = false).buildIndices()
         val top = builder.setSideFlags(left = false, right = false, top = true, bottom = false).buildIndices()

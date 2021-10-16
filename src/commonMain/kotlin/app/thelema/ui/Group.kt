@@ -18,6 +18,7 @@ package app.thelema.ui
 
 import app.thelema.g2d.Batch
 import app.thelema.math.*
+import app.thelema.utils.Color
 
 
 /** 2D scene graph node that may contain other actors.
@@ -52,15 +53,15 @@ open class Group : Actor(), Cullable {
      */
     override var cullingArea: Rectangle? = null
 
-    override var stage: Stage?
-        get() = super.stage
+    override var headUpDisplay: HeadUpDisplay?
+        get() = super.headUpDisplay
         set(value) {
-            super.stage = value
+            super.headUpDisplay = value
             val childrenArray = children
             var i = 0
             val n = children.size
             while (i < n) {
-                childrenArray[i].stage = stage // StackOverflowError here means the group is its own ancestor.
+                childrenArray[i].headUpDisplay = headUpDisplay // StackOverflowError here means the group is its own ancestor.
                 i++
             }
         }
@@ -98,8 +99,8 @@ open class Group : Actor(), Cullable {
      * these methods don't need to be called, children positions are temporarily offset by the group position when drawn. This
      * method avoids drawing children completely outside the [culling area][setCullingArea], if set.  */
     protected fun drawChildren(batch: Batch, parentAlpha: Float) {
-        var parentAlpha = parentAlpha
-        parentAlpha *= color.a
+        var alpha = parentAlpha
+        alpha *= Color.getAlpha(color)
         val children = children
         val actors = children
         val cullingArea = cullingArea
@@ -120,7 +121,7 @@ open class Group : Actor(), Cullable {
                     val cx = child.x
                     val cy = child.y
                     if (cx <= cullRight && cy <= cullTop && cx + child.width >= cullLeft && cy + child.height >= cullBottom) {
-                        child.draw(batch, parentAlpha)
+                        child.draw(batch, alpha)
                     }
                     i++
                 }
@@ -142,7 +143,7 @@ open class Group : Actor(), Cullable {
                     if (cx <= cullRight && cy <= cullTop && cx + child.width >= cullLeft && cy + child.height >= cullBottom) {
                         child.x = cx + offsetX
                         child.y = cy + offsetY
-                        child.draw(batch, parentAlpha)
+                        child.draw(batch, alpha)
                         child.x = cx
                         child.y = cy
                     }
@@ -161,7 +162,7 @@ open class Group : Actor(), Cullable {
                         i++
                         continue
                     }
-                    child.draw(batch, parentAlpha)
+                    child.draw(batch, alpha)
                     i++
                 }
             } else { // No transform for this group, offset each child.
@@ -181,7 +182,7 @@ open class Group : Actor(), Cullable {
                     val cy = child.y
                     child.x = cx + offsetX
                     child.y = cy + offsetY
-                    child.draw(batch, parentAlpha)
+                    child.draw(batch, alpha)
                     child.x = cx
                     child.y = cy
                     i++
@@ -249,7 +250,7 @@ open class Group : Actor(), Cullable {
         }
         children.add(actor)
         actor.parent = this
-        actor.stage = stage
+        actor.headUpDisplay = headUpDisplay
         childrenChanged()
     }
 
@@ -264,7 +265,7 @@ open class Group : Actor(), Cullable {
         }
         if (index >= children.size) children.add(actor) else children.add(index, actor)
         actor.parent = this
-        actor.stage = stage
+        actor.headUpDisplay = headUpDisplay
         childrenChanged()
     }
 
@@ -278,7 +279,7 @@ open class Group : Actor(), Cullable {
         val index = children.indexOf(actorBefore)
         children.add(index, actor)
         actor.parent = this
-        actor.stage = stage
+        actor.headUpDisplay = headUpDisplay
         childrenChanged()
     }
 
@@ -293,7 +294,7 @@ open class Group : Actor(), Cullable {
         val index = children.indexOf(actorAfter)
         if (index == children.size || index == -1) children.add(actor) else children.add(index + 1, actor)
         actor.parent = this
-        actor.stage = stage
+        actor.headUpDisplay = headUpDisplay
         childrenChanged()
     }
 
@@ -311,18 +312,18 @@ open class Group : Actor(), Cullable {
     }
 
     /** Removes an actor from this group.
-     * @param unfocus If true, [Stage.unfocus] is called.
+     * @param unfocus If true, [HeadUpDisplay.unfocus] is called.
      * @return the actor removed from this group or null.
      */
     open fun removeActorAt(index: Int, unfocus: Boolean): Actor? {
         return if (index < children.size) {
             val actor = children.removeAt(index)
             if (unfocus) {
-                val stage = stage
+                val stage = headUpDisplay
                 stage?.unfocus(actor)
             }
             actor.parent = null
-            actor.stage = null
+            actor.headUpDisplay = null
             childrenChanged()
             actor
         } else {
@@ -337,7 +338,7 @@ open class Group : Actor(), Cullable {
         val n = children.size
         while (i < n) {
             val child = actors[i]
-            child.stage = null
+            child.headUpDisplay = null
             child.parent = null
             i++
         }

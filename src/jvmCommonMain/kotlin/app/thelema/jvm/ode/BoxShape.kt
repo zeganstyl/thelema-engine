@@ -16,52 +16,36 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
 import app.thelema.phys.IBoxShape
-import app.thelema.phys.IShape
+import org.ode4j.math.DVector3
 import org.ode4j.ode.DBox
+import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class BoxShape: IBoxShape {
-    var box: DBox? = null
-
-    /** Space names */
-    private val spaces = ArrayList<String>()
-
-    override var entityOrNull: IEntity? = null
+class BoxShape: SpecificShape<DBox>(), IBoxShape {
+    override var xSize: Float = 1f
         set(value) {
             field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = box
+            geom?.setLengths(value.toDouble(), ySize.toDouble(), zSize.toDouble())
         }
 
-    override var shape: IShape = Shape().also { it.geom = box }
-
-    override var xSize: Float
-        get() = box?.lengths?.get0()?.toFloat() ?: 0f
+    override var ySize: Float = 1f
         set(value) {
-            box?.setLengths(value.toDouble(), ySize.toDouble(), zSize.toDouble())
+            field = value
+            geom?.setLengths(xSize.toDouble(), value.toDouble(), zSize.toDouble())
         }
 
-    override var ySize: Float
-        get() = box?.lengths?.get1()?.toFloat() ?: 0f
+    override var zSize: Float = 1f
         set(value) {
-            box?.setLengths(xSize.toDouble(), value.toDouble(), zSize.toDouble())
+            field = value
+            geom?.setLengths(xSize.toDouble(), ySize.toDouble(), value.toDouble())
         }
 
-    override var zSize: Float
-        get() = box?.lengths?.get2()?.toFloat() ?: 0f
-        set(value) {
-            box?.setLengths(xSize.toDouble(), ySize.toDouble(), value.toDouble())
-        }
+    override fun createGeom(): DBox =
+        OdeHelper.createBox(getSpace(), xSize.toDouble(), ySize.toDouble(), zSize.toDouble())
 
-    override fun startSimulation() {
-        box = OdeHelper.createBox(xSize.toDouble(), ySize.toDouble(), zSize.toDouble()).also { it.data = this }
-    }
-
-    override fun endSimulation() {
-        box?.destroy()
-        box = null
+    override fun setupMass(density: Double, mass: DMass) {
+        mass.setBox(density, xSize.toDouble(), ySize.toDouble(), zSize.toDouble())
     }
 }

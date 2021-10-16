@@ -16,50 +16,33 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
 import app.thelema.math.IVec3
 import app.thelema.phys.IRayShape
-import app.thelema.phys.IShape
-import org.ode4j.ode.DGeom
+import org.ode4j.ode.DMass
 import org.ode4j.ode.DRay
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class RayShape: IRayShape {
-    var ray: DRay? = null
-
-    override var length: Float
-        get() = ray?.length?.toFloat() ?: 0f
-        set(value) {
-            ray?.length = value.toDouble()
-        }
-
-    override var entityOrNull: IEntity? = null
+class RayShape: SpecificShape<DRay>(), IRayShape {
+    override var length: Float = 0f
         set(value) {
             field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = ray
+            geom?.length = value.toDouble()
         }
 
-    override var shape: IShape = Shape().also { it.geom = ray }
-
-    override fun startSimulation() {
-        ray = OdeHelper.createRay(null, length.toDouble())
-    }
-
-    override fun endSimulation() {
-        ray?.destroy()
-        ray = null
-    }
+    override fun createGeom(): DRay =
+        OdeHelper.createRay(null, length.toDouble())
 
     override fun setRayDirection(x: Float, y: Float, z: Float) {
-        val pos = ray?.position
-        if (pos != null) ray?.set(pos.get0(), pos.get1(), pos.get2(), x.toDouble(), y.toDouble(), z.toDouble())
+        val pos = geom?.position
+        if (pos != null) geom?.set(pos.get0(), pos.get1(), pos.get2(), x.toDouble(), y.toDouble(), z.toDouble())
     }
 
     override fun getRayDirection(out: IVec3): IVec3 {
-        val dir = ray?.direction
+        val dir = geom?.direction
         if (dir != null) out.set(dir.get0().toFloat(), dir.get1().toFloat(), dir.get2().toFloat())
         return out
     }
+
+    override fun setupMass(density: Double, mass: DMass) {}
 }

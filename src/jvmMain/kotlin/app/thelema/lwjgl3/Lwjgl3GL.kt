@@ -19,10 +19,7 @@ package app.thelema.lwjgl3
 import app.thelema.data.IByteData
 import app.thelema.data.IFloatData
 import app.thelema.data.IIntData
-import app.thelema.gl.AbstractGL
-import app.thelema.gl.GL_UNSIGNED_BYTE
-import app.thelema.gl.GL_UNSIGNED_INT
-import app.thelema.gl.GL_UNSIGNED_SHORT
+import app.thelema.gl.*
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.*
@@ -91,6 +88,16 @@ class Lwjgl3GL: AbstractGL() {
     override fun glBindTextureBase(target: Int, texture: Int) {
         GL11.glBindTexture(target, texture)
     }
+
+    override fun glGenTextureBase(): Int = GL11.glGenTextures()
+    override fun glGenBufferBase(): Int = GL15.glGenBuffers()
+    override fun glGenFrameBufferBase(): Int = GL30.glGenFramebuffers()
+    override fun glGenRenderBufferBase(): Int = GL30.glGenRenderbuffers()
+
+    override fun glDeleteTextureBase(id: Int) { GL11.glDeleteTextures(id) }
+    override fun glDeleteBufferBase(id: Int) { GL15.glDeleteBuffers(id) }
+    override fun glDeleteFrameBufferBase(id: Int) { GL30.glDeleteFramebuffers(id) }
+    override fun glDeleteRenderBufferBase(id: Int) { GL30.glDeleteRenderbuffers(id) }
 
     private fun ensureBufferCapacity(numBytes: Int) {
         var buffer = buffer
@@ -211,10 +218,6 @@ class Lwjgl3GL: AbstractGL() {
         GL15.glDeleteBuffers(buffers)
     }
 
-    override fun glDeleteBuffer(buffer: Int) {
-        GL15.glDeleteBuffers(buffer)
-    }
-
     override fun glDeleteProgram(program: Int) {
         GL20.glDeleteProgram(program)
     }
@@ -225,10 +228,6 @@ class Lwjgl3GL: AbstractGL() {
 
     override fun glDeleteTextures(textures: IntArray) {
         GL11.glDeleteTextures(textures)
-    }
-
-    override fun glDeleteTexture(texture: Int) {
-        GL11.glDeleteTextures(texture)
     }
 
     override fun glDepthRangef(zNear: Float, zFar: Float) {
@@ -276,16 +275,8 @@ class Lwjgl3GL: AbstractGL() {
         GL15.glGenBuffers(buffers)
     }
 
-    override fun glGenBuffer(): Int {
-        return GL15.glGenBuffers()
-    }
-
     override fun glGenTextures(n: Int, textures: IntArray) {
         GL11.glGenTextures(textures)
-    }
-
-    override fun glGenTexture(): Int {
-        return GL11.glGenTextures()
     }
 
     override fun glGetActiveAttrib(program: Int, index: Int, size: IntArray, type: IntArray): String {
@@ -811,16 +802,8 @@ class Lwjgl3GL: AbstractGL() {
         GL30.glDeleteFramebuffers(framebuffers)
     }
 
-    override fun glDeleteFramebuffer(framebuffer: Int) {
-        GL30.glDeleteFramebuffers(framebuffer)
-    }
-
     override fun glDeleteRenderbuffers(renderbuffers: IntArray) {
         GL30.glDeleteRenderbuffers(renderbuffers)
-    }
-
-    override fun glDeleteRenderbuffer(renderbuffer: Int) {
-        GL30.glDeleteRenderbuffers(renderbuffer)
     }
 
     override fun glGenerateMipmap(target: Int) {
@@ -829,14 +812,6 @@ class Lwjgl3GL: AbstractGL() {
 
     override fun glGenFramebuffers(framebuffers: IntArray) {
         GL30.glGenFramebuffers(framebuffers)
-    }
-
-    override fun glGenFramebuffer(): Int {
-        return GL30.glGenFramebuffers()
-    }
-
-    override fun glGenRenderbuffer(): Int {
-        return GL30.glGenRenderbuffers()
     }
 
     override fun glGetRenderbufferParameteriv(target: Int, pname: Int, params: IntArray) {

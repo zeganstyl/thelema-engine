@@ -21,7 +21,7 @@ import app.thelema.app.Cursor
 import app.thelema.g2d.Batch
 import app.thelema.math.Rectangle
 import app.thelema.math.Vec2
-import app.thelema.ui.SplitPane.Style
+import app.thelema.utils.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -42,11 +42,11 @@ import kotlin.math.min
  * @author Nathan Sweet
  */
 class SplitPane(
-        private var firstWidget: Actor,
-        private var secondWidget: Actor,
-        vertical: Boolean = false,
-        style: Style = Style.default("default-" + if (vertical) "vertical" else "horizontal"),
-        splitValue: Float = 0.5f
+    private var firstWidget: Actor,
+    private var secondWidget: Actor,
+    vertical: Boolean = false,
+    style: SplitPaneStyle = SplitPaneStyle.default("default-" + if (vertical) "vertical" else "horizontal"),
+    splitValue: Float = 0.5f
 ) : WidgetGroup() {
     var style = style
         set(value) {
@@ -124,7 +124,7 @@ class SplitPane(
                 val handle = style.handle
                 if (!isVertical) {
                     val delta = x - lastPoint.x
-                    val availWidth = width - handle.minWidth
+                    val availWidth = width - (handle?.minWidth ?: 0f)
                     var dragX = handlePosition.x + delta
                     handlePosition.x = dragX
                     dragX = max(0f, dragX)
@@ -133,7 +133,7 @@ class SplitPane(
                     lastPoint.set(x, y)
                 } else {
                     val delta = y - lastPoint.y
-                    val availHeight = height - handle.minHeight
+                    val availHeight = height - (handle?.minHeight ?: 0f)
                     var dragY = handlePosition.y + delta
                     handlePosition.y = dragY
                     dragY = max(0f, dragY)
@@ -172,37 +172,37 @@ class SplitPane(
         get() {
             val first: Float = if (firstWidget == null) 0f else if (firstWidget is Layout) (firstWidget as Layout).prefWidth else firstWidget.width
             val second: Float = if (secondWidget == null) 0f else if (secondWidget is Layout) (secondWidget as Layout).prefWidth else secondWidget.width
-            return if (isVertical) max(first, second) else first + style.handle.minWidth + second
+            return if (isVertical) max(first, second) else first + (style.handle?.minWidth ?: 0f) + second
         }
 
     override val prefHeight: Float
         get() {
             val first: Float = if (firstWidget == null) 0f else if (firstWidget is Layout) (firstWidget as Layout).prefHeight else firstWidget.height
             val second: Float = if (secondWidget == null) 0f else if (secondWidget is Layout) (secondWidget as Layout).prefHeight else secondWidget.height
-            return if (!isVertical) max(first, second) else first + style.handle.minHeight + second
+            return if (!isVertical) max(first, second) else first + (style.handle?.minHeight ?: 0f) + second
         }
 
     override val minWidth: Float
         get() {
             val first: Float = if (firstWidget is Layout) (firstWidget as Layout).minWidth else 0f
             val second: Float = if (secondWidget is Layout) (secondWidget as Layout).minWidth else 0f
-            return if (isVertical) max(first, second) else first + style.handle.minWidth + second
+            return if (isVertical) max(first, second) else first + (style.handle?.minWidth ?: 0f) + second
         }
 
     override val minHeight: Float
         get() {
             val first: Float = if (firstWidget is Layout) (firstWidget as Layout).minHeight else 0f
             val second: Float = if (secondWidget is Layout) (secondWidget as Layout).minHeight else 0f
-            return if (!isVertical) max(first, second) else first + style.handle.minHeight + second
+            return if (!isVertical) max(first, second) else first + (style.handle?.minHeight ?: 0f) + second
         }
 
     private fun calculateHorizBoundsAndPositions() {
         val handle = style.handle
         val height = height
-        val availWidth = width - handle.minWidth
+        val availWidth = width - (handle?.minWidth ?: 0f)
         val leftAreaWidth: Float = (availWidth * splitValue)
         val rightAreaWidth = availWidth - leftAreaWidth
-        val handleWidth = handle.minWidth
+        val handleWidth = handle?.minWidth ?: 0f
         firstWidgetBounds.set(0f, 0f, leftAreaWidth, height)
         secondWidgetBounds.set(leftAreaWidth + handleWidth, 0f, rightAreaWidth, height)
         handleBounds.set(leftAreaWidth, 0f, handleWidth, height)
@@ -212,20 +212,20 @@ class SplitPane(
         val handle = style.handle
         val width = width
         val height = height
-        val availHeight = height - handle.minHeight
+        val availHeight = height - (handle?.minHeight ?: 0f)
         val topAreaHeight: Float = (availHeight * splitValue)
         val bottomAreaHeight = availHeight - topAreaHeight
-        val handleHeight = handle.minHeight
+        val handleHeight = handle?.minHeight ?: 0f
         firstWidgetBounds.set(0f, height - topAreaHeight, width, topAreaHeight)
         secondWidgetBounds.set(0f, 0f, width, bottomAreaHeight)
         handleBounds.set(0f, bottomAreaHeight, width, handleHeight)
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        val stage = stage ?: return
+        val stage = headUpDisplay ?: return
         validate()
         val color = color
-        val alpha = color.a * parentAlpha
+        val alpha = Color.getAlpha(color) * parentAlpha
         applyTransform(batch, computeTransform())
         if (firstWidget.isVisible) {
             batch.flush()
@@ -245,8 +245,8 @@ class SplitPane(
                 ScissorStack.popScissors()
             }
         }
-        batch.setColor(color.r, color.g, color.b, alpha)
-        style.handle.draw(batch, handleBounds.x, handleBounds.y, handleBounds.width, handleBounds.height)
+        batch.setMulAlpha(color, alpha)
+        style.handle?.draw(batch, handleBounds.x, handleBounds.y, handleBounds.width, handleBounds.height)
         resetTransform(batch)
     }
 
@@ -257,13 +257,13 @@ class SplitPane(
         var effectiveMinAmount = minSplitValue
         var effectiveMaxAmount = maxSplitValue
         if (isVertical) {
-            val availableHeight = height - style.handle.minHeight
+            val availableHeight = height - (style.handle?.minHeight ?: 0f)
             if (firstWidget is Layout) effectiveMinAmount = max(effectiveMinAmount,
                     min((firstWidget as Layout).minHeight / availableHeight, 1f))
             if (secondWidget is Layout) effectiveMaxAmount = min(effectiveMaxAmount,
                     1 - min((secondWidget as Layout).minHeight / availableHeight, 1f))
         } else {
-            val availableWidth = width - style.handle.minWidth
+            val availableWidth = width - (style.handle?.minWidth ?: 0f)
             if (firstWidget is Layout) effectiveMinAmount = max(effectiveMinAmount, min((firstWidget as Layout).minWidth / availableWidth, 1f))
             if (secondWidget is Layout) effectiveMaxAmount = min(effectiveMaxAmount,
                     1 - min((secondWidget as Layout).minWidth / availableWidth, 1f))
@@ -308,28 +308,6 @@ class SplitPane(
 
     override fun removeActorAt(index: Int, unfocus: Boolean): Actor {
         throw NotImplementedError("cannot do this")
-    }
-
-    /** The style for a splitpane, see [SplitPane].
-     * @author mzechner
-     * @author Nathan Sweet
-     */
-    open class Style(var handle: Drawable = Drawable.Empty) {
-        constructor(style: Style): this(style.handle)
-
-        companion object {
-            const val GdxTypeName = "com.badlogic.gdx.scenes.scene2d.ui.SplitPane\$SplitPaneStyle"
-
-            var Default: Style? = null
-            fun default(styleName: String = "default-horizontal"): Style {
-                var style = Default
-                if (style == null) {
-                    style = Style()
-                    Default = style
-                }
-                return style
-            }
-        }
     }
 
     /** @param firstWidget May be null.

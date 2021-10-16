@@ -21,12 +21,16 @@ class ActionData(vararg values: Any?) {
 
     val list: Array<Any?> = Array(values.size) { values[it] }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <T> get(index: Int): T = list[index] as T
     operator fun set(index: Int, value: Any?) {
         list[index] = value
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> getTypedOrNull(index: Int): T? = list[index] as T?
+
+    @Suppress("UNCHECKED_CAST")
     fun <T> getTyped(index: Int) = list[index] as T
 
     fun copy() = ActionData(list)

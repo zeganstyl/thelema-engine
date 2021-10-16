@@ -16,8 +16,8 @@
 
 package app.thelema.action
 
-import app.thelema.ecs.getComponentOrNull
-import app.thelema.g3d.node.ITransformNode
+import app.thelema.ecs.componentOrNull
+import app.thelema.g3d.ITransformNode
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 
@@ -38,10 +38,10 @@ class MoveToTargetAction: ActionAdapter() {
     override fun update(delta: Float): Float {
         if (isRunning) {
             val target = target
-            val node = entityOrNull?.parentEntity?.getComponentOrNull<ActionList>()?.customContext?.getComponentOrNull<ITransformNode>()
+            val node = entityOrNull?.parentEntity?.componentOrNull<ActionList>()?.customContext?.componentOrNull<ITransformNode>()
             if (target != null && node != null) {
                 val speed = speed * delta
-                if (target.getGlobalPosition(tmp).dst2(node.getGlobalPosition(tmp2)) > speed * speed) {
+                if (target.worldPosition.dst2(node.worldPosition) > speed * speed) {
                     tmp.set(target.position).sub(node.position).nor().scl(speed)
                     node.position.add(tmp)
                 } else {

@@ -1,9 +1,9 @@
 package app.thelema.android
 
-import app.thelema.input.IKB
+import app.thelema.input.IKeyboard
 import app.thelema.input.IKeyListener
 
-class AndroidKB: IKB {
+class AndroidKB: IKeyboard {
     val listeners = ArrayList<IKeyListener>()
 
     val keyMap = HashMap<Int, Boolean>()

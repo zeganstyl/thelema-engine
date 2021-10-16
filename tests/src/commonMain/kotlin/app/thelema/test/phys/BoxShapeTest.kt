@@ -18,20 +18,15 @@ package app.thelema.test.phys
 
 import app.thelema.app.APP
 import app.thelema.ecs.Entity
-import app.thelema.ecs.component
-import app.thelema.g3d.Object3D
-import app.thelema.g3d.Scene
-import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMesh
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.test.Test
-import app.thelema.math.Mat4
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.material
+import app.thelema.g3d.mesh.boxMesh
+import app.thelema.g3d.scene
+import app.thelema.gl.mesh
+import app.thelema.math.MATH
 import app.thelema.phys.*
-import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
+import app.thelema.test.Test
 import app.thelema.utils.LOG
 
 /** @author zeganstyl */
@@ -40,106 +35,69 @@ class BoxShapeTest: Test {
         get() = "Box shape"
 
     override fun testMain() {
-        val mainScene = Entity {
-            component<Scene>()
+        Entity {
+            makeCurrent()
 
-            componentTyped<IRigidBodyPhysicsWorld>(IRigidBodyPhysicsWorld.Name) {
-                setGravity(0f, -2f, 0f)
+            APP.setupPhysicsComponents()
+
+            scene()
+            orbitCameraControl {
+                targetDistance = 10f
             }
 
-            val box = component<BoxMesh> {
-                builder.positionName = "POSITION"
-                builder.uvName = "UV"
+            val box = boxMesh {
+                setSize(2f)
+                mesh.isVisible = false
             }
 
-            entity("dynamicBox").apply {
-                componentTyped<IBoxShape>(IBoxShape.Name) { setSize(2f) }
-                componentTyped<IRigidBody>(IRigidBody.Name) {
+            // material will be set to box mesh automatically
+            material {
+                shader = SimpleShader3D()
+            }
+
+            entity("dynamic") {
+                mesh { inheritedMesh = box.mesh }
+                boxShape { setSize(box.xSize, box.ySize, box.zSize) }
+                rigidBody {
                     node.position.set(0f, 3f, 0f)
-                    node.requestTransformUpdate()
                 }
-                component<Object3D> { addMesh(box.mesh) }
             }
 
-            entity("staticBox1").apply {
-                componentTyped<IBoxShape>(IBoxShape.Name) { setSize(2f) }
-                componentTyped<IRigidBody>(IRigidBody.Name) {
+            entity("static1") {
+                mesh { inheritedMesh = box.mesh }
+                boxShape { setSize(box.xSize, box.ySize, box.zSize) }
+                rigidBody {
                     node.position.set(1.25f, 0f, 0f)
-                    node.requestTransformUpdate()
-                    isGravityEnabled = false
                     isStatic = true
+                    onCollision { contact, body, other ->
+                        LOG.info("${body.entity.name} collided with ${other.entity.name}, depth = ${contact.depth}, normal = ${contact.normal}")
+                    }
                 }
-                component<Object3D> { addMesh(box.mesh) }
             }
 
-            entity("staticBox2").apply {
-                componentTyped<IBoxShape>(IBoxShape.Name) { setSize(2f) }
-                componentTyped<IRigidBody>(IRigidBody.Name) {
+            entity("static2") {
+                mesh { inheritedMesh = box.mesh }
+                boxShape { setSize(box.xSize, box.ySize, box.zSize) }
+                rigidBody {
                     node.position.set(-2.5f, 0f, 0f)
-                    node.requestTransformUpdate()
-                    isGravityEnabled = false
                     isStatic = true
                 }
-                component<Object3D> { addMesh(box.mesh) }
             }
-        }
 
-        val boxMesh = BoxMeshBuilder(2f, 2f, 2f).apply {
-            positionName = "POSITION"
-            uvName = "UV"
-        }.build()
+            rigidBodyPhysicsWorld {
+                setGravity(0f, -2f, 0f)
+                startSimulation()
 
+                addPhysicsWorldListener(object: IPhysicsWorldListener {
+                    override fun collisionBegin(contact: IBodyContact) {
+                        LOG.info("begin contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
+                    }
 
-        val shader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
-uniform mat4 world;
-uniform mat4 viewProj;
-
-void main() {
-    uv = UV;
-    gl_Position = viewProj * world * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-varying vec2 uv;
-void main() {
-    gl_FragColor = vec4(uv, 0.0, 1.0);
-}"""
-        )
-
-        val control = OrbitCameraControl(
-            camera = ActiveCamera,
-            targetDistance = 10f,
-            azimuth = 2f
-        )
-        control.listenToMouse()
-        LOG.info(control.help)
-
-        val tmp = Mat4()
-
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            control.update(APP.deltaTime)
-            ActiveCamera.updateCamera()
-
-//            world.step(APP.deltaTime)
-//
-//            shader.bind()
-//            shader["viewProj"] = ActiveCamera.viewProjectionMatrix
-//
-//            shader["world"] = static1.getWorldTransform(tmp)
-//            boxMesh.render(shader)
-//
-//            shader["world"] = static2.getWorldTransform(tmp)
-//            boxMesh.render(shader)
-//
-//            shader["world"] = dynamic.getWorldTransform(tmp)
-//            boxMesh.render(shader)
+                    override fun collisionEnd(contact: IBodyContact) {
+                        LOG.info("end contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
+                    }
+                })
+            }
         }
     }
 }

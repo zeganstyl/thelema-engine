@@ -16,32 +16,28 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IObject3D
+import app.thelema.app.APP
+import app.thelema.g3d.IScene
+import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
 import app.thelema.json.IJsonObject
+import app.thelema.math.MATH
 
 /** @author zeganstyl */
-class VelocityNode(
-    worldSpacePosition: IShaderData = GLSL.zeroFloat,
-    clipSpacePosition: IShaderData = GLSL.zeroFloat,
-    previousViewProjectionMatrix: IShaderData = GLSL.zeroFloat,
-    normal: IShaderData = GLSL.defaultNormal,
+class VelocityNode(): ShaderNode() {
+    constructor(block: VelocityNode.() -> Unit): this() {
+        block(this)
+    }
 
-    var maxBones: Int = 0,
+    var maxBones: Int = 0
 
     /** Use [TransformDataType] */
-    var worldTransformType: String = TransformDataType.TRS,
+    var worldTransformType: String = TransformDataType.TRS
 
     var bonesSetsNum: Int = 1
-): ShaderNode() {
+
     override val name: String
         get() = "Vertex"
-
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
 
     var aPositionName = "POSITION"
     var aBonesName = "JOINTS_"
@@ -53,27 +49,27 @@ class VelocityNode(
 
     /** Current world space position. It can be taken from [VertexNode.position] */
     var worldSpacePosition: IShaderData
-        get() = input[WorldSpacePosition] ?: GLSL.zeroFloat
-        set(value) = setInput(WorldSpacePosition, value)
+        get() = input["worldSpacePosition"] ?: GLSL.zeroFloat
+        set(value) = setInput("worldSpacePosition", value)
 
     /** Current clip space position. It can be taken from [CameraDataNode.clipSpacePosition] */
     var clipSpacePosition: IShaderData
-        get() = input[ClipSpacePosition] ?: GLSL.zeroFloat
-        set(value) = setInput(ClipSpacePosition, value)
+        get() = input["clipSpacePosition"] ?: GLSL.zeroFloat
+        set(value) = setInput("clipSpacePosition", value)
 
     /** Previous clip space position. It can be taken from [CameraDataNode.previousViewProjectionMatrix] */
     var previousViewProjectionMatrix: IShaderData
-        get() = input[PreviousViewProjectionMatrix] ?: GLSL.oneFloat
-        set(value) = setInput(PreviousViewProjectionMatrix, value)
+        get() = input["previousViewProjectionMatrix"] ?: GLSL.oneFloat
+        set(value) = setInput("previousViewProjectionMatrix", value)
 
     /** Vertex shader normal, used for stretching */
     var normal: IShaderData
-        get() = input[Normal] ?: GLSL.defaultNormal
-        set(value) = setInput(Normal, value)
+        get() = input["normal"] ?: GLSL.defaultNormal
+        set(value) = setInput("normal", value)
 
     var viewProjectionMatrix: IShaderData
-        get() = input[ViewProjectionMatrix] ?: GLSL.oneFloat
-        set(value) = setInput(ViewProjectionMatrix, value)
+        get() = input["viewProjectionMatrix"] ?: GLSL.oneFloat
+        set(value) = setInput("viewProjectionMatrix", value)
 
     private val uPrevBoneMatricesName: String
         get() = "uPrevBoneMatrices$uid"
@@ -147,21 +143,15 @@ class VelocityNode(
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun prepareObjectData(obj: IObject3D) {
-        super.prepareObjectData(obj)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
-        shader[uPrevWorldMatrixName] = obj.node.transformData.previousWorldMatrix ?: obj.node.transformData.worldMatrix
+        val worldMat = (mesh.previousWorldMatrix ?: mesh.worldMatrix) ?: MATH.IdentityMat4
+        shader[uPrevWorldMatrixName] = worldMat
 
-        val armature = obj.armature
+        val armature = mesh.armature
         if (armature != null) {
             val prevMatrices = armature.previousBoneMatrices
-//            for (i in prevMatrices.indices) {
-//                val floatOffset = i * 16
-//                val values = prevMatrices[i].values
-//                for (j in 0 until 16) {
-//                    bonesTemp[floatOffset + j] = values[j]
-//                }
-//            }
             shader.setMatrix4(uPrevBoneMatricesName, prevMatrices, length = prevMatrices.size)
         }
     }
@@ -257,24 +247,6 @@ if (dot($posRef - ${prevPosition.ref}, ${normal.asVec3()}) > 0.0) {
                 out.append("uniform mat4 $uPrevBoneMatricesName[$maxBones];\n")
                 out.append("mat4 prevSkinning = mat4(0.0);\n")
             }
-        }
-    }
-
-    companion object {
-        const val ClassId = "velocity"
-
-        const val WorldSpacePosition = "worldSpacePosition"
-        const val ClipSpacePosition = "clipSpacePosition"
-        const val PreviousViewProjectionMatrix = "previousViewProjectionMatrix"
-        const val Normal = "normal"
-        const val ViewProjectionMatrix = "viewProjectionMatrix"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(WorldSpacePosition, GLSLType.Vec3)
-            put(ClipSpacePosition, GLSLType.Vec4)
-            put(PreviousViewProjectionMatrix, GLSLType.Mat4)
-            put(Normal, GLSLType.Vec3)
-            put(ViewProjectionMatrix, GLSLType.Mat4)
         }
     }
 }

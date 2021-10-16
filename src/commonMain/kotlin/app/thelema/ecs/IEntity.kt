@@ -17,28 +17,34 @@
 package app.thelema.ecs
 
 import app.thelema.json.IJsonObjectIO
+import app.thelema.res.RES
 
 interface IEntity: IJsonObjectIO {
     val children: List<IEntity>
-
-    val components: List<IEntityComponent>
 
     var parentEntity: IEntity?
 
     var name: String
 
     /** If true, components and children entities will be serialized to json */
-    var serialize: Boolean
+    var serializeEntity: Boolean
 
     /** It is relative path from root */
     val path: String
         get() {
             val parentPath = parentEntity ?: return ""
-
-            var path = parentPath.path
-            if (path.isNotEmpty()) path += delimiter
-            return path + name
+            return if (parentEntity == RES.entity) {
+                resPath + name
+            } else {
+                var path = parentPath.path
+                if (path.isNotEmpty()) path += delimiter
+                path + name
+            }
         }
+
+    fun addEntityListener(listener: EntityListener)
+
+    fun removeEntityListener(listener: EntityListener)
 
     fun getRootEntity(): IEntity = parentEntity?.getRootEntity() ?: this
 
@@ -93,27 +99,38 @@ interface IEntity: IJsonObjectIO {
     fun getEntityByPath(path: String): IEntity? = when {
         path.isEmpty() -> null
         path == toSelf -> this
+        path.startsWith(resPath) -> RES.entity.getEntityByPath(path.substring(resPath.length))
         path.startsWith(upDelimiter) -> parentEntity?.getEntityByPath(path.substring(3))
+        path.startsWith(delimiter) -> getEntityByPath(path.substring(1))
         path.contains(delimiter) -> {
-            val childName = path.substring(0, path.indexOf(delimiter))
+            val childName = path.substringBefore(delimiter)
             getEntityByName(childName)?.getEntityByPath(path.substring(childName.length+1))
         }
         else -> getEntityByName(path)
     }
 
+    fun getComponentByPath(path: String): IEntityComponent? = when {
+        path.isEmpty() -> null
+        path.startsWith(resPath) -> RES.entity.getComponentByPath(path.substring(resPath.length))
+        path.startsWith(upDelimiter) -> parentEntity?.getComponentByPath(path.substring(3))
+        path.contains(delimiter) -> {
+            val childName = path.substring(0, path.indexOf(delimiter))
+            getEntityByName(childName)?.getComponentByPath(path.substring(childName.length+1))
+        }
+        path.contains(componentDelimiter) -> {
+            val childName = path.substring(0, path.indexOf(componentDelimiter))
+            getEntityByName(childName)?.componentOrNull(path.substring(childName.length+1))
+        }
+        else -> null
+    }
+
+    /** Search children entities */
     fun getEntityByName(name: String): IEntity?
 
-    fun firstOrNullFromTree(predicate: (item: IEntity) -> Boolean): IEntity? {
-        val item = children.firstOrNull(predicate)
-        if (item != null) return item
+    /** Search whole branch */
+    fun findEntityByName(name: String): IEntity?
 
-        for (i in children.indices) {
-            val item2 = children[i].firstOrNullFromTree(predicate)
-            if (item2 != null) return item2
-        }
-
-        return null
-    }
+    fun findEntityByPredicate(predicate: (item: IEntity) -> Boolean): IEntity?
 
     private fun isChildNameAcceptable(newName: String) = getEntityByName(newName) == null
 
@@ -154,19 +171,29 @@ interface IEntity: IJsonObjectIO {
     fun removeComponent(component: IEntityComponent)
 
     fun getComponent(typeName: String): IEntityComponent {
-        return getComponentOrNull(typeName) ?: throw IllegalArgumentException("Component $typeName is not added to entity $path")
+        return componentOrNull(typeName) ?: throw IllegalArgumentException("Component $typeName is not added to entity $path")
     }
 
     /** Get or create component */
     fun component(typeName: String): IEntityComponent
 
     /** Get or create component with generic */
+    @Suppress("UNCHECKED_CAST")
     fun <T> componentTyped(typeName: String, block: T.() -> Unit = {}): T =
         (component(typeName) as T).apply(block)
 
-    fun getComponentOrNull(typeName: String): IEntityComponent?
+    fun componentOrNull(typeName: String): IEntityComponent?
 
-    fun <T> getComponentOrNullTyped(typeName: String): T? = getComponentOrNull(typeName) as T?
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getComponentOrNullTyped(typeName: String): T? = componentOrNull(typeName) as T?
+
+    fun getComponentsCount(): Int
+
+    fun containsComponent(component: IEntityComponent): Boolean
+
+    fun getComponent(index: Int): IEntityComponent
+
+    fun indexOfComponent(component: IEntityComponent): Int
 
     /** Get or create child entity */
     fun entity(name: String): Entity {
@@ -179,22 +206,25 @@ interface IEntity: IJsonObjectIO {
         return entity as Entity
     }
 
+    /** Get or create entity with given name */
     fun entity(name: String, block: IEntity.() -> Unit) = entity(name).apply(block)
 
-    /** Get or create entities with structure by given path. It is analog of mkdir. */
-    fun mkEntity(path: String): IEntity
-
-    fun addEntity(entity: IEntity)
-
-    /** If there is already entity with same name, [entity] will receive new free name */
-    fun addEntityWithCorrectedName(entity: IEntity) {
-        if (getEntityByName(entity.name) != null) {
-            entity.name = makeChildName(entity.name)
-        }
-        addEntity(entity)
+    /** Create new entity */
+    fun entity(block: IEntity.() -> Unit) {
+        val entity = Entity("Entity")
+        addEntity(entity, true)
+        entity.apply(block)
     }
 
+    /** Get or create entities with structure by given path. It is analog of mkdir. */
+    fun makePath(path: String): IEntity
+
+    /** @param correctName If there is already entity with the same name, [entity] will get a new free name */
+    fun addEntity(entity: IEntity, correctName: Boolean = true)
+
     fun removeEntity(entity: IEntity)
+
+    fun removeEntity(name: String)
 
     fun removeAllComponents()
 
@@ -220,37 +250,37 @@ interface IEntity: IJsonObjectIO {
         }
     }
 
-    fun addedEntityNotifyAscending(entity: IEntity) {
-        forEachComponent { it.addedEntityToBranch(entity) }
-        parentEntity?.addedEntityNotifyAscending(entity)
-    }
+    fun addedEntityNotifyAscending(entity: IEntity)
+    fun removedEntityNotifyAscending(entity: IEntity)
 
-    fun addedComponentNotifyAscending(component: IEntityComponent) {
-        forEachComponent { it.addedComponentToBranch(component) }
-        parentEntity?.addedComponentNotifyAscending(component)
-    }
+    fun addedComponentNotifyAscending(component: IEntityComponent)
+    fun removedComponentNotifyAscending(component: IEntityComponent)
 
-    fun set(other: IEntity): IEntity
+    fun setEntity(other: IEntity, fullReplace: Boolean = true): IEntity
 
-    fun invoke(methodName: String, vararg args: String) {}
+    fun copy(): IEntity = Entity().setEntity(this)
 
-    fun copy(): IEntity = Entity().set(this)
+    /** Copy this entity and whole its branch. */
+    fun copyDeep(to: IEntity? = null, setupComponents: Boolean = true): IEntity
 
-    fun copyDeep(setupComponents: Boolean = true): IEntity
+    /** Copy this entity and whole its branch. */
+    fun copyDeep(newName: String, setupComponents: Boolean = true): IEntity
 
-    fun setDeep(other: IEntity)
-
-    fun update(delta: Float) {
-        ECS.update(this, delta)
-    }
+    /** Apply [setEntity] to this entity and to whole its branch. */
+    fun setDeep(other: IEntity, fullReplace: Boolean = true)
 
     fun destroy()
+
+    /** Set this entity as ECS current entity, it will be updated and rendered on main loop */
+    fun makeCurrent()
 
     companion object {
         const val toSelf = "."
         const val toParent = ".."
         const val delimiter = '/'
+        const val componentDelimiter = ':'
         const val upDelimiter = toParent + delimiter
+        const val resPath = "RES:"
     }
 }
 
@@ -262,6 +292,6 @@ inline fun <reified T: IEntityComponent> IEntity.component(block: T.() -> Unit):
     return componentTyped<T>(T::class.simpleName!!).apply(block)
 }
 
-inline fun <reified T: IEntityComponent> IEntity.getComponent(): T = getComponentOrNull(T::class.simpleName!!) as T
+inline fun <reified T: IEntityComponent> IEntity.getComponent(): T = componentOrNull(T::class.simpleName!!) as T
 
-inline fun <reified T: IEntityComponent> IEntity.getComponentOrNull(): T? = getComponentOrNull(T::class.simpleName!!) as T?
+inline fun <reified T: IEntityComponent> IEntity.componentOrNull(): T? = componentOrNull(T::class.simpleName!!) as T?

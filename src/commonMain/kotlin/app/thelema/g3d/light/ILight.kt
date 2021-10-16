@@ -18,7 +18,7 @@ package app.thelema.g3d.light
 
 import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
-import app.thelema.g3d.node.ITransformNode
+import app.thelema.g3d.ITransformNode
 import app.thelema.img.ITexture
 import app.thelema.math.IMat4
 import app.thelema.math.IVec3
@@ -29,7 +29,15 @@ interface ILight: IEntityComponent {
 
     val color: IVec3
 
-    var lightIntensity: Float
+    val direction: IVec3
+
+    var range: Float
+
+    var innerConeCos: Float
+
+    var outerConeCos: Float
+
+    var intensity: Float
 
     /** Use [LightType] */
     val lightType: Int
@@ -49,7 +57,7 @@ interface ILight: IEntityComponent {
 
     fun set(other: ILight): ILight {
         color.set(other.color)
-        lightIntensity = other.lightIntensity
+        intensity = other.intensity
         return this
     }
 }

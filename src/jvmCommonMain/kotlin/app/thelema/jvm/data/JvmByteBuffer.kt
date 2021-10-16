@@ -112,14 +112,7 @@ class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer<Byte>() {
     }
 
     override fun putInt(byteIndex: Int, value: Int) {
-        //byteBuffer.putInt(0, value)
-//        byteBuffer.order(ByteOrder.BIG_ENDIAN)
         byteBuffer.putInt(byteIndex, value)
-//        intView.put(0, value)
-//        put(byteIndex, bytes4.get(0))
-//        put(byteIndex + 1, bytes4.get(1))
-//        put(byteIndex + 2, bytes4.get(2))
-//        put(byteIndex + 3, bytes4.get(3))
     }
 
     override fun toStringUTF8(): String = Charsets.UTF_8.decode(byteBuffer).toString()

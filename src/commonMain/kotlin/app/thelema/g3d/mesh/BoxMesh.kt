@@ -17,13 +17,10 @@
 package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.gl.*
-import app.thelema.json.IJsonObject
 import app.thelema.math.Vec3
 
-class BoxMesh(): IEntityComponent {
+class BoxMesh(): MeshBuilderAdapter() {
     constructor(block: BoxMesh.() -> Unit): this() {
         getOrCreateEntity()
         block(this)
@@ -32,12 +29,6 @@ class BoxMesh(): IEntityComponent {
 
     override val componentName: String
         get() = "BoxMesh"
-
-    override var entityOrNull: IEntity? = null
-        set(value) {
-            field = value
-            builder = value?.component() ?: MeshBuilder()
-        }
 
     var xSize: Float = 1f
         set(value) {
@@ -63,12 +54,9 @@ class BoxMesh(): IEntityComponent {
             }
         }
 
-    var isMeshUpdateRequested = true
+    override fun getVerticesCount(): Int = 24
 
-    var builder = MeshBuilder()
-
-    val mesh: IMesh
-        get() = builder.mesh
+    override fun getIndicesCount(): Int = 36
 
     fun setSize(x: Float, y: Float, z: Float) {
         xSize = x
@@ -78,13 +66,12 @@ class BoxMesh(): IEntityComponent {
 
     fun setSize(value: Float) = setSize(value, value, value)
 
-    private fun applyVertices() {
-        val xs = xSize * 0.5f
-        val ys = ySize * 0.5f
-        val zs = zSize * 0.5f
+    override fun applyVertices() {
+        preparePositions {
+            val xs = xSize * 0.5f
+            val ys = ySize * 0.5f
+            val zs = zSize * 0.5f
 
-        mesh.getAttribute(builder.positionName) {
-            rewind()
             putFloatsWithStep(3,
                 // front
                 -xs, -ys,  zs,
@@ -122,133 +109,80 @@ class BoxMesh(): IEntityComponent {
                 xs,  ys, -zs,
                 xs,  ys,  zs
             )
-            rewind()
-            buffer.requestBufferLoading()
         }
 
-        if (builder.uvs) {
-            mesh.getAttribute(builder.uvName) {
-                rewind()
-                for (i in 0 until 6) {
-                    putFloatsWithStep(2,
-                        0f, 0f,
-                        1f, 0f,
-                        1f, 1f,
-                        0f, 1f
-                    )
-                }
-                rewind()
-                buffer.requestBufferLoading()
-            }
-        }
-
-        if (builder.normals) {
-            mesh.getAttribute(builder.normalName) {
-                rewind()
-                putFloatsWithStep(3,
-                    0f, 0f, 1f,
-                    0f, 0f, 1f,
-                    0f, 0f, 1f,
-                    0f, 0f, 1f,
-
-                    0f, 1f, 0f,
-                    0f, 1f, 0f,
-                    0f, 1f, 0f,
-                    0f, 1f, 0f,
-
-                    0f, 0f, -1f,
-                    0f, 0f, -1f,
-                    0f, 0f, -1f,
-                    0f, 0f, -1f,
-
-                    0f, -1f, 0f,
-                    0f, -1f, 0f,
-                    0f, -1f, 0f,
-                    0f, -1f, 0f,
-
-                    -1f, 0f, 0f,
-                    -1f, 0f, 0f,
-                    -1f, 0f, 0f,
-                    -1f, 0f, 0f,
-
-                    1f, 0f, 0f,
-                    1f, 0f, 0f,
-                    1f, 0f, 0f,
-                    1f, 0f, 0f
+        prepareUvs {
+            for (i in 0 until 6) {
+                putFloatsWithStep(2,
+                    0f, 0f,
+                    1f, 0f,
+                    1f, 1f,
+                    0f, 1f
                 )
-                rewind()
-                buffer.requestBufferLoading()
             }
+        }
+
+        prepareNormals {
+            putFloatsWithStep(3,
+                0f, 0f, 1f,
+                0f, 0f, 1f,
+                0f, 0f, 1f,
+                0f, 0f, 1f,
+
+                0f, 1f, 0f,
+                0f, 1f, 0f,
+                0f, 1f, 0f,
+                0f, 1f, 0f,
+
+                0f, 0f, -1f,
+                0f, 0f, -1f,
+                0f, 0f, -1f,
+                0f, 0f, -1f,
+
+                0f, -1f, 0f,
+                0f, -1f, 0f,
+                0f, -1f, 0f,
+                0f, -1f, 0f,
+
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+
+                1f, 0f, 0f,
+                1f, 0f, 0f,
+                1f, 0f, 0f,
+                1f, 0f, 0f
+            )
         }
     }
 
-    private fun applyIndices(buffer: IIndexBuffer) {
-        buffer.bytes.rewind()
-        buffer.bytes.putShorts(
-            // front
-            0, 1, 2,
-            2, 3, 0,
-            // top
-            4, 5, 6,
-            6, 7, 4,
-            // back
-            8, 9, 10,
-            10, 11, 8,
-            // bottom
-            12, 13, 14,
-            14, 15, 12,
-            // left
-            17, 16, 18,
-            19, 18, 16,
-            // right
-            20, 21, 22,
-            22, 23, 20
-        )
-        buffer.bytes.rewind()
-        buffer.requestBufferLoading()
-    }
-
-    fun updateMesh() {
-        mesh.verticesCount = 24
-
-        if (mesh.vertexBuffers.isEmpty()) {
-            mesh.addVertexBuffer {
-                addAttribute(3, builder.positionName)
-                if (builder.uvs) addAttribute(2, builder.uvName)
-                if (builder.normals) addAttribute(3, builder.normalName)
-                initVertexBuffer(mesh.verticesCount)
-            }
-        }
-        applyVertices()
-
-        if (mesh.indices == null) {
-            mesh.setIndexBuffer {
-                indexType = GL_UNSIGNED_SHORT
-                initIndexBuffer(36) {}
-            }
-        }
-        applyIndices(mesh.indices!!)
-
-        isMeshUpdateRequested = false
-    }
-
-    fun requestMeshUpdate() {
-        isMeshUpdateRequested = true
-    }
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-        if (isMeshUpdateRequested) updateMesh()
-    }
-
-    companion object {
-        fun skybox() = BoxMesh {
-            val n = Vec3(1f, 1f, 1f).nor()
-            xSize = n.x
-            ySize = n.y
-            zSize = n.z
-            this.builder.normals = false
-            this.builder.uvs = false
+    override fun applyIndices() {
+        prepareIndices {
+            putIndices(
+                // front
+                0, 1, 2,
+                2, 3, 0,
+                // top
+                4, 5, 6,
+                6, 7, 4,
+                // back
+                8, 9, 10,
+                10, 11, 8,
+                // bottom
+                12, 13, 14,
+                14, 15, 12,
+                // left
+                17, 16, 18,
+                19, 18, 16,
+                // right
+                20, 21, 22,
+                22, 23, 20
+            )
         }
     }
 }
+
+fun IEntity.boxMesh(block: BoxMesh.() -> Unit) = component(block)
+fun IEntity.boxMesh() = component<BoxMesh>()
+fun IEntity.boxMesh(size: Float) = component<BoxMesh> { setSize(size) }

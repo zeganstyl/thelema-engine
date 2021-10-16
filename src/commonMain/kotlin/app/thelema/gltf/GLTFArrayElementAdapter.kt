@@ -27,8 +27,8 @@ abstract class GLTFArrayElementAdapter(arrayOrNull: IGLTFArray? = null): IGLTFAr
     override val progress: Float
         get() = currentProgress.toFloat() / maxProgress
 
-    override var currentProgress: Long = 0
-    override var maxProgress: Long = 1
+    override var currentProgress: Int = 0
+    override var maxProgress: Int = 1
 
     protected open val defaultName: String
         get() = ""

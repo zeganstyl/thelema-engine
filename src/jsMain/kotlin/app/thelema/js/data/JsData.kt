@@ -19,6 +19,7 @@ package app.thelema.js.data
 import org.khronos.webgl.Uint8Array
 import app.thelema.data.IByteData
 import app.thelema.data.IData
+import kotlinx.browser.window
 
 /** @author zeganstyl */
 class JsData: IData {
@@ -30,27 +31,15 @@ class JsData: IData {
     override fun bytes(capacity: Int): IByteData =
         JsUInt8Array(Uint8Array(capacity))
 
-    // TODO https://github.com/beatgammit/base64-js
-
-    override fun decodeBase64(text: String): ByteArray {
-        TODO("Not yet implemented")
-    }
-
-    override fun decodeBase64(text: String, out: IByteData): IByteData {
-        TODO("Not yet implemented")
-    }
+    override fun decodeBase64(text: String): IByteData =
+        JsUInt8Array(TextEncoder().encode(window.btoa(text)))
 
     override fun decodeURI(uri: String): String = jsDecodeURI(uri) as String
 
     override fun destroyBytes(data: IByteData) {}
 
-    override fun encodeBase64(data: IByteData): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun encodeBase64(bytes: ByteArray): String {
-        TODO("Not yet implemented")
-    }
+    override fun encodeBase64(data: IByteData): String =
+        window.atob(TextDecoder("UTF-8").decode(data.sourceObject as Uint8Array))
 
     override fun encodeURI(uri: String): String = jsEncodeURI(uri) as String
 

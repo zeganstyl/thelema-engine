@@ -19,16 +19,14 @@ package app.thelema.test.g3d.terrain
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.terrain.*
 import app.thelema.gl.*
-import app.thelema.img.IMG
-import app.thelema.img.ImageSampler
-import app.thelema.img.Texture2D
-import app.thelema.img.TextureCube
+import app.thelema.img.*
 import app.thelema.math.MATH
 import app.thelema.math.Perlin
 import app.thelema.math.Vec3
+import app.thelema.res.RES
 import app.thelema.shader.Shader
 import app.thelema.test.Test
 import kotlin.math.pow
@@ -234,42 +232,21 @@ void main() {
         grassShader["tex"] = grassTexUnit
         grassShader["heightMap"] = grassHeightMapUnit
 
-        val cracked = Texture2D()
-        cracked.load("terrain/Ground031_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
+        val cracked = Texture2D("terrain/Ground031_2K_Color.jpg")
+        val crackedDisp = Texture2D("terrain/Ground031_2K_Displacement.jpg")
+        val grassDisp = Texture2D("terrain/Ground013_2K_Displacement.jpg")
+        val terrainGrassTex = Texture2D("terrain/Ground013_2K_Color.jpg")
+        val rock = Texture2D("terrain/Rock037_2K_Color.jpg")
+        val rockDisp = Texture2D("terrain/Rock037_2K_Displacement.jpg")
+        val normalMap = Texture2D("terrain/normalmap.jpg")
+        val heightMap = Texture2D("terrain/heightmap.png")
 
-        val crackedDisp = Texture2D()
-        crackedDisp.load("terrain/Ground031_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
+        val grassTexture = Texture2D("terrain/grass-diffuse.png") {
+            sWrap = GL_CLAMP_TO_EDGE
+            tWrap = GL_CLAMP_TO_EDGE
+        }
 
-        val terrainGrassTex = Texture2D()
-        terrainGrassTex.load("terrain/Ground013_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val grassDisp = Texture2D()
-        grassDisp.load("terrain/Ground013_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val rock = Texture2D()
-        rock.load("terrain/Rock037_2K_Color.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val rockDisp = Texture2D()
-        rockDisp.load("terrain/Rock037_2K_Displacement.jpg", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val normalMap = Texture2D()
-        normalMap.load("terrain/normalmap.png", minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR, generateMipmaps = true)
-
-        val heightMap = Texture2D()
-        heightMap.load("terrain/heightmap.png")
-
-        val grassTexture = Texture2D()
-        grassTexture.load(
-            "terrain/grass-diffuse.png",
-            minFilter = GL_LINEAR_MIPMAP_LINEAR,
-            magFilter = GL_LINEAR,
-            sWrap = GL_CLAMP_TO_EDGE,
-            tWrap = GL_CLAMP_TO_EDGE,
-            generateMipmaps = true
-        )
-        grassTexture.bind()
-
-        val grass = GrassPatchMeshBuilder().apply {
+        val grass = GrassPatchMesh().apply {
             rotations = listOf(0.1f, 1f, 0.25f, 0.3f, 0.15f)
             val dist = 0.5f
             points = listOf(
@@ -279,30 +256,27 @@ void main() {
                 Vec3(-dist, 0f, -dist),
                 Vec3(0f, 0f, 0f)
             )
-        }.build()
+        }
 
         val splatMap = Texture2D()
 
-        var splatImage = IMG.image()
-
         val splatMapTexture = Texture2D()
-        IMG.load(
-            uri = "terrain/splatmap.png",
-            ready = { img ->
-                splatImage = img
-                splatMap.load(img, generateMipmaps = true) {
+        val splatImage = RES.image("terrain/splatmap.png") {
+            onLoaded {
+                splatMap.load(this) {
                     splatMap.minFilter = GL_LINEAR_MIPMAP_LINEAR
                     splatMap.magFilter = GL_LINEAR
+                    generateMipmapsGPU()
                 }
-                splatMapTexture.load(img)
+                splatMapTexture.load(this)
 
-                grass.instances = VertexBuffer {
-                    addAttribute(3, "instancePos")
-                    initVertexBuffer(100 * 100)
-                }
+//                grass.instances = VertexBuffer {
+//                    addAttribute(3, "instancePos")
+//                    initVertexBuffer(100 * 100)
+//                }
                 //grass.instances?.instancesToRender = 0
             }
-        )
+        }
 
         val perlin = Perlin()
 
@@ -325,7 +299,7 @@ void main() {
                     grassShader.bind()
                     grassTexture.bind(grassTexUnit)
                     heightMap.bind(grassHeightMapUnit)
-                    grass.instances = instances
+                    //grass.instances = instances
                     grass.render(grassShader)
                 }
             }
@@ -392,19 +366,15 @@ void main () {
         val textureCube = TextureCube()
 
         textureCube.load(
-            positiveX = "clouds1/clouds1_east.jpg",
-            negativeX = "clouds1/clouds1_west.jpg",
-            positiveY = "clouds1/clouds1_up.jpg",
-            negativeY = "clouds1/clouds1_down.jpg",
-            positiveZ = "clouds1/clouds1_north.jpg",
-            negativeZ = "clouds1/clouds1_south.jpg"
+            px = "clouds1/clouds1_px.jpg",
+            nx = "clouds1/clouds1_nx.jpg",
+            py = "clouds1/clouds1_py.jpg",
+            ny = "clouds1/clouds1_ny.jpg",
+            pz = "clouds1/clouds1_pz.jpg",
+            nz = "clouds1/clouds1_nz.jpg"
         )
 
-        val mesh = BoxMeshBuilder(
-            xSize = 0.5f,
-            ySize = 0.5f,
-            zSize = 0.5f
-        ).build()
+        val mesh = BoxMesh { setSize(0.5f) }
 
         ActiveCamera {
             lookAt(Vec3(0f, 200f, 0.001f), MATH.Zero3)
@@ -413,12 +383,11 @@ void main () {
             updateCamera()
         }
 
-        val control = OrbitCameraControl(camera = ActiveCamera)
-        control.listenToMouse()
+        val control = OrbitCameraControl()
 
         GL.isDepthTestEnabled = true
         GL.isBlendingEnabled = true
-        GL.setSimpleAlphaBlending()
+        GL.setupSimpleAlphaBlending()
         GL.glClearColor(fogColor.x, fogColor.y, fogColor.z, 1f)
         GL.render {
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)

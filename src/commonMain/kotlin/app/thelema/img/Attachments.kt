@@ -31,13 +31,13 @@ object Attachments {
         internalFormat: Int = GL_RGBA,
         type: Int = GL_UNSIGNED_BYTE,
         mipmapLevel: Int = 0
-    ) = FrameBufferAttachment(
-        attachment = GL_COLOR_ATTACHMENT0 + index,
-        internalFormat = internalFormat,
-        pixelFormat = pixelFormat,
-        type = type,
-        mipmapLevel = mipmapLevel
-    )
+    ) = FrameBufferAttachment2D {
+        this.attachment = GL_COLOR_ATTACHMENT0 + index
+        this.internalFormat = internalFormat
+        this.pixelFormat = pixelFormat
+        this.type = type
+        this.mipmapLevel = mipmapLevel
+    }
 
     /** Depth as attachment */
     fun depth(
@@ -45,26 +45,26 @@ object Attachments {
         internalFormat: Int = GL_DEPTH_COMPONENT32F,
         type: Int = GL_FLOAT,
         mipmapLevel: Int = 0
-    ) = FrameBufferAttachment(
-        attachment = GL_DEPTH_ATTACHMENT,
-        internalFormat = internalFormat,
-        pixelFormat = pixelFormat,
-        type = type,
-        mipmapLevel = mipmapLevel
-    )
+    ) = FrameBufferAttachment2D {
+        this.attachment = GL_DEPTH_ATTACHMENT
+        this.internalFormat = internalFormat
+        this.pixelFormat = pixelFormat
+        this.type = type
+        this.mipmapLevel = mipmapLevel
+    }
 
     fun depthStencil(
         pixelFormat: Int = GL_DEPTH_STENCIL,
         internalFormat: Int = GL_DEPTH24_STENCIL8,
         type: Int = GL_UNSIGNED_INT_24_8,
         mipmapLevel: Int = 0
-    ) = FrameBufferAttachment(
-        attachment = GL_DEPTH_STENCIL_ATTACHMENT,
-        internalFormat = internalFormat,
-        pixelFormat = pixelFormat,
-        type = type,
-        mipmapLevel = mipmapLevel
-    )
+    ) = FrameBufferAttachment2D {
+        this.attachment = GL_DEPTH_STENCIL_ATTACHMENT
+        this.internalFormat = internalFormat
+        this.pixelFormat = pixelFormat
+        this.type = type
+        this.mipmapLevel = mipmapLevel
+    }
 
     /** Write-only high-speed depth buffer */
     fun depthRenderBuffer(internalFormat: Int = GL_DEPTH_COMPONENT16, handle: Int = 0) =

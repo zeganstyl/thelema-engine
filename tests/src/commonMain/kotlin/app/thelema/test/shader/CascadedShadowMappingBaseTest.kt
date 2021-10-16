@@ -19,17 +19,16 @@ package app.thelema.test.shader
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.*
 import app.thelema.img.Attachments
 import app.thelema.img.FrameBuffer
 import app.thelema.math.*
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.test.Test
-import app.thelema.utils.LOG
 import kotlin.math.max
 import kotlin.math.min
 
@@ -74,20 +73,20 @@ class CascadedShadowMappingBaseTest: Test {
 
         lightView.setToLook(ActiveCamera.position, lightDirection, MATH.Y)
 
-        val camFarSubNear = ActiveCamera.far
+        val camFar = ActiveCamera.far
 
         for (i in 0 until numCascades) {
             val frustumPoints = this.sceneCameraFrustumPoints[i]
             centroid.set(0f, 0f, 0f)
 
-            val alphaNear = cascadeEnd[i] / camFarSubNear
+            val alphaNear = cascadeEnd[i] / camFar
             for (j in 0 until 4) {
                 val p = frustumPoints[j]
                 p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaNear)
                 centroid.add(p)
             }
 
-            val alphaFar = cascadeEnd[i + 1] / camFarSubNear
+            val alphaFar = cascadeEnd[i + 1] / camFar
             for (j in 0 until 4) {
                 val p = frustumPoints[j + 4]
                 p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaFar)
@@ -225,34 +224,29 @@ void main() {
         updateFrustums()
 
         val depthBuffers = Array(numCascades) {
-            val buffer = FrameBuffer(1024, 1024)
-            buffer.attachments.add(Attachments.depth())
-            buffer.buildAttachments()
-            buffer.getTexture(0).apply {
-                bind()
-                minFilter = GL_NEAREST
-                magFilter = GL_NEAREST
+            FrameBuffer {
+                setResolution(1024, 1024)
+                addAttachment(Attachments.depth())
+                buildAttachments()
+                getTexture(0).apply {
+                    bind()
+                    minFilter = GL_NEAREST
+                    magFilter = GL_NEAREST
+                }
             }
-            buffer
         }
 
-        val cube = BoxMeshBuilder(xSize = 2f, ySize = 2f, zSize = 2f).build()
-        val plane = PlaneMeshBuilder(width = 500f, height = 500f).build()
+        val box = BoxMesh { setSize(2f) }
+        val plane = PlaneMesh { setSize(500f) }
 
         val cubeColor = Vec4(1f, 0.5f, 0f, 1f)
 
-        GL.isDepthTestEnabled = true
-
-        val control = OrbitCameraControl(
-            camera = ActiveCamera,
-            zenith = 1f,
-            azimuth = 0f,
-            target = Vec3(10f, 3f, 0f),
+        val control = OrbitCameraControl {
+            zenith = 1f
+            azimuth = 0f
+            target = Vec3(10f, 3f, 0f)
             targetDistance = 10f
-        )
-
-        control.listenToMouse()
-        LOG.info(control.help)
+        }
 
         // create screen quad for debugging
         val screenQuad = TextureRenderer()
@@ -267,14 +261,12 @@ void main() {
 
         val cubesY = 1f
 
-        GL.glClearColor(0f, 0f, 0f, 1f)
         GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
             control.update(APP.deltaTime)
 
             updateFrustums()
 
+            // render to depth maps
             for (i in 0 until numCascades) {
                 depthBuffers[i].render {
                     GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -285,8 +277,8 @@ void main() {
                     shader["viewProj"] = lightProj[i]
 
                     // render plane
-                    shader.set("pos", 0f, 0f, 0f)
-                    plane.render(shader)
+//                    shader.set("pos", 0f, 0f, 0f)
+//                    plane.render(shader)
 
                     // render cubes
                     var xi = cubesStartX
@@ -294,7 +286,7 @@ void main() {
                         var zi = cubesStartZ
                         while (zi < cubesEndZ) {
                             shader.set("pos", xi, cubesY, zi)
-                            cube.render(shader)
+                            box.render(shader)
                             zi += cubesStepZ
                         }
                         xi += cubesStepX
@@ -327,7 +319,7 @@ void main() {
                 var zi = cubesStartZ
                 while (zi < cubesEndZ) {
                     shader.set("pos", xi, cubesY, zi)
-                    cube.render(shader)
+                    box.render(shader)
                     zi += cubesStepZ
                 }
                 xi += cubesStepX

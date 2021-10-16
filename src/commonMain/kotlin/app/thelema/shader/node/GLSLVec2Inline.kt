@@ -22,7 +22,7 @@ class GLSLVec2Inline(var x: Float = 0f, var y: Float = 0f, name: String = ""): G
         get() = asVec2()
         set(_) {}
 
-    override val type: Int
+    override val type: String
         get() = GLSLType.Vec2
 
     override var scope: Int

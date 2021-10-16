@@ -16,44 +16,29 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
 import app.thelema.phys.ICapsuleShape
-import app.thelema.phys.IShape
 import org.ode4j.ode.DCapsule
+import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class CapsuleShape: ICapsuleShape {
-    var capsule: DCapsule? = null
-
-    override var entityOrNull: IEntity? = null
+class CapsuleShape: SpecificShape<DCapsule>(), ICapsuleShape {
+    override var radius: Float = 0f
         set(value) {
             field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = capsule
+            geom?.setParams(value.toDouble(), length.toDouble())
         }
 
-    override var shape: IShape = Shape().also { it.geom = capsule }
-
-    override var radius: Float
-        get() = capsule?.radius?.toFloat() ?: 0f
+    override var length: Float = 0f
         set(value) {
-            capsule?.setParams(value.toDouble(), length.toDouble())
+            field = value
+            geom?.setParams(radius.toDouble(), value.toDouble())
         }
 
-    override var length: Float
-        get() = capsule?.length?.toFloat() ?: 0f
-        set(value) {
-            capsule?.setParams(radius.toDouble(), value.toDouble())
-        }
+    override fun createGeom(): DCapsule =
+        OdeHelper.createCapsule(radius.toDouble(), length.toDouble())
 
-    override fun startSimulation() {
-        endSimulation()
-        capsule = OdeHelper.createCapsule(radius.toDouble(), length.toDouble())
-    }
-
-    override fun endSimulation() {
-        capsule?.destroy()
-        capsule = null
+    override fun setupMass(density: Double, mass: DMass) {
+        mass.setCapsule(density, 2, radius.toDouble(), length.toDouble())
     }
 }

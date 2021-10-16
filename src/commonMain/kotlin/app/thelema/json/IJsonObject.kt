@@ -27,10 +27,10 @@ interface IJsonObject {
 
     fun obj(key: String): IJsonObject
     fun objOrNull(key: String): IJsonObject? = if (contains(key)) obj(key) else null
-    fun obj(key: String, call: IJsonObject.() -> Unit): IJsonObject? = objOrNull(key)?.apply(call)
+    fun obj(key: String, block: IJsonObject.() -> Unit): IJsonObject? = objOrNull(key)?.apply(block)
     fun array(key: String): IJsonArray
     fun arrayOrNull(key: String): IJsonArray? = if (contains(key)) array(key) else null
-    fun array(key: String, call: IJsonArray.() -> Unit): IJsonArray? = arrayOrNull(key)?.apply(call)
+    fun array(key: String, block: IJsonArray.() -> Unit): IJsonArray? = arrayOrNull(key)?.apply(block)
     fun string(key: String): String
     fun float(key: String): Float
     fun int(key: String): Int
@@ -41,47 +41,41 @@ interface IJsonObject {
     fun int(key: String, default: Int) = if (contains(key)) int(key) else default
     fun bool(key: String, default: Boolean) = if (contains(key)) bool(key) else default
 
-    /** If [key] found in json [call] will be called */
-    fun string(key: String, call: (value: String) -> Unit) { if (contains(key)) call(string(key)) }
-    /** If [key] found in json [call] will be called */
-    fun float(key: String, call: (value: Float) -> Unit) { if (contains(key)) call(float(key)) }
-    /** If [key] found in json [call] will be called */
-    fun int(key: String, call: (value: Int) -> Unit) { if (contains(key)) call(int(key)) }
-    /** If [key] found in json [call] will be called */
-    fun bool(key: String, call: (value: Boolean) -> Unit) { if (contains(key)) call(bool(key)) }
+    /** If [key] found in json [block] will be called */
+    fun string(key: String, block: (value: String) -> Unit) { if (contains(key)) block(string(key)) }
+    /** If [key] found in json [block] will be called */
+    fun float(key: String, block: (value: Float) -> Unit) { if (contains(key)) block(float(key)) }
+    /** If [key] found in json [block] will be called */
+    fun int(key: String, block: (value: Int) -> Unit) { if (contains(key)) block(int(key)) }
+    /** If [key] found in json [block] will be called */
+    fun bool(key: String, block: (value: Boolean) -> Unit) { if (contains(key)) block(bool(key)) }
 
     /** If key has null value, function must return false */
     fun contains(key: String): Boolean
 
-    fun objs(call: IJsonObject.(key: String) -> Unit)
-    fun arrays(call: IJsonArray.(key: String) -> Unit)
-    fun strings(call: (key: String, value: String) -> Unit)
-    fun ints(call: (key: String, value: Int) -> Unit)
-    fun bools(call: (key: String, value: Boolean) -> Unit)
-    fun floats(call: (key: String, value: Float) -> Unit)
+    fun forEachObject(block: IJsonObject.(key: String) -> Unit)
+    fun forEachArray(block: IJsonArray.(key: String) -> Unit)
+    fun forEachString(block: (key: String, value: String) -> Unit)
+    fun forEachInt(block: (key: String, value: Int) -> Unit)
+    fun forEachBool(block: (key: String, value: Boolean) -> Unit)
+    fun forEachFloat(block: (key: String, value: Float) -> Unit)
+
+    fun forEachObject(key: String, block: IJsonObject.(key: String) -> Unit) { objOrNull(key)?.forEachObject(block) }
 
     /** get array by [key] and iterate it */
-    fun strings(key: String, call: (value: String) -> Unit) {
-        arrayOrNull(key)?.strings(call)
-    }
+    fun forEachString(key: String, block: (value: String) -> Unit) { arrayOrNull(key)?.forEachString(block) }
     /** get array by [key] and iterate it */
-    fun ints(key: String, call: (value: Int) -> Unit) {
-        arrayOrNull(key)?.ints(call)
-    }
+    fun forEachInt(key: String, block: (value: Int) -> Unit) { arrayOrNull(key)?.forEachInt(block) }
     /** get array by [key] and iterate it */
-    fun bools(key: String, call: (value: Boolean) -> Unit) {
-        arrayOrNull(key)?.bools(call)
-    }
+    fun forEachBool(key: String, block: (value: Boolean) -> Unit) { arrayOrNull(key)?.forEachBool(block) }
     /** get array by [key] and iterate it */
-    fun floats(key: String, call: (value: Float) -> Unit) {
-        arrayOrNull(key)?.floats(call)
-    }
+    fun forEachFloat(key: String, block: (value: Float) -> Unit) { arrayOrNull(key)?.forEachFloat(block) }
 
     /** Get child JSON-object
-     * @param call will be called if object exists */
-    fun get(key: String, call: IJsonObject.() -> Unit): IJsonObject? {
+     * @param block will be called if object exists */
+    fun get(key: String, block: IJsonObject.() -> Unit): IJsonObject? {
         val json = objOrNull(key)
-        if (json != null) call(json)
+        if (json != null) block(json)
         return json
     }
 
@@ -98,44 +92,44 @@ interface IJsonObject {
     /** @param childBlock context for created child */
     fun setArray(key: String, childBlock: IJsonArray.() -> Unit)
 
-    fun setFloats(key: String, size: Int, call: (i: Int) -> Float) {
+    fun setFloats(key: String, size: Int, block: (i: Int) -> Float) {
         setArray(key) {
             for (i in 0 until size) {
-                add(call(i))
+                add(block(i))
             }
         }
     }
-    fun setInts(key: String, size: Int, call: (i: Int) -> Int) {
+    fun setInts(key: String, size: Int, block: (i: Int) -> Int) {
         setArray(key) {
             for (i in 0 until size) {
-                add(call(i))
+                add(block(i))
             }
         }
     }
-    fun setBools(key: String, size: Int, call: (i: Int) -> Boolean) {
+    fun setBools(key: String, size: Int, block: (i: Int) -> Boolean) {
         setArray(key) {
             for (i in 0 until size) {
-                add(call(i))
+                add(block(i))
             }
         }
     }
-    fun setStrings(key: String, size: Int, call: (i: Int) -> String) {
+    fun setStrings(key: String, size: Int, block: (i: Int) -> String) {
         setArray(key) {
             for (i in 0 until size) {
-                add(call(i))
-            }
-        }
-    }
-
-    fun setObjs(key: String, size: Int, call: (i: Int) -> IJsonObjectIO) {
-        setArray(key) {
-            for (i in 0 until size) {
-                add(call(i))
+                add(block(i))
             }
         }
     }
 
-    fun setObjs(key: String, vararg values: IJsonObjectIO) {
+    fun setObjects(key: String, size: Int, block: (i: Int) -> IJsonObjectIO) {
+        setArray(key) {
+            for (i in 0 until size) {
+                add(block(i))
+            }
+        }
+    }
+
+    fun setObjects(key: String, vararg values: IJsonObjectIO) {
         setArray(key) {
             for (i in values.indices) {
                 add(values[i])

@@ -17,7 +17,7 @@
 package app.thelema.shader.node
 
 /** @author zeganstyl */
-class GLSLValue(override var name: String, override var type: Int): ShaderData() {
+class GLSLValue(override var name: String, override var type: String): ShaderData() {
     override fun asFloat(): String = if (type == GLSLType.Float) ref else "$ref.x"
     override fun asVec2(): String = when(type) {
         GLSLType.Float -> "vec2($ref, 0.0)"

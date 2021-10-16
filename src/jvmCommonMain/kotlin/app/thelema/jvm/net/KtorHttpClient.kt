@@ -51,7 +51,7 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
                 }
             }
 
-            if (HTTP.isSuccess(response.status.value)) {
+            if (httpIsSuccess(response.status.value)) {
                 ready(KtorHttpResponse(response))
             } else {
                 error(response.status.value)
@@ -89,7 +89,7 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
                 }
             }
 
-            if (HTTP.isSuccess(response.status.value)) {
+            if (httpIsSuccess(response.status.value)) {
                 ready(KtorHttpResponse(response))
             } else {
                 error(response.status.value)
@@ -112,7 +112,7 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
                 }
             }
 
-            if (HTTP.isSuccess(response.status.value)) {
+            if (httpIsSuccess(response.status.value)) {
                 ready(KtorHttpResponse(response))
             } else {
                 error(response.status.value)
@@ -123,7 +123,7 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
     override fun open(url: String, error: (status: Int) -> Unit, opened: () -> Unit) {
         super.open(url, error, opened)
 
-        readyStateInternal = WS.CONNECTING
+        readyStateInternal = WEBSOCKET_CONNECTING
 
         runBlocking {
             client.webSocket(
@@ -131,7 +131,7 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
                 block = {
                     session = this
 
-                    readyStateInternal = WS.OPEN
+                    readyStateInternal = WEBSOCKET_OPEN
                     opened()
 
                     incoming.consumeEach {
@@ -158,13 +158,13 @@ class KtorHttpClient: WebSocketAdapter(), IHttp {
                         }
                     }
 
-                    readyStateInternal = WS.CLOSING
+                    readyStateInternal = WEBSOCKET_CLOSING
                 }
             )
         }
 
         session = null
-        readyStateInternal = WS.CLOSED
+        readyStateInternal = WEBSOCKET_CLOSED
         for (i in listeners.indices) {
             listeners[i].closed()
         }

@@ -42,20 +42,20 @@ class JsonSimpleObject(val source: JsonObject = JsonObject()): IJsonObject {
     override fun int(key: String): Int = (source[key] as BigDecimal).toInt()
     override fun bool(key: String): Boolean = source[key] as Boolean
 
-    override fun strings(call: (key: String, value: String) -> Unit) {
-        source.entries.forEach { call(it.key, it.value as String) }
+    override fun forEachString(block: (key: String, value: String) -> Unit) {
+        source.entries.forEach { block(it.key, it.value as String) }
     }
 
-    override fun ints(call: (key: String, value: Int) -> Unit) {
-        source.entries.forEach { call(it.key, (it.value  as BigDecimal).toInt()) }
+    override fun forEachInt(block: (key: String, value: Int) -> Unit) {
+        source.entries.forEach { block(it.key, (it.value  as BigDecimal).toInt()) }
     }
 
-    override fun bools(call: (key: String, value: Boolean) -> Unit) {
-        source.entries.forEach { call(it.key, it.value as Boolean) }
+    override fun forEachBool(block: (key: String, value: Boolean) -> Unit) {
+        source.entries.forEach { block(it.key, it.value as Boolean) }
     }
 
-    override fun floats(call: (key: String, value: Float) -> Unit) {
-        source.entries.forEach { call(it.key, (it.value  as BigDecimal).toFloat()) }
+    override fun forEachFloat(block: (key: String, value: Float) -> Unit) {
+        source.entries.forEach { block(it.key, (it.value  as BigDecimal).toFloat()) }
     }
 
     override fun set(key: String, value: Boolean) {
@@ -76,12 +76,12 @@ class JsonSimpleObject(val source: JsonObject = JsonObject()): IJsonObject {
 
     override fun contains(key: String) = source[key] != null
 
-    override fun objs(call: IJsonObject.(key: String) -> Unit) {
-        source.entries.forEach { call(JsonSimpleObject(it.value as JsonObject), it.key) }
+    override fun forEachObject(block: IJsonObject.(key: String) -> Unit) {
+        source.entries.forEach { block(JsonSimpleObject(it.value as JsonObject), it.key) }
     }
 
-    override fun arrays(call: IJsonArray.(key: String) -> Unit) {
-        source.entries.forEach { call(JsonSimpleArray(it.value as JsonArray), it.key) }
+    override fun forEachArray(block: IJsonArray.(key: String) -> Unit) {
+        source.entries.forEach { block(JsonSimpleArray(it.value as JsonArray), it.key) }
     }
 
     override fun set(key: String, value: IJsonObjectIO) {

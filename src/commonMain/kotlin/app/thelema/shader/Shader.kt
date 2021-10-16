@@ -16,7 +16,7 @@
 
 package app.thelema.shader
 
-import app.thelema.app.APP
+import app.thelema.g3d.IScene
 import app.thelema.gl.*
 import app.thelema.shader.node.IShaderData
 import app.thelema.shader.node.IShaderNode
@@ -30,10 +30,14 @@ open class Shader(
     compile: Boolean = true,
 
     /** Precision will be added as first line */
-    var floatPrecision: String = if (APP.platformType != APP.Desktop) "precision mediump float;\n" else "",
+    var floatPrecision: String = if (GL.isGLES) "precision mediump float;\n" else "",
     override var version: Int = 110,
     override var profile: String = ""
 ): IShader {
+    constructor(block: Shader.() -> Unit): this() {
+        block(this)
+    }
+
     override var vertCode: String = vertCode
     override var fragCode: String = fragCode
 
@@ -61,7 +65,9 @@ open class Shader(
 
     protected val uids = HashMap<IShaderData, String>()
 
-    override var onMeshDraw: IShader.(mesh: IMesh) -> Unit = {}
+    override var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit = { _, _ -> }
+
+    override var depthMask: Boolean = true
 
     init {
         if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
@@ -77,14 +83,14 @@ open class Shader(
     override fun fragSourceCode(title: String, pad: Int): String =
         numerateLines(title, getVersionStr() + floatPrecision + fragCode, pad)
 
-    private fun getVersionStr(): String = if (APP.platformType == APP.Desktop) {
+    private fun getVersionStr(): String = if (GL.isGLES) {
+        if (version < 330) "#version 100\n" else "#version 300 es\n"
+    } else {
         if (profile.isNotEmpty()) {
             "#version $version $profile\n"
         } else {
             "#version $version\n"
         }
-    } else {
-        if (version < 330) "#version 100\n" else "#version 300 es\n"
     }
 
     fun load(vertCode: String, fragCode: String) {
@@ -123,7 +129,6 @@ open class Shader(
                 uniforms[name] = location
             }
         } else {
-            LOG.error(GL.getErrorString())
             if (name.isNotEmpty()) {
                 LOG.error("==== Errors in shader \"$name\" ====")
             } else {

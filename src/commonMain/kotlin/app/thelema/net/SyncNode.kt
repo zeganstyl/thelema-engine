@@ -16,7 +16,7 @@
 
 package app.thelema.net
 
-import app.thelema.ecs.DefaultEntitySystem
+import app.thelema.ecs.DefaultComponentSystem
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
@@ -30,7 +30,7 @@ class SyncNode: IEntityComponent {
 
     var mode: String = WebSocketSyncMode.All
 
-    val system = ECS.systems.first { it.systemName == "Default" } as DefaultEntitySystem
+    val system = ECS.systems.first { it is DefaultComponentSystem } as DefaultComponentSystem
 
     var id = system.newSyncId(this)
 
@@ -38,7 +38,7 @@ class SyncNode: IEntityComponent {
 
     fun deserialize(json: IJsonObject) {
         json.obj("components") {
-            objs {
+            forEachObject {
                 entity.component(string(it)).readJson(this)
             }
         }

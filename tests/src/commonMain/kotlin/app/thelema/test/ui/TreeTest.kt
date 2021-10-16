@@ -16,26 +16,27 @@
 
 package app.thelema.test.ui
 
-import app.thelema.fs.FS
+import app.thelema.app.APP
+import app.thelema.g2d.Sprite
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.input.KB
-import app.thelema.input.MOUSE
 import app.thelema.test.Test
 import app.thelema.img.Texture2D
+import app.thelema.input.KB
+import app.thelema.input.MOUSE
 import app.thelema.ui.*
+import app.thelema.utils.Color
 
 class TreeTest: Test {
     override val name: String
         get() = "Tree"
 
     override fun testMain() {
-        val stage = Stage(ScreenViewport())
+        val stage = HeadUpDisplay()
 
         KB.addListener(stage)
         MOUSE.addListener(stage)
 
-        val drawable = TextureRegionDrawable(Texture2D().load(FS.internal("thelema-logo.png")))
+        val drawable = Sprite(Texture2D("thelema-logo.png"))
         drawable.minWidth = 16f
         drawable.minHeight = 16f
 
@@ -57,10 +58,9 @@ class TreeTest: Test {
 
         stage.addActor(stack)
 
-        GL.render {
-            GL.glClearColor(0.1f, 0.1f, 0.1f, 1f)
-            GL.glClear(GL_COLOR_BUFFER_BIT)
+        GL.glClearColor(Color.GRAY)
 
+        APP.onRender = {
             stage.update()
             stage.render()
         }

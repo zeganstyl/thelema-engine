@@ -16,10 +16,7 @@
 
 package app.thelema.img
 
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_ATTACHMENT0
-import app.thelema.gl.GL_RGBA
-import app.thelema.gl.GL_UNSIGNED_BYTE
+import app.thelema.gl.*
 
 /**
  * Simple frame buffer implements texture interface and delegates
@@ -27,104 +24,41 @@ import app.thelema.gl.GL_UNSIGNED_BYTE
  *
  * @param pixelFormat can be GL_RGBA, GL_RGB, GL_RG and etc
  * @param internalFormat can be GL_RGBA, GL_RGBA16F, GL_RG16F and etc
- * @param type can GL_FLOAT, GL_UNSIGNED_BYTE and etc
+ * @param pixelChannelType can GL_FLOAT, GL_UNSIGNED_BYTE and etc
  * @author zeganstyl */
 class SimpleFrameBuffer(
     width: Int = GL.mainFrameBufferWidth,
     height: Int = GL.mainFrameBufferHeight,
+    internalFormat: Int = GL_RGBA8,
     pixelFormat: Int = GL_RGBA,
-    internalFormat: Int = pixelFormat,
-    type: Int = GL_UNSIGNED_BYTE,
+    pixelChannelType: Int = GL_UNSIGNED_BYTE,
     hasDepth: Boolean = true,
     hasStencil: Boolean = false
-): IFrameBuffer, ITexture {
-    override var name: String
-        get() = texture.name
-        set(value) { texture.name = value }
-
-    override var glTarget: Int
-        get() = texture.glTarget
-        set(value) { texture.glTarget = value }
-
-    override var minFilter: Int
-        get() = texture.minFilter
-        set(value) { texture.minFilter = value }
-
-    override var magFilter: Int
-        get() = texture.magFilter
-        set(value) { texture.magFilter = value }
-
-    override var sWrap: Int
-        get() = texture.sWrap
-        set(value) { texture.sWrap = value }
-
-    override var tWrap: Int
-        get() = texture.tWrap
-        set(value) { texture.tWrap = value }
-
-    override var rWrap: Int
-        get() = texture.rWrap
-        set(value) { texture.rWrap = value }
-
-    override var anisotropicFilter: Float
-        get() = texture.anisotropicFilter
-        set(value) { texture.anisotropicFilter = value }
-
-    override val depth: Int
-        get() = texture.depth
-
-    override var textureHandle: Int
-        get() = texture.textureHandle
-        set(value) { texture.textureHandle = value }
-
+): FrameBufferAdapter() {
     /** First attachment color texture */
     val texture: ITexture
         get() = getTexture(0)
 
-    override var width: Int = width
-        private set
-
-    override var height: Int = height
-        private set
-
-    override var isBound: Boolean = false
-
-    override var frameBufferHandle: Int = GL.glGenFramebuffer()
-
-    override val attachments = ArrayList<IFrameBufferAttachment>()
-
     init {
-        attachments.add(
-            FrameBufferAttachment(
-                attachment = GL_COLOR_ATTACHMENT0,
-                internalFormat = internalFormat,
-                pixelFormat = pixelFormat,
-                type = type
-            )
+        setResolution(width, height)
+
+        addAttachment(
+            FrameBufferAttachment2D {
+                this.attachment = GL_COLOR_ATTACHMENT0
+                this.internalFormat = internalFormat
+                this.pixelFormat = pixelFormat
+                this.type = pixelChannelType
+            }
         )
 
-        when {
-            hasDepth && hasStencil -> attachments.add(Attachments.depthStencilRenderBuffer())
-            hasDepth -> attachments.add(Attachments.depthRenderBuffer())
-            hasStencil -> attachments.add(Attachments.stencilRenderBuffer())
+        if (hasDepth && hasStencil) {
+            addAttachment(Attachments.depthStencilRenderBuffer())
+        } else {
+            if (hasDepth) addAttachment(Attachments.depthRenderBuffer())
+            if (hasStencil) addAttachment(Attachments.stencilRenderBuffer())
         }
 
         buildAttachments()
-    }
-
-    override fun bind() {
-        super<IFrameBuffer>.bind()
-    }
-
-    override fun initTexture() = texture.initTexture()
-
-    override fun destroy() {
-        super<IFrameBuffer>.destroy()
-    }
-
-    override fun setResolution(width: Int, height: Int) {
-        this.width = width
-        this.height = height
-        super.setResolution(width, height)
+        checkErrors()
     }
 }

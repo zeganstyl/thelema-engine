@@ -27,15 +27,21 @@ class GLTFArray(
     override val ready: MutableSet<Int> = HashSet()
     override val requests: MutableList<Pair<Int, () -> Unit>> = ArrayList()
 
-    private val list = ArrayList<IGLTFArrayElement>()
+    private val list: MutableList<IGLTFArrayElement> = ArrayList()
 
     override val size: Int
         get() = list.size
 
-    override var currentProgress: Long = 0
-    override var maxProgress: Long = 1
+    override var currentProgress: Int = 0
+    override var maxProgress: Int = 1
 
     override var jsonOrNull: IJsonArray? = null
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getTyped(index: Int) = get(index) as T
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getOrNullTyped(index: Int) = getOrNull(index) as T?
 
     override fun initProgress() {
         currentProgress = 0

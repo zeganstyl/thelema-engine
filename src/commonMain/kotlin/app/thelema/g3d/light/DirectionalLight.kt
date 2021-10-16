@@ -17,13 +17,10 @@
 package app.thelema.g3d.light
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.IScene
-import app.thelema.g3d.ShaderChannel
+import app.thelema.ecs.component
+import app.thelema.g3d.*
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.Camera
-import app.thelema.g3d.node.ITransformNode
-import app.thelema.g3d.node.TransformNode
 import app.thelema.gl.GL
 import app.thelema.gl.GL_COLOR_BUFFER_BIT
 import app.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -39,9 +36,20 @@ class DirectionalLight: ILight {
         set(value) {
             field = value
             node = value?.componentTyped("TransformNode") ?: TransformNode()
+            updateDirection()
         }
 
+    private val nodeListener = TransformNodeListener {
+        updateDirection()
+    }
+
     override var node: ITransformNode = TransformNode()
+        set(value) {
+            field.removeListener(nodeListener)
+            field = value
+            updateDirection()
+            value.addListener(nodeListener)
+        }
 
     override val lightType: Int
         get() = LightType.Directional
@@ -56,13 +64,17 @@ class DirectionalLight: ILight {
 
     var shadowCascadeEnd = arrayOf<Float>()
 
-    var lightPositionOffset: Float = 0f
+    var lightPositionOffset: Float = 50f
 
-    override var lightIntensity: Float = 1f
+    override var intensity: Float = 1f
     override val color: IVec3 = Vec3(1f)
-    val direction: IVec3 = Vec3(0f, 0f, 1f)
+    override val direction: IVec3 = Vec3(0f, 0f, 1f)
     override var isLightEnabled: Boolean = true
     override var isShadowEnabled: Boolean = false
+
+    override var range: Float = 0f
+    override var innerConeCos: Float = 0f
+    override var outerConeCos: Float = 0f
 
     override val componentName: String
         get() = "DirectionalLight"
@@ -76,25 +88,42 @@ class DirectionalLight: ILight {
 
     val tmpCam = Camera()
 
+    var lookAtZero: Boolean = true
+
+    /** Rotate node to look from position to (0, 0, 0) */
+    fun setDirectionFromPosition(x: Float, y: Float, z: Float) {
+        direction.set(-x, -y, -z).nor()
+        node.position.set(x, y, z)
+        node.worldMatrix.setToLook(node.position, direction, MATH.Y)
+        node.worldMatrix.getRotation(node.rotation)
+        node.requestTransformUpdate()
+    }
+
     fun updateDirection() {
-        direction.set(0f, 0f, 1f)
-        node.worldMatrix.mul(direction)
-        direction.nor()
+        if (lookAtZero) {
+            val pos = node.position
+            setDirectionFromPosition(pos.x, pos.y, pos.z)
+        } else {
+            node.worldMatrix.getCol2Vec3(direction)
+            direction.nor()
+        }
     }
 
     override fun setupShadowMaps(width: Int, height: Int) {
         val shadowFrameBuffers = Array<IFrameBuffer>(shadowCascadesNum) {
-            val depthBuffer = FrameBuffer(width, height)
-            depthBuffer.attachments.add(Attachments.depth())
-            depthBuffer.buildAttachments()
-            if (GL.isGLES) {
-                depthBuffer.getTexture(0).apply {
-                    bind()
-                    minFilter = GL_NEAREST
-                    magFilter = GL_NEAREST
+            FrameBuffer {
+                setResolution(width, height)
+                addAttachment(Attachments.depth())
+                buildAttachments()
+
+                if (GL.isGLES) {
+                    getTexture(0).apply {
+                        bind()
+                        minFilter = GL_NEAREST
+                        magFilter = GL_NEAREST
+                    }
                 }
             }
-            depthBuffer
         }
 
         shadowCascadeEnd = arrayOf(
@@ -110,6 +139,7 @@ class DirectionalLight: ILight {
 
         this.shadowMaps = shadowMaps
         this.shadowFrameBuffers = shadowFrameBuffers
+        isShadowEnabled = true
     }
 
     override fun renderShadowMaps(scene: IScene) {
@@ -117,8 +147,8 @@ class DirectionalLight: ILight {
             val sceneCameraFrustumPoints = ActiveCamera.frustum.points
             val camFarSubNear = ActiveCamera.far
 
-            val tmp = ActiveCamera.proxy
-            ActiveCamera.proxy = tmpCam
+            val tmp = ActiveCamera
+            ActiveCamera = tmpCam
             tmpCam.direction.set(direction)
             tmpCam.near = 0f
             tmpCam.isOrthographic = true
@@ -190,7 +220,10 @@ class DirectionalLight: ILight {
                 }
             }
 
-            ActiveCamera.proxy = tmp
+            ActiveCamera = tmp
         }
     }
 }
+
+fun IEntity.directionalLight(block: DirectionalLight.() -> Unit) = component(block)
+fun IEntity.directionalLight() = component<DirectionalLight>()

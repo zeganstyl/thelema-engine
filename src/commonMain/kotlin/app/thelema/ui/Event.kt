@@ -38,7 +38,7 @@ package app.thelema.ui
  */
 open class Event(open val eventType: Int = 0) {
     /** The stage for the actor the event was fired on.  */
-    var stage: Stage? = null
+    var headUpDisplay: HeadUpDisplay? = null
     /** Returns the actor that the event originated from.  */
     var target: Actor? = null
     /** Returns the actor that this listener is attached to.  */
@@ -67,7 +67,7 @@ open class Event(open val eventType: Int = 0) {
             = false
         private set
 
-    /** Marks this event as handled. This does not affect event propagation inside scene2d, but causes the [Stage] event
+    /** Marks this event as handled. This does not affect event propagation inside scene2d, but causes the [HeadUpDisplay] event
      * methods to return true, which will eat the event so it is not passed on to the application under the stage.  */
     fun handle() {
         isHandled = true
@@ -88,7 +88,7 @@ open class Event(open val eventType: Int = 0) {
     }
 
     open fun reset() {
-        stage = null
+        headUpDisplay = null
         target = null
         listenerActor = null
         isCapture = false

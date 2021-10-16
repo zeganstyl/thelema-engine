@@ -26,7 +26,7 @@ import app.thelema.g2d.Batch
 interface Drawable {
     /** Draws this drawable at the specified bounds. The drawable should be tinted with [Batch.color], possibly by
      * mixing its own color.  */
-    fun draw(batch: Batch, x: Float, y: Float, width: Float, height: Float) = Unit
+    fun draw(batch: Batch, x: Float, y: Float, width: Float, height: Float)
 
     var leftWidth: Float
         get() = 0f
@@ -47,25 +47,9 @@ interface Drawable {
         get() = 0f
         set(_) = Unit
 
-    open class Default(
-            override var leftWidth: Float = 0f,
-            override var rightWidth: Float = 0f,
-            override var topHeight: Float = 0f,
-            override var bottomHeight: Float = 0f,
-            override var minWidth: Float = 0f,
-            override var minHeight: Float = 0f
-    ): Drawable {
-        constructor(other: Drawable): this() {
-            leftWidth = other.leftWidth
-            rightWidth = other.rightWidth
-            topHeight = other.topHeight
-            bottomHeight = other.bottomHeight
-            minWidth = other.minWidth
-            minHeight = other.minHeight
-        }
-    }
-
     companion object {
-        val Empty = object: Drawable {}
+        val Empty = object: Drawable {
+            override fun draw(batch: Batch, x: Float, y: Float, width: Float, height: Float) {}
+        }
     }
 }

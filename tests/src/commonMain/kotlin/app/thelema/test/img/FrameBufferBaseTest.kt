@@ -16,10 +16,14 @@
 
 package app.thelema.test.img
 
+import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.gl.TextureRenderer
-import app.thelema.test.CubeModel
+import app.thelema.math.MATH
+import app.thelema.math.Vec3
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
 class FrameBufferBaseTest: Test {
@@ -27,9 +31,13 @@ class FrameBufferBaseTest: Test {
         get() = "Frame buffer base"
 
     override fun testMain() {
-        val screenQuad = TextureRenderer()
+        ActiveCamera {
+            lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
+            updateCamera()
+        }
 
-        val model = CubeModel()
+        val box = BoxMesh { setSize(2f) }
+        val shader = SimpleShader3D()
 
         // framebuffer configuration
         // -------------------------
@@ -54,9 +62,8 @@ class FrameBufferBaseTest: Test {
             throw IllegalStateException("ERROR::FRAMEBUFFER:: Framebuffer is not complete!")
         GL.glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-        val tex = Texture2D(textureHandle = textureColorBuffer)
-
-        GL.isDepthTestEnabled = true
+        val tex = Texture2D()
+        tex.textureHandle = textureColorBuffer
 
         GL.render {
             // bind to framebuffer and draw scene as we normally would to color texture
@@ -67,13 +74,12 @@ class FrameBufferBaseTest: Test {
             GL.glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
-            model.update()
-            model.render()
+            shader.render(box.mesh)
 
             GL.glBindFramebuffer(GL_FRAMEBUFFER, 0)
             GL.glClear(GL_COLOR_BUFFER_BIT)
 
-            screenQuad.render(tex)
+            ScreenQuad.render(tex)
         }
     }
 }

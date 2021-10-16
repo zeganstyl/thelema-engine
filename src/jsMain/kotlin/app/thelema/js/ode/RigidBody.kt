@@ -17,33 +17,58 @@
 package app.thelema.js.ode
 
 import app.thelema.ecs.IEntity
-import app.thelema.g3d.node.ITransformNode
-import app.thelema.g3d.node.TransformNode
-import app.thelema.math.IMat4
+import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.TransformNode
 import app.thelema.math.IVec3
-import app.thelema.math.IVec4
-import app.thelema.math.Mat3
 import app.thelema.phys.IRigidBody
 import app.thelema.phys.IShape
+import app.thelema.phys.RigidBodyListener
 
 class RigidBody(val body: Body): IRigidBody {
     override var userObject: Any = this
-    override var userObjectType: Int = 0
     override var isGravityEnabled: Boolean = true
     override var isEnabled: Boolean = true
     override var maxAngularSpeed: Float = 0f
-    override var mass: Float = 0f
     override var friction: Float = 0f
 
     override var node: ITransformNode = TransformNode()
-
-    override var shape: IShape = Shape()
 
     override var isKinematic: Boolean = false
     override var influenceOtherBodies: Boolean = true
     override var isStatic: Boolean = false
 
     override var entityOrNull: IEntity? = null
+
+    override var isSimulationRunning: Boolean = false
+
+    override var categoryBits: Long
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    override var collideBits: Long
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    override val spaces: List<String>
+        get() = TODO("Not yet implemented")
+
+    override fun addListener(listener: RigidBodyListener) {
+        TODO("Not yet implemented")
+    }
+
+    override fun removeListener(listener: RigidBodyListener) {
+        TODO("Not yet implemented")
+    }
+
+    override fun addSpace(name: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun removeSpace(name: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun update() {}
 
     override fun endSimulation() {
         TODO("Not yet implemented")

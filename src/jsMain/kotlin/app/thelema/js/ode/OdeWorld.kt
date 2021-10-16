@@ -23,6 +23,13 @@ import app.thelema.phys.*
 class OdeWorld: IRigidBodyPhysicsWorld {
     override var entityOrNull: IEntity? = null
 
+    override val fixedDelta: Float = 0.02f
+
+    override val componentName: String
+        get() = super.componentName
+
+    override var isSimulationRunning: Boolean = false
+
     override fun setGravity(x: Float, y: Float, z: Float) {
         TODO("Not yet implemented")
     }
@@ -35,47 +42,7 @@ class OdeWorld: IRigidBodyPhysicsWorld {
         TODO("Not yet implemented")
     }
 
-    override fun rigidBody(block: IRigidBody.() -> Unit): IRigidBody {
-        TODO("Not yet implemented")
-    }
-
-    override fun boxShape(block: IBoxShape.() -> Unit): IBoxShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun sphereShape(block: ISphereShape.() -> Unit): ISphereShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun capsuleShape(block: ICapsuleShape.() -> Unit): ICapsuleShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun cylinderShape(block: ICylinderShape.() -> Unit): ICylinderShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun trimeshShape(block: ITrimeshShape.() -> Unit): ITrimeshShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun planeShape(block: IPlaneShape.() -> Unit): IPlaneShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun rayShape(block: IRayShape.() -> Unit): IRayShape {
-        TODO("Not yet implemented")
-    }
-
-    override fun heightField(block: IHeightField.() -> Unit): IHeightField {
-        TODO("Not yet implemented")
-    }
-
-    override fun checkCollision(
-        shape1: IShape,
-        shape2: IShape,
-        out: MutableList<IContactInfo>
-    ): MutableList<IContactInfo> {
+    override fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact? {
         TODO("Not yet implemented")
     }
 
@@ -88,10 +55,6 @@ class OdeWorld: IRigidBodyPhysicsWorld {
     }
 
     override fun removePhysicsWorldListener(listener: IPhysicsWorldListener) {
-        TODO("Not yet implemented")
-    }
-
-    override fun destroy() {
         TODO("Not yet implemented")
     }
 }

@@ -16,6 +16,7 @@
 
 package app.thelema.test.g3d.mesh
 
+import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.*
@@ -29,43 +30,30 @@ class TangentsCalculationTest: Test {
         get() = "Tangents calculation"
 
     override fun testMain() {
-        val box = CylinderMeshBuilder().build()
+        val cylinder = CylinderMesh {
+            builder.normals = true
+            builder.tangents = true
+        }
 
         val shader = SimpleShader3D()
 
-        box.addVertexBuffer {
-            addAttribute(4, "TANGENT")
-            addAttribute(3, "BITANGENT")
-            initVertexBuffer(box.verticesCount)
-        }
+        val positions = cylinder.mesh.getAttribute("POSITION")
+        val normals = cylinder.mesh.getAttribute("NORMAL")
+        val tangents = cylinder.mesh.getAttribute("TANGENT")
 
-        val positions = box.getAttribute("POSITION")
-        val uvs = box.getAttribute("UV")
-        val normals = box.getAttribute("NORMAL")
-        val tangents = box.getAttribute("TANGENT")
-        val bitangents = box.getAttribute("BITANGENT")
-
-        Mesh3DTool.calculateTangents(box, positions, uvs, tangents, bitangents)
-        Mesh3DTool.orthogonalizeTangents(tangents, normals)
-
-        val debugMesh = DebugMesh {
+        val debugMesh = MeshVisualizer {
             addVectors3D(positions, normals, Vec4(0f, 0f, 1f, 1f), 0.5f)
             addVectors3D(positions, tangents, Vec4(1f, 0f, 0f, 1f), 0.5f)
-            addVectors3D(positions, bitangents, Vec4(0f, 1f, 0f, 1f), 0.5f)
         }
 
         val control = OrbitCameraControl()
-        control.listenToMouse()
 
         GL.glLineWidth(5f)
-        GL.isDepthTestEnabled = true
-        GL.render {
-            GL.glClear()
-
+        APP.onRender = {
             control.update()
             ActiveCamera.updateCamera()
 
-            shader.render(box)
+            cylinder.render(shader)
 
             debugMesh.render()
         }

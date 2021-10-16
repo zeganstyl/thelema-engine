@@ -17,16 +17,11 @@
 package app.thelema.ui
 
 import app.thelema.app.APP
-import app.thelema.g3d.cam.ICamera
 import app.thelema.gl.GL
 import app.thelema.gl.GL_SCISSOR_TEST
-import app.thelema.math.IMat4
-import app.thelema.math.IRectangle
-import app.thelema.math.Rectangle
-import app.thelema.math.Vec3
+import app.thelema.math.*
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.roundToLong
 
 /** A stack of [Rectangle] objects to be used for clipping via [GL.glScissor]. When a new
  * Rectangle is pushed onto the stack, it will be merged with the current top of stack. The minimum area of overlap is then set as
@@ -124,10 +119,10 @@ object ScissorStack {
     }
 
     private fun fix(rect: IRectangle) {
-        rect.x = rect.x.roundToLong().toFloat()
-        rect.y = rect.y.roundToLong().toFloat()
-        rect.width = rect.width.roundToLong().toFloat()
-        rect.height = rect.height.roundToLong().toFloat()
+        rect.x = rect.x.toInt().toFloat()
+        rect.y = rect.y.toInt().toFloat()
+        rect.width = rect.width.toInt().toFloat()
+        rect.height = rect.height.toInt().toFloat()
         if (rect.width < 0) {
             rect.width = -rect.width
             rect.x -= rect.width
@@ -136,62 +131,5 @@ object ScissorStack {
             rect.height = -rect.height
             rect.y -= rect.height
         }
-    }
-
-    /** Calculates a scissor rectangle using 0,0,[APP.width],[APP.height] as the viewport.
-     * @see .calculateScissors
-     */
-    fun calculateScissors(
-        camera: ICamera,
-        batchTransform: IMat4,
-        areaX: Float,
-        areaY: Float,
-        areaWidth: Float,
-        areaHeight: Float,
-        scissor: Rectangle
-    ) = calculateScissors(
-        camera,
-        0f,
-        0f,
-        APP.width.toFloat(),
-        APP.height.toFloat(),
-        batchTransform,
-        areaX, areaY, areaWidth, areaHeight, scissor
-    )
-
-    /** Calculates a scissor rectangle in OpenGL ES window coordinates from a [ICamera], a transformation [IMat4] and
-     * an axis aligned [Rectangle]. The rectangle will get transformed by the camera and transform matrices and is then
-     * projected to screen coordinates. Note that only axis aligned rectangles will work with this method. If either the Camera or
-     * the Matrix4 have rotational components, the output of this method will not be suitable for
-     * [glScissor].
-     * @param camera the [ICamera]
-     * @param batchTransform the transformation [IMat4]
-     * @param area the [Rectangle] to transform to window coordinates
-     * @param scissor the Rectangle to store the result in
-     */
-    fun calculateScissors(
-        camera: ICamera,
-        viewportX: Float,
-        viewportY: Float,
-        viewportWidth: Float,
-        viewportHeight: Float,
-        batchTransform: IMat4,
-        areaX: Float,
-        areaY: Float,
-        areaWidth: Float,
-        areaHeight: Float,
-        scissor: IRectangle
-    ) {
-        tmp.set(areaX, areaY, 0f)
-        tmp.mul(batchTransform)
-        camera.project(tmp, viewportX, viewportY, viewportWidth, viewportHeight)
-        scissor.x = tmp.x
-        scissor.y = tmp.y
-
-        tmp.set(areaX + areaWidth, areaY + areaHeight, 0f)
-        tmp.mul(batchTransform)
-        camera.project(tmp, viewportX, viewportY, viewportWidth, viewportHeight)
-        scissor.width = tmp.x - scissor.x
-        scissor.height = tmp.y - scissor.y
     }
 }

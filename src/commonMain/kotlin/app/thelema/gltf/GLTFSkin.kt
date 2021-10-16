@@ -16,11 +16,10 @@
 
 package app.thelema.gltf
 
-import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.IArmature
-import app.thelema.g3d.node.ITransformNode
+import app.thelema.g3d.ITransformNode
 import app.thelema.math.IMat4
 import app.thelema.math.MATH
 import app.thelema.math.Mat4
@@ -45,9 +44,7 @@ class GLTFSkin(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         skin.initBones(joints.size)
 
-        if (gltf.conf.setupVelocityShader) {
-            skin.previousBoneMatrices = FloatArray(joints.size * 16)
-        }
+        skin.isPreviousBoneMatricesEnabled = gltf.conf.setupVelocityShader
 
         for (i in joints.indices) {
             val node = nodes[joints[i]]!!
@@ -66,7 +63,7 @@ class GLTFSkin(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         joints.clear()
         json.array("joints") {
-            ints { joints.add(it) }
+            forEachInt { joints.add(it) }
         }
 
         skeleton = json.int("skeleton", -1)

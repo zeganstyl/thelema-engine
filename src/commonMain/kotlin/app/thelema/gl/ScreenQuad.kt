@@ -16,27 +16,122 @@
 
 package app.thelema.gl
 
-/** @author zeganstyl */
-open class ScreenQuad(
-    x: Float = 0f,
-    y: Float = 0f,
-    width: Float = 1f,
-    height: Float = 1f,
-    positionName: String = "POSITION",
-    uvName: String = "UV"
-): IScreenQuad {
-    override val mesh: IMesh = Mesh {
-        primitiveType = GL_TRIANGLE_FAN
+import app.thelema.img.IFrameBuffer
+import app.thelema.img.ITexture
+import app.thelema.img.renderNoClear
+import app.thelema.shader.IShader
+import app.thelema.shader.Shader
+import kotlin.native.concurrent.ThreadLocal
 
-        addVertexBuffer {
-            addAttribute(2, positionName)
-            addAttribute(2, uvName)
-            initVertexBuffer(4) {
-                putFloats(x + -width, y + -height,  0f, 0f)
-                putFloats(x + width, y + -height,  1f, 0f)
-                putFloats(x + width, y + height,  1f, 1f)
-                putFloats(x + -width, y + height,  0f, 1f)
+/** Default screen quad, that may be used for post processing shaders.
+ *
+ * Attribute names: POSITION - vertex position, UV - texture coordinates
+ *
+ * @author zeganstyl */
+@ThreadLocal
+object ScreenQuad {
+    var defaultClearMask: Int? = GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT
+
+    val mesh: IMesh by lazy {
+        Mesh {
+            primitiveType = GL_TRIANGLE_FAN
+
+            addVertexBuffer {
+                addAttribute(2, "POSITION")
+                addAttribute(2, "UV")
+                initVertexBuffer(4) {
+                    putFloats(-1f, -1f,  0f, 0f)
+                    putFloats(1f, -1f,  1f, 0f)
+                    putFloats(1f, 1f,  1f, 1f)
+                    putFloats(-1f, 1f,  0f, 1f)
+                }
             }
+        }
+    }
+
+    val textureRenderShader: IShader by lazy {
+        Shader(
+            vertCode = """
+attribute vec2 POSITION;
+attribute vec2 UV;
+varying vec2 uv;
+
+void main() {
+    uv = UV;
+    gl_Position = vec4(POSITION, 0.0, 1.0);
+}""",
+            fragCode = """            
+varying vec2 uv;
+uniform sampler2D tex;
+
+void main() {
+    gl_FragColor = texture2D(tex, uv);
+}"""
+        )
+    }
+
+    val flippedTextureRenderShader: IShader by lazy {
+        Shader(
+            vertCode = """
+attribute vec2 POSITION;
+attribute vec2 UV;
+varying vec2 uv;
+
+void main() {
+    uv = UV;
+    uv.y = 1.0 - uv.y;
+    gl_Position = vec4(POSITION, 0.0, 1.0);
+}""",
+            fragCode = """            
+varying vec2 uv;
+uniform sampler2D tex;
+
+void main() {
+    gl_FragColor = texture2D(tex, uv);
+}"""
+        )
+    }
+
+    fun render(
+        texture: ITexture,
+        flipY: Boolean = true,
+        out: IFrameBuffer? = null,
+        clearMask: Int? = defaultClearMask
+    ) {
+        texture.bind(0)
+        render(if (flipY) flippedTextureRenderShader else textureRenderShader, out, clearMask)
+    }
+
+    /** Render 2D texture on screen */
+    fun render(
+        textureHandle: Int,
+        flipY: Boolean = true,
+        out: IFrameBuffer? = null,
+        clearMask: Int? = defaultClearMask
+    ) {
+        GL.activeTexture = 0
+        GL.glBindTexture(GL_TEXTURE_2D, textureHandle)
+        render(if (flipY) flippedTextureRenderShader else textureRenderShader, out, clearMask)
+    }
+
+    /**
+     * Render screen quad mesh with shader
+     * @param clearMask if null, glClear will not be called
+     * @param set may be used to update shader uniforms. Called after shader bound, so you may not to bind it again.
+     * */
+    fun render(
+        shader: IShader,
+        out: IFrameBuffer? = null,
+        clearMask: Int? = defaultClearMask
+    ) {
+        if (out != null) {
+            out.renderNoClear {
+                if (clearMask != null) GL.glClear(clearMask)
+                mesh.render(shader)
+            }
+        } else {
+            if (clearMask != null) GL.glClear(clearMask)
+            mesh.render(shader)
         }
     }
 }

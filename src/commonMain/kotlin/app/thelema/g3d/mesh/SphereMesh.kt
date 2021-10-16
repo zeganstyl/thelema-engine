@@ -17,28 +17,18 @@
 package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.gl.*
-import app.thelema.json.IJsonObject
 import app.thelema.math.MATH
-import app.thelema.math.Vec3
 
-class SphereMesh(): IEntityComponent {
+class SphereMesh(): MeshBuilderAdapter() {
     constructor(block: SphereMesh.() -> Unit): this() {
         getOrCreateEntity()
         block(this)
-        if (isMeshUpdateRequested) updateMesh()
+        updateMesh()
     }
 
     override val componentName: String
         get() = "SphereMesh"
-
-    override var entityOrNull: IEntity? = null
-        set(value) {
-            field = value
-            builder = value?.component() ?: MeshBuilder()
-        }
 
     var radius: Float = 1f
         set(value) {
@@ -49,14 +39,24 @@ class SphereMesh(): IEntityComponent {
         }
 
     var hDivisions: Int = 16
+        set(value) {
+            if (field != value) {
+                field = value
+                requestMeshUpdate()
+            }
+        }
+
     var vDivisions: Int = 16
+        set(value) {
+            if (field != value) {
+                field = value
+                requestMeshUpdate()
+            }
+        }
 
-    var isMeshUpdateRequested = true
+    override fun getIndicesCount(): Int = 6 * (hDivisions + 1) * (vDivisions + 1)
 
-    var builder = MeshBuilder()
-
-    val mesh: IMesh
-        get() = builder.mesh
+    override fun getVerticesCount(): Int = (hDivisions + 1) * (vDivisions + 1) + 1
 
     fun setSize(radius: Float) {
         this.radius = radius
@@ -67,24 +67,18 @@ class SphereMesh(): IEntityComponent {
         vDivisions = vertical
     }
 
-    private fun applyVertices() {
-        val pi = 3.141592653589793f
-        val pi2 = pi * 2f
-        val hNum = hDivisions + 1
-        val vNum = vDivisions + 1
+    override fun applyVertices() {
+        preparePositions {
+            val hNum = hDivisions + 1
+            val vNum = vDivisions + 1
 
-        val uvs = if (builder.uvs) mesh.getAttributeOrNull(builder.uvName) else null
-        val normals = if (builder.normals) mesh.getAttributeOrNull(builder.normalName) else null
-
-        mesh.getAttribute(builder.positionName) {
-            uvs?.rewind()
-            normals?.rewind()
-            rewind()
+            val uvs = mesh.getAttributeOrNull(builder.uvName)
+            val normals = mesh.getAttributeOrNull(builder.normalName)
 
             // https://en.wikipedia.org/wiki/Spherical_coordinate_system
             for (yi in 0 until vNum) {
                 val v = yi.toFloat() / vDivisions
-                val zenith = v * pi
+                val zenith = v * MATH.PI
 
                 val yn = MATH.cos(zenith)
                 val y = radius * yn
@@ -92,7 +86,7 @@ class SphereMesh(): IEntityComponent {
 
                 for (xi in 0 until hNum) {
                     val u = xi.toFloat() / hDivisions
-                    val azimuth = u * pi2
+                    val azimuth = u * MATH.PI2
 
                     val xn = MATH.cos(azimuth)
                     val zn = MATH.sin(azimuth)
@@ -104,69 +98,27 @@ class SphereMesh(): IEntityComponent {
                     normals?.putFloatsNext(xn, yn, zn)
                 }
             }
-
-            uvs?.rewind()
-            normals?.rewind()
-            rewind()
-            buffer.requestBufferLoading()
         }
     }
 
-    private fun applyIndices(buffer: IIndexBuffer) {
-        val newSize = 6 * (hDivisions + 1) * (vDivisions + 1)
-        if (newSize != buffer.size) buffer.initIndexBuffer(newSize) {}
-
-        buffer.bytes.rewind()
-
-        var ringIndex = 1
-        while (ringIndex < vDivisions + 2) {
-            var curRingVertexIndex = hDivisions * ringIndex
-            var prevRingVertexIndex = hDivisions * (ringIndex - 1)
-            val num = hDivisions * (ringIndex + 1) + 1
-            while (curRingVertexIndex < num) {
-                buffer.bytes.putShorts((curRingVertexIndex + 1), prevRingVertexIndex, (prevRingVertexIndex + 1))
-                buffer.bytes.putShorts(curRingVertexIndex, prevRingVertexIndex, (curRingVertexIndex + 1))
-                curRingVertexIndex += 1
-                prevRingVertexIndex += 1
-            }
-
-            ringIndex++
-        }
-
-        buffer.bytes.rewind()
-        buffer.requestBufferLoading()
-    }
-
-    fun updateMesh() {
-        mesh.verticesCount = (hDivisions + 1) * (vDivisions + 1)
-
-        if (mesh.vertexBuffers.isEmpty()) {
-            mesh.addVertexBuffer {
-                addAttribute(3, builder.positionName)
-                if (builder.uvs) addAttribute(2, builder.uvName)
-                if (builder.normals) addAttribute(3, builder.normalName)
-                initVertexBuffer(mesh.verticesCount)
+    override fun applyIndices() {
+        prepareIndices {
+            var ringIndex = 1
+            while (ringIndex < vDivisions + 2) {
+                var curRingVertexIndex = hDivisions * ringIndex
+                var prevRingVertexIndex = hDivisions * (ringIndex - 1)
+                val num = hDivisions * (ringIndex + 1) + 1
+                while (curRingVertexIndex < num) {
+                    putIndices((curRingVertexIndex + 1), prevRingVertexIndex, (prevRingVertexIndex + 1))
+                    putIndices(curRingVertexIndex, prevRingVertexIndex, (curRingVertexIndex + 1))
+                    curRingVertexIndex += 1
+                    prevRingVertexIndex += 1
+                }
+                ringIndex++
             }
         }
-        applyVertices()
-
-        if (mesh.indices == null) {
-            mesh.setIndexBuffer {
-                indexType = GL_UNSIGNED_SHORT
-                initIndexBuffer(6 * (hDivisions + 1) * (vDivisions + 1)) {}
-            }
-        }
-        applyIndices(mesh.indices!!)
-
-        isMeshUpdateRequested = false
-    }
-
-    fun requestMeshUpdate() {
-        isMeshUpdateRequested = true
-    }
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-        if (isMeshUpdateRequested) updateMesh()
     }
 }
+
+fun IEntity.sphereMesh(block: SphereMesh.() -> Unit) = component(block)
+fun IEntity.sphereMesh() = component<SphereMesh>()

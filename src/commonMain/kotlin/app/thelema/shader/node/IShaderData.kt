@@ -39,7 +39,7 @@ interface IShaderData {
     var scope: Int
 
     /** Use [GLSLType] */
-    val type: Int
+    val type: String
 
     /** Reserved. Do not set it manually */
     var container: IShaderNode?
@@ -71,7 +71,7 @@ interface IShaderData {
 
     /** May be used for declaration */
     val typedRef: String
-        get() = "$typeStr $ref"
+        get() = "$type $ref"
 
     fun declaration(): String {
         return if (scope == GLSLScope.Inline) {
@@ -88,7 +88,7 @@ interface IShaderData {
     fun asVec3(): String = throw NotImplementedError()
     fun asVec4(): String = throw NotImplementedError()
 
-    fun asTyped(type: Int): String {
+    fun asTyped(type: String): String {
         return when (type) {
             GLSLType.Float -> asFloat()
             GLSLType.Vec2 -> asVec2()

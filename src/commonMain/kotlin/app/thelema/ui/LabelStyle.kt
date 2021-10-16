@@ -17,8 +17,6 @@
 package app.thelema.ui
 
 import app.thelema.font.BitmapFont
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
 
 /** The style for a label, see [Label].
  * @author Nathan Sweet, zeganstyl
@@ -26,7 +24,7 @@ import app.thelema.math.Vec4
 open class LabelStyle(block: LabelStyle.() -> Unit = {}) {
     var font: BitmapFont = DSKIN.font()
     var background: Drawable? = null
-    var fontColor: IVec4 = Vec4(1f, 1f, 1f, 1f)
+    var fontColor: Int = -1
 
     init {
         block(this)

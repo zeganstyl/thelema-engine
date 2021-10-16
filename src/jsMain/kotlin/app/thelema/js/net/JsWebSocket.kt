@@ -20,6 +20,7 @@ import app.thelema.data.IByteData
 import app.thelema.net.WS
 import app.thelema.net.WebSocketAdapter
 import app.thelema.js.data.JsUInt8Array
+import app.thelema.net.*
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.ArrayBufferView
 import org.khronos.webgl.Uint8Array
@@ -39,9 +40,9 @@ class JsWebSocket: WebSocketAdapter() {
 
         ws.binaryType = BinaryType.ARRAYBUFFER
 
-        readyStateInternal = WS.CONNECTING
+        readyStateInternal = WEBSOCKET_CONNECTING
         ws.onopen = {
-            readyStateInternal = WS.OPEN
+            readyStateInternal = WEBSOCKET_OPEN
             //opened()
             for (i in listeners.indices) {
                 listeners[i].opened()
@@ -63,7 +64,7 @@ class JsWebSocket: WebSocketAdapter() {
         }
 
         ws.onclose = {
-            readyStateInternal = WS.CLOSED
+            readyStateInternal = WEBSOCKET_CLOSED
             asDynamic()
         }
     }
@@ -77,13 +78,13 @@ class JsWebSocket: WebSocketAdapter() {
     }
 
     override fun close(code: Int, reason: String) {
-        readyStateInternal = WS.CLOSING
+        readyStateInternal = WEBSOCKET_CLOSING
         ws?.close(code.toShort(), reason)
         ws = null
     }
 
     override fun close() {
-        readyStateInternal = WS.CLOSING
+        readyStateInternal = WEBSOCKET_CLOSING
         ws?.close()
         ws = null
     }

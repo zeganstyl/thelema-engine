@@ -18,9 +18,11 @@ package app.thelema.ui
 
 import app.thelema.app.APP
 import app.thelema.g2d.Batch
-import app.thelema.input.KB
+import app.thelema.input.KEY
+import app.thelema.input.BUTTON
 import app.thelema.input.MOUSE
 import app.thelema.math.Vec2
+import app.thelema.utils.Color
 import kotlin.math.max
 
 /** A tree com.ksdfv.thelema.studio.widget where each node has an icon, actor, and child nodes.
@@ -78,10 +80,10 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
                 val node = getNodeAt(y) ?: return
                 if (node !== getNodeAt(touchDownY)) return
-                if (selection.isMultiple && !selection.isEmpty() && KB.shift) { // Select range (shift).
+                if (selection.isMultiple && !selection.isEmpty() && KEY.shiftPressed) { // Select range (shift).
                     if (rangeStart == null) rangeStart = node
                     val rangeStart: ITreeNode = rangeStart!!
-                    if (!KB.ctrl) selection.clear()
+                    if (!KEY.ctrlPressed) selection.clear()
                     val start = rangeStart.actor.y
                     val end = node.actor.y
                     if (start > end) selectNodes(nodes, end, start) else {
@@ -91,7 +93,7 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
                     this@Tree.rangeStart = rangeStart
                     return
                 }
-                if ((node.children.size > 0 || node.canBeExpandedAnyway) && (!selection.isMultiple || !KB.ctrl)) { // Toggle expanded if left of icon.
+                if ((node.children.size > 0 || node.canBeExpandedAnyway) && (!selection.isMultiple || !KEY.ctrlPressed)) { // Toggle expanded if left of icon.
                     var rowX = node.actor.x
                     if (node.icon != null) rowX -= iconSpacingRight + node.icon!!.minWidth
                     if (x < rowX) {
@@ -231,8 +233,7 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         drawBackground(batch, parentAlpha)
-        val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.color = Color.setAlpha(color, Color.getAlpha(color) * parentAlpha)
         draw(batch, nodes, paddingLeft, plusMinusWidth())
         super.draw(batch, parentAlpha) // Draw node actors.
     }
@@ -241,7 +242,7 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
     protected fun drawBackground(batch: Batch, parentAlpha: Float) {
         if (style.background != null) {
             val color = color
-            batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+            batch.color = Color.setAlpha(color, Color.getAlpha(color) * parentAlpha)
             style.background!!.draw(batch, x, y, width, height)
         }
     }
@@ -281,7 +282,7 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
                     batch.setColor(1f, 1f, 1f, 1f)
                 }
                 if (node.children.size > 0 || node.canBeExpandedAnyway) {
-                    val expandIcon = getExpandIcon(node, iconX)!!
+                    val expandIcon = getExpandIcon(node, iconX)
                     val iconY = y + actorY + ((height - expandIcon.minHeight) * 0.5f)
                     drawExpandIcon(node, expandIcon, batch, expandX, iconY)
                 }
@@ -322,11 +323,11 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
      * `iconX`, and clicking would expand the node.
      * @param iconX The X coordinate of the over node's icon.
      */
-    protected fun getExpandIcon(node: ITreeNode, iconX: Float): Drawable? {
+    protected fun getExpandIcon(node: ITreeNode, iconX: Float): Drawable {
         var over = false
         if (node === overNode //
-                && APP.platformType == APP.Desktop //
-                && (!selection.isMultiple || !KB.ctrl && !KB.shift) //
+                && APP.isDesktop //
+                && (!selection.isMultiple || !KEY.ctrlPressed && !KEY.shiftPressed) //
         ) {
             val mouseX = screenToLocalCoordinates(tmp.set(MOUSE.x.toFloat(), 0f)).x
             if (mouseX >= 0 && mouseX < iconX) over = true
@@ -475,7 +476,7 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
     init {
         selection = object : Selection<ITreeNode>() {
             override fun changed() {
-                when (size()) {
+                when (size) {
                     0 -> rangeStart = null
                     1 -> rangeStart = first()
                 }

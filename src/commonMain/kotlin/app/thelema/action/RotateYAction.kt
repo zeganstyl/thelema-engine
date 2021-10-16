@@ -16,11 +16,8 @@
 
 package app.thelema.action
 
-import app.thelema.anim.AnimationAction
-import app.thelema.anim.AnimationPlayer
-import app.thelema.ecs.ECS
-import app.thelema.g3d.node.ITransformNode
-import app.thelema.phys.PhysicsContext
+import app.thelema.g3d.ITransformNode
+import app.thelema.phys.PhysicsProperties
 import kotlin.math.abs
 
 class RotateYAction: ActionAdapter() {
@@ -34,9 +31,6 @@ class RotateYAction: ActionAdapter() {
 
     var passed: Float = 0f
 
-    var animationTransition: Float = 0.1f
-    var animationAction: AnimationAction? = null
-
     override fun restart() {
         super.restart()
         passed = 0f
@@ -45,7 +39,7 @@ class RotateYAction: ActionAdapter() {
     override fun update(delta: Float): Float {
         if (isRunning) {
             val node = getContextComponent<ITransformNode>()
-            val physicsContext = getContextComponent<PhysicsContext>()
+            val physicsContext = getContextComponent<PhysicsProperties>()
             if (node != null && physicsContext != null) {
                 val speed = physicsContext.angularVelocity * (if (angleLength < 0f) -delta else delta)
                 val diff = angleLength - passed
@@ -58,26 +52,8 @@ class RotateYAction: ActionAdapter() {
                     passed += speed
                 }
                 node.requestTransformUpdate()
-
-                val animation = physicsContext.rotateAnim
-                val animationAction = animationAction
-                if (animation != null && animationAction == null) {
-                    val animationPlayer = getContextComponent<AnimationPlayer>()
-                    if (animationPlayer != null) {
-                        this.animationAction = animationPlayer.animate(animation, animationTransition, loopCount = -1)
-                    }
-                }
             } else {
                 isRunning = false
-            }
-
-            if (animationAction != null && !isRunning) {
-                animationAction?.end()
-                animationAction = null
-
-                getContextComponent<AnimationPlayer>()?.also { player ->
-                    physicsContext?.idleAnim?.also { player.animate(it, animationTransition, loopCount = -1) }
-                }
             }
         }
         return 0f

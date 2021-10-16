@@ -20,20 +20,20 @@ package app.thelema.math
  *
  * @author badlogicgames@gmail.com
  */
-class Ray(val origin: Vec3 = Vec3(), val direction: Vec3 = Vec3()) {
+class Ray {
+    val origin: IVec3 = Vec3()
+    val direction: IVec3 = Vec3()
+
     init {
         direction.nor()
     }
-
-    /** @return a copy of this ray. */
-    fun cpy() = Ray(origin, direction)
 
     /** Returns the endpoint given the distance. This is calculated as startpoint + distance * direction.
      * @param out The vector to set to the result
      * @param distance The distance from the end point to the start point.
      * @return The out param
      */
-    fun getEndPoint(out: IVec3, distance: Float): IVec3 {
+    fun getEndPoint(distance: Float, out: IVec3 = Vec3()): IVec3 {
         return out.set(direction).scl(distance).add(origin)
     }
 
@@ -68,7 +68,7 @@ class Ray(val origin: Vec3 = Vec3(), val direction: Vec3 = Vec3()) {
      * @param direction The direction
      * @return this ray for chaining
      */
-    fun set(origin: Vec3, direction: Vec3): Ray {
+    fun set(origin: IVec3, direction: IVec3): Ray {
         this.origin.set(origin)
         this.direction.set(direction)
         return this

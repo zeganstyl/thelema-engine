@@ -20,39 +20,47 @@ package app.thelema.utils
 class Pool<T>(val create: () -> T, val reset: ((instance: T) -> Unit)?) {
     constructor(create: () -> T): this(create, null)
 
-    private val freeInternal = ArrayList<T>()
-    val free: List<T>
-        get() = freeInternal
-
-    private val usedInternal = ArrayList<T>()
-    val used: List<T>
-        get() = usedInternal
+    val free = ArrayList<T>()
+    val used = ArrayList<T>()
 
     fun get(): T {
         val obj = if (free.isNotEmpty()) {
             val instance = free[0]
-            freeInternal.remove(instance)
+            free.remove(instance)
             instance
         } else {
             create()
         }
         reset?.invoke(obj)
-        usedInternal.add(obj)
+        used.add(obj)
+        return obj
+    }
+
+    inline fun getOrCreate(create: () -> T): T {
+        val obj = if (free.isNotEmpty()) {
+            val instance = free[0]
+            free.remove(instance)
+            instance
+        } else {
+            create()
+        }
+        reset?.invoke(obj)
+        used.add(obj)
         return obj
     }
 
     fun free(instance: T) {
-        freeInternal.add(instance)
-        usedInternal.remove(instance)
+        free.add(instance)
+        used.remove(instance)
     }
 
     fun free(instances: List<T>) {
-        freeInternal.addAll(instances)
-        usedInternal.removeAll(instances)
+        free.addAll(instances)
+        used.removeAll(instances)
     }
 
     fun clear() {
-        freeInternal.clear()
-        usedInternal.clear()
+        free.clear()
+        used.clear()
     }
 }

@@ -17,18 +17,23 @@
 package app.thelema.ecs
 
 open class ComponentDescriptorList(val componentName: String): IComponentDescriptorList {
-    override val descriptors = ArrayList<ComponentDescriptor<*>>()
+    override val descriptors = ArrayList<ComponentDescriptor<IEntityComponent>>()
 
-    override fun <T: IEntityComponent> descriptor(descriptor: ComponentDescriptor<T>) {
+    override fun addDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {
         descriptors.add(descriptor)
-        ECS.allDescriptors[descriptor.componentName] = descriptor as ComponentDescriptor<IEntityComponent>
+        ECS.allDescriptors[descriptor.componentName] = descriptor
     }
 
     inline fun <reified T: IEntityComponent> descriptor(noinline create: () -> T, noinline block: ComponentDescriptor<T>.() -> Unit) {
-        return descriptor(T::class.simpleName!!, create, block)
+        descriptor(T::class.simpleName!!, create, block)
     }
 
     inline fun <reified T: IEntityComponent> descriptor(noinline create: () -> T) {
-        return descriptor(T::class.simpleName!!, create)
+        descriptor(T::class.simpleName!!, create)
+    }
+
+    override fun removeDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {
+        descriptors.remove(descriptor)
+        ECS.allDescriptors.remove(descriptor.componentName)
     }
 }

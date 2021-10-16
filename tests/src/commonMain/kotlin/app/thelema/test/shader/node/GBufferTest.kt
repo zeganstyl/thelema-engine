@@ -17,56 +17,33 @@
 package app.thelema.test.shader.node
 
 import app.thelema.app.APP
-import app.thelema.gltf.GLTFConf
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.ecs.ECS
 import app.thelema.img.GBuffer
 import app.thelema.gl.TextureRenderer
+import app.thelema.gltf.GLTF
 import app.thelema.img.render
-import app.thelema.test.GLTFModel
-import app.thelema.test.Test
+import app.thelema.test.g3d.gltf.GLTFTestBase
 
 /** @author zeganstyl */
-class GBufferTest: Test {
+class GBufferTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override val name: String
         get() = "G-Buffer"
 
     override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer < 3) {
-                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
-                return
-            }
-            if (GL.glesMajVer == 3) {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
-            }
+        GLTF.defaultConf {
+            setupGBufferShader = true
+            shaderVersion = 330
         }
+
+        super.testMain()
 
         val screenQuad = TextureRenderer(0f, 0f, 0.5f, 0.5f)
 
         val gBuffer = GBuffer()
 
-        val model = GLTFModel(conf = GLTFConf().apply {
-            setupGBufferShader = true
-            shaderVersion = 330
-        })
-
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             gBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-                model.update()
-                model.render()
+                ECS.render()
             }
 
             screenQuad.render(gBuffer.colorMap, clearMask = null) {

@@ -19,14 +19,14 @@ package app.thelema.test.img
 import app.thelema.app.APP
 import app.thelema.data.DATA
 import app.thelema.gl.*
-import app.thelema.img.IMG
 import app.thelema.img.ImageSampler
 import app.thelema.img.Texture2D
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
 import app.thelema.math.Vec4I
-import app.thelema.gl.TextureRenderer
+import app.thelema.img.Image
+import app.thelema.input.MOUSE
 import app.thelema.test.Test
+import app.thelema.utils.Color
 
 class ImageSamplerTest: Test {
     override val name: String
@@ -37,10 +37,8 @@ class ImageSamplerTest: Test {
         val sWrap = GL_CLAMP_TO_EDGE
         val tWrap = GL_REPEAT
 
-        val screenQuad = TextureRenderer(flipY = true, uvScale = uvScale)
-
         val texture = Texture2D()
-        texture.initOnePixelTexture(1f, 1f, 1f, 1f)
+        texture.initTexture(Color.WHITE_INT)
 
         val pixels = DATA.bytes(4 * 4)
         pixels.put(255.toByte(), 0, 0, 255.toByte())
@@ -49,15 +47,15 @@ class ImageSamplerTest: Test {
         pixels.put(0, 255.toByte(), 255.toByte(), 255.toByte())
         pixels.rewind()
 
-        val image = IMG.image()
+        val image = Image()
         image.height = 2
         image.width = 2
-        image.glPixelFormat = GL_RGBA
-        image.glInternalFormat = GL_RGBA
-        image.glType = GL_UNSIGNED_BYTE
+        image.pixelFormat = GL_RGBA
+        image.internalFormat = GL_RGBA8
+        image.pixelChannelType = GL_UNSIGNED_BYTE
         image.bytes = pixels
 
-        texture.load(image, generateMipmaps = false) {
+        texture.load(image) {
             minFilter = GL_NEAREST
             magFilter = GL_NEAREST
             this.sWrap = sWrap
@@ -85,8 +83,6 @@ class ImageSamplerTest: Test {
         }
         println("pixel iteration end")
 
-        GL.render {
-            screenQuad.render(texture)
-        }
+        APP.onRender = { ScreenQuad.render(texture) }
     }
 }

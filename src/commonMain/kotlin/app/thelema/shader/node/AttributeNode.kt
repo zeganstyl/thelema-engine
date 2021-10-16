@@ -23,18 +23,12 @@ import app.thelema.json.IJsonObject
  * @author zeganstyl */
 class AttributeNode(
     attributeName: String = "",
-    type: Int = GLSLType.Float
+    type: String = GLSLType.Float
 ): ShaderNode() {
     override val name: String
         get() = "Attribute"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
-    var type: Int
+    var type: String
         get() = this.value.type
         set(value) {
             this.value.type = value
@@ -52,19 +46,19 @@ class AttributeNode(
         super.readJson(json)
 
         attributeName = json.string("attributeName", "")
-        type = GLSLType.getTypeByName(json.string("type"))
+        type = json.string("type")
     }
 
     override fun writeJson(json: IJsonObject) {
         super.writeJson(json)
 
         json["attributeName"] = attributeName
-        json["type"] = GLSLType.getTypeName(type)
+        json["type"] = type
     }
 
     override fun declarationVert(out: StringBuilder) {
         super.declarationVert(out)
-        out.append("attribute ${value.typeStr} $attributeName;\n")
+        out.append("attribute ${value.type} $attributeName;\n")
         out.append("varying ${value.typedRef};\n")
     }
 
@@ -76,11 +70,5 @@ class AttributeNode(
     override fun executionVert(out: StringBuilder) {
         super.executionVert(out)
         out.append("${value.ref} = $attributeName;\n")
-    }
-
-    companion object {
-        const val ClassId = "attribute"
-
-        val InputForm = HashMap<String, Int>()
     }
 }

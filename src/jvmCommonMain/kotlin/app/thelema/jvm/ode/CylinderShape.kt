@@ -16,43 +16,29 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
 import app.thelema.phys.ICylinderShape
-import app.thelema.phys.IShape
 import org.ode4j.ode.DCylinder
+import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class CylinderShape: ICylinderShape {
-    var cylinder: DCylinder? = null
-
-    override var entityOrNull: IEntity? = null
+class CylinderShape: SpecificShape<DCylinder>(), ICylinderShape {
+    override var radius: Float = 0f
         set(value) {
             field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = cylinder
+            geom?.setParams(value.toDouble(), length.toDouble())
         }
 
-    override var shape: IShape = Shape().also { it.geom = cylinder }
-
-    override var radius: Float
-        get() = cylinder?.radius?.toFloat() ?: 0f
+    override var length: Float = 0f
         set(value) {
-            cylinder?.setParams(value.toDouble(), length.toDouble())
+            field = value
+            geom?.setParams(radius.toDouble(), value.toDouble())
         }
 
-    override var length: Float
-        get() = cylinder?.length?.toFloat() ?: 0f
-        set(value) {
-            cylinder?.setParams(radius.toDouble(), value.toDouble())
-        }
+    override fun createGeom(): DCylinder =
+        OdeHelper.createCylinder(radius.toDouble(), length.toDouble())
 
-    override fun startSimulation() {
-        cylinder = OdeHelper.createCylinder(radius.toDouble(), length.toDouble())
-    }
-
-    override fun endSimulation() {
-        cylinder?.destroy()
-        cylinder = null
+    override fun setupMass(density: Double, mass: DMass) {
+        mass.setCylinder(density, 2, radius.toDouble(), length.toDouble())
     }
 }

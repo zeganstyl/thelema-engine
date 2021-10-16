@@ -63,7 +63,7 @@ class InputEvent : Event(EventType.Input) {
         return actorCoords
     }
 
-    /** Returns true of this event is a touchUp triggered by [Stage.cancelTouchFocus].  */
+    /** Returns true of this event is a touchUp triggered by [HeadUpDisplay.cancelTouchFocus].  */
     val isTouchFocusCancel: Boolean
         get() = stageX == Int.MIN_VALUE.toFloat() || stageY == Int.MIN_VALUE.toFloat()
 

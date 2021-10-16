@@ -199,7 +199,7 @@ interface IMat4: IJsonObjectIO {
         transformDataType = json.string("transformDataType", TransformDataType.TRS)
         json.array("values") {
             var i = 0
-            floats {
+            forEachFloat {
                 values[i] = it
                 i++
             }
@@ -242,6 +242,15 @@ interface IMat4: IJsonObjectIO {
     fun getCol1Vec3(out: IVec3): IVec3 = out.set(m01, m11, m21)
     fun getCol2Vec3(out: IVec3): IVec3 = out.set(m02, m12, m22)
     fun getCol3Vec3(out: IVec3): IVec3 = out.set(m03, m13, m23)
+
+    /** Get forward vector of world matrix */
+    fun getWorldForward(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m02, m12, m22).nor()
+
+    /** Get up vector of world matrix */
+    fun getWorldUp(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m01, m11, m21).nor()
+
+    /** Get right vector of world matrix */
+    fun getWorldRight(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m00, m10, m20).nor()
 
     fun isEqualTo(other: IMat4): Boolean {
         val values1 = values
@@ -932,7 +941,7 @@ interface IMat4: IJsonObjectIO {
 
     /** Sets this matrix to look from position (px, py, pz) in direction (fx, fy, fz) with up vector (ux, uy, uz).
      * Assumes direction and up vectors are already normalized */
-    fun setToLook(px: Float, py: Float, pz: Float, fx: Float, fy: Float, fz: Float, ux: Float = 0f, uy: Float = 1f, uz: Float = 0f): IMat4 {
+    fun setToLook(px: Float, py: Float, pz: Float, fx: Float, fy: Float, fz: Float, ux: Float, uy: Float, uz: Float): IMat4 {
         val fx2 = -fx
         val fy2 = -fy
         val fz2 = -fz

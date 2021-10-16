@@ -16,16 +16,15 @@
 
 package app.thelema.test.shader.post
 
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.gl.GL_RGB
+import app.thelema.app.APP
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.gl.*
 import app.thelema.img.SimpleFrameBuffer
-import app.thelema.gl.ScreenQuad
 import app.thelema.img.render
+import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.ChromaticAberration
-import app.thelema.test.CubeModel
 import app.thelema.test.Test
+import app.thelema.utils.Color
 
 /** @author zeganstyl */
 class ChromaticAberrationTest: Test {
@@ -33,33 +32,23 @@ class ChromaticAberrationTest: Test {
         get() = "Chromatic Aberration"
 
     override fun testMain() {
-        val model = CubeModel()
+        val box = BoxMesh { setSize(2f) }
+        val boxShader = SimpleShader3D {
+            color = Color.WHITE
+        }
 
-        val frameBuffer = SimpleFrameBuffer(
-            width = GL.mainFrameBufferWidth,
-            height = GL.mainFrameBufferHeight,
-            pixelFormat = GL_RGB,
-            hasDepth = true
-        )
+        val frameBuffer = SimpleFrameBuffer()
 
-        val shader = ChromaticAberration()
-        shader.strength = 0.1f
+        val chromaticAberration = ChromaticAberration()
+        chromaticAberration.strength = 0.005f
 
-        val screenQuad = ScreenQuad()
-
-        GL.isDepthTestEnabled = true
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            model.update()
-
+        APP.onRender = {
             frameBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.render()
+                GL.glClear()
+                box.render(boxShader)
             }
 
-            shader.render(screenQuad, frameBuffer.getTexture(0), null)
+            chromaticAberration.render(frameBuffer.texture, null)
         }
     }
 }

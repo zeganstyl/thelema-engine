@@ -16,10 +16,12 @@
 
 package app.thelema.test.img
 
-import app.thelema.gl.GL
-import app.thelema.img.IMG
+import app.thelema.app.APP
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.Texture2D
 import app.thelema.gl.TextureRenderer
+import app.thelema.img.image
+import app.thelema.res.RES
 import app.thelema.test.Test
 
 class ImagePixelsCopyTest: Test {
@@ -27,18 +29,12 @@ class ImagePixelsCopyTest: Test {
         get() = "Image pixels copy"
 
     override fun testMain() {
-        val screenQuad = TextureRenderer(flipY = true)
-
         val texture = Texture2D()
-        texture.initTexture()
 
-        IMG.load(uri = "thelema-logo-128.png") {
-            val subImage = it.subImage(0, 0, 64, 64)
-            texture.load(subImage)
+        RES.image("thelema-logo-256.png") {
+            texture.load(subImage(0, 0, 64, 64))
         }
 
-        GL.render {
-            screenQuad.render(texture)
-        }
+        APP.onRender = { ScreenQuad.render(texture) }
     }
 }

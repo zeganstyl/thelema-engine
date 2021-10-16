@@ -18,7 +18,7 @@ package app.thelema.jvm
 
 import app.thelema.app.*
 import app.thelema.audio.AL
-import app.thelema.audio.mock.MockAudio
+import app.thelema.audio.mock.AudioStub
 import app.thelema.data.DATA
 import app.thelema.ecs.ECS
 import app.thelema.fs.FS
@@ -28,8 +28,8 @@ import app.thelema.jvm.json.JsonSimpleJson
 import app.thelema.utils.LOG
 
 open class JvmGraphiclessApp: AbstractApp() {
-    override val platformType: Int
-        get() = APP.Desktop
+    override val platformType: String
+        get() = DesktopApp
     override var clipboardString: String = ""
     override var cursor: Int = Cursor.Arrow
     override var defaultCursor: Int = Cursor.Arrow
@@ -60,12 +60,11 @@ open class JvmGraphiclessApp: AbstractApp() {
     init {
         ECS.setupDefaultComponents()
 
-        AL.proxy = MockAudio()
-        APP.proxy = this
-        LOG.proxy = JvmLog()
-        FS.proxy = JvmFS()
-        JSON.proxy = JsonSimpleJson()
-        DATA.proxy = JvmData()
+        APP = this
+        LOG = JvmLog()
+        FS = JvmFS()
+        JSON = JsonSimpleJson()
+        DATA = JvmData()
         //IMG.proxy = STBImg()
     }
 }

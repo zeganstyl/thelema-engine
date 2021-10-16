@@ -16,7 +16,7 @@
 
 package app.thelema.lwjgl3.audio
 
-import app.thelema.audio.IAL
+import app.thelema.audio.IAudio
 import app.thelema.audio.IAudioDevice
 import app.thelema.audio.IAudioRecorder
 import app.thelema.fs.IFile
@@ -31,9 +31,9 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 
-/** @author Nathan Sweet
+/** @author Nathan Sweet, zeganstyl
  */
-class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int = 9, private val deviceBufferSize: Int = 512) : IAL {
+class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int = 9, private val deviceBufferSize: Int = 512) : IAudio {
     private val idleSources = ArrayList<Int>()
     private val allSources = ArrayList<Int>()
     private val soundIdToSource = HashMap<Int, Int>()
@@ -47,14 +47,16 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     var noDevice = false
     var checkAndValidatePlayingMusic = false
 
+    val tmpMusic = ArrayList<OpenALMusic>()
+
     override fun newSound(file: IFile): OpenALSound {
-        val builder = OpenALCodecs.sound[file.extension.toLowerCase()] ?:
+        val builder = OpenALCodecs.sound[file.extension.lowercase()] ?:
         throw IllegalArgumentException("Sound file extension is unknown")
         return builder.invoke(this, file)
     }
 
     override fun newMusic(file: IFile): OpenALMusic {
-        val builder = OpenALCodecs.music[file.extension.toLowerCase()] ?:
+        val builder = OpenALCodecs.music[file.extension.lowercase()] ?:
         throw IllegalArgumentException("Music file extension is unknown")
         return builder.invoke(this, file)
     }
@@ -318,9 +320,5 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         for (i in 0 until 16) {
             recentSounds.add(null)
         }
-    }
-
-    companion object {
-        val tmpMusic = ArrayList<OpenALMusic>()
     }
 }

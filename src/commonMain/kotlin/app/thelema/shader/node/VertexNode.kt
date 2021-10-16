@@ -16,9 +16,11 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IObject3D
+import app.thelema.g3d.IScene
+import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
 import app.thelema.json.IJsonObject
+import app.thelema.math.MATH
 
 /** For static, moving, skinned objects
  * @author zeganstyl */
@@ -34,12 +36,6 @@ class VertexNode(
 
     override val name: String
         get() = "Vertex"
-
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
 
     var positionName = "POSITION"
     var normalName = "NORMAL"
@@ -134,17 +130,15 @@ class VertexNode(
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun prepareObjectData(obj: IObject3D) {
-        super.prepareObjectData(obj)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
-        shader[uWorldMatrix] = obj.node.worldMatrix
+        shader[uWorldMatrix] = mesh.worldMatrix ?: MATH.IdentityMat4
 
-        val armature = obj.armature
+        val armature = mesh.armature
         if (armature != null) {
             val matrices = armature.boneMatrices
-            if (matrices.isNotEmpty()) {
-                shader.setMatrix4(uBoneMatricesName, matrices, length = matrices.size)
-            }
+            if (matrices.isNotEmpty()) shader.setMatrix4(uBoneMatricesName, matrices, length = matrices.size)
         }
     }
 
@@ -266,11 +260,5 @@ class VertexNode(
                 }
             }
         }
-    }
-
-    companion object {
-        const val ClassId = "vertex"
-
-        val InputForm = HashMap<String, Int>()
     }
 }

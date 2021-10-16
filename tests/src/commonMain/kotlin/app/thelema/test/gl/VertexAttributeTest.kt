@@ -16,12 +16,10 @@
 
 package app.thelema.test.gl
 
-import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.app.APP
+import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.gl.*
-import app.thelema.math.MATH
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
-import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 import app.thelema.utils.LOG
 
@@ -32,20 +30,19 @@ class VertexAttributeTest: Test {
     override fun testMain() {
         val mesh = Mesh {
             addVertexBuffer {
-                addAttribute(2, "UV")
                 addAttribute(3, "POSITION")
                 initVertexBuffer(8) {
                     putFloats(
                         // front
-                        0f, 0f,   -1f, -1f,  1f,
-                        0f, 0f,   1f, -1f,  1f,
-                        0f, 0f,   1f,  1f,  1f,
-                        0f, 0f,   -1f,  1f,  1f,
+                        -1f, -1f,  1f,
+                        1f, -1f,  1f,
+                        1f,  1f,  1f,
+                        -1f,  1f,  1f,
                         // back
-                        0f, 0f,   -1f, -1f, -1f,
-                        0f, 0f,   1f, -1f, -1f,
-                        0f, 0f,   1f,  1f, -1f,
-                        0f, 0f,   -1f,  1f, -1f
+                        -1f, -1f, -1f,
+                        1f, -1f, -1f,
+                        1f,  1f, -1f,
+                        -1f,  1f, -1f
                     )
                 }
             }
@@ -53,7 +50,7 @@ class VertexAttributeTest: Test {
             setIndexBuffer {
                 indexType = GL_UNSIGNED_SHORT
                 initIndexBuffer(6 * 6) {
-                    putShorts(
+                    putIndices(
                         // front
                         0, 1, 2,
                         2, 3, 0,
@@ -77,61 +74,32 @@ class VertexAttributeTest: Test {
             }
         }
 
-        mesh.getAttribute("POSITION").apply {
+        mesh.getAttribute("POSITION") {
             val x = getFloat(0)
             val y = getFloat(4)
             val z = getFloat(8)
 
-            putFloats(0f, 0f, 1f)
-            putFloats(1f, 0f, 1f)
-            putFloats(1f, 1f, 1f)
-            putFloats(0f, 1f, 1f)
+            putFloatsNext(0f, 0f, 1f)
+            putFloatsNext(1f, 0f, 1f)
+            putFloatsNext(1f, 1f, 1f)
+            putFloatsNext(0f, 1f, 1f)
 
-            putFloats(0f, 0f, 0f)
-            putFloats(1f, 0f, 0f)
-            putFloats(1f, 1f, 0f)
-            putFloats(0f, 1f, 0f)
+            putFloatsNext(0f, 0f, 0f)
+            putFloatsNext(1f, 0f, 0f)
+            putFloatsNext(1f, 1f, 0f)
+            putFloatsNext(0f, 1f, 0f)
 
             LOG.info("$x, $y, $z")
         }
 
-        val shader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-varying vec3 position;
-uniform mat4 projViewModelTrans;
-
-void main() {
-    position = POSITION.xyz;
-    gl_Position = projViewModelTrans * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-varying vec3 position;
-
-void main() {
-    gl_FragColor = vec4(position, 1.0);
-}""")
-
-        ActiveCamera {
-            lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
-            near = 0.1f
-            far = 100f
-            updateCamera()
+        val shader = SimpleShader3D {
+            renderAttributeName = positionsName
         }
 
-        val cubeMatrix4 = Mat4()
-        val temp = Mat4()
+        val control = OrbitCameraControl()
 
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            cubeMatrix4.rotate(0f, 1f, 0f, 0.01f)
-
-            shader.bind()
-            shader["projViewModelTrans"] = temp.set(cubeMatrix4).mulLeft(ActiveCamera.viewProjectionMatrix)
+        APP.onRender = {
+            control.updateNow()
             mesh.render(shader)
         }
     }

@@ -21,24 +21,26 @@ import app.thelema.data.IByteData
 import app.thelema.data.IFloatData
 import app.thelema.gl.AbstractGL
 import app.thelema.gl.GL
-import app.thelema.img.IImageData
+import app.thelema.img.IImage
+import app.thelema.utils.LOG
 import org.w3c.dom.HTMLImageElement
 
 /**
  * @author zeganstyl
  * */
 class JsGL(
+    val app: JsApp,
     val gl: WebGL2RenderingContext,
     override val majVer: Int = 1,
     override val minVer: Int = 0,
     override val glslVer: Int = 100
 ): AbstractGL() {
-    val textures = GLObjectArray<WebGLTexture, TextureWrap> { TextureWrap(it) }
+    val textureObjects = GLObjectArray<WebGLTexture, TextureWrap> { TextureWrap(it) }
     val programs = GLObjectArray<WebGLProgram, ProgramWrap> { ProgramWrap(it) }
-    val buffers = GLObjectArray<WebGLBuffer, BufferWrap> { BufferWrap(it) }
+    val bufferObjects = GLObjectArray<WebGLBuffer, BufferWrap> { BufferWrap(it) }
     val vertexArrays = GLObjectArray<WebGLVertexArrayObject, VertexArrayWrap> { VertexArrayWrap(it) }
-    val frameBuffers = GLObjectArray<WebGLFramebuffer, FrameBufferWrap> { FrameBufferWrap(it) }
-    val renderBuffers = GLObjectArray<WebGLRenderbuffer, RenderBufferWrap> { RenderBufferWrap(it) }
+    val frameBufferObjects = GLObjectArray<WebGLFramebuffer, FrameBufferWrap> { FrameBufferWrap(it) }
+    val renderBufferObjects = GLObjectArray<WebGLRenderbuffer, RenderBufferWrap> { RenderBufferWrap(it) }
     val shaders = GLObjectArray<WebGLShader, ShaderWrap> { ShaderWrap(it) }
 
     val floatArraysCache = HashMap<Int, Array<Float>>()
@@ -66,6 +68,24 @@ class JsGL(
     override val maxAnisotropicFilterLevel: Float
         get() = 1f
 
+    override fun enableRequiredByDefaultExtensions() {
+        super.enableRequiredByDefaultExtensions()
+
+        if (glesMajVer == 3) {
+            // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+            if (!enableExtension("EXT_color_buffer_float")) {
+                LOG.info("Extension not supported: EXT_color_buffer_float")
+                // not supported
+            }
+        } else if (glesMajVer < 3) {
+            enableExtension("ANGLE_instanced_arrays")
+            enableExtension("EXT_color_buffer_half_float")
+            enableExtension("WEBGL_color_buffer_float")
+            enableExtension("OES_vertex_array_object") // TODO: https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object
+            enableExtension("WEBGL_draw_buffers")
+        }
+    }
+
     override fun glBlendFuncSeparate(srcRGB: Int, dstRGB: Int, srcAlpha: Int, dstAlpha: Int) {
         gl.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
     }
@@ -83,7 +103,7 @@ class JsGL(
     }
 
     override fun glBindBufferBase(target: Int, buffer: Int) {
-        gl.bindBuffer(target, buffers.gl(buffer))
+        gl.bindBuffer(target, bufferObjects.gl(buffer))
     }
 
     override fun glBindVertexArrayBase(value: Int) {
@@ -115,8 +135,24 @@ class JsGL(
     }
 
     override fun glBindTextureBase(target: Int, texture: Int) {
-        gl.bindTexture(target, textures.gl(texture))
+        gl.bindTexture(target, textureObjects.gl(texture))
     }
+
+    override fun glGenTextureBase(): Int = textureObjects.new(gl.createTexture())
+
+    override fun glGenBufferBase(): Int = bufferObjects.new(gl.createBuffer())
+
+    override fun glGenFrameBufferBase(): Int = frameBufferObjects.new(gl.createFramebuffer())
+
+    override fun glGenRenderBufferBase(): Int = renderBufferObjects.new(gl.createRenderbuffer())
+
+    override fun glDeleteTextureBase(id: Int) { gl.deleteTexture(textureObjects.gl(id)) }
+
+    override fun glDeleteBufferBase(id: Int) { gl.deleteBuffer(bufferObjects.delete(id)) }
+
+    override fun glDeleteFrameBufferBase(id: Int) { gl.deleteFramebuffer(frameBufferObjects.delete(id)) }
+
+    override fun glDeleteRenderBufferBase(id: Int) { gl.deleteRenderbuffer(renderBufferObjects.gl(id)) }
 
     override fun isExtensionSupported(extension: String): Boolean =
         gl.getSupportedExtensions()?.contains(extension) ?: false
@@ -140,10 +176,6 @@ class JsGL(
         gl.clearColor(red, green, blue, alpha)
     }
 
-    override fun glDeleteTexture(texture: Int) {
-        gl.deleteTexture(textures.gl(texture))
-    }
-
     override fun glDrawElements(mode: Int, count: Int, type: Int, indices: IByteData) {
         gl.drawElements(mode, count, type, indices.sourceObject.unsafeCast<ArrayBufferView>().byteOffset)
     }
@@ -154,10 +186,6 @@ class JsGL(
 
     override fun glLinkProgram(program: Int) {
         gl.linkProgram(programs.gl(program))
-    }
-
-    override fun glGenTexture(): Int {
-        return textures.new(gl.createTexture())
     }
 
     override fun glGetUniformLocation(program: Int, name: String): Int {
@@ -200,29 +228,21 @@ class JsGL(
         border: Int,
         format: Int,
         type: Int,
-        image: IImageData
+        image: IImage
     ) {
         gl.texImage2D(target, level, internalformat, format, type, image.sourceObject as HTMLImageElement)
     }
 
     override fun glFramebufferTexture2D(target: Int, attachment: Int, textarget: Int, texture: Int, level: Int) {
-        gl.framebufferTexture2D(target, attachment, textarget, textures.gl(texture), level)
-    }
-
-    override fun glGenRenderbuffer(): Int {
-        return renderBuffers.new(gl.createRenderbuffer())
+        gl.framebufferTexture2D(target, attachment, textarget, textureObjects.gl(texture), level)
     }
 
     override fun glBindRenderbuffer(target: Int, renderbuffer: Int) {
-        gl.bindRenderbuffer(target, renderBuffers.gl(renderbuffer))
-    }
-
-    override fun glDeleteRenderbuffer(renderbuffer: Int) {
-        gl.deleteRenderbuffer(renderBuffers.gl(renderbuffer))
+        gl.bindRenderbuffer(target, renderBufferObjects.gl(renderbuffer))
     }
 
     override fun glIsRenderbuffer(renderbuffer: Int): Boolean {
-        return gl.isRenderbuffer(renderBuffers.gl(renderbuffer))
+        return gl.isRenderbuffer(renderBufferObjects.gl(renderbuffer))
     }
 
     override fun glGetRenderbufferParameteriv(target: Int, pname: Int, params: IntArray) {
@@ -235,7 +255,7 @@ class JsGL(
     }
 
     override fun glFramebufferRenderbuffer(target: Int, attachment: Int, renderbuffertarget: Int, renderbuffer: Int) {
-        gl.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderBuffers.gl(renderbuffer))
+        gl.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderBufferObjects.gl(renderbuffer))
     }
 
     override fun glRenderbufferStorage(target: Int, internalformat: Int, width: Int, height: Int) {
@@ -276,10 +296,6 @@ class JsGL(
         return gl.getProgramInfoLog(programs.gl(program)) ?: ""
     }
 
-    override fun glGenBuffer(): Int {
-        return buffers.new(gl.createBuffer())
-    }
-
     override fun glViewport(x: Int, y: Int, width: Int, height: Int) {
         gl.viewport(x, y, width, height)
     }
@@ -302,7 +318,7 @@ class JsGL(
     }
 
     override fun glBindFramebuffer(target: Int, framebuffer: Int) {
-        gl.bindFramebuffer(target, frameBuffers.gl(framebuffer))
+        gl.bindFramebuffer(target, frameBufferObjects.gl(framebuffer))
     }
 
     override fun glCompileShader(shader: Int) {
@@ -317,24 +333,12 @@ class JsGL(
         return shaders.new(gl.createShader(type))
     }
 
-    override fun glDeleteBuffer(buffer: Int) {
-        gl.deleteBuffer(buffers.delete(buffer))
-    }
-
-    override fun glDeleteFramebuffer(framebuffer: Int) {
-        gl.deleteFramebuffer(frameBuffers.delete(framebuffer))
-    }
-
     override fun glDeleteProgram(program: Int) {
         gl.deleteProgram(programs.delete(program))
     }
 
     override fun glDrawElements(mode: Int, count: Int, type: Int, indices: Int) {
         gl.drawElements(mode, count, type, indices)
-    }
-
-    override fun glGenFramebuffer(): Int {
-        return frameBuffers.new(gl.createFramebuffer())
     }
 
     override fun glDeleteShader(shader: Int) {
@@ -486,7 +490,11 @@ class JsGL(
     }
 
     override fun glDrawArraysInstanced(mode: Int, first: Int, count: Int, instanceCount: Int) {
-        gl.drawArraysInstanced(mode, first, count, instanceCount)
+        if (glesMajVer < 3) {
+            gl.drawArraysInstancedANGLE(mode, first, count, instanceCount)
+        } else {
+            gl.drawArraysInstanced(mode, first, count, instanceCount)
+        }
     }
 
     override fun glDrawBuffers(n: Int, bufs: IntArray) {
@@ -494,11 +502,23 @@ class JsGL(
     }
 
     override fun glDrawElementsInstanced(mode: Int, count: Int, type: Int, indicesOffset: Int, instanceCount: Int) {
-        gl.drawElementsInstanced(mode, count, type, indicesOffset, instanceCount)
+        if (glesMajVer < 3) {
+            gl.drawElementsInstancedANGLE(mode, count, type, indicesOffset, instanceCount)
+        } else {
+            gl.drawElementsInstanced(mode, count, type, indicesOffset, instanceCount)
+        }
     }
 
     override fun glVertexAttribDivisor(index: Int, divisor: Int) {
-        gl.vertexAttribDivisor(index, divisor)
+        if (glesMajVer < 3) {
+            gl.vertexAttribDivisorANGLE(index, divisor)
+        } else {
+            gl.vertexAttribDivisor(index, divisor)
+        }
+    }
+
+    override fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: IByteData) {
+        gl.readPixels(x, y, width, height, format, type, pixels.sourceObject as ArrayBufferView?)
     }
 
     override fun glGetError(): Int = gl.getError()

@@ -16,7 +16,7 @@
 
 package app.thelema.ui
 
-import app.thelema.input.KB
+import app.thelema.input.KEY
 
 /** A selection that supports range selection by knowing about the array of items being selected.
  * @author Nathan Sweet
@@ -34,8 +34,7 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
             super.choose(item)
             return
         }
-        if (selected.size > 0 && KB.shift) {
-            val array = array
+        if (selected.size > 0 && KEY.shiftPressed) {
             val rangeStartIndex = if (rangeStart == null) -1 else array.indexOf(rangeStart!!)
             if (rangeStartIndex != -1) {
                 val oldRangeStart = rangeStart
@@ -48,7 +47,7 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
                     end = start
                     start = temp
                 }
-                if (!KB.ctrl) selected.clear()
+                if (!KEY.ctrlPressed) selected.clear()
                 for (i in start..end) selected.add(array[i])
                 changed()
                 rangeStart = oldRangeStart
@@ -68,7 +67,6 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
     /** Removes objects from the selection that are no longer in the items array. If [getRequired] is true and there is no
      * selected item, the first item is selected.  */
     fun validate() {
-        val array = array
         if (array.isEmpty()) {
             clear()
             return
@@ -82,5 +80,4 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
             }
         }
     }
-
 }

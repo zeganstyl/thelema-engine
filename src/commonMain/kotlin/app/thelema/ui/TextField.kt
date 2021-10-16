@@ -21,12 +21,11 @@ import app.thelema.app.Cursor
 import app.thelema.font.BitmapFont
 import app.thelema.font.GlyphLayout
 import app.thelema.g2d.Batch
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.math.IVec2
-import app.thelema.math.IVec4
 import app.thelema.math.Vec2
-import app.thelema.math.Vec4
 import app.thelema.ui.TextField.OnscreenKeyboard
+import app.thelema.utils.Color
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -281,15 +280,14 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
     }
 
     private val backgroundDrawable: Drawable?
-        private get() {
+        get() {
             val focused = hasKeyboardFocus()
             return if (isDisabled && style.disabledBackground != null) style.disabledBackground else if (focused && style.focusedBackground != null) style.focusedBackground else style.background
         }
 
     var isInputValid = true
 
-    var textColor: IVec4? = null
-    private var textColorInternal: IVec4 = Vec4(1f, 1f, 1f, 1f)
+    var textColor: Int? = null
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         val focused = hasKeyboardFocus()
@@ -309,7 +307,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
         val y = y
         val width = width
         val height = height
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.setMulAlpha(color, parentAlpha)
         var bgLeftWidth = 0f
         var bgRightWidth = 0f
         if (background != null) {
@@ -327,13 +325,14 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             if (!focused && messageText != null) {
                 val messageFont = if (style.messageFont != null) style.messageFont else font
                 if (style.messageFontColor != null) {
-                    messageFont!!.setColor(style.messageFontColor!!.r, style.messageFontColor!!.g, style.messageFontColor!!.b,
-                            style.messageFontColor!!.a * color.a * parentAlpha)
-                } else messageFont!!.setColor(0.7f, 0.7f, 0.7f, color.a * parentAlpha)
+                    messageFont!!.color = Color.mulAlpha(style.messageFontColor!!, Color.getAlpha(color) * parentAlpha)
+                } else {
+                    messageFont!!.color = Color.mulAlpha(Color.LIGHT_GRAY_INT, Color.getAlpha(color) * parentAlpha)
+                }
                 drawMessageText(batch, messageFont, x + bgLeftWidth, y + textY + yOffset, width - bgLeftWidth - bgRightWidth)
             }
         } else {
-            textColorInternal.set(1f, 1f, 1f, 1f)
+            var textColorInternal = -1
             val fontColor = if (isDisabled && style.disabledFontColor != null) {
                 style.disabledFontColor
             } else if (focused && style.focusedFontColor != null) {
@@ -343,16 +342,15 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             }
 
             if (fontColor != null) {
-                textColorInternal.set(fontColor)
+                textColorInternal = fontColor
             }
 
             val textColor = textColor
             if (textColor != null) {
-                textColorInternal.set(textColor)
+                textColorInternal = textColor
             }
 
-            textColorInternal.a *= parentAlpha * color.a
-            font.setColor(textColorInternal.r, textColorInternal.g, textColorInternal.b, textColorInternal.a)
+            font.color = Color.mulAlpha(textColorInternal, Color.getAlpha(color) * parentAlpha)
             drawText(batch, font, x + bgLeftWidth, y + textY + yOffset)
         }
         if (!isDisabled && isCursorOn && cursorPatch != null) {
@@ -519,7 +517,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
      * @param up If true, the TextField with the same or next smallest y coordinate is found, else the next highest.
      */
     fun next(up: Boolean) {
-        val stage = stage ?: return
+        val stage = headUpDisplay ?: return
         var current = this
         val currentCoords = current.parent!!.localToStageCoordinates(tmp2.set(current.x, current.y))
         val bestCoords = tmp1
@@ -546,7 +544,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
     /** Focuses this field, field must be added to stage before this method can be called  */
     fun focusField() {
         if (isDisabled) return
-        val stage = stage
+        val stage = headUpDisplay
         FocusManager.switchFocus(stage, this@TextField)
         cursorPosition = 0
         selectionStart = 0
@@ -775,7 +773,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             if (isDisabled) return true
             setCursorPosition(x, y)
             selectionStart = cursor
-            val stage = stage
+            val stage = headUpDisplay
             if (stage != null) stage.keyboardFocus = this@TextField
             onscreenKeyboard.show(true)
             hasSelection = true
@@ -810,28 +808,28 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             isCursorOn = focused
             if (!hasKeyboardFocus()) return false
             var repeat = false
-            val ctrl = KB.ctrl
+            val ctrl = KEY.ctrlPressed
             val jump = ctrl && !passwordMode
             var handled = true
             if (ctrl) {
                 when (keycode) {
-                    KB.V -> {
+                    KEY.V -> {
                         //paste(clipboard.contents, true)
                         repeat = true
                     }
-                    KB.C, KB.INSERT -> {
+                    KEY.C, KEY.INSERT -> {
                         copy()
                         return true
                     }
-                    KB.X -> {
+                    KEY.X -> {
                         cut(true)
                         return true
                     }
-                    KB.A -> {
+                    KEY.A -> {
                         selectAll()
                         return true
                     }
-                    KB.Z -> {
+                    KEY.Z -> {
                         val oldText = textInternal
                         text = undoText!!
                         undoText = oldText
@@ -841,11 +839,11 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                     else -> handled = false
                 }
             }
-            if (KB.shift) {
+            if (KEY.shiftPressed) {
                 when (keycode) {
                     //KB.INSERT -> paste(clipboard.contents, true)
-                    KB.FORWARD_DEL -> cut(true)
-                    KB.LEFT -> {
+                    KEY.FORWARD_DEL -> cut(true)
+                    KEY.LEFT -> {
                         val temp = cursor
                         moveCursor(false, jump)
                         repeat = true
@@ -855,7 +853,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                             hasSelection = true
                         }
                     }
-                    KB.RIGHT -> {
+                    KEY.RIGHT -> {
                         val temp = cursor
                         moveCursor(true, jump)
                         repeat = true
@@ -865,7 +863,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                             hasSelection = true
                         }
                     }
-                    KB.HOME -> {
+                    KEY.HOME -> {
                         val temp = cursor
                         goHome(jump)
                         handled = true
@@ -874,7 +872,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                             hasSelection = true
                         }
                     }
-                    KB.END -> {
+                    KEY.END -> {
                         val temp = cursor
                         goEnd(jump)
                         handled = true
@@ -886,24 +884,24 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                 }
             } else { // Cursor movement or other keys (kills selection).
                 when (keycode) {
-                    KB.LEFT -> {
+                    KEY.LEFT -> {
                         moveCursor(false, jump)
                         clearSelection()
                         repeat = true
                         handled = true
                     }
-                    KB.RIGHT -> {
+                    KEY.RIGHT -> {
                         moveCursor(true, jump)
                         clearSelection()
                         repeat = true
                         handled = true
                     }
-                    KB.HOME -> {
+                    KEY.HOME -> {
                         goHome(jump)
                         clearSelection()
                         handled = true
                     }
-                    KB.END -> {
+                    KEY.END -> {
                         goEnd(jump)
                         clearSelection()
                         handled = true
@@ -931,7 +929,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             if (!hasKeyboardFocus()) return false
             //if (UIUtils.isMac && KB.isKeyPressed(KB.SYM)) return true
             if ((character == TAB || character == ENTER_ANDROID) && focusTraversal) {
-                next(KB.shift)
+                next(KEY.shiftPressed)
             } else {
                 val delete = character == DELETE
                 val backspace = character == BACKSPACE
@@ -983,8 +981,6 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
         private val tmp1 = Vec2()
         private val tmp2 = Vec2()
         private val tmp3 = Vec2()
-        var keyRepeatInitialTime = 0.4f
-        var keyRepeatTime = 0.1f
     }
 
     init {

@@ -23,12 +23,6 @@ class NormalMapNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() 
     override val name: String
         get() = "Normal Map"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     /** normalize(cameraPosition - worldPosition), for back-facing surface */
     var normalizedViewVector
         get() = input[NormalizedViewVector] ?: GLSL.zeroFloat
@@ -81,23 +75,12 @@ class NormalMapNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() 
     }
 
     companion object {
-        const val ClassId = "normalMap"
-
         const val NormalizedViewVector = "normalizedViewVector"
         const val VertexPosition = "vertexPosition"
         const val UV = "uv"
         const val NormalScale = "normalScale"
         const val NormalColor = "normalColor"
         const val TBN = "tbn"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(NormalizedViewVector, GLSLType.Vec3)
-            put(VertexPosition, GLSLType.Vec3)
-            put(UV, GLSLType.Vec2)
-            put(NormalScale, GLSLType.Float)
-            put(NormalColor, GLSLType.Vec3)
-            put(TBN, GLSLType.Mat3)
-        }
 
         // TODO https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
         fun normalCode(outTangentName: String, outBiNormalName: String, outNormalName: String): String {
@@ -120,10 +103,17 @@ void normalMapMain(vec3 viewVector, mat3 tbn, vec3 worldPosition, vec2 uv, float
     vec3 ng = tbn[2];
 
     // For a back-facing surface, the tangential basis vectors are negated.
-    float facing = step(0.0, dot(viewVector, ng)) * 2.0 - 1.0;
-    t *= facing;
-    b *= facing;
-    ng *= facing;
+//    float facing = step(0.0, dot(viewVector, ng)) * 2.0 - 1.0;
+//    t *= facing;
+//    b *= facing;
+//    ng *= facing;
+    // For a back-facing surface, the tangential basis vectors are negated.
+    if (gl_FrontFacing == false)
+    {
+        t *= -1.0;
+        b *= -1.0;
+        ng *= -1.0;
+    }
 
     vec3 n = colorValue * 2.0 - vec3(1.0);
     n *= vec3(normalScale, normalScale, 1.0);

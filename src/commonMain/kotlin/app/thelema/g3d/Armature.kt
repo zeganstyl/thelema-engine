@@ -17,84 +17,86 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.*
-import app.thelema.g3d.node.ITransformNode
 import app.thelema.json.IJsonObject
 import app.thelema.math.IMat4
 import app.thelema.math.Mat4
-import app.thelema.res.RES
 import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 class Armature: IArmature {
     override var entityOrNull: IEntity? = null
 
-    private val inverseBindMatricesInternal = ArrayList<IMat4>()
+    private val inverseBindMatricesInternal = ArrayList<IMat4>(0)
     override val inverseBindMatrices: List<IMat4>
-        get() = inverseBindMatricesInternal
+        get() = if (inverseBindMatricesInternal.size == 0) (inheritedArmature?.inverseBindMatrices ?: inverseBindMatricesInternal) else inverseBindMatricesInternal
 
     private val boneMatricesUpdateRequests = ArrayList<Boolean>()
     override var boneMatrices: FloatArray = FloatArray(0)
     override var previousBoneMatrices: FloatArray = FloatArray(0)
+
+    override var isPreviousBoneMatricesEnabled: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value
+                resizeBoneDataRequest = true
+            }
+        }
 
     private val bonesInternal = ArrayList<ITransformNode?>()
     override val bones: List<ITransformNode?>
         get() = bonesInternal
 
     override val componentName: String
-        get() = Name
+        get() = "Armature"
 
     val tmp = Mat4()
 
+    override var inheritedArmature: IArmature? = null
+
+    private var resizeBoneDataRequest = true
+
+    private fun setMatrixUpdateRequest(index: Int, value: Boolean) {
+        if (index >= boneMatricesUpdateRequests.size) {
+            boneMatricesUpdateRequests.add(value)
+        } else {
+            boneMatricesUpdateRequests[index] = value
+        }
+    }
+
     override fun initBones(bonesNum: Int) {
-        val oldMatrices = Array(inverseBindMatricesInternal.size) { inverseBindMatricesInternal[it] }
+        val oldIbms = Array(inverseBindMatricesInternal.size) { inverseBindMatricesInternal[it] }
+        val oldBones = Array(bonesInternal.size) { bonesInternal[it] }
+
+        bonesInternal.clear()
         inverseBindMatricesInternal.clear()
         for (i in 0 until bonesNum) {
-            inverseBindMatricesInternal.add(oldMatrices.getOrNull(i) ?: Mat4())
-        }
-        inverseBindMatricesInternal.trimToSize()
-
-        boneMatrices = FloatArray(bonesNum * 16)
-
-        boneMatricesUpdateRequests.clear()
-        for (i in 0 until bonesNum) {
-            boneMatricesUpdateRequests.add(true)
-        }
-
-        val oldBones = Array(bonesInternal.size) { bonesInternal[it] }
-        bonesInternal.clear()
-        for (i in 0 until bonesNum) {
-            bonesInternal.add(oldBones.getOrNull(i))
+            addBone(oldBones.getOrNull(i), oldIbms.getOrNull(i) ?: Mat4())
         }
         bonesInternal.trimToSize()
+        inverseBindMatricesInternal.trimToSize()
     }
 
     override fun setComponent(other: IEntityComponent): IEntityComponent {
-        if (other.componentName == componentName && other != this) {
-            other as IArmature
-
-            inverseBindMatricesInternal.clear()
-            for (i in other.bones.indices) {
-                inverseBindMatricesInternal.add(other.inverseBindMatrices[i])
-            }
-            inverseBindMatricesInternal.trimToSize()
-
-            boneMatrices = FloatArray(other.boneMatrices.size) { other.boneMatrices[it] }
+        if (other is IArmature && other != this) {
+            isPreviousBoneMatricesEnabled = other.isPreviousBoneMatricesEnabled
 
             boneMatricesUpdateRequests.clear()
             for (i in other.boneMatrices.indices) {
                 boneMatricesUpdateRequests.add(true)
             }
 
+            inverseBindMatricesInternal.clear()
             bonesInternal.clear()
             for (i in other.bones.indices) {
-                bonesInternal.add(null)
+                addBone(null, other.inverseBindMatrices[i])
             }
             bonesInternal.trimToSize()
+            inverseBindMatricesInternal.trimToSize()
 
             for (i in other.bones.indices) {
                 val it = other.bones[i]
                 val path = other.entity.getRelativePathTo(it!!.entity)
-                val node = entity.getEntityByPath(path)?.getComponentOrNull<ITransformNode>()
+                val node = entity.getEntityByPath(path)?.componentOrNull<ITransformNode>()
                 if (node != null) {
                     bonesInternal[i] = node
                 } else {
@@ -109,35 +111,31 @@ class Armature: IArmature {
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
 
+        boneMatricesUpdateRequests.clear()
+        inverseBindMatricesInternal.clear()
         bonesInternal.clear()
         json.array("bones") {
             for (i in 0 until size) {
-                bonesInternal.add(null)
+                addBone(null, Mat4())
             }
-            bonesInternal.trimToSize()
 
-            for (i in 0 until size) {
-                RES.onComponentAdded(string(i), ITransformNode.Name) {
-                    setBone(i, it as ITransformNode?)
+            val e = entityOrNull
+            if (e != null) {
+                for (i in 0 until size) {
+                    setBone(i, e.getRootEntity().makePath(string(i)).component())
                 }
             }
         }
+        bonesInternal.trimToSize()
+        inverseBindMatricesInternal.trimToSize()
+        boneMatricesUpdateRequests.trimToSize()
 
-        inverseBindMatricesInternal.clear()
+        var i = 0
         json.array("inverseBindMatrices") {
-            objs {
-                val mat = Mat4()
-                mat.readJson(this)
-                inverseBindMatricesInternal.add(mat)
+            forEachObject {
+                inverseBindMatricesInternal[i].readJson(this)
+                i++
             }
-            inverseBindMatricesInternal.trimToSize()
-        }
-
-        boneMatrices = FloatArray(bonesInternal.size * 16)
-
-        boneMatricesUpdateRequests.clear()
-        for (i in bonesInternal.indices) {
-            boneMatricesUpdateRequests.add(true)
         }
     }
 
@@ -162,6 +160,7 @@ class Armature: IArmature {
         bonesInternal.add(bone)
         boneMatricesUpdateRequests.add(true)
         inverseBindMatricesInternal.add(inverseBindMatrix)
+        resizeBoneDataRequest = true
     }
 
     override fun setBone(index: Int, bone: ITransformNode?) {
@@ -174,7 +173,15 @@ class Armature: IArmature {
 
     override fun preUpdateBoneMatrices() {
         for (i in bonesInternal.indices) {
-            boneMatricesUpdateRequests[i] = bonesInternal[i]?.isTransformUpdateRequested ?: false
+            setMatrixUpdateRequest(i, bonesInternal[i]?.isTransformUpdateRequested ?: false)
+        }
+    }
+
+    override fun updatePreviousBoneMatrices() {
+        if (previousBoneMatrices.isNotEmpty()) {
+            for (i in previousBoneMatrices.indices) {
+                previousBoneMatrices[i] = boneMatrices[i]
+            }
         }
     }
 
@@ -187,21 +194,25 @@ class Armature: IArmature {
         bonesInternal.removeAt(index)
         inverseBindMatricesInternal.removeAt(index)
         boneMatricesUpdateRequests.removeAt(index)
-    }
-
-    override fun updatePreviousTransform() {
-        if (previousBoneMatrices.isNotEmpty()) {
-            for (i in previousBoneMatrices.indices) {
-                previousBoneMatrices[i] = boneMatrices[i]
-            }
-        }
+        resizeBoneDataRequest = true
     }
 
     override fun updateBoneMatrices() {
+        if (resizeBoneDataRequest) {
+            resizeBoneDataRequest = false
+
+            val floats = bonesInternal.size * 16
+            if (boneMatrices.size != floats) boneMatrices = FloatArray(floats)
+            if (isPreviousBoneMatricesEnabled && previousBoneMatrices.size != floats) {
+                previousBoneMatrices = FloatArray(floats)
+            }
+        }
+
         var floatIndex = 0
-        for (i in bones.indices) {
+        val inverseBindMatrices = inverseBindMatrices
+        for (i in bonesInternal.indices) {
             if (boneMatricesUpdateRequests[i]) {
-                val bone = bones[i]
+                val bone = bonesInternal[i]
                 if (bone != null) {
                     tmp.set(bone.worldMatrix).mul(inverseBindMatrices[i])
                 } else {
@@ -214,9 +225,5 @@ class Armature: IArmature {
                 }
             }
         }
-    }
-
-    companion object {
-        const val Name = "Armature"
     }
 }

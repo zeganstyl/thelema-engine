@@ -26,12 +26,6 @@ class MergeVec4(
     override val name: String
         get() = "Merge Vec4"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     var x: IShaderData
         get() = input[X] ?: GLSL.zeroFloat
         set(value) = setInput(X, value)
@@ -66,18 +60,9 @@ class MergeVec4(
     }
 
     companion object {
-        const val ClassId = "mergeVec4"
-
         const val X = "x"
         const val Y = "y"
         const val Z = "z"
         const val W = "w"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(X, GLSLType.Float)
-            put(Y, GLSLType.Float)
-            put(Z, GLSLType.Float)
-            put(W, GLSLType.Float)
-        }
     }
 }

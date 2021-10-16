@@ -17,13 +17,13 @@
 package app.thelema.js
 
 import kotlinx.browser.document
-import app.thelema.input.IKB
+import app.thelema.input.IKeyboard
 import app.thelema.input.IKeyListener
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import org.w3c.dom.events.KeyboardEvent
 
 /** @author zeganstyl */
-class JsKB: IKB {
+class JsKB: IKeyboard {
     val pressed = HashSet<Int>()
 
     val listeners = ArrayList<IKeyListener>()
@@ -61,125 +61,125 @@ class JsKB: IKB {
 
     /** [Web API documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code/code_values) */
     fun getKeyCode(event: KeyboardEvent): Int = when (event.code) {
-        "Escape" -> KB.ESCAPE
-        "Digit1" -> KB.NUM_1
-        "Digit2" -> KB.NUM_2
-        "Digit3" -> KB.NUM_3
-        "Digit4" -> KB.NUM_4
-        "Digit5" -> KB.NUM_5
-        "Digit6" -> KB.NUM_6
-        "Digit7" -> KB.NUM_7
-        "Digit8" -> KB.NUM_8
-        "Digit9" -> KB.NUM_9
-        "Digit0" -> KB.NUM_0
-        "Minus" -> KB.MINUS
-        "Equal" -> KB.EQUALS
-        "Backspace" -> KB.BACKSPACE
-        "Tab" -> KB.TAB
-        "KeyQ" -> KB.Q
-        "KeyW" -> KB.W
-        "KeyE" -> KB.E
-        "KeyR" -> KB.R
-        "KeyT" -> KB.T
-        "KeyY" -> KB.Y
-        "KeyU" -> KB.U
-        "KeyI" -> KB.I
-        "KeyO" -> KB.O
-        "KeyP" -> KB.P
-        "BracketLeft" -> KB.LEFT_BRACKET
-        "BracketRight" -> KB.RIGHT_BRACKET
-        "Enter" -> KB.ENTER
-        "ControlLeft" -> KB.CONTROL_LEFT
-        "KeyA" -> KB.A
-        "KeyS" -> KB.S
-        "KeyD" -> KB.D
-        "KeyF" -> KB.F
-        "KeyG" -> KB.G
-        "KeyH" -> KB.H
-        "KeyJ" -> KB.J
-        "KeyK" -> KB.K
-        "KeyL" -> KB.L
-        "Semicolon" -> KB.SEMICOLON
-        "Quote" -> KB.APOSTROPHE
-        "Backquote" -> KB.GRAVE
-        "ShiftLeft" -> KB.SHIFT_LEFT
-        "Backslash" -> KB.BACKSLASH
-        "KeyZ" -> KB.Z
-        "KeyX" -> KB.X
-        "KeyC" -> KB.C
-        "KeyV" -> KB.V
-        "KeyB" -> KB.B
-        "KeyN" -> KB.N
-        "KeyM" -> KB.M
-        "Comma" -> KB.COMMA
-        "Period" -> KB.PERIOD
-        "Slash" -> KB.SLASH
-        "ShiftRight" -> KB.SHIFT_RIGHT
+        "Escape" -> KEY.ESCAPE
+        "Digit1" -> KEY.NUM_1
+        "Digit2" -> KEY.NUM_2
+        "Digit3" -> KEY.NUM_3
+        "Digit4" -> KEY.NUM_4
+        "Digit5" -> KEY.NUM_5
+        "Digit6" -> KEY.NUM_6
+        "Digit7" -> KEY.NUM_7
+        "Digit8" -> KEY.NUM_8
+        "Digit9" -> KEY.NUM_9
+        "Digit0" -> KEY.NUM_0
+        "Minus" -> KEY.MINUS
+        "Equal" -> KEY.EQUALS
+        "Backspace" -> KEY.BACKSPACE
+        "Tab" -> KEY.TAB
+        "KeyQ" -> KEY.Q
+        "KeyW" -> KEY.W
+        "KeyE" -> KEY.E
+        "KeyR" -> KEY.R
+        "KeyT" -> KEY.T
+        "KeyY" -> KEY.Y
+        "KeyU" -> KEY.U
+        "KeyI" -> KEY.I
+        "KeyO" -> KEY.O
+        "KeyP" -> KEY.P
+        "BracketLeft" -> KEY.LEFT_BRACKET
+        "BracketRight" -> KEY.RIGHT_BRACKET
+        "Enter" -> KEY.ENTER
+        "ControlLeft" -> KEY.CONTROL_LEFT
+        "KeyA" -> KEY.A
+        "KeyS" -> KEY.S
+        "KeyD" -> KEY.D
+        "KeyF" -> KEY.F
+        "KeyG" -> KEY.G
+        "KeyH" -> KEY.H
+        "KeyJ" -> KEY.J
+        "KeyK" -> KEY.K
+        "KeyL" -> KEY.L
+        "Semicolon" -> KEY.SEMICOLON
+        "Quote" -> KEY.APOSTROPHE
+        "Backquote" -> KEY.GRAVE
+        "ShiftLeft" -> KEY.SHIFT_LEFT
+        "Backslash" -> KEY.BACKSLASH
+        "KeyZ" -> KEY.Z
+        "KeyX" -> KEY.X
+        "KeyC" -> KEY.C
+        "KeyV" -> KEY.V
+        "KeyB" -> KEY.B
+        "KeyN" -> KEY.N
+        "KeyM" -> KEY.M
+        "Comma" -> KEY.COMMA
+        "Period" -> KEY.PERIOD
+        "Slash" -> KEY.SLASH
+        "ShiftRight" -> KEY.SHIFT_RIGHT
         //"NumpadMultiply" -> KB
-        "AltLeft" -> KB.ALT_LEFT
-        "Space" -> KB.SPACE
+        "AltLeft" -> KEY.ALT_LEFT
+        "Space" -> KEY.SPACE
         //"CapsLock" -> KB
-        "F1" -> KB.F1
-        "F2" -> KB.F2
-        "F3" -> KB.F3
-        "F4" -> KB.F4
-        "F5" -> KB.F5
-        "F6" -> KB.F6
-        "F7" -> KB.F7
-        "F8" -> KB.F8
-        "F9" -> KB.F9
-        "F10" -> KB.F10
+        "F1" -> KEY.F1
+        "F2" -> KEY.F2
+        "F3" -> KEY.F3
+        "F4" -> KEY.F4
+        "F5" -> KEY.F5
+        "F6" -> KEY.F6
+        "F7" -> KEY.F7
+        "F8" -> KEY.F8
+        "F9" -> KEY.F9
+        "F10" -> KEY.F10
         //"NumLock" -> KB
         //"ScrollLock" -> KB
-        "Numpad7" -> KB.NUMPAD_7
-        "Numpad8" -> KB.NUMPAD_8
-        "Numpad9" -> KB.NUMPAD_9
+        "Numpad7" -> KEY.NUMPAD_7
+        "Numpad8" -> KEY.NUMPAD_8
+        "Numpad9" -> KEY.NUMPAD_9
         //"NumpadSubtract" -> KB.MINUS
-        "Numpad4" -> KB.NUMPAD_4
-        "Numpad5" -> KB.NUMPAD_5
-        "Numpad6" -> KB.NUMPAD_6
+        "Numpad4" -> KEY.NUMPAD_4
+        "Numpad5" -> KEY.NUMPAD_5
+        "Numpad6" -> KEY.NUMPAD_6
         //"NumpadAdd" -> KB.PLUS
-        "Numpad1" -> KB.NUMPAD_1
-        "Numpad2" -> KB.NUMPAD_2
-        "Numpad3" -> KB.NUMPAD_3
-        "Numpad0" -> KB.NUMPAD_0
+        "Numpad1" -> KEY.NUMPAD_1
+        "Numpad2" -> KEY.NUMPAD_2
+        "Numpad3" -> KEY.NUMPAD_3
+        "Numpad0" -> KEY.NUMPAD_0
         //"NumpadDecimal" -> KB
         //"IntlBackslash" -> KB
-        "F11" -> KB.F11
-        "F12" -> KB.F12
+        "F11" -> KEY.F11
+        "F12" -> KEY.F12
         //"IntlRo" -> KB
         //"Convert" -> KB
         //"KanaMode" -> KB
         //"NonConvert" -> KB
         //"NumpadEnter" -> KB.ENTER
-        "ControlRight" -> KB.CONTROL_RIGHT
+        "ControlRight" -> KEY.CONTROL_RIGHT
         //"NumpadDivide" -> KB.SLASH
         //"PrintScreen" -> KB
-        "AltRight" -> KB.ALT_RIGHT
-        "Home" -> KB.HOME
-        "ArrowUp" -> KB.UP
-        "PageUp" -> KB.PAGE_UP
-        "ArrowLeft" -> KB.LEFT
-        "ArrowRight" -> KB.RIGHT
-        "End" -> KB.END
-        "ArrowDown" -> KB.DOWN
-        "PageDown" -> KB.PAGE_DOWN
-        "Insert" -> KB.INSERT
-        "Delete" -> KB.DEL
+        "AltRight" -> KEY.ALT_RIGHT
+        "Home" -> KEY.HOME
+        "ArrowUp" -> KEY.UP
+        "PageUp" -> KEY.PAGE_UP
+        "ArrowLeft" -> KEY.LEFT
+        "ArrowRight" -> KEY.RIGHT
+        "End" -> KEY.END
+        "ArrowDown" -> KEY.DOWN
+        "PageDown" -> KEY.PAGE_DOWN
+        "Insert" -> KEY.INSERT
+        "Delete" -> KEY.DEL
         //"AudioVolumeMute" -> KB
-        "AudioVolumeDown" -> KB.VOLUME_DOWN
-        "AudioVolumeUp" -> KB.VOLUME_UP
+        "AudioVolumeDown" -> KEY.VOLUME_DOWN
+        "AudioVolumeUp" -> KEY.VOLUME_UP
         //"NumpadEqual" -> KB.EQUALS
         //"Pause" -> KB
         //"NumpadComma" -> KB.COMMA
         //"IntlYen" -> KB
         //"OSLeft" -> KB
         //"OSRight" -> KB
-        "ContextMenu" -> KB.MENU
+        "ContextMenu" -> KEY.MENU
         //"Undo" -> KB
         //"Copy" -> KB
         //"Paste" -> KB
-        else -> auxMap[event.code] ?: KB.UNKNOWN
+        else -> auxMap[event.code] ?: KEY.UNKNOWN
     }
 
     override fun isKeyPressed(keycode: Int): Boolean = pressed.contains(keycode)

@@ -16,8 +16,6 @@
 
 package app.thelema.font
 
-import app.thelema.math.Vec4
-
 /** Stores glyphs and positions for a piece of text which is a single color and does not span multiple lines.
  * @author Nathan Sweet
  */
@@ -29,7 +27,7 @@ class GlyphRun {
     var x = 0f
     var y = 0f
     var width = 0f
-    val color = Vec4()
+    var color = -1
     fun reset() {
         glyphs.clear()
         xAdvances.clear()

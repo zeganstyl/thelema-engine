@@ -12,5 +12,5 @@ class AndroidFS(val app: AndroidApp): IFileSystem {
         get() = true
     override val localStoragePath: String = app.context.filesDir.path
 
-    override fun file(path: String, location: Int): IFile = AndroidFile(this, path, location)
+    override fun file(path: String, location: String): IFile = AndroidFile(this, path, location)
 }

@@ -17,49 +17,16 @@
 package app.thelema.phys
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.math.IVec3
-import app.thelema.math.IVec4
+import app.thelema.math.IMat4
 
 /** @author zeganstyl */
 interface IShape: IEntityComponent {
-    /** Categories in what this object participate */
-    var categoryBits: Long
-
-    /** Categories with what this object interact */
-    var collideBits: Long
-
-    /** Usually must be 1.0 by default */
-    var friction: Float
-
-    var userObject: Any
-
-    val shapeType: String
-
-    var influenceOtherBodies: Boolean
-
     val sourceObject: Any
         get() = this
 
-    override val componentName: String
-        get() = Name
+    var body: IRigidBody?
 
-    val spaces: List<String>
+    var shapeOffset: IMat4?
 
-    fun addSpace(name: String)
-
-    fun removeSpace(name: String)
-
-    companion object {
-        const val Unknown = "Unknown"
-        const val Box = "Box"
-        const val Sphere = "Sphere"
-        const val Cylinder = "Cylinder"
-        const val Capsule = "Capsule"
-        const val TriMesh = "TriMesh"
-        const val Plane = "Plane"
-        const val Ray = "Ray"
-        const val HeightField = "HeightField"
-
-        const val Name = "Shape"
-    }
+    var mass: Float
 }

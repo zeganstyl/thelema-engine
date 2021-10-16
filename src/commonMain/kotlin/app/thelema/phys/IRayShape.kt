@@ -16,29 +16,18 @@
 
 package app.thelema.phys
 
-import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec3
 
 /** @author zeganstyl */
-interface IRayShape: IEntityComponent {
-    val shape: IShape
-
+interface IRayShape: IShape {
     var length: Float
 
     override val componentName: String
-        get() = Name
+        get() = "RayShape"
 
     fun setRayDirection(vec: IVec3) = setRayDirection(vec.x, vec.y, vec.z)
     fun setRayDirection(x: Float, y: Float, z: Float)
     fun setRayDirection(x: Double, y: Double, z: Double) = setRayDirection(x.toFloat(), y.toFloat(), z.toFloat())
 
     fun getRayDirection(out: IVec3): IVec3
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "RayShape"
-    }
 }

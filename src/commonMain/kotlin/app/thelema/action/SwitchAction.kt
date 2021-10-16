@@ -18,7 +18,7 @@ package app.thelema.action
 
 import app.thelema.ecs.Entity
 import app.thelema.ecs.component
-import app.thelema.ecs.getComponentOrNull
+import app.thelema.ecs.componentOrNull
 
 class SwitchAction: ActionAdapter() {
     override val componentName: String
@@ -35,7 +35,7 @@ class SwitchAction: ActionAdapter() {
         currentCondition = null
         currentAction = null
         currentIndex = 0
-        entity.children.forEach { it.getComponentOrNull<IAction>()?.restart() }
+        entity.children.forEach { it.componentOrNull<IAction>()?.restart() }
     }
 
     inline fun <reified C: IAction, reified B: IAction> addBranch(condition: C.() -> Unit, body: B.() -> Unit) {
@@ -44,13 +44,13 @@ class SwitchAction: ActionAdapter() {
     }
 
     inline fun <reified T: IAction> elseBranch(body: T.() -> Unit) {
-        getOrCreateEntity().addEntityWithCorrectedName(Entity(T::class.simpleName!!).apply { component<T>().apply(body) })
+        getOrCreateEntity().addEntity(Entity(T::class.simpleName!!).apply { component<T>().apply(body) })
     }
 
     override fun update(delta: Float): Float {
         if (isRunning) {
             val children = entity.children
-            val action = children[currentIndex].getComponentOrNull<IAction>()
+            val action = children[currentIndex].componentOrNull<IAction>()
             if (action != null) {
                 if (action.isRunning) {
                     action.update(delta)

@@ -19,15 +19,16 @@ package app.thelema.ui
 import app.thelema.font.BitmapFont
 import app.thelema.math.IVec4
 import app.thelema.math.Vec4
+import app.thelema.utils.Color
 
 /** The style for a list, see [UIList].
  * @author mzechner
  * @author Nathan Sweet
  */
 class ListStyle(
-    var font: BitmapFont = BitmapFont.default(),
-    var fontColorSelected: IVec4 = Vec4(0f, 1f, 0f, 1f),
-    var fontColorUnselected: IVec4 = Vec4(1f, 1f, 1f, 1f),
+    var font: BitmapFont = DSKIN.font(),
+    var fontColorSelected: Int = Color.GREEN_INT,
+    var fontColorUnselected: Int = -1,
     var selection: Drawable? = null
 ) {
     /** Optional.  */

@@ -33,7 +33,9 @@ import kotlin.math.roundToLong
 open class Window(
     title: String = "",
     addCloseButton: Boolean = true,
-    style: WindowStyle = DSKIN.window
+    style: WindowStyle = DSKIN.window,
+    titlePadding: Float = 10f,
+    contentPadding: Float = 10f
 ) : Table() {
     var style: WindowStyle = style
         set(value) {
@@ -69,7 +71,7 @@ open class Window(
         }
 
     var closeButton = TextButton("X") {
-        addAction { hide() }
+        onClick { hide() }
     }
 
     override val prefWidth: Float
@@ -90,8 +92,8 @@ open class Window(
             titleTable.add(closeButton).padRight(resizeBorder.toFloat())
         }
 
-        add(titleTable).growX().newRow()
-        add(content).grow()
+        add(titleTable).growX().pad(titlePadding).newRow()
+        add(content).grow().pad(contentPadding)
 
         this.style = style
         width = 150f
@@ -172,7 +174,7 @@ open class Window(
                 val maxWidth = maxWidth
                 val minHeight = minHeight
                 val maxHeight = maxHeight
-                val stage = stage
+                val stage = headUpDisplay
                 val clampPosition = keepWithinStage && stage != null && parent === stage.root
                 if (edge and MOVE != 0) {
                     val amountX = x - startX
@@ -232,8 +234,8 @@ open class Window(
         })
     }
 
-    open fun show(stage: Stage) {
-        lastParent = stage.root
+    open fun show(headUpDisplay: HeadUpDisplay) {
+        lastParent = headUpDisplay.root
         show()
     }
 
@@ -252,7 +254,7 @@ open class Window(
 
     protected fun setKeepWithinStage() {
         if (!keepWithinStage) return
-        val stage = stage ?: return
+        val stage = headUpDisplay ?: return
         val camera = stage.camera
         val parentWidth = stage.width
         val parentHeight = stage.height
@@ -271,13 +273,13 @@ open class Window(
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        val stage = stage
+        val stage = headUpDisplay
         if (stage != null && stage.keyboardFocus == null) stage.keyboardFocus = this
         setKeepWithinStage()
         if (style.stageBackground != null) {
             stageToLocalCoordinates(tmpPosition.set(0f, 0f))
             stageToLocalCoordinates(tmpSize.set(stage!!.width, stage.height))
-            batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+            batch.setMulAlpha(color, parentAlpha)
             style.stageBackground!!.draw(batch, x + tmpPosition.x, y + tmpPosition.y, x + tmpSize.x, y + tmpSize.y)
         }
         super.draw(batch, parentAlpha)
@@ -298,8 +300,8 @@ open class Window(
     }
 
     fun reCenter() {
-        val stageWidth = stage?.width ?: 0f
-        val stageHeight = stage?.height ?: 0f
+        val stageWidth = headUpDisplay?.width ?: 0f
+        val stageHeight = headUpDisplay?.height ?: 0f
         x = (stageWidth - width) * 0.5f
         y = (stageHeight - height) * 0.5f
     }

@@ -16,74 +16,55 @@
 
 package app.thelema.test.g3d.gltf
 
-import app.thelema.app.APP
-import app.thelema.g3d.Scene
+import app.thelema.ecs.Entity
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.gltf.GLTF
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.light.directionalLight
+import app.thelema.g3d.scene
+import app.thelema.gl.glClearColor
+import app.thelema.gltf.gltf
 import app.thelema.math.Vec3
 import app.thelema.res.RES
 import app.thelema.test.Test
+import app.thelema.utils.Color
 
 class GLTFLoadMultithreaded: Test {
     override val name: String
         get() = "glTF load multithreaded"
 
     override fun testMain() {
-        val mainScene = Scene()
-
         ActiveCamera {
             lookAt(Vec3(1f, 1f, 1f), Vec3(0f, 0f, 0f))
             near = 0.01f
             far = 1000f
-            updateCamera()
         }
 
-        val control = OrbitCameraControl()
-        control.listenToMouse()
+        Entity {
+            makeCurrent()
+            scene()
+            orbitCameraControl()
 
-        RES.loadTyped<GLTF>(
-            uri = "gearbox.glb",
-            block = {
-                conf.separateThread = true
-                conf.setupVelocityShader = false
-                conf.mergeVertexAttributes = false
-
-                onLoaded {
-                    val newScene = scene!!.entity.copyDeep()
-                    newScene.name = "newScene"
-                    mainScene.entity.addEntity(newScene)
+            entity {
+                directionalLight {
+                    setDirectionFromPosition(1f, 1f, 1f)
                 }
             }
-        )
 
-        RES.loadTyped<GLTF>(
-            uri = "ToyCar.glb",
-            block = {
-                conf.separateThread = true
-                conf.setupVelocityShader = false
-                conf.mergeVertexAttributes = false
+            RES.loadOnSeparateThreadByDefault = true
 
+            RES.gltf("nightshade/nightshade.gltf") {
                 onLoaded {
-                    val newScene = scene!!.entity.copyDeep()
-                    newScene.name = "newScene2"
-                    mainScene.entity.addEntity(newScene)
+                    addEntity(scene.copyDeep("model1"))
                 }
             }
-        )
 
-        GL.isDepthTestEnabled = true
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            control.update(APP.deltaTime)
-            ActiveCamera.updateCamera()
-
-            mainScene.entity.update(APP.deltaTime)
-            mainScene.render()
+            RES.gltf("gltf/DamagedHelmet.glb") {
+                onLoaded {
+                    addEntity(scene.copyDeep("model2"))
+                }
+            }
         }
+
+        glClearColor(Color.SKY)
     }
 }

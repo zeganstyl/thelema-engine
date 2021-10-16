@@ -17,6 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
+import app.thelema.gl.IMesh
 import app.thelema.json.IJsonObject
 
 /** For tone mapping, implied that [TextureNode.sRGB] is enabled.
@@ -30,12 +31,6 @@ class ToneMapNode(
 ): ShaderNode() {
     override val name: String
         get() = "Tone Map"
-
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
 
     var inputColor
         get() = input[InputColor] ?: GLSL.oneFloat
@@ -71,10 +66,10 @@ class ToneMapNode(
         }
     }
 
-    override fun prepareToDrawScene(scene: IScene) {
-        super.prepareToDrawScene(scene)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
-        shader["uExposure"] = scene.world?.exposure ?: 1f
+        shader["uExposure"] = scene?.world?.exposure ?: 1f
     }
 
     override fun declarationFrag(out: StringBuilder) {
@@ -131,13 +126,7 @@ class ToneMapNode(
         const val Gamma: Float = 2.2f
         const val InvGamma: Float = 1f / Gamma
 
-        const val ClassId = "toneMap"
-
         const val InputColor = "inputColor"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(InputColor, GLSLType.Vec4)
-        }
 
         private const val A = 0.15f
         private const val B = 0.50f

@@ -16,19 +16,17 @@
 
 package app.thelema.test.shader.post
 
-
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.*
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
-import app.thelema.gl.TextureRenderer
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.img.render
+import app.thelema.input.MOUSE
 import app.thelema.shader.Shader
 import app.thelema.shader.post.MotionBlur
 import app.thelema.test.Test
@@ -41,16 +39,6 @@ class MotionBlurBaseTest: Test {
         get() = "Motion Blur Base"
 
     override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer == 3) {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
-            }
-        }
-
-
         val sceneColorShader = Shader(
             vertCode = """
 attribute vec3 POSITION;
@@ -113,38 +101,31 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
 }""")
 
         ActiveCamera {
+            enablePreviousMatrix()
             lookAt(Vec3(5f, 5f, 0f), MATH.Zero3)
             near = 0.1f
             far = 100f
             updateCamera()
+            updatePreviousTransform()
         }
 
-        val plane = PlaneMeshBuilder(width = 5f, height = 5f).build()
-
-        val screenQuad = TextureRenderer()
+        val plane = PlaneMesh { setSize(5f) }
 
         val sceneColorBuffer = SimpleFrameBuffer(width = APP.width, height = APP.height, pixelFormat = GL_RGBA)
         val velocityMapBuffer = SimpleFrameBuffer(
             width = APP.width,
             height = APP.height,
-            pixelFormat = GL_RG,
             internalFormat = GL_RG16F,
-            type = GL_FLOAT
+            pixelFormat = GL_RG,
+            pixelChannelType = GL_FLOAT
         )
 
-        val motionBlur = MotionBlur(
-            sceneColorBuffer.getTexture(0),
-            velocityMapBuffer.getTexture(0),
-            1f,
-            16
-        )
+        val motionBlur = MotionBlur(1f, 16)
+        motionBlur.velocityMap = velocityMapBuffer.texture
 
-        val cube = BoxMeshBuilder().build()
+        val cube = BoxMesh { setSize(1f) }
         val cubePos = Vec3(0f, 1f, 0f)
         val cubePrevPos = Vec3(cubePos)
-
-        GL.isDepthTestEnabled = true
-
         var moveDir = 1f
 
         var movingEnabled = true
@@ -159,13 +140,9 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
 
         val cubeColor = Vec3(1f, 0.5f, 0f)
 
-        ActiveCamera.updatePreviousTransform()
-
         GL.glClearColor(0f, 0f, 0f, 1f)
 
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             if (movingEnabled) {
                 val delta = APP.deltaTime * 10f
                 cubePos.z += delta * moveDir
@@ -175,12 +152,10 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
                 }
 
                 velocityMapBuffer.render {
-                    GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
                     // in this example previous view and current view matrices are equal, because camera is not moving
                     velocityShader.bind()
                     velocityShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-                    velocityShader["prevViewProj"] = ActiveCamera.previousViewProjectionMatrix
+                    velocityShader["prevViewProj"] = ActiveCamera.previousViewMatrix ?: ActiveCamera.viewProjectionMatrix
 
                     velocityShader["pos"] = cubePos
                     velocityShader["prevPos"] = cubePrevPos
@@ -193,8 +168,6 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
             }
 
             sceneColorBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
                 sceneColorShader.bind()
                 sceneColorShader["viewProj"] = ActiveCamera.viewProjectionMatrix
 
@@ -207,8 +180,7 @@ gl_FragColor = vec4(ndcPos - prevNdcPos, 0.0, 1.0);
                 plane.render(sceneColorShader)
             }
 
-            //screenQuad.render(velocityMapBuffer.getTexture(0))
-            motionBlur.render(screenQuad, null)
+            motionBlur.render(sceneColorBuffer.texture, null)
 
             if (movingEnabled) {
                 cubePrevPos.set(cubePos)

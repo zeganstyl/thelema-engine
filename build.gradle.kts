@@ -1,25 +1,35 @@
 plugins {
-    kotlin("multiplatform") version "1.5.0"
+    kotlin("multiplatform") version kotlin_version
     id("com.android.library")
     id("maven-publish")
 }
 
-val kotlin_version = "1.5.0"
-val ktor_version = "1.5.2"
-val thelema_group = "app.thelema"
-val thelema_version = "0.6.0"
-
-group = "app.thelema"
-version = "0.6.0"
-
-repositories {
-    google()
-    mavenCentral()
-    mavenLocal()
-}
+group = thelema_group
+version = thelema_version
 
 kotlin {
     jvm()
+
+    linuxX64 {
+        val target = this
+        val main by target.compilations.getting
+        main.cinterops {
+            val glfw by creating {
+                val includeDir = when (target.preset) {
+                    presets["linuxX64"] -> "/usr/include"
+                    else -> throw NotImplementedError()
+                }
+                includeDirs.headerFilterOnly(includeDir, "$projectDir/src/nativeInterop/cinterop")
+            }
+            val al by creating {
+                val includeDir = when (target.preset) {
+                    presets["linuxX64"] -> "/usr/include"
+                    else -> throw NotImplementedError()
+                }
+                includeDirs.headerFilterOnly(includeDir)
+            }
+        }
+    }
 
     js {
         browser {}
@@ -27,6 +37,12 @@ kotlin {
 
     android {
         publishLibraryVariants("release", "debug")
+    }
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
     }
     
     sourceSets {
@@ -37,11 +53,12 @@ kotlin {
 
             dependencies {
                 implementation("com.github.cliftonlabs:json-simple:3.1.1")
-                implementation("org.ode4j:core:0.4.0")
+                api("org.ode4j:core:0.4.0")
+                api("org.recast4j:recast:1.5.0")
 
-                implementation("io.ktor:ktor-client-core:$ktor_version")
-                implementation("io.ktor:ktor-client-cio:$ktor_version")
-                implementation("io.ktor:ktor-client-websockets:$ktor_version")
+                api("io.ktor:ktor-client-core:$ktor_version")
+                api("io.ktor:ktor-client-cio:$ktor_version")
+                api("io.ktor:ktor-client-websockets:$ktor_version")
             }
         }
 
@@ -53,23 +70,13 @@ kotlin {
 
                 val lwjglPrefix = "org.lwjgl:lwjgl"
                 val lwjglVersion = "3.2.3"
-                implementation("$lwjglPrefix-bom:$lwjglVersion")
-                implementation("$lwjglPrefix:$lwjglVersion")
-                implementation("$lwjglPrefix-glfw:$lwjglVersion")
-                implementation("$lwjglPrefix-jemalloc:$lwjglVersion")
-                implementation("$lwjglPrefix-openal:$lwjglVersion")
-                implementation("$lwjglPrefix-opengl:$lwjglVersion")
-                implementation("$lwjglPrefix-stb:$lwjglVersion")
-
-                val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
-                platforms.forEach {
-                    implementation("$lwjglPrefix:$lwjglVersion:$it")
-                    implementation("$lwjglPrefix-glfw:$lwjglVersion:$it")
-                    implementation("$lwjglPrefix-jemalloc:$lwjglVersion:$it")
-                    implementation("$lwjglPrefix-openal:$lwjglVersion:$it")
-                    implementation("$lwjglPrefix-opengl:$lwjglVersion:$it")
-                    implementation("$lwjglPrefix-stb:$lwjglVersion:$it")
-                }
+                api("$lwjglPrefix-bom:$lwjglVersion")
+                api("$lwjglPrefix:$lwjglVersion")
+                api("$lwjglPrefix-glfw:$lwjglVersion")
+                api("$lwjglPrefix-jemalloc:$lwjglVersion")
+                api("$lwjglPrefix-openal:$lwjglVersion")
+                api("$lwjglPrefix-opengl:$lwjglVersion")
+                api("$lwjglPrefix-stb:$lwjglVersion")
             }
 
 //            val jvmJar by tasks.getting(Jar::class) {
@@ -93,5 +100,22 @@ android {
     defaultConfig {
         minSdkVersion(24)
         targetSdkVersion(30)
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            setUrl("https://maven.pkg.github.com/zeganstyl/thelema-engine")
+            name = "github"
+            credentials(PasswordCredentials::class)
+        }
     }
 }

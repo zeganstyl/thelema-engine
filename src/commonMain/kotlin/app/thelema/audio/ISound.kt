@@ -26,7 +26,7 @@ package app.thelema.audio
  *
  *
  *
- * Sound instances are created via a call to [IAL.newSound].
+ * Sound instances are created via a call to [IAudio.newSound].
  *
  *
  *

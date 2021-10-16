@@ -13,4 +13,4 @@ pluginManagement {
     }
 }
 rootProject.name = "thelema"
-include("tests")
+include("tests", "thelema-studio")

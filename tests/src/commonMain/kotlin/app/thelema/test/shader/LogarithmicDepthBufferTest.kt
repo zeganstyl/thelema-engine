@@ -19,11 +19,8 @@ package app.thelema.test.shader
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.math.Vec3
 import app.thelema.shader.Shader
 import app.thelema.test.Test
@@ -44,8 +41,10 @@ class LogarithmicDepthBufferTest: Test {
             far = 10f.pow(21)
         }
 
-        val control = OrbitCameraControl(camera = ActiveCamera, azimuth = 3f, zenith = 1.3f)
-        control.listenToMouse()
+        val control = OrbitCameraControl {
+            azimuth = 3f
+            zenith = 1.3f
+        }
 
         val shader = Shader(
             vertCode = """
@@ -77,16 +76,9 @@ void main() {
     gl_FragColor = vec4(uv, 0.0, 1.0);
 }""")
 
-        val plane = PlaneMeshBuilder().apply {
-            width = 10f
-            height = 10f
-        }.build()
+        val plane = PlaneMesh { setSize(10f) }
 
-        val box = BoxMeshBuilder().apply {
-            xSize = 1f
-            ySize = 1f
-            zSize = 1f
-        }.build()
+        val box = BoxMesh { setSize(1f) }
 
         val units = listOf(
             10f.pow(3), // km
@@ -97,11 +89,7 @@ void main() {
             10f.pow(18), // Pm
         )
 
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 

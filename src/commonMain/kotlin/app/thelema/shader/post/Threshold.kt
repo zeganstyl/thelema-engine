@@ -18,7 +18,7 @@ package app.thelema.shader.post
 
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
-import app.thelema.gl.IScreenQuad
+import app.thelema.gl.ScreenQuad
 
 /** @author zeganstyl */
 class Threshold(cutoff: Float = 1f) {
@@ -37,10 +37,10 @@ class Threshold(cutoff: Float = 1f) {
         shader["tex"] = 0
     }
 
-    fun render(screenQuad: IScreenQuad, inputMap: ITexture, out: IFrameBuffer?) {
-        screenQuad.render(shader, out) {
-            inputMap.bind(0)
-        }
+    fun render(inputMap: ITexture, out: IFrameBuffer?) {
+        shader.bind()
+        inputMap.bind(0)
+        ScreenQuad.render(shader, out)
     }
 
     fun dispose() {

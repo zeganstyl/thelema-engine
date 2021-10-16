@@ -16,18 +16,17 @@
 
 package app.thelema.font
 
-import app.thelema.fs.FS
+import app.thelema.concurrency.ATOM
+import app.thelema.ecs.sibling
 import app.thelema.fs.IFile
-import app.thelema.g2d.AtlasRegion
 import app.thelema.g2d.Batch
 import app.thelema.g2d.TextureRegion
-import app.thelema.gl.GL
-import app.thelema.img.IMG
+import app.thelema.img.IImage
 import app.thelema.img.Texture2D
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
+import app.thelema.res.IProject
 import app.thelema.res.LoaderAdapter
-import app.thelema.res.RES
+import app.thelema.res.load
+import app.thelema.res.loadDependency
 import app.thelema.utils.LOG
 import kotlin.collections.ArrayList
 import kotlin.math.max
@@ -246,11 +245,11 @@ open class BitmapFont: LoaderAdapter() {
                     var spaceGlyph = getGlyph(' ')
                     if (spaceGlyph == null) {
                         spaceGlyph = Glyph()
-                        spaceGlyph.id = ' '.toInt()
+                        spaceGlyph.id = ' '.code
                         var xadvanceGlyph = getGlyph('l')
                         if (xadvanceGlyph == null) xadvanceGlyph = firstGlyph
                         spaceGlyph.xadvance = xadvanceGlyph.xadvance
-                        setGlyph(' '.toInt(), spaceGlyph)
+                        setGlyph(' '.code, spaceGlyph)
                     }
                     if (spaceGlyph.width == 0) {
                         spaceGlyph.width = (padLeft + spaceGlyph.xadvance + padRight).toInt()
@@ -307,16 +306,12 @@ open class BitmapFont: LoaderAdapter() {
     fun setGlyphRegion(glyph: Glyph, region: TextureRegion) {
         val invTexWidth = 1.0f / region.texture.width
         val invTexHeight = 1.0f / region.texture.height
-        var offsetX = 0f
-        var offsetY = 0f
-        val u = region.left
-        val v = region.bottom
+        val offsetX = 0f
+        val offsetY = 0f
+        val u = region.u
+        val v = region.v
         val regionWidth = region.regionWidth.toFloat()
         val regionHeight = region.regionHeight.toFloat()
-        if (region is AtlasRegion) { // Compensate for whitespace stripped from left and top edges.
-            offsetX = region.offsetX
-            offsetY = region.originalHeight - region.packedHeight - region.offsetY
-        }
         var x = glyph.srcX.toFloat()
         var x2 = glyph.srcX + glyph.width.toFloat()
         var y = glyph.srcY.toFloat()
@@ -392,8 +387,8 @@ open class BitmapFont: LoaderAdapter() {
      * [getGlyphs] should be be used to shape a string of characters into a list
      * of glyphs.  */
     fun getGlyph(ch: Char): Glyph? {
-        val page = glyphs[ch.toInt() / BitmapFont.PAGE_SIZE]
-        return page?.get(ch.toInt() and BitmapFont.PAGE_SIZE - 1)
+        val page = glyphs[ch.toInt() / PAGE_SIZE]
+        return page?.get(ch.toInt() and PAGE_SIZE - 1)
     }
 
     /** Using the specified string, populates the glyphs and positions of the specified glyph run.
@@ -402,18 +397,18 @@ open class BitmapFont: LoaderAdapter() {
      * @param lastGlyph The glyph immediately before this run, or null if this is run is the first on a line of text.
      */
     fun getGlyphs(run: GlyphRun, str: CharSequence, start: Int, end: Int, lastGlyph: Glyph?) {
-        var start = start
-        var lastGlyph = lastGlyph
+        var start2 = start
+        var lastGlyph2 = lastGlyph
         val markupEnabled = markupEnabled
         val scaleX = scaleX
         val missingGlyph = missingGlyph
         val glyphs: ArrayList<Glyph> = run.glyphs
         val xAdvances = run.xAdvances
         // Guess at number of glyphs needed.
-        glyphs.ensureCapacity(end - start)
-        xAdvances.ensureCapacity(end - start + 1)
-        while (start < end) {
-            val ch = str[start++]
+        glyphs.ensureCapacity(end - start2)
+        xAdvances.ensureCapacity(end - start2 + 1)
+        while (start2 < end) {
+            val ch = str[start2++]
             if (ch == '\r') continue  // Ignore.
             var glyph = getGlyph(ch)
             if (glyph == null) {
@@ -421,14 +416,14 @@ open class BitmapFont: LoaderAdapter() {
                 glyph = missingGlyph
             }
             glyphs.add(glyph)
-            if (lastGlyph == null) // First glyph on line, adjust the position so it isn't drawn left of 0.
-                xAdvances.add(if (glyph.fixedWidth) 0f else -glyph.xoffset * scaleX - padLeft) else xAdvances.add((lastGlyph.xadvance + lastGlyph.getKerning(ch)) * scaleX)
-            lastGlyph = glyph
+            if (lastGlyph2 == null) // First glyph on line, adjust the position so it isn't drawn left of 0.
+                xAdvances.add(if (glyph.fixedWidth) 0f else -glyph.xoffset * scaleX - padLeft) else xAdvances.add((lastGlyph2.xadvance + lastGlyph2.getKerning(ch)) * scaleX)
+            lastGlyph2 = glyph
             // "[[" is an escaped left square bracket, skip second character.
-            if (markupEnabled && ch == '[' && start < end && str[start] == '[') start++
+            if (markupEnabled && ch == '[' && start2 < end && str[start2] == '[') start2++
         }
-        if (lastGlyph != null) {
-            val lastGlyphWidth = if (lastGlyph.fixedWidth) lastGlyph.xadvance * scaleX else (lastGlyph.width + lastGlyph.xoffset) * scaleX - padRight
+        if (lastGlyph2 != null) {
+            val lastGlyphWidth = if (lastGlyph2.fixedWidth) lastGlyph2.xadvance * scaleX else (lastGlyph2.width + lastGlyph2.xoffset) * scaleX - padRight
             xAdvances.add(lastGlyphWidth)
         }
     }
@@ -505,90 +500,76 @@ open class BitmapFont: LoaderAdapter() {
         setScale(scaleX + amount, scaleY + amount)
     }
 
-
-    protected var isLoadingInternal: Boolean = false
-    override val isLoading: Boolean
-        get() = isLoadingInternal
-
     private var loadedTextures: Int = 0
     private var maxLoadedTextures: Int = 0
 
     override fun updateProgress() {
         super.updateProgress()
 
-        if (currentProgress == maxProgress - 1 && isLoadingInternal) {
-            currentProgress++
-            isLoadingInternal = false
+        if (currentProgress == maxProgress) {
+            stop()
         }
     }
 
-    override fun load() {
-        if (!isLoadingInternal) {
-            isLoadingInternal = true
-            initProgress()
+    override fun initProgress() {
+        currentProgress = 0
+        maxProgress = 1
+    }
 
-            val res = resource()
+    override fun loadBase(file: IFile) {
+        initProgress()
 
-            maxProgress++
-            val fontFile = res.file
-            load(fontFile, isFlipped) {
-                // Load each path.
-                val n = imagePaths.size
-                maxProgress += n
-                maxLoadedTextures = n
-                for (i in 0 until n) {
-                    val file: IFile = FS.file(imagePaths[i], fontFile.location)
-
-                    val tex = Texture2D(0)
+        val fontFile = file
+        load(fontFile, isFlipped) {
+            // Load each path.
+            val n = imagePaths.size
+            maxProgress += n
+            maxLoadedTextures = n
+            for (i in 0 until n) {
+                loadDependency<IImage>(imagePaths[i]) {
+                    val tex = sibling<Texture2D>()
+                    tex.image = this
 
                     val region = TextureRegion(tex)
                     regions.add(region)
 
-                    IMG.load(file) { image ->
-                        glCalls.add {
-                            tex.load(image) {
-                                region.setRegion(this)
-                                loadedTextures++
+                    onLoaded {
+                        region.setRegion(0, 0, width, height)
+                        loadedTextures++
 
-                                if (loadedTextures == maxLoadedTextures) {
-                                    for (page in glyphs) {
-                                        if (page == null) continue
-                                        for (glyph in page) {
-                                            if (glyph != null) {
-                                                setGlyphRegion(glyph, regions[glyph.page])
-                                            }
-                                        }
+                        if (loadedTextures == maxLoadedTextures) {
+                            for (page in glyphs) {
+                                if (page == null) continue
+                                for (glyph in page) {
+                                    if (glyph != null) {
+                                        setGlyphRegion(glyph, regions[glyph.page])
                                     }
-                                    val missingGlyph = missingGlyph
-                                    if (missingGlyph != null) {
-                                        setGlyphRegion(missingGlyph, regions[missingGlyph.page])
-                                    }
-
-                                    notifyLoaded()
                                 }
+                            }
+                            val missingGlyph = missingGlyph
+                            if (missingGlyph != null) {
+                                setGlyphRegion(missingGlyph, regions[missingGlyph.page])
                             }
                         }
 
-                        currentProgress++
+                        this@BitmapFont.currentProgress++
                     }
                 }
-
-                currentProgress++
             }
+
+            currentProgress++
         }
     }
-
-    override val runOnGLThreadRequest: Boolean
-        get() = glCalls.size > 0
 
     override fun runOnGLThread() {
-        for (i in glCalls.indices) {
-            glCalls[i]()
+        while (glCalls.size > 0) {
+            glCalls[0]()
+            currentProgressInternal += 1
+            glCalls.removeAt(0)
         }
-        glCalls.clear()
     }
 
-    private val glCalls = ArrayList<() -> Unit>()
+    private val glCalls = ATOM.list<() -> Unit>()
 
     /** Draws text at the specified position.
      * @see BitmapFontCache.addText
@@ -643,16 +624,11 @@ open class BitmapFont: LoaderAdapter() {
 
     /** Returns the color of text drawn with this font.  */
     /** A convenience method for setting the font color. The color can also be set by modifying [getColor].  */
-    var color: IVec4
+    var color: Int
         get() = cache.color
         set(color) {
-            cache.color.set(color)
+            cache.color = color
         }
-
-    /** A convenience method for setting the font color. The color can also be set by modifying [getColor].  */
-    fun setColor(r: Float, g: Float, b: Float, a: Float) {
-        cache.color.set(r, g, b, a)
-    }
 
     /** Returns the first texture region. This is included for backwards compatibility, and for convenience since most fonts only
      * use one texture page. For multi-page fonts, use [getRegions].
@@ -720,19 +696,7 @@ open class BitmapFont: LoaderAdapter() {
         const val LOG2_PAGE_SIZE = 9
         const val PAGE_SIZE = 1 shl LOG2_PAGE_SIZE
         const val PAGES = 0x10000 / PAGE_SIZE
-
-        fun default(): BitmapFont {
-            return RES.loadTyped("arial-15.fnt")
-        }
-
-        fun indexOf(text: CharSequence, ch: Char, start: Int): Int {
-            var start = start
-            val n = text.length
-            while (start < n) {
-                if (text[start] == ch) return start
-                start++
-            }
-            return n
-        }
     }
 }
+
+fun IProject.font(uri: String, block: BitmapFont.() -> Unit = {}): BitmapFont = load(uri, block)

@@ -5,14 +5,15 @@ import app.thelema.data.IByteData
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import java.io.*
+import java.lang.StringBuilder
 import java.nio.ByteBuffer
 
 class AndroidFile(
     val fs: AndroidFS,
     val file: File,
-    override val location: Int = FileLocation.Absolute
+    override val location: String = FileLocation.Absolute
 ): IFile {
-    constructor(fs: AndroidFS, path: String, location: Int) : this(
+    constructor(fs: AndroidFS, path: String, location: String) : this(
         fs,
         when (location) {
             FileLocation.External -> File(fs.externalStoragePath, path)

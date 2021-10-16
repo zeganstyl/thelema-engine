@@ -1,10 +1,32 @@
 ![logo](images/thelema-logo-256.png)
 ### Thelema Engine
 
-[ ![Download](https://api.bintray.com/packages/zeganstyl/thelema-engine/thelema-lwjgl3/images/download.svg) ](https://bintray.com/zeganstyl/thelema-engine/thelema-lwjgl3/_latestVersion)
 [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 
-**Thelema** is 3d graphics engine with high level absctraction from platforms through interfaces. It was based on libGDX sources and completely redesigned.
+**Thelema** is multiplatform 3d graphics engine on Kotlin. It was based on libGDX sources and completely redesigned.
+
+#### Download
+
+Enter your credentials to download engine libraries.
+[How to get token.](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/zeganstyl/thelema-engine")
+        credentials {
+            username = "username"
+            password = "token"
+        }
+    }
+}
+```
+```kotlin
+dependencies {
+    implementation("app.thelema:thelema-jvm:0.6.0")
+}
+```
 
 [Quick Start](https://github.com/zeganstyl/thelema-engine/wiki/Quick-Start)
 
@@ -27,6 +49,7 @@
   * SSAO
   * Cascaded shadow mapping
   * Motion blur
+  * IBL
 * 3D graphics
   * VBO, VAO, Instancing buffers
   * Skinned meshes
@@ -39,17 +62,15 @@
 * JSON
 * Image loading from JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
 * ODE physics
-* Platforms: desktop JVM, HTML5
+* Platforms: Desktop JVM, HTML5, Android
 
 #### Work in progress
-* Thelema Creator - 3d editor for creating scenes, shaders, animations etc.
-* HTML5 physics (simple objects such as boxes and spheres already implemented)
-* Kotlin/Multiplatform modules
-* GUI (it was rewritten to Kotlin from libGDX, but needs redesign)
-* Audio interfaces redesign
+* 3D Editor
+* HTML5 rigid body physics
+* GUI (redesign)
+* Audio API (redesign)
 
 #### Things that may be implemented in future
-* Vulkan API (most likely to be)
-* Android (most likely to be)
-* WebGPU (when it will be available)
-* WebAssembly (Kotlin/Native, but chances are not great)
+* Vulkan API
+* Kotlin/Native
+* Navigation mesh

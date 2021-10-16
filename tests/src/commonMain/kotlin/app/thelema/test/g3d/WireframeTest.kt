@@ -18,6 +18,7 @@ package app.thelema.test.g3d
 
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
 import app.thelema.gl.GL_COLOR_BUFFER_BIT
 import app.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -25,8 +26,7 @@ import app.thelema.gl.GL_LINES
 import app.thelema.math.MATH
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.shader.Shader
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
 class WireframeTest: Test {
@@ -34,56 +34,14 @@ class WireframeTest: Test {
         get() = "Wireframe"
 
     override fun testMain() {
-        val shader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
-uniform mat4 projViewModelTrans;
+        val shader = SimpleShader3D()
 
-void main() {
-    uv = UV;
-    gl_Position = projViewModelTrans * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-varying vec2 uv;
+        val box = BoxMesh { setSize(2f, 1f, 1f) }
+        box.mesh.primitiveType = GL_LINES
+        box.mesh.indices = box.mesh.indices!!.trianglesToWireframe()
 
-void main() {
-    gl_FragColor = vec4(uv, 0.0, 1.0);
-}""")
-
-        GL.isDepthTestEnabled = true
-
-        val mesh = BoxMeshBuilder().apply {
-            xSize = 2f
-            ySize = 1f
-            zSize = 1f
-            positionName = "POSITION"
-            uvName = "UV"
-        }.build()
-
-        mesh.primitiveType = GL_LINES
-        mesh.indices = mesh.indices!!.trianglesToWireframe()
-
-        ActiveCamera {
-            lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
-            near = 0.1f
-            far = 100f
-            updateCamera()
-        }
-
-        val cubeMatrix4 = Mat4()
-        val temp = Mat4()
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
-            cubeMatrix4.rotate(0f, 1f, 0f, APP.deltaTime)
-
-            shader.bind()
-            shader["projViewModelTrans"] = temp.set(cubeMatrix4).mulLeft(ActiveCamera.viewProjectionMatrix)
-            mesh.render(shader)
+        APP.onRender = {
+            shader.render(box.mesh)
         }
     }
 }

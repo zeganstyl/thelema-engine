@@ -142,6 +142,51 @@ interface IByteData: IDataArray<Byte> {
         }
     }
 
+    /** Put integer with big endian bytes order. Useful for RGBA colors */
+    fun putRGBA(byteIndex: Int, rgba: Int) {
+        put(byteIndex, (rgba ushr 24).toByte())
+        put(byteIndex + 1, (rgba ushr 16).toByte())
+        put(byteIndex + 2, (rgba ushr 8).toByte())
+        put(byteIndex + 3, rgba.toByte())
+    }
+    fun putRGBA(byteIndex: Int, rgba: Long) = putRGBA(byteIndex, rgba.toInt())
+
+    fun putRGBA(rgba: Int) {
+        put((rgba ushr 24).toByte())
+        put((rgba ushr 16).toByte())
+        put((rgba ushr 8).toByte())
+        put(rgba.toByte())
+    }
+    fun putRGBA(rgba: Long) = putRGBA(rgba.toInt())
+
+    fun putRGBAWithOffset(byteIndex: Int, vararg colors: Int) {
+        var i = byteIndex
+        val num = colors.size * 4
+        while (i < num) {
+            putRGBA(i, colors[i])
+            i += 4
+        }
+    }
+    fun putRGBAWithOffset(byteIndex: Int, vararg colors: Long) {
+        var i = byteIndex
+        val num = colors.size * 4
+        while (i < num) {
+            putRGBA(i, colors[i])
+            i += 4
+        }
+    }
+
+    fun putRGBAs(vararg colors: Int) {
+        for (i in colors.indices) {
+            putRGBA(colors[i])
+        }
+    }
+    fun putRGBAs(vararg colors: Long) {
+        for (i in colors.indices) {
+            putRGBA(colors[i])
+        }
+    }
+
     fun putFloat(value: Float) {
         putFloat(position, value)
         position += 4

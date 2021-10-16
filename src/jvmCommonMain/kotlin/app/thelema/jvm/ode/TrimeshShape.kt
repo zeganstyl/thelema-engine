@@ -17,74 +17,92 @@
 package app.thelema.jvm.ode
 
 import app.thelema.ecs.IEntity
-import app.thelema.gl.IMesh
-import app.thelema.phys.IShape
+import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.getSiblingOrNull
+import app.thelema.gl.*
 import app.thelema.phys.ITrimeshShape
+import org.ode4j.ode.DMass
 import org.ode4j.ode.DTriMesh
 import org.ode4j.ode.DTriMeshData
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class TrimeshShape: ITrimeshShape {
+class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
     var trimeshData: DTriMeshData? = null
 
-    var trimesh: DTriMesh? = null
-
-    override var entityOrNull: IEntity? = null
+    override var mesh: IMesh? = null
         set(value) {
-            field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = trimesh
+            if (field != value) {
+                field?.removeMeshListener(meshListener)
+                field = value
+                value?.addMeshListener(meshListener)
+            }
         }
 
-    override var shape: IShape = Shape().also { it.geom = trimesh }
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            if (mesh == null) mesh = getSiblingOrNull()
+        }
 
-    override var mesh: IMesh? = null
+    private val meshListener = object : MeshListener {
+        override fun bufferUploadedToGPU(buffer: IGLBuffer) { setupBody() }
+        override fun addedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
+        override fun removedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
+        override fun indexBufferChanged(mesh: IMesh, newIndexBuffer: IIndexBuffer?) { setupBody() }
+        override fun inheritedMeshChanged(mesh: IMesh, newInheritedMesh: IMesh?) { setupBody() }
+    }
 
-    var positionAttributeName: String = "POSITION"
-
-    override fun startSimulation() {
-        val mesh = mesh
-        if (mesh != null) {
-            val positions = mesh.getAttributeOrNull(positionAttributeName)
-            if (positions != null) {
-                trimeshData = OdeHelper.createTriMeshData().apply {
-                    val verticesCount = positions.buffer.verticesCount
-                    val floatsCount = verticesCount * 3
-                    val positionsArray = FloatArray(floatsCount)
-                    positions.rewind()
-                    var i = 0
-                    while (i < floatsCount) {
-                        positionsArray[i] = positions.getFloat(0)
-                        positionsArray[i+1] = positions.getFloat(4)
-                        positionsArray[i+2] = positions.getFloat(8)
-                        positions.nextVertex()
-                        i += 3
-                    }
-                    positions.rewind()
-
-                    val indices = mesh.indices
-                    val indicesArray = if (indices == null) {
-                        IntArray(verticesCount) { it }
-                    } else {
-                        indices.rewind()
-                        IntArray(indices.size) {
-                            indices.getIndexNext()
-                        }.also { indices.rewind() }
-                    }
-
-                    build(positionsArray, indicesArray)
-                    preprocess()
-                }
-
-                trimesh = OdeHelper.createTriMesh(null, trimeshData!!, null, null, null)
+    private fun setupBody() {
+        body?.also { body ->
+            if (body.isSimulationRunning) {
+                (body as RigidBody).setupBody()
             }
         }
     }
 
-    override fun endSimulation() {
-        trimesh?.destroy()
-        trimesh = null
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        if (mesh == null) mesh = getSiblingOrNull()
+    }
+
+    override fun setupMass(density: Double, mass: DMass) {
+        mass.setTrimesh(density, geom!!)
+    }
+
+    override fun createGeom(): DTriMesh? {
+        mesh?.also { mesh ->
+            val positions = mesh.positions()
+
+            val verticesCount = positions.count
+            val floatsCount = verticesCount * 3
+            val positionsArray = FloatArray(floatsCount)
+            positions.prepare {
+                var i = 0
+                while (i < floatsCount) {
+                    positionsArray[i] = positions.getFloat(0)
+                    positionsArray[i+1] = positions.getFloat(4)
+                    positionsArray[i+2] = positions.getFloat(8)
+                    positions.nextVertex()
+                    i += 3
+                }
+            }
+
+            val indicesArray = mesh.indices?.toIntArray() ?: IntArray(verticesCount) { it }
+
+            val trimeshData = OdeHelper.createTriMeshData()
+            trimeshData.build(positionsArray, indicesArray)
+            trimeshData.preprocess()
+            this.trimeshData = trimeshData
+
+            return OdeHelper.createTriMesh(getSpace(), trimeshData, null, null, null)
+        }
+
+        return null
+    }
+
+    override fun destroyGeom() {
+        super.destroyGeom()
         trimeshData?.destroy()
         trimeshData = null
     }

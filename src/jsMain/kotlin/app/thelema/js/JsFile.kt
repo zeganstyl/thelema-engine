@@ -24,6 +24,7 @@ import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import app.thelema.js.data.JsUInt8Array
 import app.thelema.net.HTTP
+import app.thelema.net.httpIsSuccess
 import org.w3c.xhr.ARRAYBUFFER
 import org.w3c.xhr.XMLHttpRequest
 import org.w3c.xhr.XMLHttpRequestResponseType
@@ -33,7 +34,7 @@ class JsFile(override val path: String): IFile {
     override val isDirectory: Boolean
         get() = false
 
-    override val location: Int
+    override val location: String
         get() = FileLocation.Classpath
 
     override val sourceObject: Any
@@ -70,7 +71,7 @@ class JsFile(override val path: String): IFile {
         xhr.onload = {
             if (xhr.readyState.toInt() == 4) {
                 val status = xhr.status.toInt()
-                if (HTTP.isSuccess(status)) {
+                if (httpIsSuccess(status)) {
                     ready(xhr.responseText)
                 } else {
                     error(status)
@@ -87,7 +88,7 @@ class JsFile(override val path: String): IFile {
         xhr.onload = {
             if (xhr.response != null) {
                 val status = xhr.status.toInt()
-                if (HTTP.isSuccess(status)) {
+                if (httpIsSuccess(status)) {
                     ready(JsUInt8Array(Uint8Array(xhr.response as ArrayBuffer)))
                 } else {
                     error(status)

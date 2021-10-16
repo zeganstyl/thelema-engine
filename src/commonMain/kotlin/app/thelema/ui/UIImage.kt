@@ -19,10 +19,9 @@ package app.thelema.ui
 import app.thelema.g2d.Batch
 
 /** Displays a [Drawable], scaled various way within the widgets bounds. The preferred size is the min size of the drawable.
- * Only when using a [TextureRegionDrawable] will the actor's scale, rotation, and origin be used when drawing.
  * @author Nathan Sweet, zeganstyl
  */
-open class UIImage (drawable: Drawable? = null) : Widget() {
+class UIImage (drawable: Drawable? = null) : Widget() {
     constructor(block: UIImage.() -> Unit): this() { block(this) }
 
     var scaling: Scaling = Scaling.stretch
@@ -56,7 +55,7 @@ open class UIImage (drawable: Drawable? = null) : Widget() {
      * than the pref size, [pack] can be used to size the image to its pref size.
      * @param drawable May be null.
      */
-    open var drawable: Drawable? = drawable
+    var drawable: Drawable? = drawable
         set(value) {
             if (field === value) return
             if (value != null) {
@@ -67,6 +66,7 @@ open class UIImage (drawable: Drawable? = null) : Widget() {
                 invalidateHierarchy()
             }
             field = value
+            updateLayout()
         }
 
     override var minWidth: Float = drawable?.minWidth ?: 0f
@@ -81,25 +81,13 @@ open class UIImage (drawable: Drawable? = null) : Widget() {
 
     init {
         setSize(prefWidth, prefHeight)
+        updateLayout()
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         validate()
-        val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
-        val x = x
-        val y = y
-        val scaleX = scaleX
-        val scaleY = scaleY
-        if (drawable is TransformDrawable) {
-            val rotation = rotation
-            if (scaleX != 1f || scaleY != 1f || rotation != 0f) {
-                (drawable as TransformDrawable).draw(batch, x + imageX, y + imageY, originX - imageX, originY - imageY,
-                    imageWidth, imageHeight, scaleX, scaleY, rotation)
-                return
-            }
-        }
-        if (drawable != null) drawable!!.draw(batch, x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY)
+        batch.setMulAlpha(color, parentAlpha)
+        if (drawable != null) drawable?.draw(batch, x + imageX, y + imageY, imageWidth * scaleX, imageHeight * scaleY)
     }
 
     override fun updateLayout() {

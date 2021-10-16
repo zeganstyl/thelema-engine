@@ -19,6 +19,7 @@ package app.thelema.g3d.terrain
 import app.thelema.data.DATA
 import app.thelema.img.ITexture2D
 import app.thelema.img.Texture2D
+import app.thelema.utils.Color
 import kotlin.math.floor
 
 class TerrainTextureTiles(
@@ -29,8 +30,8 @@ class TerrainTextureTiles(
 ) {
     val textures = Array(tilesPerSide) {
         Array(tilesPerSide) {
-            Texture2D().apply {
-                initOnePixelTexture(0f, 0f, 0f, 1f)
+            Texture2D {
+                initTexture(Color.BLACK_INT)
             }
         }
     }
@@ -77,7 +78,7 @@ class TerrainTextureTiles(
                             currentUris[i][j] = file
                             texture.load(file)
                         } else {
-                            texture.initOnePixelTexture(0f, 0f, 0f, 1f)
+                            texture.initTexture(Color.BLACK_INT)
                         }
                     }
 

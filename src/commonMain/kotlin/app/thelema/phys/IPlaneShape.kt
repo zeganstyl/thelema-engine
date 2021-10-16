@@ -16,17 +16,14 @@
 
 package app.thelema.phys
 
-import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec3
 
 /** @author zeganstyl */
-interface IPlaneShape: IEntityComponent {
+interface IPlaneShape: IShape {
     val depth: Float
 
-    val shape: IShape
-
     override val componentName: String
-        get() = Name
+        get() = "PlaneShape"
 
     fun getNormal(out: IVec3)
 
@@ -34,12 +31,4 @@ interface IPlaneShape: IEntityComponent {
 
     fun setParams(a: Float, b: Float, c: Float, d: Float) =
         setParamsD(a.toDouble(), b.toDouble(), c.toDouble(), d.toDouble())
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "PlaneShape"
-    }
 }

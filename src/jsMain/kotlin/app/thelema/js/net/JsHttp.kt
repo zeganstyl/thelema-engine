@@ -16,10 +16,7 @@
 
 package app.thelema.js.net
 
-import app.thelema.net.HTTP
-import app.thelema.net.IFormData
-import app.thelema.net.IHttp
-import app.thelema.net.IHttpResponse
+import app.thelema.net.*
 import org.w3c.xhr.ARRAYBUFFER
 import org.w3c.xhr.XMLHttpRequest
 import org.w3c.xhr.XMLHttpRequestResponseType
@@ -67,7 +64,7 @@ class JsHttp: IHttp {
         xhr.open(method, url, true)
         xhr.onload = {
             if (xhr.readyState.toInt() == 4) {
-                if (HTTP.isSuccess(xhr.status.toInt())) {
+                if (httpIsSuccess(xhr.status.toInt())) {
                     ready(TvmHttpResponse(xhr))
                 } else {
                     error(xhr.status.toInt())

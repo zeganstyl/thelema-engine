@@ -18,7 +18,6 @@ package app.thelema.gltf
 
 import app.thelema.anim.*
 import app.thelema.data.IFloatData
-import app.thelema.ecs.ECS
 import app.thelema.ecs.component
 import app.thelema.math.IVec
 import app.thelema.math.Vec3
@@ -59,14 +58,14 @@ class GLTFAnimation(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         animationSamplers.clear()
         json.array("samplers") {
-            objs {
-                animationSamplers.add(GLTFAnimationSampler().apply { readJson(this@objs) })
+            forEachObject {
+                animationSamplers.add(GLTFAnimationSampler().apply { readJson(this@forEachObject) })
             }
         }
 
         // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-channel
         json.array("channels") {
-            objs {
+            forEachObject {
                 val animationSampler = animationSamplers[int("sampler")]
 
                 asFloatBuffer(animationSampler.input) { inputData ->

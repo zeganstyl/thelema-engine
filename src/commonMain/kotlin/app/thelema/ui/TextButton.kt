@@ -17,7 +17,6 @@
 package app.thelema.ui
 
 import app.thelema.g2d.Batch
-import app.thelema.math.IVec4
 
 /** A button with a child [Label] to display text.
  * @author Nathan Sweet
@@ -47,7 +46,7 @@ open class TextButton(text: String, style: TextButtonStyle = DSKIN.textButton) :
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         val style = style as TextButtonStyle
-        val fontColor: IVec4? = if (isDisabled && style.disabledFontColor != null) {
+        val fontColor: Int? = if (isDisabled && style.disabledFontColor != null) {
             style.disabledFontColor
         } else if (isPressed && style.downFontColor != null) {
             style.downFontColor
@@ -62,7 +61,7 @@ open class TextButton(text: String, style: TextButtonStyle = DSKIN.textButton) :
         } else {
             style.fontColor
         }
-        if (fontColor != null) label.color.set(fontColor)
+        if (fontColor != null) label.color = fontColor
         super.draw(batch, parentAlpha)
     }
 }

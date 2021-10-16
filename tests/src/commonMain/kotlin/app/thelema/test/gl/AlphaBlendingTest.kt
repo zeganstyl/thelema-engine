@@ -19,7 +19,7 @@ package app.thelema.test.gl
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
 import app.thelema.img.Texture2D
 import app.thelema.math.Mat4
@@ -32,47 +32,31 @@ class AlphaBlendingTest: Test {
         get() = "Alpha blending test"
 
     override fun testMain() {
-        val box = BoxMeshBuilder().build()
-
-        val color = Vec4(1f)
-        color.a = 0.5f
-
-        val matrix = Mat4()
+        val box = BoxMesh { setSize(2f) }
+        box.mesh.worldMatrix = Mat4()
 
         val shader = SimpleShader3D {
-            this.color = color
-            multiplyColor = true
-            worldMatrix = matrix
-            colorTexture = Texture2D().load("thelema-logo-128.png")
+            setupOnlyTexture(Texture2D("thelema-logo-alpha.png"))
+            alphaCutoff = 0f
         }
 
         val control = OrbitCameraControl()
-        control.listenToMouse()
 
-        GL.setSimpleAlphaBlending()
+        GL.setupSimpleAlphaBlending()
         GL.isBlendingEnabled = true
         GL.isDepthTestEnabled = false
         GL.glClearColor(0.2f, 0.2f, 0.2f, 1f)
         APP.onRender = {
-            GL.glClear()
+            control.updateNow()
 
-            control.update(APP.deltaTime)
-            ActiveCamera.updateCamera()
+            box.mesh.worldMatrix?.setToTranslation(-1.5f, 0f, 0f)
+            shader.render(box.mesh)
 
-            val alpha = 0.5f
-            val colorMul = 0f
+            box.mesh.worldMatrix?.setToTranslation(0f, 0f, 0f)
+            shader.render(box.mesh)
 
-            color.set(1f, colorMul, colorMul, alpha)
-            matrix.setToTranslation(-1.5f, 0f, 0f)
-            shader.render(box)
-
-            color.set(colorMul, 1f, colorMul, alpha)
-            matrix.setToTranslation(0f, 0f, 0f)
-            shader.render(box)
-
-            color.set(colorMul, colorMul, 1f, alpha)
-            matrix.setToTranslation(1.5f, 0f, 0f)
-            shader.render(box)
+            box.mesh.worldMatrix?.setToTranslation(1.5f, 0f, 0f)
+            shader.render(box.mesh)
         }
     }
 }

@@ -1,11 +1,15 @@
 package app.thelema.js.test
 
-import app.thelema.test.MainTest
 import app.thelema.gl.GL
 import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.js.JsApp
-import app.thelema.test.Tests
+import app.thelema.test.*
+import app.thelema.test.g3d.BoxMeshTest
+import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
+import app.thelema.test.shader.IBLTest
+import app.thelema.test.shader.post.BloomTest
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.w3c.dom.HTMLButtonElement
@@ -15,9 +19,10 @@ fun main() {
     val singleTest = true
     if (singleTest) {
         window.onload = {
-            JsApp(document.getElementById("canvas") as HTMLCanvasElement) {
-                MainTest()
-            }
+            val app = JsApp(document.getElementById("canvas") as HTMLCanvasElement)
+            GL.enableRequiredByDefaultExtensions()
+            IBLTest().testMain()
+            app.startLoop()
         }
     } else {
         var currentApp: JsApp? = null
@@ -47,19 +52,20 @@ fun main() {
                 button.addEventListener("click", {
                     if (currentApp == null) {
                         val canvas = document.getElementById("canvas") as HTMLCanvasElement
-                        currentApp = JsApp(canvas)
+                        currentApp = JsApp(canvas) {
+                            test.testMain()
+                        }
+                    } else {
+                        KB.reset()
+                        MOUSE.reset()
+                        GL.clearSingleCalls()
+                        GL.clearRenderCalls()
+                        test.testMain()
                     }
 
                     currentButton?.style?.setProperty("text-decoration", "none")
                     button.style.setProperty("text-decoration", "underline")
                     currentButton = button
-
-                    KB.reset()
-                    MOUSE.reset()
-                    GL.clearSingleCalls()
-                    GL.clearRenderCalls()
-
-                    test.testMain()
                 }, false)
 
                 listItem.appendChild(button)

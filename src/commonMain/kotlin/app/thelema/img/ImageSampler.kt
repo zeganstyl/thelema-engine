@@ -24,7 +24,7 @@ import kotlin.math.floor
 
 /** Helps to get pixel values from image by texels (texture pixels, that may be smaller or greater than source image pixels).
  * This sampling from image is similar to sampling from texture on GPU, with similar parameters. */
-class ImageSampler(var image: IImageData) {
+class ImageSampler(var image: IImage) {
     /** Image width in world space */
     var width: Float = 1f
 

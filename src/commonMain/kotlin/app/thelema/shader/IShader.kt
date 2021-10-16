@@ -17,7 +17,6 @@
 package app.thelema.shader
 
 import app.thelema.data.IFloatData
-import app.thelema.g3d.IObject3D
 import app.thelema.g3d.IScene
 import app.thelema.gl.GL
 import app.thelema.gl.IVertexAttribute
@@ -66,40 +65,23 @@ interface IShader {
     var name: String
 
     /** Sometimes may be useful for custom shaders. For example, to bind textures before render mesh */
-    var onMeshDraw: IShader.(mesh: IMesh) -> Unit
+    var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit
+
+    var depthMask: Boolean
 
     /** For shader node GLSL-variables */
     fun getUID(data: IShaderData): String
 
-    fun prepareSceneData(scene: IScene) {
+    fun prepareShader(mesh: IMesh, scene: IScene?) {
+        GL.resetTextureUnitCounter()
         bind()
+
+        onPrepareShader(mesh, scene)
 
         for (i in nodes.indices) {
             val node = nodes[i]
             node.shaderOrNull = this
-            node.prepareToDrawScene(scene)
-        }
-    }
-
-    fun prepareObjectData(object3D: IObject3D) {
-        bind()
-
-        for (i in nodes.indices) {
-            val node = nodes[i]
-            node.shaderOrNull = this
-            node.prepareObjectData(object3D)
-        }
-    }
-
-    fun prepareToDrawMesh(mesh: IMesh) {
-        bind()
-        startTextureBinding()
-        onMeshDraw(mesh)
-
-        for (i in nodes.indices) {
-            val node = nodes[i]
-            node.shaderOrNull = this
-            node.prepareToDrawMesh(mesh)
+            node.prepareShaderNode(mesh, scene)
         }
     }
 

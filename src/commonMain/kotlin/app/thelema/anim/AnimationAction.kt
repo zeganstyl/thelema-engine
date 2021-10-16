@@ -27,8 +27,6 @@ class AnimationAction: ActionAdapter() {
     override val componentName: String
         get() = "AnimationAction"
 
-    var player: AnimationPlayer? = null
-
     /** The animation to be applied.  */
     var animation: IAnimation? = null
     /** The speed at which to play the animation (can be negative), 1.0 for normal speed.  */

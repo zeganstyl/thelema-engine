@@ -16,10 +16,12 @@
 
 package app.thelema.test
 
-import app.thelema.test.action.SwitchActionTest
+import app.thelema.test.g3d.gltf.GLTFLoadMultithreaded
+import app.thelema.test.phys.BoxShapeTest
+import app.thelema.test.ui.UITest
 
 class MainTest {
     init {
-        ComplexPBRShaderTest().testMain()
+        GameTest().testMain()
     }
 }

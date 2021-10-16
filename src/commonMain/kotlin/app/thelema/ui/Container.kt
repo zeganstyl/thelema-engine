@@ -87,11 +87,9 @@ open class Container<T : Actor>() : WidgetGroup() {
                 batch.flush()
                 val padLeft = padLeftValue[this]
                 val padBottom = padBottomValue[this]
-                if (clipBegin(padLeft, padBottom, width - padLeft - padRightValue[this],
-                                height - padBottom - padTopValue[this])) {
+                clipArea(padLeft, padBottom, width - padLeft - padRightValue[this], height - padBottom - padTopValue[this]) {
                     drawChildren(batch, parentAlpha)
                     batch.flush()
-                    clipEnd()
                 }
             } else drawChildren(batch, parentAlpha)
             resetTransform(batch)
@@ -105,8 +103,7 @@ open class Container<T : Actor>() : WidgetGroup() {
      * drawable.  */
     protected fun drawBackground(batch: Batch, parentAlpha: Float, x: Float, y: Float) {
         if (background == null) return
-        val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.setMulAlpha(color, parentAlpha)
         background!!.draw(batch, x, y, width, height)
     }
 

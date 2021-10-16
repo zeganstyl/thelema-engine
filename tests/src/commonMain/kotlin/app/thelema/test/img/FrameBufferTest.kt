@@ -17,14 +17,14 @@
 package app.thelema.test.img
 
 import app.thelema.app.APP
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.Attachments
 import app.thelema.img.FrameBuffer
 import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
-import app.thelema.test.CubeModel
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
 /** @author zeganstyl */
@@ -33,29 +33,24 @@ class FrameBufferTest: Test {
         get() = "Frame buffer"
 
     override fun testMain() {
-        val screenQuad = TextureRenderer()
+        val box = BoxMesh { setSize(2f) }
+        val shader = SimpleShader3D()
 
-        val model = CubeModel()
-
-        val frameBuffer = FrameBuffer(width = APP.width, height = APP.height)
-        frameBuffer.attachments.add(Attachments.color())
-        frameBuffer.attachments.add(Attachments.depthRenderBuffer())
-        frameBuffer.buildAttachments()
-
-        GL.isDepthTestEnabled = true
+        val frameBuffer = FrameBuffer {
+            addAttachment(Attachments.color())
+            addAttachment(Attachments.depthRenderBuffer())
+            buildAttachments()
+            checkErrors()
+        }
 
         GL.glClearColor(0.5f, 0.5f, 0.5f, 1f)
 
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             frameBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                model.update()
-                model.render()
+                box.render(shader)
             }
 
-            screenQuad.render(frameBuffer.getTexture(0))
+            ScreenQuad.render(frameBuffer.getTexture(0))
         }
     }
 }

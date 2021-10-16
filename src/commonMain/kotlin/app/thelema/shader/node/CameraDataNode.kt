@@ -18,22 +18,17 @@ package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.gl.IMesh
 
 /** @author zeganstyl */
 class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
     override val name: String
         get() = "Camera Data"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     /** World space vertex position */
     var vertexPosition
-        get() = input[VertexPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(VertexPosition, value)
+        get() = input["vertexPosition"] ?: GLSL.zeroFloat
+        set(value) = setInput("vertexPosition", value)
 
     val cameraPosition = defOut(GLSLVec3("cameraPosition"))
     val viewProjectionMatrix = defOut(GLSLMat4("viewProjectionMatrix"))
@@ -56,13 +51,13 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
         setInput("vertexPosition", vertexPosition)
     }
 
-    override fun prepareToDrawScene(scene: IScene) {
-        super.prepareToDrawScene(scene)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
         val cam = ActiveCamera
         shader[cameraPosition.ref] = cam.position
         shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
-        shader[previousViewProjectionMatrix.ref] = cam.previousViewProjectionMatrix
+        shader[previousViewProjectionMatrix.ref] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix
         shader[viewMatrix.ref] = cam.viewMatrix
         shader[projectionMatrix.ref] = cam.projectionMatrix
         shader[inverseViewProjectionMatrix.ref] = cam.inverseViewProjectionMatrix
@@ -115,15 +110,5 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
         if (viewSpacePosition.isUsed) out.append("$varIn ${viewSpacePosition.typedRef};\n")
         if (viewZDepth.isUsed) out.append("$varIn ${viewZDepth.typedRef};\n")
         if (viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
-    }
-
-    companion object {
-        const val ClassId = "cameraData"
-
-        const val VertexPosition = "vertexPosition"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(VertexPosition, GLSLType.Vec3)
-        }
     }
 }

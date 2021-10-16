@@ -23,7 +23,6 @@ import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.img.Texture2D
-import app.thelema.gl.IScreenQuad
 import kotlin.random.Random
 
 /** @author zeganstyl */
@@ -35,18 +34,49 @@ class SSAO(
     auxBufferSSAO: IFrameBuffer = SimpleFrameBuffer(
         GL.mainFrameBufferWidth,
         GL.mainFrameBufferHeight,
-        GL_RGB
+        pixelFormat = GL_RGB
     ),
     var auxBufferBlur: IFrameBuffer = SimpleFrameBuffer(
         GL.mainFrameBufferWidth,
         GL.mainFrameBufferHeight,
-        GL_RGB
+        pixelFormat = GL_RGB
     ),
     val noiseTextureSideSize: Int = 4,
     occlusionSamplesNum: Int = 64
 ): PostShader(ssaoCode(occlusionSamplesNum)) {
     // generate noise texture
-    var noiseTexture: Texture2D = Texture2D()
+    val noiseTexture: Texture2D = Texture2D {
+        val ssaoNoiseBuffer = DATA.bytes(noiseTextureSideSize * noiseTextureSideSize * 3 * 4)
+        ssaoNoiseBuffer.apply {
+            var index = 0
+            for (i in 0 until noiseTextureSideSize * noiseTextureSideSize) {
+                put(index, Random.nextBits(8).toByte())
+                index++
+                put(index, Random.nextBits(8).toByte())
+                index++
+                put(index, 0)
+                index++
+            }
+            position = 0
+        }
+
+        load(
+            noiseTextureSideSize,
+            noiseTextureSideSize,
+            ssaoNoiseBuffer,
+            GL_RGB8,
+            GL_RGB,
+            GL_UNSIGNED_BYTE,
+            0
+        )
+
+        minFilter = GL_NEAREST
+        magFilter = GL_NEAREST
+        sWrap = GL_REPEAT
+        tWrap = GL_REPEAT
+
+        ssaoNoiseBuffer.destroy()
+    }
 
     private var uProjectionMatrix = -1
 
@@ -111,35 +141,6 @@ class SSAO(
     init {
         uProjectionMatrix = this["uProjectionMatrix"]
 
-        val ssaoNoiseBuffer = DATA.bytes(noiseTextureSideSize * noiseTextureSideSize * 3 * 4)
-        ssaoNoiseBuffer.apply {
-            var index = 0
-            for (i in 0 until noiseTextureSideSize * noiseTextureSideSize) {
-                put(index, Random.nextBits(8).toByte())
-                index++
-                put(index, Random.nextBits(8).toByte())
-                index++
-                put(index, 0)
-                index++
-            }
-            position = 0
-        }
-
-        noiseTexture.load(
-            width = noiseTextureSideSize,
-            height = noiseTextureSideSize,
-            pixelFormat = GL_RGB,
-            type = GL_UNSIGNED_BYTE,
-            pixels = ssaoNoiseBuffer,
-            internalFormat = GL_RGB,
-            minFilter = GL_NEAREST,
-            magFilter = GL_NEAREST,
-            sWrap = GL_REPEAT,
-            tWrap = GL_REPEAT
-        )
-
-        ssaoNoiseBuffer.destroy()
-
         bind()
         this["uRadius"] = radius
         this["uRange"] = range
@@ -166,38 +167,37 @@ class SSAO(
         combineShader["uSsaoMap"] = auxBufferBlurUnit
     }
 
-    /** By default result will be saved to [auxBufferSsao] */
-    fun render(screenQuad: IScreenQuad, out: IFrameBuffer? = auxBufferSsao) {
+    fun render(out: IFrameBuffer?) {
         val camera = ActiveCamera
         if (visualizeSsao) {
-            screenQuad.render(this, null) {
-                if (camera.projectionMatrix.det() != 0f) {
-                    this@SSAO[uProjectionMatrix] = camera.projectionMatrix
+            if (camera.projectionMatrix.det() != 0f) {
+                bind()
+                this@SSAO[uProjectionMatrix] = camera.projectionMatrix
 
-                    normalMap.bind(normalMapUnit)
-                    noiseTexture.bind(noiseMapUnit)
-                    viewSpacePositionMap.bind(positionMapUnit)
-                }
+                normalMap.bind(normalMapUnit)
+                noiseTexture.bind(noiseMapUnit)
+                viewSpacePositionMap.bind(positionMapUnit)
             }
+            ScreenQuad.render(this, null)
         } else {
-            screenQuad.render(this, auxBufferSsao) {
-                if (camera.projectionMatrix.det() != 0f) {
-                    this@SSAO[uProjectionMatrix] = camera.projectionMatrix
+            if (camera.projectionMatrix.det() != 0f) {
+                bind()
+                this@SSAO[uProjectionMatrix] = camera.projectionMatrix
 
-                    normalMap.bind(normalMapUnit)
-                    noiseTexture.bind(noiseMapUnit)
-                    viewSpacePositionMap.bind(positionMapUnit)
-                }
+                normalMap.bind(normalMapUnit)
+                noiseTexture.bind(noiseMapUnit)
+                viewSpacePositionMap.bind(positionMapUnit)
             }
+            ScreenQuad.render(this, auxBufferSsao)
 
-            screenQuad.render(blurShader, auxBufferBlur) {
-                auxBufferSsao.getTexture(0).bind(auxBufferSsaoUnit)
-            }
+            blurShader.bind()
+            auxBufferSsao.getTexture(0).bind(auxBufferSsaoUnit)
+            ScreenQuad.render(blurShader, auxBufferBlur)
 
-            screenQuad.render(combineShader, out) {
-                colorMap.bind(colorMapUnit)
-                auxBufferBlur.getTexture(0).bind(auxBufferBlurUnit)
-            }
+            combineShader.bind()
+            colorMap.bind(colorMapUnit)
+            auxBufferBlur.getTexture(0).bind(auxBufferBlurUnit)
+            ScreenQuad.render(combineShader, out)
         }
     }
 

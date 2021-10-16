@@ -16,8 +16,9 @@
 
 package app.thelema.action
 
+import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.getComponentOrNull
+import app.thelema.ecs.componentOrNull
 
 /** Main action of entity. */
 class Action: IAction {
@@ -46,7 +47,7 @@ class Action: IAction {
         super.createContext(out)
         proxy?.createContext(out)
         entity.forEachChildEntity {
-            it.getComponentOrNull<IAction>()?.createContext(out)
+            it.componentOrNull<IAction>()?.createContext(out)
         }
         return out
     }
@@ -60,4 +61,30 @@ class Action: IAction {
     }
 
     override fun getContext(): IEntity? = proxy?.getContext()
+
+    companion object {
+        fun setupActionComponents() {
+            ECS.descriptor({ Action() }) {
+                setAliases(IAction::class)
+
+                descriptor { ActionList() }
+                descriptor({ DelayAction() }) {
+                    float("delay", { delay }) { delay = it }
+                }
+                descriptor({ MoveToTargetAction() }) {
+                    float("speed", { speed }) { speed = it }
+                    ref("target", { target }) { target = it }
+                }
+                descriptor({ MoveForwardAction() }) {
+                    float("length", { length }) { length = it }
+                }
+                descriptor({ RotateYAction() }) {
+                    float("angleLength", { angleLength }) { angleLength = it }
+                }
+                descriptor { SwitchAction() }
+                descriptor { BiOperation() }
+                descriptor { VariableAction() }
+            }
+        }
+    }
 }

@@ -28,7 +28,7 @@ class GLSLVec4Inline(
         get() = asVec4()
         set(_) {}
 
-    override val type: Int
+    override val type: String
         get() = GLSLType.Vec4
 
     override var scope: Int

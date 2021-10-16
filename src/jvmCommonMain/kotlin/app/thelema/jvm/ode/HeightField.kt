@@ -16,20 +16,16 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
 import app.thelema.phys.IHeightField
-import app.thelema.phys.IHeightProvider
-import app.thelema.phys.IShape
-import org.ode4j.ode.DGeom
+import app.thelema.phys.HeightProvider
 import org.ode4j.ode.DHeightfield
+import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** http://ode.org/wiki/index.php?title=Manual#Heightfield_Class
  *
  * @author zeganstyl */
-class HeightField: IHeightField {
-    var heightField: DHeightfield? = null
-
+class HeightField: SpecificShape<DHeightfield>(), IHeightField {
     var width: Float = 1f
     var depth: Float = 1f
     var widthSamples: Int = 1
@@ -39,23 +35,14 @@ class HeightField: IHeightField {
     var thickness: Float = 0f
     var tiling: Boolean = false
 
-    override var heightProvider: IHeightProvider? = null
+    override var heightProvider: HeightProvider? = null
     private val heightCallback = DHeightfield.DHeightfieldGetHeight { userData, x, y ->
         heightProvider?.provideHeight(userData, x, y)?.toDouble() ?: 0.0
     }
 
-    override var entityOrNull: IEntity? = null
-        set(value) {
-            field = value
-            shape = value?.componentTyped(IShape.Name) ?: Shape()
-            (shape as Shape?)?.geom = heightField
-        }
-
     val data = OdeHelper.createHeightfieldData()
 
-    override var shape: IShape = Shape().also { it.geom = heightField }
-
-    override fun startSimulation() {
+    override fun createGeom(): DHeightfield {
         data.buildCallback(
             this,
             heightCallback,
@@ -69,19 +56,13 @@ class HeightField: IHeightField {
             tiling
         )
 
-        //heightField = OdeHelper.createHeightfield(world.space, data, true)
-        heightField?.data = this
+        return OdeHelper.createHeightfield(null, data, true)
     }
 
-    override fun endSimulation() {
-        heightField?.destroy()
-        heightField = null
+    override fun setupMass(density: Double, mass: DMass) {}
+
+    override fun destroyGeom() {
+        super.destroyGeom()
         data.destroy()
-    }
-
-    override fun destroy() {
-        heightProvider = null
-        endSimulation()
-        super.destroy()
     }
 }

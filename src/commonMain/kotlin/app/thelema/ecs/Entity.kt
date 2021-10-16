@@ -16,7 +16,10 @@
 
 package app.thelema.ecs
 
+import app.thelema.concurrency.ATOM
 import app.thelema.json.IJsonObject
+import app.thelema.res.RES
+import app.thelema.utils.iterate
 
 class Entity() : IEntity {
     constructor(name: String): this() {
@@ -34,36 +37,53 @@ class Entity() : IEntity {
 
     override var name: String = ""
 
-    override var serialize: Boolean = true
+    override var serializeEntity: Boolean = true
 
     override var parentEntity: IEntity? = null
         set(value) {
             val oldValue = field
             field = value
-            for (i in componentsInternal.indices) {
-                componentsInternal[i].parentChanged(oldValue, value)
-            }
+            forEachComponent { it.parentChanged(oldValue, value) }
+            listeners?.apply { for (i in indices) { get(i).parentChanged(oldValue, value) } }
         }
 
-    private val childrenInternal = ArrayList<IEntity>()
+    private val childrenInternal = ATOM.list<IEntity>()
     override val children: List<IEntity>
         get() = childrenInternal
 
-    private val componentsInternal = ArrayList<IEntityComponent>()
-    override val components: List<IEntityComponent>
-        get() = componentsInternal
+    private val componentsInternal = ATOM.list<IEntityComponent>()
+
+    private var listeners: ArrayList<EntityListener>? = null
+
+    override fun addEntityListener(listener: EntityListener) {
+        if (listeners == null) listeners = ArrayList(1)
+        listeners?.add(listener)
+        listeners?.trimToSize()
+    }
+
+    override fun removeEntityListener(listener: EntityListener) {
+        listeners?.remove(listener)
+        listeners?.trimToSize()
+    }
+
+    override fun getComponentsCount(): Int = componentsInternal.size
+
+    override fun containsComponent(component: IEntityComponent): Boolean = componentsInternal.contains(component)
+
+    override fun getComponent(index: Int): IEntityComponent = componentsInternal[index]
+
+    override fun indexOfComponent(component: IEntityComponent): Int = componentsInternal.indexOf(component)
 
     override fun readJson(json: IJsonObject) {
         name = json.string("name", "")
 
         json.obj("children") {
-            objs {
-                val childName = string("name", "Entity")
-                entity(childName).readJson(this)
+            forEachObject {
+                entity(string("name", "Entity")).readJson(this)
             }
         }
         json.obj("components") {
-            objs {
+            forEachObject {
                 component(it).readJson(this)
             }
         }
@@ -74,10 +94,7 @@ class Entity() : IEntity {
 
         if (componentsInternal.isNotEmpty()) {
             json.setObj("components") {
-                for (i in componentsInternal.indices) {
-                    val component = componentsInternal[i]
-                    set(component.componentName, component)
-                }
+                forEachComponent { set(it.componentName, it) }
             }
         }
 
@@ -85,7 +102,7 @@ class Entity() : IEntity {
             json.setObj("children") {
                 for (i in childrenInternal.indices) {
                     val entity = childrenInternal[i]
-                    if (entity.serialize) set(entity.name, entity)
+                    if (entity.serializeEntity) set(entity.name, entity)
                 }
             }
         }
@@ -97,31 +114,84 @@ class Entity() : IEntity {
 
     override fun getEntityByName(name: String): IEntity? = childrenInternal.firstOrNull { it.name == name }
 
-    fun child(name: String, block: Entity.() -> Unit): Entity {
-        val e = Entity()
-        e.name = name
-        block(e)
-        addEntity(e)
-        return e
+    override fun findEntityByName(name: String): IEntity? {
+        val item = getEntityByName(name)
+        if (item != null) return item
+
+        for (i in children.indices) {
+            val item2 = children[i].findEntityByName(name)
+            if (item2 != null) return item2
+        }
+
+        return null
     }
 
-    override fun addEntity(entity: IEntity) {
-        if (getEntityByName(entity.name) != null) {
-            throw IllegalStateException("Entity with name ${entity.name} already exists in entity $path")
+    override fun findEntityByPredicate(predicate: (item: IEntity) -> Boolean): IEntity? {
+        val item = children.firstOrNull(predicate)
+        if (item != null) return item
+
+        for (i in children.indices) {
+            val item2 = children[i].findEntityByPredicate(predicate)
+            if (item2 != null) return item2
         }
+
+        return null
+    }
+
+    override fun addEntity(entity: IEntity, correctName: Boolean) {
+        if (getEntityByName(entity.name) != null) {
+            if (correctName) {
+                entity.name = makeChildName(entity.name)
+            } else {
+                throw IllegalStateException("Entity with name ${entity.name} already exists in entity $path")
+            }
+        }
+
         entity.parentEntity = this
         childrenInternal.add(entity)
         forEachComponent { it.addedEntity(entity) }
         addedEntityNotifyAscending(entity)
+        listeners?.apply { for (i in indices) { get(i).addedEntity(entity) } }
     }
 
     override fun removeEntity(entity: IEntity) {
         entity.parentEntity = null
         childrenInternal.remove(entity)
+        forEachComponent { it.removedEntity(entity) }
+        removedEntityNotifyAscending(entity)
+        listeners?.apply { for (i in indices) { get(i).removedEntity(entity) } }
+    }
+
+    override fun removeEntity(name: String) {
+        getEntityByName(name)?.also { removeEntity(it) }
+    }
+
+    override fun addedEntityNotifyAscending(entity: IEntity) {
+        forEachComponent { it.addedEntityToBranch(entity) }
+        parentEntity?.addedEntityNotifyAscending(entity)
+        listeners?.apply { for (i in indices) { get(i).addedEntityToBranch(entity) } }
+    }
+
+    override fun removedEntityNotifyAscending(entity: IEntity) {
+        forEachComponent { it.removedEntityFromBranch(entity) }
+        parentEntity?.removedEntityNotifyAscending(entity)
+        listeners?.apply { for (i in indices) { get(i).removedEntityFromBranch(entity) } }
+    }
+
+    override fun addedComponentNotifyAscending(component: IEntityComponent) {
+        forEachComponent { it.addedComponentToBranch(component) }
+        parentEntity?.addedComponentNotifyAscending(component)
+        listeners?.apply { for (i in indices) { get(i).addedComponentToBranch(component) } }
+    }
+
+    override fun removedComponentNotifyAscending(component: IEntityComponent) {
+        forEachComponent { it.removedComponentFromBranch(component) }
+        parentEntity?.removedComponentNotifyAscending(component)
+        listeners?.apply { for (i in indices) { get(i).removedComponentFromBranch(component) } }
     }
 
     override fun addComponent(component: IEntityComponent) {
-        if (getComponentOrNull(component.componentName) != null) {
+        if (componentOrNull(component.componentName) != null) {
             throw IllegalStateException("Component ${component.componentName} already exists in entity $path")
         }
         component.entityOrNull = this
@@ -129,17 +199,19 @@ class Entity() : IEntity {
         for (i in componentsInternal.indices) {
             componentsInternal[i].addedSiblingComponent(component)
         }
-        parentEntity?.forEachComponent { it.addedComponentToChildEntity(component) }
+        parentEntity?.forEachComponent { it.addedChildComponent(component) }
         addedComponentNotifyAscending(component)
+        listeners?.iterate { it.addedComponent(component) }
     }
 
     override fun removeComponent(typeName: String) {
-        val component = getComponentOrNull(typeName)
+        val component = componentOrNull(typeName)
         if (component != null) removeComponent(component)
     }
 
     override fun removeComponent(component: IEntityComponent) {
         componentsInternal.remove(component)
+        listeners?.iterate { it.removedComponent(component) }
     }
 
     override fun removeAllComponents() {
@@ -148,11 +220,11 @@ class Entity() : IEntity {
         componentsInternal.clear()
     }
 
-    override fun getComponentOrNull(typeName: String): IEntityComponent? =
+    override fun componentOrNull(typeName: String): IEntityComponent? =
         componentsInternal.firstOrNull { it.isComponentNameAlias(typeName) }
 
     override fun component(typeName: String): IEntityComponent {
-        var component = getComponentOrNull(typeName)
+        var component = componentOrNull(typeName)
         if (component == null) {
             component = ECS.createComponent(typeName)
             addComponent(component)
@@ -160,59 +232,68 @@ class Entity() : IEntity {
         return component
     }
 
-    override fun set(other: IEntity): IEntity {
-        name = other.name
+    override fun setEntity(other: IEntity, fullReplace: Boolean): IEntity {
+        if (fullReplace) {
+            name = other.name
 
-        val componentsToRemove = ArrayList<IEntityComponent>()
+            val componentsToRemove = ArrayList<IEntityComponent>()
 
-        for (i in componentsInternal.indices) {
-            val component = componentsInternal[i]
-            if (other.getComponentOrNull(component.componentName) == null) {
-                componentsToRemove.add(component)
+            forEachComponent { component ->
+                if (other.componentOrNull(component.componentName) == null) {
+                    componentsToRemove.add(component)
+                }
             }
-        }
 
-        for (i in componentsToRemove.indices) {
-            removeComponent(componentsToRemove[i])
-        }
+            for (i in componentsToRemove.indices) {
+                removeComponent(componentsToRemove[i])
+            }
 
-        for (i in other.components.indices) {
-            val otherComponent = other.components[i]
-            component(otherComponent.componentName).setComponent(otherComponent)
+            other.forEachComponent { otherComponent ->
+                component(otherComponent.componentName).setComponent(otherComponent)
+            }
+        } else {
+            other.forEachComponent { otherComponent ->
+                component(otherComponent.componentName).setComponent(otherComponent)
+            }
         }
 
         return this
     }
 
-    override fun setDeep(other: IEntity) {
-        val entitiesToRemove = ArrayList<IEntity>()
+    override fun setDeep(other: IEntity, fullReplace: Boolean) {
+        if (fullReplace) {
+            val entitiesToRemove = ArrayList<IEntity>()
 
-        for (i in childrenInternal.indices) {
-            val childEntity = childrenInternal[i]
-            if (other.getEntityByName(childEntity.name) == null) {
-                entitiesToRemove.add(childEntity)
+            for (i in childrenInternal.indices) {
+                val childEntity = childrenInternal[i]
+                if (other.getEntityByName(childEntity.name) == null) {
+                    entitiesToRemove.add(childEntity)
+                }
+            }
+
+            for (i in entitiesToRemove.indices) {
+                removeEntity(entitiesToRemove[i])
+            }
+
+            for (i in other.children.indices) {
+                val otherChild = other.children[i]
+                entity(otherChild.name).setDeep(otherChild)
+            }
+        } else {
+            for (i in other.children.indices) {
+                val otherChild = other.children[i]
+                entity(otherChild.name).setDeep(otherChild, fullReplace)
             }
         }
 
-        for (i in entitiesToRemove.indices) {
-            removeEntity(entitiesToRemove[i])
-        }
-
-        for (i in other.children.indices) {
-            val otherChild = other.children[i]
-            val child = entity(otherChild.name)
-            child.setDeep(otherChild)
-        }
-
-        set(other)
+        setEntity(other, fullReplace)
     }
 
-    override fun copyDeep(setupComponents: Boolean): IEntity {
-        val newEntity = Entity()
-        newEntity.name = name
+    override fun copyDeep(to: IEntity?, setupComponents: Boolean): IEntity {
+        val newEntity = to ?: Entity(name)
 
         for (i in children.indices) {
-            newEntity.addEntity(children[i].copyDeep(false))
+            newEntity.addEntity(children[i].copyDeep(null, false))
         }
 
         for (i in componentsInternal.indices) {
@@ -226,15 +307,26 @@ class Entity() : IEntity {
         return newEntity
     }
 
-    override fun mkEntity(path: String): IEntity {
-        return if (path.contains(IEntity.delimiter)) {
-            val names = path.split(IEntity.delimiter)
-            var e: IEntity = this
-            for (i in names.indices) {
-                e = e.entity(names[i])
-            }
-            e
-        } else entity(path)
+    override fun copyDeep(newName: String, setupComponents: Boolean): IEntity =
+        copyDeep(null, setupComponents).also { it.name = newName }
+
+    override fun makePath(path: String): IEntity {
+        return when {
+            path.startsWith(IEntity.resPath) -> RES.entity.makePath(path.substring(IEntity.resPath.length))
+            path.startsWith(IEntity.upDelimiter) -> RES.entity.makePath(path.substring(3))
+            path.startsWith('/') -> makePath(path.substring(1))
+            path == IEntity.toSelf -> this
+            path.contains(IEntity.delimiter) -> makePath(path.split(IEntity.delimiter), this)
+            else -> entity(path)
+        }
+    }
+
+    private fun makePath(path: List<String>, start: IEntity): IEntity {
+        var e: IEntity = start
+        for (i in path.indices) {
+            e = e.entity(path[i])
+        }
+        return e
     }
 
     override fun destroy() {
@@ -250,4 +342,13 @@ class Entity() : IEntity {
         componentsInternal.clear()
         childrenInternal.clear()
     }
+
+    override fun makeCurrent() {
+        ECS.currentEntity = this
+    }
+}
+
+/** Create entity that will be set to rendering and updating, see [IEntity.makeCurrent] */
+fun mainEntity(block: Entity.() -> Unit) {
+    Entity().apply(block).makeCurrent()
 }

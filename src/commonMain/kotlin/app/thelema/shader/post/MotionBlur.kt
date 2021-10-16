@@ -18,16 +18,16 @@ package app.thelema.shader.post
 
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
-import app.thelema.gl.IScreenQuad
+import app.thelema.gl.ScreenQuad
 
 /** @author zeganstyl */
 class MotionBlur(
-    var colorMap: ITexture? = null,
-    var velocityMap: ITexture? = null,
-    blurStrength: Float = 1f,
+    blurStrength: Float = 0.5f,
     numSamples: Int = 8,
     visualizeVelocity: Float = 0f
 ): PostShader(motionBlurCode(numSamples, visualizeVelocity)) {
+    var velocityMap: ITexture? = null
+
     var blurStrength = blurStrength
         set(value) {
             if (field != value) {
@@ -36,32 +36,27 @@ class MotionBlur(
             }
         }
 
-    val sceneColorMapUnit
-        get() = 0
-    val velocityMapUnit
-        get() = 1
-
     init {
         bind()
-        this["uSceneColorMap"] = sceneColorMapUnit
-        this["uVelocityMap"] = velocityMapUnit
+        this["uSceneColorMap"] = 0
+        this["uVelocityMap"] = 1
         this["uBlurStrength"] = blurStrength
         this["uNumSamples"] = numSamples
     }
 
-    fun render(screenQuad: IScreenQuad, out: IFrameBuffer?) {
-        screenQuad.render(this, out) {
-            colorMap?.bind(sceneColorMapUnit)
-            velocityMap?.bind(velocityMapUnit)
-        }
+    override fun render(inputMap: ITexture, out: IFrameBuffer?) {
+        bind()
+        inputMap.bind(0)
+        velocityMap?.bind(1)
+        ScreenQuad.render(this, out)
     }
 
     companion object {
         private fun velocity(visualizeVelocity: Float): String {
             var str = ""
             if (visualizeVelocity > 0f) {
-                str += "gl_FragColor.x += velocity.x * 20;\n"
-                str += "gl_FragColor.y += velocity.y * 20;\n"
+                str += "gl_FragColor.x += velocity.x * $visualizeVelocity;\n"
+                str += "gl_FragColor.y += velocity.y * $visualizeVelocity;\n"
             }
             return str
         }
@@ -81,7 +76,7 @@ void main() {
     vec3 vSum = VZERO;
 
     vec2 velocity = texture2D(uVelocityMap, uv).xy * 0.5;    
-    //velocity *= uBlurStrength;
+    velocity *= uBlurStrength;
     if (velocity.x != 0.0 || velocity.y != 0.0) {
         float fNumSamples = $numSamples.0 - 1.0;
 

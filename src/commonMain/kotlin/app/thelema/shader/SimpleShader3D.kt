@@ -16,73 +16,99 @@
 
 package app.thelema.shader
 
+import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.IMesh
 import app.thelema.img.ITexture2D
-import app.thelema.math.IMat4
-import app.thelema.math.IVec4
+import app.thelema.math.*
 
 /** Can be used for debugging purpose */
 class SimpleShader3D(block: SimpleShader3D.() -> Unit = {}): Shader() {
-    var positionName: String = "POSITION"
-    var uvName: String = "UV"
+    var positionsName: String = "POSITION"
+    var uvsName: String = "UV"
+    var normalsName: String = "NORMAL"
 
-    var renderAttributeName: String = uvName
+    /** Set to empty string if you don't want render any attribute */
+    var renderAttributeName: String = uvsName
 
     var color: IVec4? = null
 
-    var multiplyColor = false
-
-    var worldMatrix: IMat4? = null
+    var worldMatrix: IMat4? = Mat4()
+    val normalMatrix: Mat3 = Mat3()
 
     var colorTexture: ITexture2D? = null
 
-    private var drawing = false
+    var alphaCutoff = 0.5f
+
+    var lightDirection: IVec3? = Vec3(1f, 1f, 1f)
+    var lightIntensity: Float = 1f
+    var minLightIntensity: Float = 0.2f
 
     init {
         block(this)
         initShader()
+    }
 
-        onMeshDraw = { render(it) }
+    fun setupOnlyColor(color: IVec4, disableLight: Boolean = true) {
+        if (disableLight) lightDirection = null
+        alphaCutoff = 0f
+        this.color = Vec4(color)
+        renderAttributeName = ""
+    }
+
+    fun setupOnlyTexture(texture: ITexture2D, disableLight: Boolean = true) {
+        if (disableLight) lightDirection = null
+        colorTexture = texture
+        color = null
+        renderAttributeName = ""
     }
 
     fun initShader() {
         vertCode = """
-attribute vec3 $positionName;
-${if (uvName.isNotEmpty()) "attribute vec2 $uvName;" else "" }
+attribute vec3 $positionsName;
+${if (uvsName.isNotEmpty()) "attribute vec2 $uvsName;" else "" }
+${if (normalsName.isNotEmpty() || lightDirection != null) "attribute vec3 $normalsName;" else "" }
 
 varying vec3 pos;
 varying vec2 uv;
+varying vec3 normal;
 uniform mat4 viewProj;
-${if (worldMatrix != null) "uniform mat4 worldMatrix;" else ""}
+uniform mat4 worldMatrix;
 
 void main() {
-    pos = $positionName;
-    ${if (uvName.isNotEmpty()) "uv = $uvName;" else "uv = vec2(1.0);" }
-    gl_Position = viewProj ${if (worldMatrix != null) "* worldMatrix " else "" }* vec4($positionName, 1.0);
+    pos = $positionsName;
+    ${if (uvsName.isNotEmpty()) "uv = $uvsName;" else "uv = vec2(1.0);" }
+    ${if (normalsName.isNotEmpty() || lightDirection != null) "normal = $normalsName;" else "normal = vec3(0.5, 0.5, 0.0);"}
+    normal = mat3(worldMatrix[0].xyz, worldMatrix[1].xyz, worldMatrix[2].xyz) * normal; // get normal matrix from world matrix
+    normal = normalize(normal);
+    gl_Position = viewProj * worldMatrix * vec4($positionsName, 1.0);
 }
 """
         fragCode = """
 varying vec3 pos;
 varying vec2 uv;
+varying vec3 normal;
+
+${if (lightDirection != null) "uniform vec3 lightDirection;" else ""}
+uniform float lightIntensity;
+uniform float minLightIntensity;
 
 ${if (color != null) "uniform vec4 color;" else "" }
 ${if (colorTexture != null) "uniform sampler2D tex;" else ""}
 
 void main() {
-    ${
-        if (colorTexture != null) {
-            "gl_FragColor = ${if (multiplyColor) "color * " else ""}texture2D(tex, uv);"
-        } else if (color != null && !multiplyColor) {
-            "gl_FragColor = color;"
-        } else {
-            "gl_FragColor = ${if (multiplyColor) "color * " else ""}vec4(${when (renderAttributeName) {
-                uvName -> "uv, 0.0"
-                positionName -> "pos"
-                else -> "pos"
-            } }, 1.0);"
+    vec4 fragColor = vec4(${when (renderAttributeName) {
+            uvsName -> "uv, 0.0, 1.0"
+            positionsName -> "pos, 1.0"
+            normalsName -> "normal, 1.0"
+            else -> "1.0"
         }
-    }
+        });
+    ${if (colorTexture != null) "fragColor *= texture2D(tex, uv);" else ""}
+    ${if (color != null) "fragColor *= color;" else ""}
+    ${if (lightDirection != null) "fragColor.rgb *= max(dot(lightDirection, normal) * lightIntensity, minLightIntensity);" else ""}
+    gl_FragColor = fragColor;
+    ${if (alphaCutoff > 0f) "if (gl_FragColor.a < $alphaCutoff) discard; // alphaCutoff" else ""}
 }
 """
 
@@ -90,21 +116,32 @@ void main() {
         if (colorTexture != null) set("tex", 0)
     }
 
-    fun render(mesh: IMesh) {
-        if (drawing) return
-        drawing = true
-        bind()
+    override fun prepareShader(mesh: IMesh, scene: IScene?) {
+        super.prepareShader(mesh, scene)
         set("viewProj", ActiveCamera.viewProjectionMatrix)
+        set("viewDirection", ActiveCamera.direction)
 
         val color = color
         if (color != null) set("color", color)
 
-        val worldMatrix = worldMatrix
-        if (worldMatrix != null) set("worldMatrix", worldMatrix)
+        val worldMatrix = mesh.worldMatrix ?: MATH.IdentityMat4
+        set("worldMatrix", worldMatrix)
+
+        normalMatrix.set(worldMatrix)
+        set("normalMatrix", normalMatrix)
+
+        val lightDirection = lightDirection
+        if (lightDirection != null) {
+            lightDirection.set(ActiveCamera.direction).scl(-1f)
+            set("lightDirection", lightDirection)
+        }
+        set("lightIntensity", lightIntensity)
+        set("minLightIntensity", minLightIntensity)
 
         colorTexture?.bind(0)
+    }
 
+    fun render(mesh: IMesh) {
         mesh.render(this)
-        drawing = false
     }
 }

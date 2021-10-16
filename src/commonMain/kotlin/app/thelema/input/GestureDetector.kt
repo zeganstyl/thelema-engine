@@ -22,8 +22,7 @@ import kotlin.math.abs
 import kotlin.math.min
 
 
-/** [InputProcessor] implementation that detects gestures (tap, long press, fling, pan, zoom, pinch) and hands them to a
- * [GestureListener].
+/** Detects gestures (tap, long press, fling, pan, zoom, pinch) and hands them to a [GestureListener].
  * 
  * @param halfTapRectangleWidth half width in pixels of the rectangle around an initial touch event, see [GestureListener.tap].
  * @param halfTapRectangleHeight half height in pixels of the rectangle around an initial touch event, see [GestureListener.tap].
@@ -40,7 +39,7 @@ open class GestureDetector(
     longPressDuration: Float,
     maxFlingDelay: Float,
     listener: GestureListener?
-) : InputProcessor {
+) {
     val listener: GestureListener?
     private var tapRectangleWidth: Float
     private var tapRectangleHeight: Float
@@ -82,7 +81,7 @@ open class GestureDetector(
     constructor(halfTapSquareSize: Float, tapCountInterval: Float, longPressDuration: Float, maxFlingDelay: Float,
                 listener: GestureListener?) : this(halfTapSquareSize, halfTapSquareSize, tapCountInterval, longPressDuration, maxFlingDelay, listener)
 
-    override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int) {
+    fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int) {
         touchDown(screenX.toFloat(), screenY.toFloat(), pointer, button)
     }
 
@@ -92,7 +91,7 @@ open class GestureDetector(
             pointer1.set(x, y)
             gestureStartTime = 0
             tracker.start(x, y, gestureStartTime)
-            if (MOUSE.isButtonPressed(MOUSE.LEFT)) { // Start pinch.
+            if (MOUSE.isButtonPressed(BUTTON.LEFT)) { // Start pinch.
                 inTapRectangle = false
                 pinching = true
                 initialPointer1.set(pointer1)
@@ -114,7 +113,7 @@ open class GestureDetector(
         return listener!!.touchDown(x, y, pointer, button)
     }
 
-    override fun touchDragged(screenX: Int, screenY: Int, pointer: Int) {
+    fun touchDragged(screenX: Int, screenY: Int, pointer: Int) {
         touchDragged(screenX.toFloat(), screenY.toFloat(), pointer)
     }
 
@@ -144,7 +143,7 @@ open class GestureDetector(
         return false
     }
 
-    override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int) {
+    fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int) {
         touchUp(screenX.toFloat(), screenY.toFloat(), pointer, button)
     }
 

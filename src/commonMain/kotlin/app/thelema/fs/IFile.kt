@@ -41,12 +41,15 @@ interface IFile {
     val nameWithoutExtension: String
         get() = name.substringBeforeLast(".")
 
-    val location: Int
+    val location: String
 
     /** Returns true if this file is a directory. Always returns false for classpath files. On Android, an
      * [FileLocation.Internal] handle to an empty directory will return false. On the desktop, an [FileLocation.Internal]
      * handle to a directory on the classpath will return false.  */
     val isDirectory: Boolean
+
+    val platformPath: String
+        get() = path
 
     /** Reads the entire file into a string using the specified charset.
      * @param charset If null the default charset is used.
@@ -71,7 +74,7 @@ interface IFile {
      * array.
      * @throws RuntimeException if this file is an [FileLocation.Classpath] file.
      */
-    fun list(): MutableList<IFile>
+    fun list(): List<IFile>
 
     /** Returns the paths to the children of this directory with the specified suffix. */
     fun list(suffix: String): MutableList<IFile> {
@@ -85,8 +88,13 @@ interface IFile {
     }
 
     /** Returns a handle to the child with the specified name.  */
-    fun child(name: String): IFile =
-        FS.file("$path/$name", location)
+    fun child(name: String): IFile {
+        return if (path.isEmpty()) {
+            FS.file(name, location)
+        } else {
+            FS.file("$path/$name", location)
+        }
+    }
 
     /** Returns a handle to the sibling with the specified name.
      * @throws RuntimeException if this file is the root.

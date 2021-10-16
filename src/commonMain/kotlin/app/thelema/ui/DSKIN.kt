@@ -16,94 +16,134 @@
 
 package app.thelema.ui
 
-import app.thelema.data.DATA
 import app.thelema.font.BitmapFont
 import app.thelema.g2d.NinePatch
 import app.thelema.g2d.Sprite
-import app.thelema.gl.GL
-import app.thelema.gl.GL_RGBA
-import app.thelema.gl.GL_UNSIGNED_BYTE
+import app.thelema.g2d.TextureRegion
+import app.thelema.gl.GL_NEAREST
+import app.thelema.img.Image
 import app.thelema.img.Texture2D
-import app.thelema.res.RES
+import app.thelema.res.AID
+import app.thelema.res.load
+import app.thelema.utils.Color
+import kotlin.native.concurrent.ThreadLocal
 
 /** Default graphic user interface skin */
+@ThreadLocal
 object DSKIN {
-    val solidTexture by lazy { Texture2D(0) }
-    val solidFrameTexture by lazy { Texture2D(0) }
-    val transparentFrameTexture by lazy { Texture2D(0) }
+    val whiteTexture by lazy {
+        Texture2D {
+            minFilter = GL_NEAREST
+            magFilter = GL_NEAREST
+            image = Image(1, 1) {
+                putRGBAs(0xFFFFFFFF.toInt())
+            }
+        }
+    }
+    val solidFrameTexture by lazy {
+        Texture2D {
+            minFilter = GL_NEAREST
+            magFilter = GL_NEAREST
+            image = Image(4, 4) {
+                val b = 0xFFFFFFFF.toInt()
+                val f = 0x000000EE
+                putRGBAs(
+                    b, b, b, b,
+                    b, f, f, b,
+                    b, f, f, b,
+                    b, b, b, b
+                )
+            }
+        }
+    }
+    val transparentFrameTexture by lazy {
+        Texture2D {
+            minFilter = GL_NEAREST
+            magFilter = GL_NEAREST
+            image = Image(4, 4) {
+                val b = 0xFFFFFFFF.toInt()
+                val f = 0x00000000
+                putRGBAs(
+                    b, b, b, b,
+                    b, f, f, b,
+                    b, f, f, b,
+                    b, b, b, b
+                )
+            }
+        }
+    }
 
-    val solidFrame by lazy { NinePatchDrawable().also { initSolidFrameTexture() } }
-    val transparentFrame by lazy { NinePatchDrawable().also { initTransparentFrameTexture() } }
+    val solidFrame by lazy { NinePatch(solidFrameTexture, 1, 1, 1, 1) }
+    val transparentFrame by lazy { NinePatch(transparentFrameTexture, 1, 1, 1, 1) }
 
     val black5x5 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(0f, 0f, 0f, 1f)
-            minWidth = 5f
-            minHeight = 5f
+        Sprite(whiteTexture).apply {
+            color = Color.BLACK_INT
+            width = 5f
+            height = 5f
         }
     }
 
     val white5x5 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(1f, 1f, 1f, 1f)
-            minWidth = 5f
-            minHeight = 5f
+        Sprite(whiteTexture).apply {
+            color = Color.WHITE_INT
+            width = 5f
+            height = 5f
         }
     }
 
     val white1x1 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(1f, 1f, 1f, 1f)
+        Sprite(whiteTexture).apply {
+            color = Color.WHITE_INT
             minWidth = 1f
             minHeight = 1f
         }
     }
 
     val green1x1 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(0f, 1f, 0f, 1f)
+        Sprite(whiteTexture).apply {
+            color = Color.GREEN_INT
             minWidth = 1f
             minHeight = 1f
         }
     }
 
     val white5x5SemiTransparent by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(1f, 1f, 1f, 0.5f)
+        Sprite(whiteTexture).apply {
+            color = 0xFFFFFF88.toInt()
             minWidth = 5f
             minHeight = 5f
         }
     }
 
     val grey5x5 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(0.5f, 0.5f, 0.5f, 1f)
+        Sprite(whiteTexture).apply {
+            color = Color.GRAY_INT
             minWidth = 5f
             minHeight = 5f
         }
     }
 
     val grey1x1 by lazy {
-        SpriteDrawable(Sprite(solidTexture)).apply {
-            initSolidTexture()
-            sprite.color.set(0.5f, 0.5f, 0.5f, 1f)
+        Sprite(whiteTexture).apply {
+            color = Color.GRAY_INT
             minWidth = 1f
             minHeight = 1f
         }
     }
 
-    private var frameInitiated = false
-    private var solidInitiated = false
+    private val plus = Sprite()
 
-    private val plus = TextureRegionDrawable()
-
-    val tree: TreeStyle by lazy { TreeStyle() }
+    val tree: TreeStyle by lazy {
+        TreeStyle().also { treeStyle ->
+            font().apply {
+                onLoaded {
+                    getGlyph('+')?.apply { treeStyle.plus = Sprite(TextureRegion(regions[page].texture, u, v, u2, v2)) }
+                    getGlyph('-')?.apply { treeStyle.minus = Sprite(TextureRegion(regions[page].texture, u, v, u2, v2)) }
+                }
+            }
+        }
+    }
 
     val label: LabelStyle by lazy { LabelStyle() }
 
@@ -119,64 +159,5 @@ object DSKIN {
 
     var defaultFont: BitmapFont? = null
 
-    fun font(): BitmapFont = defaultFont ?: RES.loadTyped("arial-15.fnt")
-
-    private fun initSolidTexture() {
-        if (!solidInitiated) {
-            solidInitiated = true
-            GL.call {
-                solidTexture.initOnePixelTexture(1f, 1f, 1f, 1f)
-            }
-        }
-    }
-
-    private fun initSolidFrameTexture() {
-        if (!frameInitiated) {
-            frameInitiated = true
-            GL.call {
-                val border = 0xFFFFFFFF.toInt()
-                val fill = 0xEE000000.toInt()
-
-                val bytes = DATA.bytes(64).apply {
-                    putInts(
-                        border, border, border, border,
-                        border, fill, fill, border,
-                        border, fill, fill, border,
-                        border, border, border, border
-                    )
-                    rewind()
-                }
-
-                solidFrameTexture.load(4, 4, bytes, 0, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
-                solidFrame.setPatch(NinePatch(solidFrameTexture, 1, 1, 1, 1))
-
-                bytes.destroy()
-            }
-        }
-    }
-
-    private fun initTransparentFrameTexture() {
-        if (!frameInitiated) {
-            frameInitiated = true
-            GL.call {
-                val border = 0xFFFFFFFF.toInt()
-                val fill = 0x00000000
-
-                val bytes = DATA.bytes(64).apply {
-                    putInts(
-                        border, border, border, border,
-                        border, fill, fill, border,
-                        border, fill, fill, border,
-                        border, border, border, border
-                    )
-                    rewind()
-                }
-
-                transparentFrameTexture.load(4, 4, bytes, 0, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
-                transparentFrame.setPatch(NinePatch(transparentFrameTexture, 1, 1, 1, 1))
-
-                bytes.destroy()
-            }
-        }
-    }
+    fun font(): BitmapFont = defaultFont ?: AID.load("arial-15.fnt")
 }

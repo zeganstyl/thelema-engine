@@ -16,8 +16,8 @@
 
 package app.thelema.ui
 
-import app.thelema.input.KB
-import app.thelema.input.MOUSE
+import app.thelema.input.KEY
+import app.thelema.input.BUTTON
 import app.thelema.math.Vec2
 
 /**
@@ -66,26 +66,26 @@ open class PopupMenu : Table() {
             override fun keyDown(event: InputEvent, keycode: Int): Boolean {
                 val children = children
                 if (children.size == 0 || activeSubMenu != null) return false
-                if (keycode == KB.DOWN) {
+                if (keycode == KEY.DOWN) {
                     selectNextItem()
                     return true
                 }
-                if (keycode == KB.UP) {
+                if (keycode == KEY.UP) {
                     selectPreviousItem()
                     return true
                 }
                 val activeItem = activeItem ?: return false
                 val parentSubMenu = activeItem.containerMenu?.parentSubMenu
-                if (keycode == KB.LEFT && parentSubMenu != null) {
+                if (keycode == KEY.LEFT && parentSubMenu != null) {
                     parentSubMenu.setActiveSubMenu(null)
                     return true
                 }
-                if (keycode == KB.RIGHT && activeItem.subMenu != null) {
+                if (keycode == KEY.RIGHT && activeItem.subMenu != null) {
                     activeItem.showSubMenu()
                     activeSubMenu!!.selectNextItem()
                     return true
                 }
-                if (keycode == KB.ENTER) {
+                if (keycode == KEY.ENTER) {
                     activeItem.fireChangeEvent()
                     return true
                 }
@@ -201,7 +201,7 @@ open class PopupMenu : Table() {
      * menu will be displayed
      */
     fun getDefaultInputListener(): InputListener {
-        return getDefaultInputListener(MOUSE.RIGHT)
+        return getDefaultInputListener(BUTTON.RIGHT)
     }
 
     /**
@@ -217,7 +217,7 @@ open class PopupMenu : Table() {
                 }
 
                 override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                    if (event.button == mouseButton) showMenu(event.stage!!, event.stageX, event.stageY)
+                    if (event.button == mouseButton) showMenu(event.headUpDisplay!!, event.stageX, event.stageY)
                 }
             }
         }
@@ -226,23 +226,23 @@ open class PopupMenu : Table() {
 
     /**
      * Shows menu as given stage coordinates
-     * @param stage stage instance that this menu is being added to
+     * @param headUpDisplay stage instance that this menu is being added to
      * @param x stage x position
      * @param y stage y position
      */
-    fun showMenu(stage: Stage, x: Float, y: Float) {
+    fun showMenu(headUpDisplay: HeadUpDisplay, x: Float, y: Float) {
         setPosition(x, y - height)
-        if (stage.height - this.y > stage.height) this.y = this.y + height
-        ActorUtils.keepWithinStage(stage, this)
-        stage.addActor(this)
+        if (headUpDisplay.height - this.y > headUpDisplay.height) this.y = this.y + height
+        ActorUtils.keepWithinStage(headUpDisplay, this)
+        headUpDisplay.addActor(this)
     }
 
     /**
      * Shows menu below (or above if not enough space) given actor.
-     * @param stage stage instance that this menu is being added to
+     * @param headUpDisplay stage instance that this menu is being added to
      * @param actor used to get calculate menu position in stage, menu will be displayed above or below it
      */
-    fun showMenu(stage: Stage, actor: Actor) {
+    fun showMenu(headUpDisplay: HeadUpDisplay, actor: Actor) {
         val pos = actor.localToStageCoordinates(tmpVector.set(0f, 0f))
         val menuY: Float
         menuY = if (pos.y - height <= 0) {
@@ -250,7 +250,7 @@ open class PopupMenu : Table() {
         } else {
             pos.y + borderSize
         }
-        showMenu(stage, pos.x, menuY)
+        showMenu(headUpDisplay, pos.x, menuY)
     }
 
     fun contains(x: Float, y: Float): Boolean {
@@ -265,10 +265,10 @@ open class PopupMenu : Table() {
         newSubMenu?.setParentMenu(this)
     }
 
-    override var stage: Stage?
-        get() = super.stage
+    override var headUpDisplay: HeadUpDisplay?
+        get() = super.headUpDisplay
         set(value) {
-            super.stage = value
+            super.headUpDisplay = value
             value?.addListener(stageListener!!)
         }
 
@@ -280,7 +280,7 @@ open class PopupMenu : Table() {
     }
 
     override fun remove(): Boolean {
-        stage?.removeListener(stageListener!!)
+        headUpDisplay?.removeListener(stageListener!!)
         if (activeSubMenu != null) activeSubMenu!!.remove()
         setActiveItem(null, false)
         parentSubMenu = null

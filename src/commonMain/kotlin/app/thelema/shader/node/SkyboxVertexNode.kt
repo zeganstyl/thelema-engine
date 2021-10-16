@@ -18,33 +18,31 @@ package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.gl.IMesh
 import app.thelema.json.IJsonObject
 
-/** @author zeganstyl */
+/** Vertex node for skyboxes. Supports velocity.
+ *
+ * @author zeganstyl */
 class SkyboxVertexNode(
     viewProjectionMatrix: IShaderData = GLSL.zeroFloat
 ): ShaderNode() {
+    constructor(block: SkyboxVertexNode.() -> Unit): this() { block(this) }
+
     override val name: String
         get() = "Skybox Vertex"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
-    var aPositionName = "POSITION"
+    var positionsName = "POSITION"
 
     var viewProjectionMatrix
-        get() = input[ViewProjectionMatrix] ?: GLSL.oneFloat
-        set(value) = setInput(ViewProjectionMatrix, value)
+        get() = input["viewProjectionMatrix"] ?: GLSL.oneFloat
+        set(value) = setInput("viewProjectionMatrix", value)
 
     var previousViewProjectionMatrix
-        get() = input[PreviousViewProjectionMatrix] ?: GLSL.oneFloat
-        set(value) = setInput(PreviousViewProjectionMatrix, value)
+        get() = input["previousViewProjectionMatrix"] ?: GLSL.oneFloat
+        set(value) = setInput("previousViewProjectionMatrix", value)
 
-    /** Use this as skybox texture coordinates */
-    val attributePosition = defOut(GLSLVec3("attributePosition"))
+    val textureCoordinates = defOut(GLSLVec3("textureCoordinates"))
 
     val worldSpacePosition = defOut(GLSLVec3("worldSpacePosition"))
 
@@ -63,25 +61,26 @@ class SkyboxVertexNode(
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
 
-        aPositionName = json.string("aPositionName", "POSITION")
+        positionsName = json.string("aPositionName", "POSITION")
     }
 
     override fun writeJson(json: IJsonObject) {
         super.writeJson(json)
 
-        if (aPositionName != "POSITION") json["aPositionName"] = aPositionName
+        if (positionsName != "POSITION") json["aPositionName"] = positionsName
     }
 
-    override fun prepareToDrawScene(scene: IScene) {
-        super.prepareToDrawScene(scene)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
 
         val pos = ActiveCamera.position
-        //shader.set(uSkyboxVertexTransformName, pos.x, pos.y, pos.z, ActiveCamera.far)
+        shader.depthMask = false
         shader.set(uSkyboxVertexTransformName, pos.x, pos.y, pos.z, ActiveCamera.far)
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (attributePosition.isUsed) out.append("$varIn ${attributePosition.typedRef};\n")
+        out.append("$varOut vec3 vPosition;\n")
+        out.append("${textureCoordinates.typedRef};\n")
         if (worldSpacePosition.isUsed || clipSpacePosition.isUsed || velocity.isUsed) {
             out.append("$varIn ${worldSpacePosition.typedRef};\n")
 
@@ -97,8 +96,9 @@ class SkyboxVertexNode(
     }
 
     override fun declarationVert(out: StringBuilder) {
-        out.append("$attribute vec3 $aPositionName;\n")
-        out.append("$varOut ${attributePosition.typedRef};\n")
+        out.append("$attribute vec3 $positionsName;\n")
+        out.append("$varOut vec3 vPosition;\n")
+        out.append("$varOut ${textureCoordinates.typedRef};\n")
         out.append("$varOut ${worldSpacePosition.typedRef};\n")
         out.append("$varOut ${clipSpacePosition.typedRef};\n")
         out.append("$varOut vec4 prevClipSpacePos;\n")
@@ -107,6 +107,8 @@ class SkyboxVertexNode(
 
     override fun executionFrag(out: StringBuilder) {
         super.executionFrag(out)
+
+        out.append("${textureCoordinates.ref} = normalize(vPosition);\n")
 
         if (velocity.isUsed) {
             out.append("vec4 clipSpacePos = ${clipSpacePosition.asVec4()};\n")
@@ -119,9 +121,9 @@ class SkyboxVertexNode(
     }
 
     override fun executionVert(out: StringBuilder) {
+        out.append("vPosition = ${positionsName}.xyz;\n")
         if (clipSpacePosition.isUsed || worldSpacePosition.isUsed || velocity.isUsed) {
-            out.append("${attributePosition.ref} = ${aPositionName}.xyz;\n")
-            out.append("${worldSpacePosition.ref} = $uSkyboxVertexTransformName.xyz + ${aPositionName}.xyz * $uSkyboxVertexTransformName.w;\n")
+            out.append("${worldSpacePosition.ref} = $uSkyboxVertexTransformName.xyz + ${positionsName}.xyz * $uSkyboxVertexTransformName.w;\n")
 
             if (clipSpacePosition.isUsed || velocity.isUsed) {
                 out.append("${clipSpacePosition.ref} = ${viewProjectionMatrix.ref} * ${worldSpacePosition.asVec4()};\n")
@@ -130,18 +132,6 @@ class SkyboxVertexNode(
                     out.append("prevClipSpacePos = ${previousViewProjectionMatrix.ref} * ${worldSpacePosition.asVec4()};\n")
                 }
             }
-        }
-    }
-
-    companion object {
-        const val ClassId = "skyboxVertex"
-
-        const val ViewProjectionMatrix = "viewProjectionMatrix"
-        const val PreviousViewProjectionMatrix = "previousViewProjectionMatrix"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(ViewProjectionMatrix, GLSLType.Mat4)
-            put(PreviousViewProjectionMatrix, GLSLType.Mat4)
         }
     }
 }

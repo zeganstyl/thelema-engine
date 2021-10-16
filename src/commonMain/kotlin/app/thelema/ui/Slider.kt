@@ -16,7 +16,7 @@
 
 package app.thelema.ui
 
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -38,7 +38,7 @@ class Slider(
         max: Float,
         stepSize: Float,
         vertical: Boolean,
-        style: Style = Style.default("default-" + if (vertical) "vertical" else "horizontal")
+        style: SliderStyle = SliderStyle()
 ) : ProgressBar(min, max, stepSize, vertical, style) {
     var draggingPointer = -1
     var mouseOver = false
@@ -46,15 +46,15 @@ class Slider(
     private var snapValues: FloatArray? = null
     private var threshold = 0f
 
-    override val knobDrawable: Drawable
+    override val knobDrawable: Drawable?
         get() {
-            val style = style as Style
+            val style = style as SliderStyle
             return if (isDisabled && style.disabledKnob != null) {
-                style.disabledKnob!!
+                style.disabledKnob
             } else if (isDragging && style.knobDown != null) {
-                style.knobDown!!
+                style.knobDown
             } else if (mouseOver && style.knobOver != null) {
-                style.knobOver!!
+                style.knobOver
             } else {
                 style.knob
             }
@@ -70,21 +70,21 @@ class Slider(
         val max = maxValue
         if (isVertical) {
             val height = height - bg.topHeight - bg.bottomHeight
-            val knobHeight: Float = knob.minHeight
+            val knobHeight: Float = knob?.minHeight ?: 0f
             knobPosition = y - bg.bottomHeight - knobHeight * 0.5f
             value = min + (max - min) * visualInterpolationInverse.apply(knobPosition / (height - knobHeight))
             knobPosition = max(min(0f, bg.bottomHeight), knobPosition)
             knobPosition = min(height - knobHeight, knobPosition)
         } else {
             val width = width - bg.leftWidth - bg.rightWidth
-            val knobWidth: Float = knob.minWidth
+            val knobWidth: Float = knob?.minWidth ?: 0f
             knobPosition = x - bg.leftWidth - knobWidth * 0.5f
             value = min + (max - min) * visualInterpolationInverse.apply(knobPosition / (width - knobWidth))
             knobPosition = max(min(0f, bg.leftWidth), knobPosition)
             knobPosition = min(width - knobWidth, knobPosition)
         }
         val oldValue = value
-        if (!KB.isKeyPressed(KB.SHIFT_LEFT) && !KB.isKeyPressed(KB.SHIFT_RIGHT)) value = snap(value)
+        if (!KEY.shiftPressed) value = snap(value)
         val valueSet = setValue(value)
         if (value == oldValue) knobPosition = oldPosition
         return valueSet
@@ -124,38 +124,6 @@ class Slider(
      * [visual interpolation][setVisualInterpolation].  */
     fun setVisualInterpolationInverse(interpolation: Interpolation) {
         visualInterpolationInverse = interpolation
-    }
-
-    /** The style for a slider, see [Slider].
-     * @author mzechner
-     * @author Nathan Sweet
-     */
-    class Style(
-            background: Drawable? = null,
-            knob: Drawable = Drawable.Empty
-    ) : ProgressBarStyle(background, knob) {
-        /** Optional.  */
-        var knobOver: Drawable? = null
-        var knobDown: Drawable? = null
-
-        constructor(style: Style) : this(style.background, style.knob) {
-            knobOver = style.knobOver
-            knobDown = style.knobDown
-        }
-
-        companion object {
-            const val GdxTypeName = "com.badlogic.gdx.scenes.scene2d.ui.Slider\$SliderStyle"
-
-            var Default: Style? = null
-            fun default(styleName: String = "default-horizontal"): Style {
-                var style = Default
-                if (style == null) {
-                    style = Style()
-                    Default = style
-                }
-                return style
-            }
-        }
     }
 
     /** Creates a new slider. If horizontal, its width is determined by the prefWidth parameter, its height is determined by the

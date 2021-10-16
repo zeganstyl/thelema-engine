@@ -19,13 +19,13 @@ package app.thelema.test
 import app.thelema.test.audio.SoundOggTest
 import app.thelema.test.audio.SoundWavTest
 import app.thelema.test.g3d.BoxMeshTest
-import app.thelema.test.g3d.FrustumMeshBuilderTest
+import app.thelema.test.g3d.FrustumMeshTest
 import app.thelema.test.g3d.MeshCubeTest
 import app.thelema.test.g3d.PlaneMeshTest
-import app.thelema.test.g3d.gltf.GLTFLoaderAnimationTest
+import app.thelema.test.g3d.gltf.GLTFMultiUVTest
 import app.thelema.test.img.FrameBufferTest
 import app.thelema.test.img.GBufferBaseTest
-import app.thelema.test.img.SkyboxTest
+import app.thelema.test.img.SkyboxBaseTest
 import app.thelema.test.img.Texture2DTest
 import app.thelema.test.input.KeyboardTest
 import app.thelema.test.input.MouseTest
@@ -56,7 +56,7 @@ open class Tests: TestGroup("Core") {
     val shaderNodes = TestGroup(
         "Shader nodes",
         CascadedShadowMappingTest(),
-        EmissionBloomNodeTest(),
+        EmissionBloomTest(),
         GBufferTest(),
         MotionBlurTest(),
         SkyboxVertexNodeTest(),
@@ -68,7 +68,7 @@ open class Tests: TestGroup("Core") {
         Texture2DTest(),
         FrameBufferTest(),
         GBufferBaseTest(),
-        SkyboxTest(),
+        SkyboxBaseTest(),
     )
 
     val physics = TestGroup(
@@ -97,7 +97,7 @@ open class Tests: TestGroup("Core") {
             MeshCubeTest(),
             PlaneMeshTest(),
             BoxMeshTest(),
-            FrustumMeshBuilderTest(),
+            FrustumMeshTest(),
             InstancingTest()
         )
 
@@ -105,7 +105,7 @@ open class Tests: TestGroup("Core") {
             "Other",
             JsonTest(),
             CascadedShadowMatricesTest(),
-            GLTFLoaderAnimationTest()
+            GLTFMultiUVTest()
         )
 
         groups.add(shaders)

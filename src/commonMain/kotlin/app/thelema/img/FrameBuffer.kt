@@ -16,8 +16,6 @@
 
 package app.thelema.img
 
-import app.thelema.gl.GL
-
 /**
  * Default frame buffer. You need manually add attachments and build them using [buildAttachments].
  * For creating attachments, probably better you already existing functions from [Attachments].
@@ -26,27 +24,8 @@ import app.thelema.gl.GL
  *
  * @author zeganstyl
  */
-class FrameBuffer(
-    width: Int = GL.mainFrameBufferWidth,
-    height: Int = GL.mainFrameBufferHeight,
-    override var frameBufferHandle: Int = GL.glGenFramebuffer()
-): IFrameBuffer {
-    private var widthInternal = width
-    private var heightInternal = height
-
-    override val width: Int
-        get() = widthInternal
-
-    override val height: Int
-        get() = heightInternal
-
-    override var isBound: Boolean = false
-
-    override val attachments = ArrayList<IFrameBufferAttachment>()
-
-    override fun setResolution(width: Int, height: Int) {
-        widthInternal = width
-        heightInternal = height
-        super.setResolution(width, height)
+class FrameBuffer(): FrameBufferAdapter() {
+    constructor(block: FrameBuffer.() -> Unit): this() {
+        block()
     }
 }

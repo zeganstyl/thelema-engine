@@ -16,22 +16,19 @@
 
 package app.thelema.test.shader.post
 
-
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.gl.*
 import app.thelema.img.ITexture
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.input.IMouseListener
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 import app.thelema.math.Vec2
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
-import app.thelema.shader.Shader
+import app.thelema.input.MOUSE
+import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.PostShader
 import app.thelema.test.Test
 import kotlin.math.pow
@@ -42,25 +39,9 @@ class BloomBaseTest: Test {
         get() = "Bloom base"
 
     override fun testMain() {
-
-        val cubeShader = Shader(
-            vertCode = """
-attribute vec3 POSITION;
-varying vec3 vPosition;
-uniform mat4 viewProj;
-
-void main() {
-    vPosition = POSITION;
-    gl_Position = viewProj * vec4(POSITION, 1.0);
-}""",
-            fragCode = """
-varying vec3 vPosition;
-                
-void main() {
-    gl_FragColor = vec4(vPosition, 1.0);
-}"""
-        )
-
+        val cubeShader = SimpleShader3D {
+            renderAttributeName = positionsName
+        }
 
         val blurDownShader = PostShader(
             fragCode = """
@@ -134,39 +115,25 @@ void main() {
 
         val texelSizes = Array(iterations) { Vec2(1f / downScaleBuffers[it].width, 1f / downScaleBuffers[it].height) }
 
-        val screenQuad = TextureRenderer()
+        val box = BoxMesh { setSize(2f) }
 
-        val box = BoxMeshBuilder().build()
-
-        ActiveCamera {
-            far = 1000f
-        }
-
-        val control = OrbitCameraControl(camera = ActiveCamera)
-        control.listenToMouse()
-        println(control.help)
+        val control = OrbitCameraControl()
 
         // maps to debug
         val debugMaps = ArrayList<ITexture>()
-        debugMaps.addAll(downScaleBuffers)
-        debugMaps.addAll(upScaleBuffers)
+        downScaleBuffers.forEach { debugMaps.add(it.texture) }
+        upScaleBuffers.forEach { debugMaps.add(it.texture) }
         var mapIndex = 0
 
         MOUSE.addListener(object : IMouseListener {
             override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-                if (button == MOUSE.LEFT) {
+                if (button == BUTTON.LEFT) {
                     mapIndex = (mapIndex + 1) % debugMaps.size
                 }
             }
         })
 
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
@@ -176,7 +143,7 @@ void main() {
 
                 cubeShader.bind()
                 cubeShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-                box.render(cubeShader)
+                box.mesh.render(cubeShader)
             }
 
             // downscale
@@ -186,11 +153,9 @@ void main() {
             var prevMap = sceneColorBuffer.getTexture(0) // brightness map
             for (i in downScaleBuffers.indices) {
                 val buffer = downScaleBuffers[i]
-                screenQuad.render(blurDownShader, buffer) {
-                    GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-                    blurDownShader["uTexelSize"] = texelSizes[i]
-                    prevMap.bind(0)
-                }
+                blurDownShader["uTexelSize"] = texelSizes[i]
+                prevMap.bind(0)
+                ScreenQuad.render(blurDownShader, buffer)
                 prevMap = buffer.getTexture(0)
             }
 
@@ -200,21 +165,18 @@ void main() {
 
             var i = iterations - 1
             while (i > 0) {
-                screenQuad.render(blurUpShader, upScaleBuffers[i-1]) {
-                    blurUpShader["uTexelSize"] = texelSizes[i-1]
-                    downScaleBuffers[i].texture.bind(0)
-                    upScaleBuffers[i].texture.bind(1)
-                }
-
+                blurUpShader["uTexelSize"] = texelSizes[i-1]
+                downScaleBuffers[i].texture.bind(0)
+                upScaleBuffers[i].texture.bind(1)
+                ScreenQuad.render(blurUpShader, upScaleBuffers[i-1])
                 i--
             }
 
             // bloom output
-            screenQuad.render(blurUpShader, null) {
-                blurUpShader.set("uTexelSize", 1f / APP.width, 1f / APP.height)
-                upScaleBuffers[0].texture.bind(0)
-                sceneColorBuffer.texture.bind(1)
-            }
+            blurUpShader.set("uTexelSize", 1f / APP.width, 1f / APP.height)
+            upScaleBuffers[0].texture.bind(0)
+            sceneColorBuffer.texture.bind(1)
+            ScreenQuad.render(blurUpShader, null)
 
             // maps debug rendering
             //screenQuad.render(debugMaps[mapIndex])

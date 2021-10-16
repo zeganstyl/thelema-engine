@@ -22,7 +22,7 @@ class GLSLFloatInline(var value: Float = 0f, name: String = ""): GLSLInlineBase(
         get() = asFloat()
         set(_) {}
 
-    override val type: Int
+    override val type: String
         get() = GLSLType.Float
 
     override fun asFloat(): String = str(value)

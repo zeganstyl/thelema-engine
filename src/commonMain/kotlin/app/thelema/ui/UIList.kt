@@ -20,32 +20,31 @@ import app.thelema.app.APP
 import app.thelema.font.BitmapFont
 import app.thelema.font.GlyphLayout
 import app.thelema.g2d.Batch
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.math.Rectangle
+import app.thelema.utils.Color
 import kotlin.math.max
 
 
 /** A list (aka list box) displays textual items and highlights the currently selected item.
  *
- *
  * [Event] is fired when the list selection changes.
- *
  *
  * The preferred size of the list is determined by the text bounds of the items and the size of the [ListStyle.selection].
  * @author mzechner, Nathan Sweet, zeganstyl
  */
-open class UIList<T>(
-    items: List<T> = ArrayList(),
-    var itemToString: (item: T) -> String = { "" },
-    style: ListStyle = ListStyle()
-) : Widget(), Cullable {
+open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
+    constructor(block: UIList<T>.() -> Unit): this() {
+        block(this)
+    }
+
     var style: ListStyle = style
         set(value) {
             field = value
             invalidateHierarchy()
         }
 
-    var items: List<T> = items
+    var items: List<T> = emptyList()
         set(value) {
             val oldPrefWidth = prefWidth2
             val oldPrefHeight = prefHeight2
@@ -91,6 +90,8 @@ open class UIList<T>(
     var keyListener: InputListener? = null
     var typeToSelect = false
 
+    var itemToString: (item: T) -> String = { "" }
+
     fun forEachSelectedItem(block: (node: T) -> Unit) {
         for (i in selection.selected.indices) {
             block(selection.selected[i])
@@ -126,7 +127,7 @@ open class UIList<T>(
         val fontColorSelected = style.fontColorSelected
         val fontColorUnselected = style.fontColorUnselected
         val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.color = Color.mulAlpha(color, parentAlpha)
         var x = x
         val y = y
         var width = width
@@ -142,7 +143,7 @@ open class UIList<T>(
         val textOffsetX = selectedDrawable?.leftWidth ?: 0f
         val textWidth = width - textOffsetX - (selectedDrawable?.rightWidth ?: 0f)
         val textOffsetY = (selectedDrawable?.topHeight ?: 0f) - font.descent
-        font.setColor(fontColorUnselected.r, fontColorUnselected.g, fontColorUnselected.b, fontColorUnselected.a * parentAlpha)
+        font.color = Color.mulAlpha(fontColorUnselected, parentAlpha)
         val items = items
         for (i in items.indices) {
             if (cullingArea == null || itemY - itemHeight <= cullingArea!!.y + cullingArea!!.height && itemY >= cullingArea!!.y) {
@@ -151,15 +152,12 @@ open class UIList<T>(
                 var drawable: Drawable? = null
                 if (pressedIndex == i && style.down != null) drawable = style.down else if (selected) {
                     drawable = selectedDrawable
-                    font.setColor(fontColorSelected.r, fontColorSelected.g, fontColorSelected.b, fontColorSelected.a * parentAlpha)
+                    font.color = Color.mulAlpha(fontColorSelected, parentAlpha)
                 } else if (overIndex == i && style.over != null) //
                     drawable = style.over
                 drawable?.draw(batch, x, y + itemY - itemHeight, width, itemHeight)
                 drawItem(batch, font, i, item, x + textOffsetX, y + itemY - textOffsetY, textWidth)
-                if (selected) {
-                    font.setColor(fontColorUnselected.r, fontColorUnselected.g, fontColorUnselected.b,
-                            fontColorUnselected.a * parentAlpha)
-                }
+                if (selected) font.color = Color.mulAlpha(fontColorUnselected, parentAlpha)
             } else if (itemY < cullingArea!!.y) {
                 break
             }
@@ -170,8 +168,7 @@ open class UIList<T>(
     /** Called to draw the background. Default implementation draws the style background drawable.  */
     protected fun drawBackground(batch: Batch, parentAlpha: Float) {
         if (style.background != null) {
-            val color = color
-            batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+            batch.setMulAlpha(color, parentAlpha)
             style.background!!.draw(batch, x, y, width, height)
         }
     }
@@ -186,7 +183,7 @@ open class UIList<T>(
         set(item) {
             if (selection.lastSelected != item) {
                 if (items.contains(item) && item != null) {
-                    selection.set(item)
+                    selection.setSelected(item)
                 } else {
                     selection.clear()
                 }
@@ -194,11 +191,7 @@ open class UIList<T>(
             }
         }
 
-    /** @return The index of the last selected item. The top item has an index of 0. Nothing selected has an index of -1.
-     */
-    /** Sets the selection to only the selected index.
-     * @param index -1 to clear the selection.
-     */
+    /** @return The index of the last selected item. The top item has an index of 0. Nothing selected has an index of -1. */
     var selectedIndex: Int
         get() {
             val selected = selection.selected
@@ -210,7 +203,7 @@ open class UIList<T>(
             if (index == -1) {
                 selection.clear()
             } else {
-                selection.set(items[index])
+                selection.setSelected(items[index])
             }
             fireChanged()
         }
@@ -227,7 +220,7 @@ open class UIList<T>(
 
     protected fun fireChanged() {
         val event = Event(EventType.Change)
-        event.stage = stage
+        event.headUpDisplay = headUpDisplay
         event.target = this
         fire(event)
     }
@@ -264,33 +257,33 @@ open class UIList<T>(
                 if (items2.isEmpty()) return false
                 var index: Int
                 when (keycode) {
-                    KB.A -> if (KB.ctrl && selection.isMultiple) {
+                    KEY.A -> if (KEY.ctrlPressed && selection.isMultiple) {
                         selection.clear()
                         items2.forEach { selection.add(it) }
                         return true
                     }
-                    KB.HOME -> {
+                    KEY.HOME -> {
                         selectedIndex = 0
                         return true
                     }
-                    KB.END -> {
+                    KEY.END -> {
                         selectedIndex = items2.size - 1
                         return true
                     }
-                    KB.DOWN -> {
+                    KEY.DOWN -> {
                         index = items2.indexOf(selected) + 1
                         if (index >= items2.size) index = 0
                         selectedIndex = index
                         return true
                     }
-                    KB.UP -> {
+                    KEY.UP -> {
                         index = items2.indexOf(selected) - 1
                         if (index < 0) index = items2.size - 1
                         selectedIndex = index
                         return true
                     }
-                    KB.ESCAPE -> {
-                        stage?.keyboardFocus = null
+                    KEY.ESCAPE -> {
+                        headUpDisplay?.keyboardFocus = null
                         return true
                     }
                 }
@@ -302,12 +295,12 @@ open class UIList<T>(
                 val time = APP.time
                 if (time > typeTimeout) prefix = ""
                 typeTimeout = time + 300
-                prefix = "$prefix${character.toLowerCase()}"
+                prefix = "$prefix${character.lowercase()}"
                 var i = 0
                 val items2 = this@UIList.items
                 val n = items2.size
                 while (i < n) {
-                    if (this@UIList.itemToString(items2[i]).toLowerCase().startsWith(prefix!!)) {
+                    if (this@UIList.itemToString(items2[i]).lowercase().startsWith(prefix!!)) {
                         selectedIndex = i
                         break
                     }
@@ -321,7 +314,7 @@ open class UIList<T>(
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 if (pointer != 0 || button != 0) return true
                 if (selection.isDisabled) return true
-                stage?.keyboardFocus = this@UIList
+                headUpDisplay?.keyboardFocus = this@UIList
                 if (this@UIList.items.isEmpty()) return true
                 val index = getItemIndexAt(y)
                 if (index == -1) return true

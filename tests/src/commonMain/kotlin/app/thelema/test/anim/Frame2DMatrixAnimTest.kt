@@ -53,17 +53,9 @@ void main() {
 
         val animMatrix = Mat3()
 
-        val tex = Texture2D()
-        tex.load("Hit-Yellow.png")
+        val tex = Texture2D("Hit-Yellow.png")
 
-        val screenQuad = ScreenQuad()
-
-        GL.isDepthTestEnabled = true
-        GL.setSimpleAlphaBlending()
-        GL.isBlendingEnabled = true
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             anim.update(APP.deltaTime)
 
             anim.setTo(animMatrix)
@@ -72,7 +64,7 @@ void main() {
             shader.bind()
             shader["animMatrix"] = animMatrix
 
-            screenQuad.render(shader)
+            ScreenQuad.render(shader)
         }
     }
 }

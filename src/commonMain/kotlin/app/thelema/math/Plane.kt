@@ -90,7 +90,7 @@ class Plane(
         d = plane.d
     }
 
-    fun intersectPoint(rayDirection: IVec3, rayOrigin: IVec3, out: IVec3): IVec3 {
+    fun getIntersectionPoint(rayDirection: IVec3, rayOrigin: IVec3, out: IVec3): IVec3 {
         val diffX = rayOrigin.x - normal.x * d
         val diffY = rayOrigin.y - normal.y * d
         val diffZ = rayOrigin.z - normal.z * d
@@ -98,7 +98,7 @@ class Plane(
         return out.set(rayOrigin).sub(rayDirection.x * prod3, rayDirection.y * prod3, rayDirection.z * prod3)
     }
 
-    fun intersectPoint(ray: Ray, out: IVec3): IVec3 = intersectPoint(ray.direction, ray.origin, out)
+    fun getIntersectionPoint(ray: Ray, out: IVec3): IVec3 = getIntersectionPoint(ray.direction, ray.origin, out)
 
     override fun toString(): String = "$normal, $d"
 }

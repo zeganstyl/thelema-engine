@@ -20,9 +20,10 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.fs.IFile
 import app.thelema.g3d.IScene
+import app.thelema.res.ILoader
 
 /** @author zeganstyl */
-interface IGLTF: IEntityComponent {
+interface IGLTF: ILoader {
     var generator: String
     var version: String
     var copyright: String
@@ -31,7 +32,7 @@ interface IGLTF: IEntityComponent {
     var conf: GLTFConf
 
     /** Main scene */
-    var scene: IScene?
+    var scene: IEntity
 
     var mainSceneIndex: Int
 
@@ -68,7 +69,4 @@ interface IGLTF: IEntityComponent {
     fun getArray(name: String): IGLTFArray
 
     fun runGLCall(block: () -> Unit)
-
-    /** Save buffers to files, in particular .bin */
-    fun saveBuffers()
 }

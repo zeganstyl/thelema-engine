@@ -16,18 +16,18 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
 
 /** @author zeganstyl */
-interface IBoxShape: IEntityComponent {
+interface IBoxShape: IShape {
     var xSize: Float
     var ySize: Float
     var zSize: Float
 
-    val shape: IShape
-
     override val componentName: String
-        get() = Name
+        get() = "BoxShape"
 
     fun setSize(size: Float) = setSize(size, size, size)
 
@@ -36,17 +36,7 @@ interface IBoxShape: IEntityComponent {
         ySize = y
         zSize = z
     }
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    override fun destroy() {
-        endSimulation()
-        super.destroy()
-    }
-
-    companion object {
-        const val Name = "BoxShape"
-    }
 }
+
+fun IEntity.boxShape(block: IBoxShape.() -> Unit) = component(block)
+fun IEntity.boxShape() = component<IBoxShape>()

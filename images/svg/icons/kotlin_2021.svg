@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   viewBox="0 0 20.554 20.543"
+   version="1.1"
+   id="svg11"
+   sodipodi:docname="kotlin_2021.svg"
+   inkscape:export-filename="../../icons/kotlin_2021.png"
+   inkscape:export-xdpi="149.45995"
+   inkscape:export-ydpi="149.45995"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)">
+  <metadata
+     id="metadata17">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs15" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1026"
+     id="namedview13"
+     showgrid="false"
+     inkscape:zoom="41.668696"
+     inkscape:cx="10.300999"
+     inkscape:cy="10.2715"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11" />
+  <radialGradient
+     id="a"
+     cx="22.432"
+     cy="3.493"
+     r="21.679"
+     gradientTransform="matrix(1.0856 0 0 1.0856 -4.4842 -2.9511)"
+     gradientUnits="userSpaceOnUse">
+    <stop
+       stop-color="#e44857"
+       offset=".003"
+       id="stop2" />
+    <stop
+       stop-color="#c711e1"
+       offset=".469"
+       id="stop4" />
+    <stop
+       stop-color="#7f52ff"
+       offset="1"
+       id="stop6" />
+  </radialGradient>
+  <path
+     d="m20.554 20.543h-20.554v-20.543h20.554l-10.489 10.119z"
+     fill="url(#a)"
+     stroke-width="1.0858"
+     id="path9" />
+</svg>

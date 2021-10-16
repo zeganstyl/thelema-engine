@@ -25,12 +25,6 @@ class UVNode() : ShaderNode() {
     override val name: String
         get() = "UV"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     var aUVName: String = "TEXCOORD_0"
 
     val uv = defOut(GLSLVec2("uv"))
@@ -60,11 +54,5 @@ class UVNode() : ShaderNode() {
             out.append("$attribute ${uv.typeStr} $aUVName;\n")
             out.append("$varOut ${uv.typedRef};\n")
         }
-    }
-
-    companion object {
-        const val ClassId = "uv"
-
-        val InputForm = LinkedHashMap<String, Int>()
     }
 }

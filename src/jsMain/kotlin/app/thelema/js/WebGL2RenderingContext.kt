@@ -41,4 +41,12 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContext {
     fun drawElementsInstanced(mode: Int, count: Int, type: Int, offset: Int, instanceCount: Int)
     /** [drawBuffers](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawBuffers) */
     fun drawBuffers(buffers: IntArray)
+
+    // ANGLE extension
+    /** [drawArraysInstancedANGLE](https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays/drawArraysInstancedANGLE) */
+    fun drawArraysInstancedANGLE(mode: Int, first: Int, count: Int, primcount: Int)
+    /** [drawElementsInstancedANGLE](https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays/drawElementsInstancedANGLE) */
+    fun drawElementsInstancedANGLE(mode: Int, count: Int, type: Int, offset: Int, primcount: Int)
+    /** [vertexAttribDivisorANGLE](https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays/vertexAttribDivisorANGLE) */
+    fun vertexAttribDivisorANGLE(index: Int, divisor: Int)
 }

@@ -16,29 +16,28 @@
 
 package app.thelema.test
 
+import app.thelema.app.APP
 import app.thelema.font.BitmapFont
+import app.thelema.font.font
 import app.thelema.g2d.SpriteBatch
 import app.thelema.gl.GL
+import app.thelema.gl.ScreenQuad
 import app.thelema.res.RES
+import app.thelema.res.load
 
 class BitmapFontTest: Test {
     override val name: String
         get() = "Bitmap font"
 
     override fun testMain() {
-        val font = RES.loadTyped<BitmapFont>(
-            uri = "arial-15.fnt",
-            block = {
-                loadOnSeparateThread = true
-            }
-        )
+        val font = RES.font("arial-15.fnt") {
+            separateThread = true
+        }
 
         val batch = SpriteBatch()
 
         GL.glClearColor(0.1f, 0.1f, 0.1f, 1f)
-        GL.render {
-            GL.glClear()
-
+        APP.onRender = {
             batch.begin()
             font.draw(batch, "qwerty 12345", 50f, 50f)
             batch.end()

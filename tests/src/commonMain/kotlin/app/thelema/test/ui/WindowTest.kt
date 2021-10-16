@@ -23,7 +23,7 @@ import app.thelema.input.MOUSE
 import app.thelema.test.Test
 import app.thelema.ui.Align
 import app.thelema.ui.Label
-import app.thelema.ui.Stage
+import app.thelema.ui.HeadUpDisplay
 import app.thelema.ui.Window
 
 class WindowTest: Test {
@@ -31,7 +31,7 @@ class WindowTest: Test {
         get() = "Window"
 
     override fun testMain() {
-        val stage = Stage()
+        val stage = HeadUpDisplay()
 
         MOUSE.addListener(stage)
         KB.addListener(stage)

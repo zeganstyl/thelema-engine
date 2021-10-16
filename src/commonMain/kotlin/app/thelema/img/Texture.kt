@@ -21,19 +21,21 @@ import app.thelema.gl.*
 /**
  * @author zeganstyl
  */
-abstract class Texture(
-    override var glTarget: Int,
-    override var textureHandle: Int = GL.glGenTexture()
-): ITexture {
-    override var name: String = ""
+abstract class Texture(override var glTarget: Int): ITexture {
+    override var textureHandle: Int = 0
 
-    var index = 0
+    override var width: Int = 0
+    override var height: Int = 0
 
-    override var minFilter: Int = GL_LINEAR
+    override var initOnBind: Boolean = true
+
+    private var updateParamsRequest = false
+
+    override var minFilter: Int = GL_NEAREST_MIPMAP_LINEAR
         set(value) {
             if (value != field) {
                 field = value
-                GL.glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, value)
+                updateParamsRequest = true
             }
         }
 
@@ -41,7 +43,7 @@ abstract class Texture(
         set(value) {
             if (value != field) {
                 field = value
-                GL.glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, value)
+                updateParamsRequest = true
             }
         }
 
@@ -50,7 +52,7 @@ abstract class Texture(
         set(value) {
             if (value != field) {
                 field = value
-                GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_S, value)
+                updateParamsRequest = true
             }
         }
 
@@ -59,7 +61,7 @@ abstract class Texture(
         set(value) {
             if (value != field) {
                 field = value
-                GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_T, value)
+                updateParamsRequest = true
             }
         }
 
@@ -67,7 +69,7 @@ abstract class Texture(
         set(value) {
             if (value != field) {
                 field = value
-                GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_R, value)
+                updateParamsRequest = true
             }
         }
 
@@ -82,9 +84,31 @@ abstract class Texture(
                     val oldValue = field
                     field = if (value > max) max else value
                     if (field != oldValue) {
-                        GL.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, field)
+                        updateParamsRequest = true
                     }
                 }
             }
         }
+
+    private fun updateParams() {
+        if (updateParamsRequest) {
+            updateParamsRequest = false
+            GL.glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, minFilter)
+            GL.glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, magFilter)
+            GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_S, sWrap)
+            GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_T, tWrap)
+            GL.glTexParameteri(glTarget, GL_TEXTURE_WRAP_R, rWrap)
+            if (GL.maxAnisotropicFilterLevel != 1f) GL.glTexParameterf(glTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropicFilter)
+        }
+    }
+
+    override fun bind(unit: Int) {
+        super.bind(unit)
+        updateParams()
+    }
+
+    override fun bind() {
+        super.bind()
+        updateParams()
+    }
 }

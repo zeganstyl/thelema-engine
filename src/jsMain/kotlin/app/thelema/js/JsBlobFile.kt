@@ -26,7 +26,7 @@ import org.khronos.webgl.Uint8Array
 import org.w3c.files.File
 
 class JsBlobFile(var blob: BlobEx?, override val path: String, val fs: JsFS): IFile {
-    override val location: Int
+    override val location: String
         get() = FileLocation.External
 
     override val isDirectory: Boolean

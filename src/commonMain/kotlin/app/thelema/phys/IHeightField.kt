@@ -16,22 +16,10 @@
 
 package app.thelema.phys
 
-import app.thelema.ecs.IEntityComponent
-
 /** @author zeganstyl */
-interface IHeightField: IEntityComponent {
-    var heightProvider: IHeightProvider?
-
-    val shape: IShape
+interface IHeightField: IShape {
+    var heightProvider: HeightProvider?
 
     override val componentName: String
-        get() = Name
-
-    fun startSimulation()
-
-    fun endSimulation()
-
-    companion object {
-        const val Name = "HeightField"
-    }
+        get() = "HeightField"
 }

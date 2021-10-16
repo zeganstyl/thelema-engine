@@ -20,6 +20,7 @@ import app.thelema.g2d.Batch
 import app.thelema.math.MATH
 import app.thelema.math.Rectangle
 import app.thelema.math.Vec2
+import app.thelema.utils.Color
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -160,7 +161,7 @@ open class ScrollPane (
      * @see .setCancelTouchFocus
      */
     fun cancelTouchFocus() {
-        val stage = stage
+        val stage = headUpDisplay
         stage?.cancelTouchFocusExcept(flickScrollListener, this)
     }
 
@@ -436,27 +437,27 @@ open class ScrollPane (
         updateWidgetPosition()
         // Draw the background ninepatch.
         val color = color
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
+        batch.setMulAlpha(color, parentAlpha)
         if (style.background != null) style.background!!.draw(batch, 0f, 0f, width, height)
         batch.flush()
-        if (clipBegin(widgetAreaBounds.x, widgetAreaBounds.y, widgetAreaBounds.width, widgetAreaBounds.height)) {
+        clipArea(widgetAreaBounds.x, widgetAreaBounds.y, widgetAreaBounds.width, widgetAreaBounds.height) {
             drawChildren(batch, parentAlpha)
             batch.flush()
-            clipEnd()
         }
         // Render scrollbars and knobs on top if they will be visible
-        var alpha = color.a * parentAlpha
+        var alpha = Color.getAlpha(color) * parentAlpha
         if (fadeScrollBars) alpha *= Interpolation.fade.apply(fadeAlpha / fadeAlphaSeconds)
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha)
-        drawScrollBars(batch, color.r, color.g, color.b, alpha)
+        batch.setMulAlpha(color, parentAlpha)
+        if (alpha > 0f) {
+            batch.color = Color.mulAlpha(color, alpha)
+            drawScrollBars(batch)
+        }
         resetTransform(batch)
     }
 
     /** Renders the scrollbars after the children have been drawn. If the scrollbars faded out, a is zero and rendering can be
      * skipped.  */
-    protected fun drawScrollBars(batch: Batch, r: Float, g: Float, b: Float, a: Float) {
-        if (a <= 0) return
-        batch.setColor(r, g, b, a)
+    protected fun drawScrollBars(batch: Batch) {
         val x = scrollX && hKnobBounds.width > 0
         val y = scrollY && vKnobBounds.height > 0
         if (x && y) {
@@ -803,7 +804,7 @@ open class ScrollPane (
         if (focusOnMouseEnter) {
             addListener(object : InputListener {
                 override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    stage?.scrollFocus = this@ScrollPane
+                    headUpDisplay?.scrollFocus = this@ScrollPane
                 }
             })
         }
@@ -813,7 +814,7 @@ open class ScrollPane (
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 if (draggingPointer != -1) return false
                 if (pointer == 0 && button != 0) return false
-                if (stage != null) stage!!.scrollFocus = this@ScrollPane
+                if (headUpDisplay != null) headUpDisplay!!.scrollFocus = this@ScrollPane
                 if (!flickScroll) setScrollbarsVisible(true)
                 if (fadeAlpha == 0f) return false
                 if (scrollBarTouch && scrollX && hScrollBounds.contains(x, y)) {

@@ -16,73 +16,33 @@
 
 package app.thelema.res
 
+import app.thelema.ecs.EntityLoader
 import app.thelema.ecs.IEntityComponent
-import app.thelema.fs.FS
 import app.thelema.fs.IFile
 
 interface IProject: IEntityComponent {
-    val providers: List<IResourceProvider>
-
-    val resources: List<Resource>
+    val loaders: List<ILoader>
 
     var loadOnSeparateThreadByDefault: Boolean
 
-    var file: IFile
+    var file: IFile?
 
-    fun addLoadersListener(listener: LoadersListener)
+    val absoluteDirectory: IFile?
 
-    fun removeLoadersListener(listener: LoadersListener)
+    var mainScene: EntityLoader?
 
-    fun addReferenceListener(listener: ReferenceListener)
+    fun addProjectListener(listener: ProjectListener)
 
-    fun removeReferenceListener(listener: ReferenceListener)
+    fun removeLoadersListener(listener: ProjectListener)
 
-    fun onComponentAdded(
-        entityPath: String,
-        componentName: String,
-        isDisposable: Boolean = true,
-        block: (component: IEntityComponent) -> Unit
-    ): ReferenceListener?
-
-    fun resourceUriChanged(oldValue: String, newValue: String)
+    fun monitorLoading(loader: ILoader)
 
     /** Must be called on OpenGL thread */
     fun update(delta: Float)
 
-    fun addLoaderProvider(provider: IResourceProvider)
+    fun load(path: String, loaderName: String, block: ILoader.() -> Unit = {}): ILoader
 
-    fun removeResourceType(provider: IResourceProvider)
+    fun <T: ILoader> load(path: String, loader: T, block: T.() -> Unit = {}): T
 
-    fun canLoad(uri: String): Boolean =
-        providers.firstOrNull { it.canLoad(FS.internal(uri)) } != null
-
-    fun canLoad(file: IFile): Boolean =
-        providers.firstOrNull { it.canLoad(file) } != null
-
-    fun load(uri: String, loader: String = "", block: ILoader.() -> Unit = {}): ILoader =
-        load(FS.internal(uri), loader, block)
-
-    fun load(file: IFile, loader: String = "", block: ILoader.() -> Unit = {}): ILoader
-
-    fun <T : ILoader> loadTyped(uri: String, loader: String = "", block: T.() -> Unit = {}): T =
-        load(uri, loader, block as (ILoader.() -> Unit)) as T
-
-    fun <T : ILoader> loadTyped(file: IFile, loader: String = "", block: T.() -> Unit = {}): T =
-        load(file, loader, block as (ILoader.() -> Unit)) as T
-
-    operator fun get(uri: String): ILoader = getOrNull(uri)!!
-
-    fun getOrNull(uri: String): ILoader?
-
-    fun <T: ILoader> getTyped(uri: String): T = get(uri) as T
-
-    fun <T: ILoader> getTypedOrNull(uri: String): T? = getOrNull(uri) as T?
-
-    fun remove(uri: String)
+    fun getLoaderOrNull(uri: String, loaderName: String): ILoader?
 }
-
-inline fun <reified T: IEntityComponent> IProject.onComponentAdded(
-    entityPath: String,
-    isDisposable: Boolean = true,
-    noinline block: (component: T) -> Unit
-): ReferenceListener? = RES.project.onComponentAdded(entityPath, T::class.simpleName!!, isDisposable, block as (component: IEntityComponent) -> Unit)

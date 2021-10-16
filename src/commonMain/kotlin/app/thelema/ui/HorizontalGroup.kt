@@ -48,7 +48,7 @@ class HorizontalGroup() : WidgetGroup() {
     override var prefHeight = 0f
         get() {
             if (sizeInvalid) computeSize()
-            return prefHeight
+            return field
         }
 
     private var lastPrefHeight = 0f
@@ -65,10 +65,13 @@ class HorizontalGroup() : WidgetGroup() {
         private set
     var expand = false
         private set
+
+    /** Sets the horizontal space between children.  */
     var space = 0f
-        private set
+
+    /** Sets the vertical space between rows when wrap is enabled.  */
     var wrapSpace = 0f
-        private set
+
     var fill = 0f
         private set
     var padTop = 0f
@@ -175,10 +178,19 @@ class HorizontalGroup() : WidgetGroup() {
         val fill = fill
         val rowHeight = (if (expand) height else prefHeight) - padTop - padBottom
         var x = padLeft
-        if (align and Align.right != 0) x += width - prefWidth else if (align and Align.left == 0) // center
+        if (align and Align.right != 0) {
+            x += width - prefWidth
+        } else if (align and Align.left == 0) {
+            // center
             x += (width - prefWidth) / 2
-        val startY: Float
-        startY = if (align and Align.bottom != 0) padBottom else if (align and Align.top != 0) height - padTop - rowHeight else padBottom + (height - padBottom - padTop - rowHeight) / 2
+        }
+        val startY: Float = if (align and Align.bottom != 0) {
+            padBottom
+        } else if (align and Align.top != 0) {
+            height - padTop - rowHeight
+        } else {
+            padBottom + (height - padBottom - padTop - rowHeight) / 2
+        }
         align = rowAlign
         val children = children
         var i = 0
@@ -197,7 +209,7 @@ class HorizontalGroup() : WidgetGroup() {
             var layout: Layout? = null
             if (child is Layout) {
                 layout = child
-                width = layout!!.prefWidth
+                width = layout.prefWidth
                 height = layout.prefHeight
             } else {
                 width = child.width
@@ -210,9 +222,17 @@ class HorizontalGroup() : WidgetGroup() {
                 if (maxHeight > 0 && height > maxHeight) height = maxHeight
             }
             var y = startY
-            if (align and Align.top != 0) y += rowHeight - height else if (align and Align.bottom == 0) // center
+            if (align and Align.top != 0) {
+                y += rowHeight - height
+            } else if (align and Align.bottom == 0) {
+                // center
                 y += (rowHeight - height) / 2
-            if (round) child.setBounds(x.roundToLong().toFloat(), y.roundToLong().toFloat(), width.roundToLong().toFloat(), height.roundToLong().toFloat()) else child.setBounds(x, y, width, height)
+            }
+            if (round) {
+                child.setBounds(x.toInt().toFloat(), y.toInt().toFloat(), width.toInt().toFloat(), height.toInt().toFloat())
+            } else {
+                child.setBounds(x, y, width, height)
+            }
             x += width + space
             layout?.validate()
             i += incr
@@ -237,7 +257,9 @@ class HorizontalGroup() : WidgetGroup() {
         var xStart = padLeft
         var x = 0f
         var rowHeight = 0f
-        if (align and Align.top != 0) rowY += height - prefHeight else if (align and Align.bottom == 0) // center
+        if (align and Align.top != 0) {
+            rowY += height - prefHeight
+        } else if (align and Align.bottom == 0) // center
             rowY += (height - prefHeight) / 2
         if (align and Align.right != 0) xStart += groupWidth - prefWidth else if (align and Align.left == 0) // center
             xStart += (groupWidth - prefWidth) / 2
@@ -261,7 +283,7 @@ class HorizontalGroup() : WidgetGroup() {
             var layout: Layout? = null
             if (child is Layout) {
                 layout = child
-                width = layout!!.prefWidth
+                width = layout.prefWidth
                 if (width > groupWidth) width = max(groupWidth, layout.minWidth)
                 height = layout.prefHeight
             } else {
@@ -310,18 +332,6 @@ class HorizontalGroup() : WidgetGroup() {
         return this
     }
 
-    /** Sets the horizontal space between children.  */
-    fun space(space: Float): HorizontalGroup {
-        this.space = space
-        return this
-    }
-
-    /** Sets the vertical space between rows when wrap is enabled.  */
-    fun wrapSpace(wrapSpace: Float): HorizontalGroup {
-        this.wrapSpace = wrapSpace
-        return this
-    }
-
     /** Sets the padTop, padLeft, padBottom, and padRight to the specified value.  */
     fun pad(pad: Float): HorizontalGroup {
         padTop = pad
@@ -339,64 +349,10 @@ class HorizontalGroup() : WidgetGroup() {
         return this
     }
 
-    fun padTop(padTop: Float): HorizontalGroup {
-        this.padTop = padTop
-        return this
-    }
-
-    fun padLeft(padLeft: Float): HorizontalGroup {
-        this.padLeft = padLeft
-        return this
-    }
-
-    fun padBottom(padBottom: Float): HorizontalGroup {
-        this.padBottom = padBottom
-        return this
-    }
-
-    fun padRight(padRight: Float): HorizontalGroup {
-        this.padRight = padRight
-        return this
-    }
-
     /** Sets the alignment of all widgets within the horizontal group. Set to [Align.center], [Align.top],
      * [Align.bottom], [Align.left], [Align.right], or any combination of those.  */
     fun align(align: Int): HorizontalGroup {
         this.align = align
-        return this
-    }
-
-    /** Sets the alignment of all widgets within the horizontal group to [Align.center]. This clears any other alignment.  */
-    fun center(): HorizontalGroup {
-        align = Align.center
-        return this
-    }
-
-    /** Sets [Align.top] and clears [Align.bottom] for the alignment of all widgets within the horizontal group.  */
-    fun setTop(): HorizontalGroup {
-        align = align or Align.top
-        align = align and Align.bottom.inv()
-        return this
-    }
-
-    /** Adds [Align.left] and clears [Align.right] for the alignment of all widgets within the horizontal group.  */
-    fun left(): HorizontalGroup {
-        align = align or Align.left
-        align = align and Align.right.inv()
-        return this
-    }
-
-    /** Sets [Align.bottom] and clears [Align.top] for the alignment of all widgets within the horizontal group.  */
-    fun bottom(): HorizontalGroup {
-        align = align or Align.bottom
-        align = align and Align.top.inv()
-        return this
-    }
-
-    /** Adds [Align.right] and clears [Align.left] for the alignment of all widgets within the horizontal group.  */
-    fun setRight(): HorizontalGroup {
-        align = align or Align.right
-        align = align and Align.left.inv()
         return this
     }
 

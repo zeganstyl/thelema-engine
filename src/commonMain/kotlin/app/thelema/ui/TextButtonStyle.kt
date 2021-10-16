@@ -16,8 +16,7 @@
 
 package app.thelema.ui
 
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
+import app.thelema.utils.Color
 
 /** The style for a text button, see [TextButton].
  * @author Nathan Sweet
@@ -30,15 +29,11 @@ open class TextButtonStyle(
 
     var label: LabelStyle = DSKIN.label
 
-    var fontColor: IVec4 =
-        Vec4(1f, 1f, 1f, 1f)
-        set(value) {
-            field.set(value)
-        }
-    var downFontColor: IVec4? = Vec4(1f, 0f, 0f, 1f)
-    var overFontColor: IVec4? = Vec4(0f, 1f, 0f, 1f)
-    var checkedFontColor: IVec4? = null
-    var checkedOverFontColor: IVec4? = null
-    var disabledFontColor: IVec4? = null
+    var fontColor: Int = -1
+    var downFontColor: Int? = Color.RED_INT
+    var overFontColor: Int? = Color.GREEN_INT
+    var checkedFontColor: Int? = null
+    var checkedOverFontColor: Int? = null
+    var disabledFontColor: Int? = null
     var focusBorder: Drawable? = null
 }

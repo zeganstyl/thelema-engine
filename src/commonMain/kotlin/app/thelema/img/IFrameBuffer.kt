@@ -16,6 +16,7 @@
 
 package app.thelema.img
 
+import app.thelema.ecs.ECS
 import app.thelema.gl.*
 import app.thelema.utils.LOG
 
@@ -26,7 +27,7 @@ interface IFrameBuffer {
     val width: Int
     val height: Int
 
-    val attachments: MutableList<IFrameBufferAttachment>
+    val attachments: List<IFrameBufferAttachment>
 
     var frameBufferHandle: Int
 
@@ -34,6 +35,10 @@ interface IFrameBuffer {
 
     /** @param index attachment index */
     fun getTexture(index: Int) = attachments[index].texture!!
+
+    fun addAttachment(attachment: IFrameBufferAttachment)
+
+    fun removeAttachment(attachment: IFrameBufferAttachment)
 
     fun buildAttachments() {
         if (frameBufferHandle == 0) frameBufferHandle = GL.glGenFramebuffer()
@@ -154,9 +159,24 @@ inline fun IFrameBuffer.bind(block: IFrameBuffer.() -> Unit) {
     unbind()
 }
 
-/** Like [bind], but also sets viewport. */
+/** Like [bind], but also sets viewport. Before invoke [block], buffer will be cleared with glClear */
 // Method implemented as extension for interface, so it can be inlined
 inline fun IFrameBuffer.render(block: IFrameBuffer.() -> Unit) {
+    renderBegin()
+    GL.glClear()
+    block(this)
+    renderEnd()
+}
+
+fun IFrameBuffer.renderCurrentScene(shaderChannel: String? = null) {
+    renderBegin()
+    GL.glClear()
+    ECS.render(shaderChannel)
+    renderEnd()
+}
+
+/** Like [bind], but also sets viewport. No clearing with glClear, so you can do it b yourself. */
+inline fun IFrameBuffer.renderNoClear(block: IFrameBuffer.() -> Unit) {
     renderBegin()
     block(this)
     renderEnd()

@@ -10,7 +10,9 @@ import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 import app.thelema.ecs.Entity
-import app.thelema.g3d.node.TransformNode
+import app.thelema.ecs.component
+import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.TransformNode
 import app.thelema.jvm.JvmGraphiclessApp
 import java.time.Duration
 
@@ -20,8 +22,8 @@ fun main() {
     var sceneAction: Boolean = false
 
     Entity {
-        child("node") {
-            component<TransformNode> {
+        entity("node") {
+            component<ITransformNode> {
 
             }
         }

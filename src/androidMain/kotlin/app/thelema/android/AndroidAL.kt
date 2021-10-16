@@ -14,7 +14,7 @@ import app.thelema.fs.IFile
 import java.io.IOException
 
 
-class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAL {
+class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
     override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice {
         return app.thelema.android.AndroidAudioDevice(samplingRate, channelsNum)
     }

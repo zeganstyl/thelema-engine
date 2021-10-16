@@ -17,17 +17,18 @@
 package app.thelema.test.g3d.terrain
 
 import app.thelema.app.APP
-import app.thelema.data.IFloatData
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.PlaneMeshBuilder
-import app.thelema.g3d.terrain.GrassPatchMeshBuilder
+import app.thelema.g3d.mesh.PlaneMesh
+import app.thelema.g3d.terrain.GrassPatchMesh
 import app.thelema.gl.*
 import app.thelema.img.IMG
 import app.thelema.img.ImageSampler
 import app.thelema.img.Texture2D
+import app.thelema.img.image
 import app.thelema.math.Perlin
 import app.thelema.math.Vec3
+import app.thelema.res.RES
 import app.thelema.shader.Shader
 import app.thelema.test.Test
 import kotlin.math.floor
@@ -87,13 +88,12 @@ void main() {
         grassShader.bind()
         grassShader["tex"] = 0
 
-        val plane = PlaneMeshBuilder().apply {
-            positionName = "POSITION"
+        val plane = PlaneMesh {
             width = splatMapWorldSize * 8f
             height = splatMapWorldSize * 8f
-            xDivisions = 1
-            yDivisions = 1
-        }.build()
+            hDivisions = 1
+            vDivisions = 1
+        }
 
         ActiveCamera {
             far = 1000f
@@ -102,18 +102,12 @@ void main() {
         val control = OrbitCameraControl()
         control.listenToMouse()
 
-        val grassTexture = Texture2D()
-        grassTexture.load(
-            "terrain/grass-diffuse.png",
-            minFilter = GL_LINEAR_MIPMAP_LINEAR,
-            magFilter = GL_LINEAR,
-            sWrap = GL_CLAMP_TO_EDGE,
-            tWrap = GL_CLAMP_TO_EDGE,
-            generateMipmaps = true
-        )
-        grassTexture.bind()
+        val grassTexture = Texture2D("terrain/grass-diffuse.png") {
+            sWrap = GL_CLAMP_TO_EDGE
+            tWrap = GL_CLAMP_TO_EDGE
+        }
 
-        val grass = GrassPatchMeshBuilder().apply {
+        val grassPatch = GrassPatchMesh().apply {
             rotations = listOf(0.1f, 1f, 0.25f, 0.3f, 0.15f)
             val dist = 0.5f
             points = listOf(
@@ -123,29 +117,24 @@ void main() {
                 Vec3(-dist, 0f, -dist),
                 Vec3(0f, 0f, 0f)
             )
-        }.build()
+        }
 
-        var splatImage = IMG.image()
-        var imageFloatView: IFloatData? = null
+        val grassInstances = Mesh()
+        grassInstances.inheritedMesh = grassPatch.mesh
+        val grassInstancesBuffer = grassInstances.addVertexBuffer {
+            addAttribute(3, "instancePos")
+            initVertexBuffer(100 * 100)
+        }
+        val instancesFloatView = grassInstancesBuffer.bytes.floatView()
 
         val splatMapTexture = Texture2D()
-        IMG.load(
-            uri = "terrain/splatmap.png",
-            ready = {
-                splatImage = it
-
-                splatMapTexture.load(splatImage)
-                splatMapTexture.bind()
+        val splatImage = RES.image("terrain/splatmap.png") {
+            onLoaded {
+                splatMapTexture.load(this)
                 splatMapTexture.minFilter = GL_NEAREST
                 splatMapTexture.magFilter = GL_NEAREST
-
-                grass.instances = VertexBuffer {
-                    addAttribute(3, "instancePos", GL_FLOAT, true)
-                    initVertexBuffer(100 * 100)
-                    imageFloatView = bytes.floatView()
-                }
             }
-        )
+        }
 
         var indexX = Int.MIN_VALUE
         var indexZ = Int.MIN_VALUE
@@ -159,13 +148,7 @@ void main() {
         sampler.texelWidth = splatMapWorldSize / splatImage.width
         sampler.texelHeight = splatMapWorldSize / splatImage.height
 
-        GL.isDepthTestEnabled = true
-        GL.isBlendingEnabled = true
-        GL.setSimpleAlphaBlending()
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
@@ -173,41 +156,39 @@ void main() {
             val tileIndexZ = floor(ActiveCamera.position.z / tileSize).toInt()
 
             if (tileIndexX != indexX || tileIndexZ != indexZ) {
-                val floatView = imageFloatView
-                if (floatView != null) {
-                    indexX = tileIndexX
-                    indexZ = tileIndexZ
+                val floatView = instancesFloatView
+                indexX = tileIndexX
+                indexZ = tileIndexZ
 
-                    floatView.rewind()
+                floatView.rewind()
 
-                    val tileX = tileIndexX * tileSize
-                    val tileZ = tileIndexZ * tileSize
+                val tileX = tileIndexX * tileSize
+                val tileZ = tileIndexZ * tileSize
 
-                    var instancesNum = 0
+                var instancesNum = 0
 
-                    sampler.iteratePixels(tileX, tileZ, tileSize, tileSize) { x, y, r, g, b, a ->
-                        if (g > 128) {
-                            floatView.put(x + perlin.sample(x, 0.3f, y))
-                            floatView.put(0f)
-                            floatView.put(y + perlin.sample(x, 1.7f, y))
-                            instancesNum++
-                        }
+                sampler.iteratePixels(tileX, tileZ, tileSize, tileSize) { x, y, r, g, b, a ->
+                    if (g > 128) {
+                        floatView.put(x + perlin.sample(x, 0.3f, y))
+                        floatView.put(0f)
+                        floatView.put(y + perlin.sample(x, 1.7f, y))
+                        instancesNum++
                     }
-
-                    grass.instances?.loadBufferToGpu()
-                    //grass.instances?.instancesToRender = instancesNum
                 }
+
+                grassInstancesBuffer.requestBufferUploading()
+                //grass.instances?.instancesToRender = instancesNum
             }
 
             planeShader.bind()
             planeShader["viewProj"] = ActiveCamera.viewProjectionMatrix
             splatMapTexture.bind(0)
-            plane.render(planeShader)
+            plane.mesh.render(planeShader)
 
             grassShader.bind()
             grassShader["viewProj"] = ActiveCamera.viewProjectionMatrix
             grassTexture.bind(0)
-            grass.render(grassShader)
+            grassInstances.render(grassShader)
         }
     }
 }

@@ -16,6 +16,7 @@
 
 package app.thelema.g2d
 
+import app.thelema.gl.IVertexBuffer
 import app.thelema.img.ITexture2D
 import app.thelema.math.Affine2
 import app.thelema.math.IMat4
@@ -50,10 +51,47 @@ import app.thelema.utils.Color
  *
  *
  * A Batch has to be disposed if it is no longer used.
- * @author mzechner
- * @author Nathan Sweet
+ * @author mzechner, Nathan Sweet
  */
 interface Batch {
+    /** Returns the current projection matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
+    /** Sets the projection matrix to be used by this Batch. If this is called inside a [begin]/[end] block, the
+     * current batch is flushed to the gpu.  */
+    var projectionMatrix: IMat4
+
+    /** Returns the current transform matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
+    /** Sets the transform matrix to be used by this Batch.  */
+    var transformMatrix: IMat4
+
+    val combinedMatrix: IMat4
+
+    /** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "POSITION", the texture
+     * coordinates attribute is called "UV", the color attribute is called "aColor".
+     * which gets "0" appended to indicate the use of the first texture unit. The combined transform and projection matrx is
+     * uploaded via a mat4 uniform called "u_projTrans". The texture sampler is passed via a uniform called "u_texture".
+     *
+     *
+     * Call this method with a null argument to use the default shader.
+     *
+     *
+     * This method will flush the batch before setting the new shader, you can call it in between [begin] and [end].
+     */
+    var shader: IShader
+
+    /** @return true if currently between begin and end. */
+    val isDrawing: Boolean
+
+    /** @return the rendering color of this Batch. If the returned instance is manipulated, [setColor] must be called
+     * afterward.
+     */
+    /** Sets the color used to tint images when they are added to the Batch. Default is [Color.WHITE].  */
+    var color: Int
+
+    /** Rendering color of this Batch in vertex format (alpha compressed to 0-254) */
+    var packedColor: Float
+
+    val vertexBuffer: IVertexBuffer
+
     /** Sets up the Batch for drawing. This will disable depth buffer writing. It enables blending and texturing. If you have more
      * texture units enabled than the first one you have to disable them before calling this. Uses a screen coordinate system by
      * default where everything is given in pixels. You can specify your own projection and modelview matrices via
@@ -64,18 +102,11 @@ interface Batch {
      * [begin]  */
     fun end()
 
+    fun setMulAlpha(color: Int, alpha: Float) {
+        this.color = Color.mulAlpha(color, alpha)
+    }
+
     fun setColor(r: Float, g: Float, b: Float, a: Float)
-
-    /** @return the rendering color of this Batch. If the returned instance is manipulated, [setColor] must be called
-     * afterward.
-     */
-    /** Sets the color used to tint images when they are added to the Batch. Default is [Color.WHITE].  */
-    var color: IVec4
-
-    /** Rendering color of this Batch in vertex format (alpha compressed to 0-254)
-     * See [Color.toFloatBits]
-     */
-    var packedColor: Float
 
     /** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The rectangle is offset by
      * originX, originY relative to the origin. Scale specifies the scaling factor by which the rectangle should be scaled around
@@ -139,6 +170,8 @@ interface Batch {
      */
     fun draw(texture: ITexture2D, x: Float, y: Float, width: Float, height: Float, u: Float, v: Float, u2: Float, v2: Float)
 
+    fun draw(texture: ITexture2D, x: Float, y: Float, x2: Float, y2: Float, u: Float, v: Float, u2: Float, v2: Float, color: Int)
+
     /** Draws a rectangle with the bottom left corner at x,y and stretching the region to cover the given width and height.  */
     fun draw(texture: ITexture2D, x: Float, y: Float, width: Float = texture.width.toFloat(), height: Float = texture.height.toFloat())
 
@@ -177,56 +210,6 @@ interface Batch {
 
     /** Enables blending for drawing sprites. Calling this within [begin]/[end] will flush the batch.  */
     fun enableBlending()
-
-    /** Sets the blending function to be used when rendering sprites.
-     * @param srcFunc the source function, e.g. GL20.GL_SRC_ALPHA. If set to -1, Batch won't change the blending function.
-     * @param dstFunc the destination function, e.g. GL20.GL_ONE_MINUS_SRC_ALPHA
-     */
-    fun setBlendFunction(srcFunc: Int, dstFunc: Int)
-
-    /** Sets separate (color/alpha) blending function to be used when rendering sprites.
-     * @param srcFuncColor the source color function, e.g. GL20.GL_SRC_ALPHA. If set to -1, Batch won't change the blending function.
-     * @param dstFuncColor the destination color function, e.g. GL20.GL_ONE_MINUS_SRC_ALPHA.
-     * @param srcFuncAlpha the source alpha function, e.g. GL20.GL_SRC_ALPHA.
-     * @param dstFuncAlpha the destination alpha function, e.g. GL20.GL_ONE_MINUS_SRC_ALPHA.
-     */
-    fun setBlendFunctionSeparate(srcFuncColor: Int, dstFuncColor: Int, srcFuncAlpha: Int, dstFuncAlpha: Int)
-
-    val blendSrcFunc: Int
-    val blendDstFunc: Int
-    val blendSrcFuncAlpha: Int
-    val blendDstFuncAlpha: Int
-    /** Returns the current projection matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
-    /** Sets the projection matrix to be used by this Batch. If this is called inside a [begin]/[end] block, the
-     * current batch is flushed to the gpu.  */
-    var projectionMatrix: IMat4
-
-    /** Returns the current transform matrix. Changing this within [begin]/[end] results in undefined behaviour.  */
-    /** Sets the transform matrix to be used by this Batch.  */
-    var transformMatrix: IMat4
-
-    val combinedMatrix: IMat4
-
-    /** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "POSITION", the texture
-     * coordinates attribute is called "UV", the color attribute is called "aColor".
-     * which gets "0" appended to indicate the use of the first texture unit. The combined transform and projection matrx is
-     * uploaded via a mat4 uniform called "u_projTrans". The texture sampler is passed via a uniform called "u_texture".
-     *
-     *
-     * Call this method with a null argument to use the default shader.
-     *
-     *
-     * This method will flush the batch before setting the new shader, you can call it in between [begin] and [end].
-     */
-    var shader: IShader
-
-    /** @return true if blending for sprites is enabled
-     */
-    val isBlendingEnabled: Boolean
-
-    /** @return true if currently between begin and end.
-     */
-    val isDrawing: Boolean
 
     companion object {
         const val X1 = 0

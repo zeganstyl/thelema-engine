@@ -41,27 +41,27 @@ class JsonSimpleArray(val source: JsonArray = JsonArray()): IJsonArray {
     override fun int(index: Int): Int = source.getInteger(index)
     override fun bool(index: Int): Boolean = source.getBoolean(index)
 
-    override fun ints(call: (value: Int) -> Unit) {
+    override fun forEachInt(block: (value: Int) -> Unit) {
         for (i in 0 until source.size) {
-            call(source.getInteger(i))
+            block(source.getInteger(i))
         }
     }
 
-    override fun strings(call: (value: String) -> Unit) {
+    override fun forEachString(block: (value: String) -> Unit) {
         for (i in 0 until source.size) {
-            call(source.getString(i))
+            block(source.getString(i))
         }
     }
 
-    override fun bools(call: (value: Boolean) -> Unit) {
+    override fun forEachBool(block: (value: Boolean) -> Unit) {
         for (i in 0 until source.size) {
-            call(source.getBoolean(i))
+            block(source.getBoolean(i))
         }
     }
 
-    override fun floats(call: (value: Float) -> Unit) {
+    override fun forEachFloat(block: (value: Float) -> Unit) {
         for (i in 0 until source.size) {
-            call(source.getFloat(i))
+            block(source.getFloat(i))
         }
     }
 
@@ -89,15 +89,15 @@ class JsonSimpleArray(val source: JsonArray = JsonArray()): IJsonArray {
         source.add(obj.sourceObject)
     }
 
-    override fun objs(call: (value: IJsonObject) -> Unit) {
+    override fun forEachObject(block: (value: IJsonObject) -> Unit) {
         for (i in 0 until source.size) {
-            call(JsonSimpleObject(source[i] as JsonObject))
+            block(JsonSimpleObject(source[i] as JsonObject))
         }
     }
 
-    override fun arrays(call: (value: IJsonArray) -> Unit) {
+    override fun forEachArray(block: (value: IJsonArray) -> Unit) {
         for (i in 0 until source.size) {
-            call(JsonSimpleArray(source[i] as JsonArray))
+            block(JsonSimpleArray(source[i] as JsonArray))
         }
     }
 

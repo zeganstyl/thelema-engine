@@ -16,54 +16,62 @@
 
 package app.thelema.shader.node
 
+import app.thelema.g3d.IScene
 import app.thelema.img.ITexture
 import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
 
 /** @author zeganstyl */
-class TextureNode(
-    uv: IShaderData = GLSL.zeroFloat,
-    var texture: ITexture? = null,
+class TextureNode(): ShaderNode() {
+    constructor(block: TextureNode.() -> Unit): this() { block(this) }
 
-    /** If you use JPEG images, better to set it false */
-    var sRGB: Boolean = true,
+    constructor(
+        uv: IShaderData = GLSL.zeroFloat,
+        texture: ITexture? = null,
 
-    /** Use [GLSLType] */
-    var textureType: Int = GLSLType.Sampler2D
-): ShaderNode() {
+        /** If you use JPEG images, better to set it false */
+        sRGB: Boolean = true,
+
+        /** Use [GLSLType] */
+        textureType: String = GLSLType.Sampler2D
+    ): this() {
+        this.uv = uv
+        this.texture = texture
+        this.sRGB = sRGB
+        this.textureType = textureType
+    }
+
     override val name: String
         get() = "Texture"
 
-    override val classId: String
-        get() = ClassId
-
-    override val inputForm: Map<String, Int>
-        get() = InputForm
-
     var uv
-        get() = input[UV] ?: GLSL.zeroFloat
-        set(value) = setInput(UV, value)
+        get() = input["uv"] ?: GLSL.zeroFloat
+        set(value) = setInput("uv", value)
 
     val sampler = defOut(GLSLFloat("tex"))
     val color = defOut(GLSLVec4("texColor"))
     val alpha = defOut(GLSLFloat("texAlpha").apply { scope = GLSLScope.Inline })
 
-    init {
-        setInput(UV, uv)
-    }
+    var texture: ITexture? = null
+
+    /** If you use JPEG images, better to set it false */
+    var sRGB: Boolean = true
+
+    /** Use [GLSLType] */
+    var textureType: String = GLSLType.Sampler2D
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
 
         sRGB = json.bool("sRGB", true)
-        textureType = GLSLType.getTypeByName(json.string("textureType", GLSLType.getTypeName(GLSLType.Sampler2D)))
+        textureType = json.string("textureType", GLSLType.Sampler2D)
     }
 
     override fun writeJson(json: IJsonObject) {
         super.writeJson(json)
 
         json["sRGB"] = sRGB
-        json["textureType"] = GLSLType.getTypeName(textureType)
+        json["textureType"] = textureType
     }
 
     override fun prepareToBuild() {
@@ -71,8 +79,9 @@ class TextureNode(
         alpha.inlineCode = "${color.ref}.a"
     }
 
-    override fun prepareToDrawMesh(mesh: IMesh) {
-        super.prepareToDrawMesh(mesh)
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        super.prepareShaderNode(mesh, scene)
+
         if (color.isUsed || alpha.isUsed) {
             val unit = shader.getNextTextureUnit()
             shader[sampler.ref] = unit
@@ -81,11 +90,11 @@ class TextureNode(
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        out.append("uniform ${GLSLType.getTypeName(textureType)} ${sampler.ref};\n")
+        out.append("uniform $textureType ${sampler.ref};\n")
         out.append("${color.typedRef} = vec4(0.0);\n")
     }
 
-    private fun getSamplerAccessCode(type: Int): String {
+    private fun getSamplerAccessCode(type: String): String {
         return if (shader.version >= 130) "texture" else when (type) {
             GLSLType.Sampler2D -> "texture2D"
             GLSLType.Sampler3D -> "texture3D"
@@ -94,7 +103,7 @@ class TextureNode(
         }
     }
 
-    private fun getCoordinates(type: Int): String = when (type) {
+    private fun getCoordinates(type: String): String = when (type) {
         GLSLType.Sampler2D -> uv.asVec2()
         GLSLType.SamplerCube -> uv.asVec3()
         else -> uv.ref
@@ -110,15 +119,5 @@ class TextureNode(
         textureType = other.textureType
         sRGB = other.sRGB
         return this
-    }
-
-    companion object {
-        const val ClassId = "texture"
-
-        const val UV = "uv"
-
-        val InputForm = LinkedHashMap<String, Int>().apply {
-            put(UV, GLSLType.Vec2)
-        }
     }
 }

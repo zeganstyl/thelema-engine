@@ -17,7 +17,7 @@
 package app.thelema.ui
 
 import app.thelema.app.APP
-import app.thelema.input.MOUSE
+import app.thelema.input.BUTTON
 import kotlin.math.abs
 
 
@@ -30,7 +30,7 @@ import kotlin.math.abs
  */
 open class ClickListener(
     /** Sets the button to listen for, all other buttons are ignored. Use -1 for any button.  */
-    var button: Int = MOUSE.LEFT
+    var button: Int = BUTTON.LEFT
 ) : InputListener {
     var tapSquareSize = 14f
     var touchDownX = -1f

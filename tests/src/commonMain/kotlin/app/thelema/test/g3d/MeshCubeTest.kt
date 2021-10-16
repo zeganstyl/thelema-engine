@@ -16,6 +16,7 @@
 
 package app.thelema.test.g3d
 
+import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.math.MATH
@@ -53,7 +54,7 @@ class MeshCubeTest: Test {
             setIndexBuffer {
                 indexType = GL_UNSIGNED_SHORT
                 initIndexBuffer(6 * 6) {
-                    putShorts(
+                    putIndices(
                         // front
                         0, 1, 2,
                         2, 3, 0,
@@ -103,9 +104,7 @@ void main() {
         val cubeMatrix4 = Mat4()
         val temp = Mat4()
 
-        GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
+        APP.onRender = {
             cubeMatrix4.rotate(0f, 1f, 0f, 0.01f)
 
             shader.bind()

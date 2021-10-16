@@ -27,36 +27,36 @@ object FocusManager {
     private var focusedWidget: Focusable? = null
     /**
      * Takes focus from current focused com.ksdfv.thelema.studio.widget (if any), and sets focus to provided com.ksdfv.thelema.studio.widget
-     * @param stage if passed stage is not null then stage keyboard focus will be set to null
+     * @param headUpDisplay if passed stage is not null then stage keyboard focus will be set to null
      * @param widget that will acquire focus
      */
-    fun switchFocus(stage: Stage?, widget: Focusable) {
+    fun switchFocus(headUpDisplay: HeadUpDisplay?, widget: Focusable) {
         if (focusedWidget === widget) return
         focusedWidget?.focusLost()
         focusedWidget = widget
-        if (stage != null) stage.keyboardFocus = null
+        if (headUpDisplay != null) headUpDisplay.keyboardFocus = null
         focusedWidget?.focusGained()
     }
 
     /**
      * Takes focus from current focused com.ksdfv.thelema.studio.widget (if any), and sets current focused com.ksdfv.thelema.studio.widget to null. If widgets owns
      * keyboard focus [resetFocus] should be always preferred.
-     * @param stage if passed stage is not null then stage keyboard focus will be set to null
+     * @param headUpDisplay if passed stage is not null then stage keyboard focus will be set to null
      */
-    fun resetFocus(stage: Stage?) {
+    fun resetFocus(headUpDisplay: HeadUpDisplay?) {
         focusedWidget?.focusLost()
-        if (stage != null) stage.keyboardFocus = null
+        if (headUpDisplay != null) headUpDisplay.keyboardFocus = null
         focusedWidget = null
     }
 
     /**
      * Takes focus from current focused com.ksdfv.thelema.studio.widget (if any), and sets current focused com.ksdfv.thelema.studio.widget to null
-     * @param stage if passed stage is not null then stage keyboard focus will be set to null only if current
+     * @param headUpDisplay if passed stage is not null then stage keyboard focus will be set to null only if current
      * focus owner is passed actor
      */
-    fun resetFocus(stage: Stage?, caller: Actor) {
+    fun resetFocus(headUpDisplay: HeadUpDisplay?, caller: Actor) {
         focusedWidget?.focusLost()
-        if (stage != null && stage.keyboardFocus === caller) stage.keyboardFocus = null
+        if (headUpDisplay != null && headUpDisplay.keyboardFocus === caller) headUpDisplay.keyboardFocus = null
         focusedWidget = null
     }
 

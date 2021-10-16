@@ -19,17 +19,12 @@ package app.thelema.test.shader.post
 
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
 import app.thelema.img.GBuffer
-import app.thelema.math.MATH
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
-import app.thelema.gl.ScreenQuad
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.PlaneMeshBuilder
 import app.thelema.img.render
+import app.thelema.math.Mat4
 import app.thelema.shader.Shader
 import app.thelema.shader.post.SSAO
 import app.thelema.test.Test
@@ -40,19 +35,6 @@ class SSAOBaseTest: Test {
         get() = "SSAO Base"
 
     override fun testMain() {
-        if (GL.isGLES) {
-            if (GL.glesMajVer < 3) {
-                APP.messageBox("Not supported", "Requires GLES 3.0 (WebGL 2.0)")
-                return
-            } else {
-                if (!GL.enableExtension("EXT_color_buffer_float")) {
-                    APP.messageBox("Not supported", "Render to float texture not supported")
-                    return
-                }
-            }
-        }
-
-
         val sceneShader = Shader(version = 330,
             vertCode = """
 in vec3 POSITION;
@@ -89,49 +71,32 @@ gNormal = vec4(vNormal, 1.0);
 gPosition = vec4(vViewSpacePosition, 1.0);
 }""")
 
-        val screenQuad = ScreenQuad(0f, 0f, 1f, 1f)
-
         val gBuffer = GBuffer()
 
         val ssao = SSAO(gBuffer.colorMap, gBuffer.normalMap, gBuffer.positionMap)
 
-        ActiveCamera {
-            lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)
-            near = 0.1f
-            far = 100f
-            updateCamera()
-        }
-
-        val cube = BoxMeshBuilder().build()
-        val plane = PlaneMeshBuilder(width = 5f, height = 5f).build()
+        val cube = BoxMesh { setSize(2f) }
+        val plane = PlaneMesh { setSize(5f) }
 
         val cubeMatrix = Mat4()
         val planeMatrix = Mat4()
 
-        GL.isDepthTestEnabled = true
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-
-        GL.render {
-            GL.glClear(GL_DEPTH_BUFFER_BIT or GL_COLOR_BUFFER_BIT)
-
+        APP.onRender = {
             cubeMatrix.rotate(0f, 1f, 0f, APP.deltaTime)
 
             gBuffer.render {
-                GL.glClear(GL_DEPTH_BUFFER_BIT or GL_COLOR_BUFFER_BIT)
-
                 sceneShader.bind()
                 sceneShader["view"] = ActiveCamera.viewMatrix
                 sceneShader["viewProj"] = ActiveCamera.viewProjectionMatrix
 
                 sceneShader["world"] = cubeMatrix
-                cube.render(sceneShader)
+                cube.mesh.render(sceneShader)
 
                 sceneShader["world"] = planeMatrix
-                plane.render(sceneShader)
+                plane.mesh.render(sceneShader)
             }
 
-            ssao.render(screenQuad, null)
+            ssao.render(null)
         }
     }
 }

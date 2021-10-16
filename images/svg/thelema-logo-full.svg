@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="65.024002"
+   inkscape:export-xdpi="65.024002"
+   inkscape:export-filename="images/thelema-logo-256.png"
+   sodipodi:docname="thelema-logo-full.svg"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 100 100"
+   height="100mm"
+   width="100mm">
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter3644">
+      <feFlood
+         flood-opacity="1"
+         flood-color="rgb(255,255,255)"
+         result="flood"
+         id="feFlood3634" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite3636" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0"
+         result="blur"
+         id="feGaussianBlur3638" />
+      <feOffset
+         dx="0.0048579"
+         dy="-0.75853430706521863"
+         result="offset"
+         id="feOffset3640" />
+      <feComposite
+         in="offset"
+         in2="SourceGraphic"
+         operator="out"
+         result="composite2"
+         id="feComposite3642" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter3644-6"
+       x="-0.047643081"
+       width="1.0952862"
+       y="-0.047643081"
+       height="1.0952862">
+      <feFlood
+         flood-opacity="1"
+         flood-color="rgb(26,95,180)"
+         result="flood"
+         id="feFlood3634-0" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite3636-6" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="1.8015929"
+         result="blur"
+         id="feGaussianBlur3638-2" />
+      <feOffset
+         dx="0.0048579"
+         dy="-0.75853430706521863"
+         result="offset"
+         id="feOffset3640-6" />
+      <feComposite
+         in="offset"
+         in2="SourceGraphic"
+         operator="out"
+         result="composite2"
+         id="feComposite3642-1" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     inkscape:document-rotation="0"
+     inkscape:window-maximized="1"
+     inkscape:window-y="0"
+     inkscape:window-x="0"
+     inkscape:window-height="1026"
+     inkscape:window-width="1920"
+     showgrid="false"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="182.34682"
+     inkscape:cx="144.38143"
+     inkscape:zoom="1.979899"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="1"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#000000"
+     id="base" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-197)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <g
+       id="g3032"
+       style="filter:url(#filter3644)"
+       transform="matrix(0.65726849,0,0,0.65726849,18.03407,91.645539)">
+      <path
+         sodipodi:nodetypes="ccccccc"
+         id="path831"
+         d="m 15.313047,227.56899 35.000001,10 34.999999,-10 -25,25 -9.999999,35 -10.000001,-35 z"
+         style="vector-effect:none;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:3;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="ccccccc"
+         id="path831-7"
+         d="m 85.313043,266.23699 -35,-10 -35,10 25,-25 10,-35 10,35 z"
+         style="vector-effect:none;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:3;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <circle
+         style="fill:none;stroke:#ffffff;stroke-width:3;stroke-miterlimit:68;stroke-dasharray:none"
+         id="path877"
+         cx="49.989429"
+         cy="247.17816"
+         r="45.377239" />
+    </g>
+    <g
+       id="g3032-8"
+       style="mix-blend-mode:normal;stroke:#2bffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter3644-6)"
+       transform="matrix(0.65726849,0,0,0.65726849,18.03407,91.645539)">
+      <path
+         sodipodi:nodetypes="ccccccc"
+         id="path831-79"
+         d="m 15.313047,227.56899 35.000001,10 34.999999,-10 -25,25 -9.999999,35 -10.000001,-35 z"
+         style="vector-effect:none;fill:none;fill-opacity:1;stroke:#2bffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         sodipodi:nodetypes="ccccccc"
+         id="path831-7-2"
+         d="m 85.313043,266.23699 -35,-10 -35,10 25,-25 10,-35 10,35 z"
+         style="vector-effect:none;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#2bffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <circle
+         style="fill:none;stroke:#2bffff;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path877-0"
+         cx="49.989429"
+         cy="247.17816"
+         r="45.377239" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;font-size:11.2889px;line-height:1.25;font-family:'Liberation Sans Narrow';-inkscape-font-specification:'Liberation Sans Narrow, Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="10.185254"
+       y="217.86967"
+       id="text852"><tspan
+         sodipodi:role="line"
+         id="tspan850"
+         x="10.185254"
+         y="217.86967"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;font-size:11.2889px;font-family:'Liberation Sans Narrow';-inkscape-font-specification:'Liberation Sans Narrow, Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583">THELEMA ENGINE</tspan></text>
+  </g>
+</svg>

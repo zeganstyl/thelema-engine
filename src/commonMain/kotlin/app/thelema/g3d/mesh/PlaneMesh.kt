@@ -17,27 +17,17 @@
 package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.gl.IIndexBuffer
-import app.thelema.gl.IMesh
-import app.thelema.json.IJsonObject
 
-class PlaneMesh(): IEntityComponent {
+class PlaneMesh(): MeshBuilderAdapter() {
     constructor(block: PlaneMesh.() -> Unit): this() {
         getOrCreateEntity()
         block(this)
-        if (isMeshUpdateRequested) updateMesh()
+        updateMesh()
     }
 
     override val componentName: String
-        get() = Name
-
-    override var entityOrNull: IEntity? = null
-        set(value) {
-            field = value
-            builder = value?.component() ?: MeshBuilder()
-        }
+        get() = "PlaneMesh"
 
     var width: Float = 1f
         set(value) {
@@ -55,7 +45,7 @@ class PlaneMesh(): IEntityComponent {
             }
         }
 
-    var xDivisions: Int = 1
+    var hDivisions: Int = 1
         set(value) {
             if (field != value) {
                 field = value
@@ -63,7 +53,7 @@ class PlaneMesh(): IEntityComponent {
             }
         }
 
-    var yDivisions: Int = 1
+    var vDivisions: Int = 1
         set(value) {
             if (field != value) {
                 field = value
@@ -73,12 +63,9 @@ class PlaneMesh(): IEntityComponent {
 
     var heightProvider: (hIndex: Int, vIndex: Int) -> Float = { _, _ -> 0f }
 
-    var isMeshUpdateRequested = true
+    override fun getVerticesCount(): Int = (hDivisions + 1) * (vDivisions + 1)
 
-    var builder = MeshBuilder()
-
-    val mesh: IMesh
-        get() = builder.mesh
+    override fun getIndicesCount(): Int = 6 * hDivisions * vDivisions
 
     fun setSize(width: Float, height: Float) {
         this.width = width
@@ -87,9 +74,16 @@ class PlaneMesh(): IEntityComponent {
 
     fun setSize(value: Float) = setSize(value, value)
 
-    private fun applyVertices() {
-        val xNum = xDivisions + 1
-        val yNum = yDivisions + 1
+    fun setDivisions(horizontal: Int, vertical: Int) {
+        hDivisions = horizontal
+        vDivisions = vertical
+    }
+
+    fun setDivisions(divisions: Int) = setDivisions(divisions, divisions)
+
+    override fun applyVertices() {
+        val xNum = hDivisions + 1
+        val yNum = vDivisions + 1
 
         val positions = mesh.getAttribute(builder.positionName)
         positions.rewind()
@@ -104,11 +98,11 @@ class PlaneMesh(): IEntityComponent {
         val halfHeight = height * 0.5f
 
         val xStart = -halfWidth
-        val xStep = width / xDivisions
+        val xStep = width / hDivisions
         val uStep = xStep / width
 
         val yStart = -halfHeight
-        val yStep = height / yDivisions
+        val yStep = height / vDivisions
         val vStep = yStep / height
 
         var y = yStart
@@ -121,8 +115,8 @@ class PlaneMesh(): IEntityComponent {
             var ix = 0
             while (ix < xNum) {
                 positions.putFloatsNext(x, heightProvider(ix, iy), y)
-                if (builder.uvs) uvs?.putFloatsNext(u, v)
-                if (builder.normals) normals?.putFloatsNext(0f, 1f, 0f)
+                uvs?.putFloatsNext(u, v)
+                normals?.putFloatsNext(0f, 1f, 0f)
 
                 u += uStep
                 x += xStep
@@ -138,86 +132,47 @@ class PlaneMesh(): IEntityComponent {
         uvs?.rewind()
         normals?.rewind()
 
-        positions.buffer.requestBufferLoading()
-        uvs?.buffer?.requestBufferLoading()
-        normals?.buffer?.requestBufferLoading()
+        positions.buffer.requestBufferUploading()
+        uvs?.buffer?.requestBufferUploading()
+        normals?.buffer?.requestBufferUploading()
     }
 
-    private fun applyIndices(buffer: IIndexBuffer) {
-        buffer.bytes.rewind()
+    override fun applyIndices() {
+        prepareIndices {
+            val xQuads = hDivisions
+            val yQuads = vDivisions
 
-        val xQuads = xDivisions
-        val yQuads = yDivisions
+            var v0 = 0
+            var v1 = xQuads + 1
+            var v2 = v0 + 1
+            var v3 = v1 + 1
 
-        var v0 = 0
-        var v1 = xQuads + 1
-        var v2 = v0 + 1
-        var v3 = v1 + 1
+            var ri = 0
+            while (ri < yQuads) {
 
-        var ri = 0
-        while (ri < yQuads) {
+                var ci = 0
+                while (ci < xQuads) {
+                    putIndices(
+                        v0, v1, v2,
+                        v1, v3, v2
+                    )
 
-            var ci = 0
-            while (ci < xQuads) {
-                buffer.bytes.putShorts(
-                    v0, v1, v2,
-                    v1, v3, v2
-                )
+                    v0 += 1
+                    v1 += 1
+                    v2 += 1
+                    v3 += 1
+                    ci++
+                }
 
                 v0 += 1
                 v1 += 1
                 v2 += 1
                 v3 += 1
-                ci++
-            }
-
-            v0 += 1
-            v1 += 1
-            v2 += 1
-            v3 += 1
-            ri++
-        }
-
-        buffer.bytes.rewind()
-        buffer.requestBufferLoading()
-    }
-
-    fun updateMesh() {
-        mesh.verticesCount = 24
-
-        if (mesh.vertexBuffers.isEmpty()) {
-            mesh.addVertexBuffer {
-                addAttribute(3, builder.positionName)
-                if (builder.uvs) addAttribute(2, builder.uvName)
-                if (builder.normals) addAttribute(3, builder.normalName)
-                initVertexBuffer((xDivisions + 1) * (yDivisions + 1))
+                ri++
             }
         }
-        applyVertices()
-
-        val indicesNum = 6 * xDivisions * yDivisions
-        val indices = mesh.indices
-        if (indices == null || indices.size != indicesNum || indices.indexType != builder.indexType) {
-            mesh.setIndexBuffer {
-                indexType = builder.indexType
-                initIndexBuffer(6 * xDivisions * yDivisions) {}
-            }
-        }
-        applyIndices(mesh.indices!!)
-
-        isMeshUpdateRequested = false
-    }
-
-    fun requestMeshUpdate() {
-        isMeshUpdateRequested = true
-    }
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-        if (isMeshUpdateRequested) updateMesh()
-    }
-
-    companion object {
-        const val Name = "PlaneMesh"
     }
 }
+
+fun IEntity.planeMesh(block: PlaneMesh.() -> Unit) = component(block)
+fun IEntity.planeMesh() = component<PlaneMesh>()

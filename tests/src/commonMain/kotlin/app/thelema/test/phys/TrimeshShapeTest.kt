@@ -16,8 +16,19 @@
 
 package app.thelema.test.phys
 
-
+import app.thelema.app.APP
+import app.thelema.ecs.Entity
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.material
+import app.thelema.g3d.mesh.planeMesh
+import app.thelema.g3d.mesh.sphereMesh
+import app.thelema.g3d.scene
+import app.thelema.gl.mesh
+import app.thelema.phys.*
+import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
+import app.thelema.utils.LOG
+import kotlin.random.Random
 
 /** @author zeganstyl */
 class TrimeshShapeTest: Test {
@@ -25,79 +36,62 @@ class TrimeshShapeTest: Test {
         get() = "Trimesh shape"
 
     override fun testMain() {
-//        val world = PHYS.world()
-//        world.setGravity(0f, -2f, 0f)
-//
-//        val mesh = BoxMeshBuilder(xSize = 1f, ySize = 1f, zSize = 1f).apply {
-//            positionName = "POSITION"
-//            uvName = "UV"
-//        }.build()
-//
-//        val plane = PlaneMeshBuilder(
-//            width = 20f,
-//            height = 20f,
-//            xDivisions = 5,
-//            yDivisions = 5,
-//            heightProvider = { _, _ -> Random.nextFloat() * 5f }
-//        ).apply {
-//            positionName = "POSITION"
-//            uvName = "UV"
-//        }.build()
-//
-//        val dynamic = world.rigidBody(world.boxShape(1f, 1f, 1f), 5f)
-//        dynamic.setPosition(0f, 5f, 0f)
-//
-//        val static = world.rigidBody(world.trimeshShape(plane, "POSITION"), 0f)
-//        static.setPosition(0f, -3f, 0f)
-//
-//
-//        val shader = Shader(
-//            vertCode = """
-//attribute vec3 POSITION;
-//attribute vec2 UV;
-//varying vec2 uv;
-//uniform mat4 world;
-//uniform mat4 viewProj;
-//
-//void main() {
-//    uv = UV;
-//    gl_Position = viewProj * world * vec4(POSITION, 1.0);
-//}""",
-//            fragCode = """
-//varying vec2 uv;
-//void main() {
-//    gl_FragColor = vec4(uv, 0.0, 1.0);
-//}"""
-//        )
-//
-//        val control = OrbitCameraControl(
-//            camera = ActiveCamera,
-//            targetDistance = 20f,
-//            azimuth = 2f
-//        )
-//        control.listenToMouse()
-//        LOG.info(control.help)
-//
-//        val tmp = Mat4()
-//
-//        GL.isDepthTestEnabled = true
-//        GL.glClearColor(0f, 0f, 0f, 1f)
-//        GL.render {
-//            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-//
-//            control.update(APP.deltaTime)
-//            ActiveCamera.updateCamera()
-//
-//            world.step(APP.deltaTime)
-//
-//            shader.bind()
-//            shader["viewProj"] = ActiveCamera.viewProjectionMatrix
-//
-//            shader["world"] = static.getWorldTransform(tmp)
-//            plane.render(shader)
-//
-//            shader["world"] = dynamic.getWorldTransform(tmp)
-//            mesh.render(shader)
-//        }
+        Entity {
+            makeCurrent()
+
+            APP.setupPhysicsComponents()
+
+            scene()
+            orbitCameraControl {
+                targetDistance = 10f
+            }
+
+            val sphere = sphereMesh {
+                setSize(1f)
+                mesh.isVisible = false
+            }
+
+            // material will be set to box mesh automatically
+            val material = material {
+                shader = SimpleShader3D()
+            }
+
+            entity("dynamic") {
+                mesh { inheritedMesh = sphere.mesh }
+                sphereShape { setSize(sphere.radius) }
+                rigidBody {
+                    node.position.set(0f, 5f, 0f)
+                }
+            }
+
+            entity("trimesh") {
+                planeMesh {
+                    setSize(20f)
+                    setDivisions(5)
+                    heightProvider = { _, _ -> Random.nextFloat() * 5f }
+                }
+                mesh { this.material = material }
+                trimeshShape() // will automatically take sibling mesh component
+                rigidBody {
+                    node.position.set(0f, 0f, 0f)
+                    isStatic = true
+                }
+            }
+
+            rigidBodyPhysicsWorld {
+                setGravity(0f, -2f, 0f)
+                startSimulation()
+
+                addPhysicsWorldListener(object: IPhysicsWorldListener {
+                    override fun collisionBegin(contact: IBodyContact) {
+                        LOG.info("begin contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
+                    }
+
+                    override fun collisionEnd(contact: IBodyContact) {
+                        LOG.info("end contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
+                    }
+                })
+            }
+        }
     }
 }

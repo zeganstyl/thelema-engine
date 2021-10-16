@@ -3,23 +3,25 @@ plugins {
     id("com.android.application")
 }
 
-group = "app.thelema"
+group = thelema_group
+version = thelema_version
 
 repositories {
-    jcenter()
     mavenCentral()
     mavenLocal()
     google()
 }
 
-val thelema_prefix = "app.thelema:thelema-engine"
-val thelema_version = "0.6.0"
-val ktor_version = "1.5.2"
-
 kotlin {
     jvm()
 
     jvm("jvmTestServer")
+
+    linuxX64 {
+        binaries {
+            executable()
+        }
+    }
 
     android()
 
@@ -29,9 +31,13 @@ kotlin {
         }
     }
 
-    sourceSets {
-        val assets by creating
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
 
+    sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation(project(rootProject.path))
@@ -39,8 +45,12 @@ kotlin {
         }
 
         val androidMain by getting {
-            dependsOn(assets)
+            dependencies {
+                implementation(project(rootProject.path))
+            }
+        }
 
+        val linuxX64Main by getting {
             dependencies {
                 implementation(project(rootProject.path))
             }
@@ -48,15 +58,32 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                rootProject.allprojects.forEach { println(it.path) }
                 implementation(project(rootProject.path))
+                implementation("org.slf4j:slf4j-simple:1.7.30")
+                implementation("org.recast4j:recast:1.5.0")
+                implementation("org.recast4j:detour:1.5.0")
+                implementation("org.recast4j:detour-crowd:1.5.0")
+                implementation("org.recast4j:detour-tile-cache:1.5.0")
+                implementation("org.recast4j:detour-extras:1.5.0")
+                implementation("org.recast4j:detour-dynamic:1.5.0")
+
+                //val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
+                val platforms = arrayOf("natives-linux")
+                platforms.forEach {
+                    implementation("$lwjgl_prefix:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-glfw:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-jemalloc:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-openal:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-opengl:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-stb:$lwjgl_version:$it")
+                }
             }
 
             val jvmJar by tasks.getting(Jar::class) {
                 doFirst {
                     manifest {
                         attributes(
-                            "Main-Class" to "Main"
+                            "Main-Class" to "app.thelema.lwjgl3.MainTestJvm"
                         )
                     }
 
@@ -78,8 +105,6 @@ kotlin {
         }
 
         val jsMain by getting {
-            dependsOn(assets)
-
             dependencies {
                 implementation(project(rootProject.path))
             }
@@ -101,5 +126,9 @@ android {
         getByName("release") {
             isMinifyEnabled = false
         }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }

@@ -54,8 +54,8 @@ class VertexArrayObjectTest: Test {
             setIndexBuffer {
                 indexType = GL_UNSIGNED_SHORT
                 initIndexBuffer(6) {
-                    putShorts(0, 1, 2)
-                    putShorts(0, 2, 3)
+                    putIndices(0, 1, 2)
+                    putIndices(0, 2, 3)
                 }
             }
         }

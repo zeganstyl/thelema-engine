@@ -22,11 +22,9 @@ import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.gl.GL
 import app.thelema.gl.GL_COLOR_BUFFER_BIT
 import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.math.*
-import app.thelema.gl.IMesh
-import app.thelema.gl.Mesh
-import app.thelema.g3d.mesh.FrustumMeshBuilder
+import app.thelema.g3d.mesh.FrustumMesh
 import app.thelema.shader.Shader
 import app.thelema.utils.Color
 import app.thelema.utils.LOG
@@ -55,8 +53,8 @@ class CascadedShadowMatricesTest: Test {
 
     val cascadeFrustums = Array(numCascades) { Frustum() }
 
-    val sceneCameraFrustumMeshes = Array<IMesh>(numCascades) { Mesh() }
-    val cascadeFrustumMeshes = Array<IMesh>(numCascades) { Mesh() }
+    val sceneCameraFrustumMeshes = Array(numCascades) { FrustumMesh() }
+    val cascadeFrustumMeshes = Array(numCascades) { FrustumMesh() }
 
     val lightProj = Array<IMat4>(numCascades) { Mat4() }
 
@@ -107,8 +105,8 @@ class CascadedShadowMatricesTest: Test {
             }
 
             // scene camera frustum part
-            FrustumMeshBuilder.updateMesh(sceneCameraFrustumMeshes[i], frustumPoints)
-            sceneCameraFrustumMeshes[i].vertexBuffers[i].loadBufferToGpu()
+            sceneCameraFrustumMeshes[i].frustumPoints = frustumPoints
+            sceneCameraFrustumMeshes[i].updateMesh()
 
             centroid.scl(0.125f)
 
@@ -147,8 +145,8 @@ class CascadedShadowMatricesTest: Test {
             lightMat.mul(tmpMat)
 
             cascadeFrustums[i].setFromMatrix(tmpMat.set(lightMat).inv())
-            FrustumMeshBuilder.updateMesh(cascadeFrustumMeshes[i], cascadeFrustums[i].points)
-            cascadeFrustumMeshes[i].vertexBuffers.forEach { it.loadBufferToGpu() }
+            cascadeFrustumMeshes[i].frustumPoints = cascadeFrustums[i].points
+            cascadeFrustumMeshes[i].updateMesh()
         }
     }
 
@@ -171,11 +169,11 @@ void main () {
         val colors = arrayOf(Color.ORANGE, Color.GREEN, Color.CYAN, Color.OLIVE, Color.PINK)
 
         for (i in sceneCameraFrustumMeshes.indices) {
-            sceneCameraFrustumMeshes[i] = FrustumMeshBuilder(sceneCameraFrustumPoints[i]).build()
+            sceneCameraFrustumMeshes[i] = FrustumMesh(sceneCameraFrustumPoints[i])
         }
 
         for (i in cascadeFrustumMeshes.indices) {
-            cascadeFrustumMeshes[i] = FrustumMeshBuilder(cascadeFrustums[i].points).build()
+            cascadeFrustumMeshes[i] = FrustumMesh(cascadeFrustums[i].points)
         }
 
         updateFrustums()
@@ -186,15 +184,14 @@ void main () {
             far = 100f
         }
 
-        val control = OrbitCameraControl(
-            camera = camera,
-            zenith = 1f,
-            azimuth = 0f,
-            target = Vec3(10f, 3f, 0f),
+        val control = OrbitCameraControl {
+            this.camera = camera
+            zenith = 1f
+            azimuth = 0f
+            target = Vec3(10f, 3f, 0f)
             targetDistance = 10f
-        )
+        }
         control.listenToMouse()
-        LOG.info(control.help)
 
         LOG.info("Use W A S D keys to move object")
 
@@ -209,20 +206,20 @@ void main () {
             control.update(delta)
             camera.updateCamera()
 
-            if (KB.isKeyPressed(KB.A)) {
+            if (KEY.isPressed(KEY.A)) {
                 quaternion.setQuaternionByAxis(x = 0f, y = 1f, z = 0f, delta)
                 quaternion.rotateVec3(sceneCamera.direction)
                 updateFrustums()
-            } else if (KB.isKeyPressed(KB.D)) {
+            } else if (KEY.isPressed(KEY.D)) {
                 quaternion.setQuaternionByAxis(x = 0f, y = 1f, z = 0f, -delta)
                 quaternion.rotateVec3(sceneCamera.direction)
                 updateFrustums()
             }
 
-            if (KB.isKeyPressed(KB.W)) {
+            if (KEY.isPressed(KEY.W)) {
                 sceneCamera.position.add(tmpVec.set(sceneCamera.direction).scl(delta * 5f))
                 updateFrustums()
-            } else if (KB.isKeyPressed(KB.S)) {
+            } else if (KEY.isPressed(KEY.S)) {
                 sceneCamera.position.sub(tmpVec.set(sceneCamera.direction).scl(delta * 5f))
                 updateFrustums()
             }

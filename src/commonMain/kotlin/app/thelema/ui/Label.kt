@@ -35,7 +35,7 @@ import kotlin.math.max
 open class Label constructor(
     var text: CharSequence = "",
     alignment: Int = Align.center,
-    color: IVec4 = Vec4(1f, 1f, 1f, 1f),
+    color: Int = -1,
     style: LabelStyle = DSKIN.label
 ) : Widget() {
     constructor(text: String, style: LabelStyle): this(text, Align.center, style = style)
@@ -57,7 +57,6 @@ open class Label constructor(
 
     private var previousText: CharSequence = ""
 
-    private var intValue = Int.MIN_VALUE
     /** Allows subclasses to access the cache in [draw].  */
     protected var bitmapFontCache = BitmapFontCache(style.font)
         private set
@@ -125,7 +124,7 @@ open class Label constructor(
                 width = (max(width, style.background!!.minWidth) - style.background!!.leftWidth
                         - style.background!!.rightWidth)
             }
-            prefSizeLayout.setText(bitmapFontCache.font, text, Color.WHITE, width, Align.left, true)
+            prefSizeLayout.setText(bitmapFontCache.font, text, -1, width, Align.left, true)
         } else prefSizeLayout.setText(bitmapFontCache.font, text)
         prefSize.set(prefSizeLayout.width, prefSizeLayout.height)
     }
@@ -159,7 +158,7 @@ open class Label constructor(
         val textHeight: Float
         val text = textProvider()
         if (wrap || text.indexOf("\n") != -1) { // If the text can span multiple lines, determine the text's actual size so it can be aligned within the label.
-            layout.setText(font, text, 0, text.length, Color.WHITE, width, lineAlign, wrap, ellipsis)
+            layout.setText(font, text, 0, text.length, -1, width, lineAlign, wrap, ellipsis)
             textWidth = layout.width
             textHeight = layout.height
             if (alignH >= 0) {
@@ -183,21 +182,18 @@ open class Label constructor(
             }
         }
         if (!bitmapFontCache.font.isFlipped) y += textHeight
-        layout.setText(font, text, 0, text.length, Color.WHITE, textWidth, lineAlign, wrap, ellipsis)
+        layout.setText(font, text, 0, text.length, -1, textWidth, lineAlign, wrap, ellipsis)
         bitmapFontCache.setText(layout, x, y)
         if (fontScaleChanged) font.setScale(oldScaleX, oldScaleY)
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         validate()
-        val color = tempColor.set(color)
-        color.a *= parentAlpha
         if (style.background != null) {
-            batch.setColor(color.r, color.g, color.b, color.a)
+            batch.setMulAlpha(color, parentAlpha)
             style.background!!.draw(batch, x, y, width, height)
         }
-        color.scl(style.fontColor)
-        bitmapFontCache.tint(color)
+        bitmapFontCache.tint(Color.mulColors(color, style.fontColor))
         bitmapFontCache.setPosition(x, y)
         bitmapFontCache.draw(batch)
     }
@@ -299,7 +295,6 @@ open class Label constructor(
     }
 
     companion object {
-        private val tempColor: IVec4 = Vec4()
         private val prefSizeLayout = GlyphLayout()
     }
 }

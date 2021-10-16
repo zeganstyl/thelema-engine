@@ -127,9 +127,19 @@ open class Button(style: ButtonStyle = ButtonStyle()) : Table() {
         setSize(prefWidth, prefHeight)
     }
 
-    fun addAction(block: (event: InputEvent) -> Unit): ClickListener {
+    fun onClick(block: (event: InputEvent) -> Unit): ClickListener {
         val listener = object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
+                block(event)
+            }
+        }
+        addListener(listener)
+        return listener
+    }
+
+    fun onChanged(block: (event: Event) -> Unit): ChangeListener {
+        val listener = object : ChangeListener {
+            override fun changed(event: Event, actor: Actor) {
                 block(event)
             }
         }

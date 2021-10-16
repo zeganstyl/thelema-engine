@@ -22,6 +22,7 @@ import kotlin.math.abs
 /** @author zeganstyl */
 interface Test {
     val name: String
+        get() = ""
 
     /** Here must be code that will be executed after application created [IApp] */
     fun testMain()

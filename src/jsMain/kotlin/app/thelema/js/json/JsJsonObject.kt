@@ -47,35 +47,35 @@ class JsJsonObject(val source: Json = json()): IJsonObject {
 
     override fun bool(key: String): Boolean = source[key] as Boolean
 
-    override fun strings(call: (key: String, value: String) -> Unit) {
+    override fun forEachString(block: (key: String, value: String) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(entry[0], entry[1])
+            block(entry[0], entry[1])
         }
     }
 
-    override fun ints(call: (key: String, value: Int) -> Unit) {
+    override fun forEachInt(block: (key: String, value: Int) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(entry[0], entry[1])
+            block(entry[0], entry[1])
         }
     }
 
-    override fun bools(call: (key: String, value: Boolean) -> Unit) {
+    override fun forEachBool(block: (key: String, value: Boolean) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(entry[0], entry[1])
+            block(entry[0], entry[1])
         }
     }
 
-    override fun floats(call: (key: String, value: Float) -> Unit) {
+    override fun forEachFloat(block: (key: String, value: Float) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(entry[0], entry[1])
+            block(entry[0], entry[1])
         }
     }
 
@@ -101,19 +101,19 @@ class JsJsonObject(val source: Json = json()): IJsonObject {
 
     override fun contains(key: String): Boolean = source[key] != null
 
-    override fun objs(call: IJsonObject.(key: String) -> Unit) {
+    override fun forEachObject(block: IJsonObject.(key: String) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(JsJsonObject(entry[1] as Json), entry[0])
+            block(JsJsonObject(entry[1] as Json), entry[0])
         }
     }
 
-    override fun arrays(call: IJsonArray.(key: String) -> Unit) {
+    override fun forEachArray(block: IJsonArray.(key: String) -> Unit) {
         val entries = objEntries(source) as Array<dynamic>
         for (i in entries.indices) {
             val entry = entries[i] as Array<dynamic>
-            call(JsJsonArray(entry[1] as Array<dynamic>), entry[0])
+            block(JsJsonArray(entry[1] as Array<dynamic>), entry[0])
         }
     }
 

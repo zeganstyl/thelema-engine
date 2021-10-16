@@ -19,24 +19,25 @@ package app.thelema.gltf
 import app.thelema.gl.GL_LINEAR
 import app.thelema.gl.GL_LINEAR_MIPMAP_LINEAR
 import app.thelema.math.IVec4
+import app.thelema.shader.node.PBRNode
 
 /** @author zeganstyl */
-class GLTFConf {
-    /** Store file buffers in RAM */
-    var saveFileBuffersInMem: Boolean = false
-    /** Store texture buffers in RAM */
-    var saveTexturesInMem: Boolean = false
-    /** Store mesh buffers in RAM */
-    var saveMeshesInMem: Boolean = false
+class GLTFConf() {
+    constructor(block: GLTFConf.() -> Unit): this() { block(this) }
 
-    /** If separate thread used, gl calls will be deferred to be called on gl thread.
-     * User must manually create thread and execute loading there. */
-    var separateThread: Boolean = false
+    /** Store file buffers in RAM */
+    var saveFileBuffersInCPUMem: Boolean = false
+    /** Store texture buffers in RAM */
+    var saveTexturesInCPUMem: Boolean = false
+    /** Store mesh buffers in RAM */
+    var saveMeshesInCPUMem: Boolean = false
 
     /** Velocity rendering may be used for motion blur */
     var setupVelocityShader: Boolean = false
 
     var receiveShadows: Boolean = false
+
+    var pbrConf: PBRNode.() -> Unit = {}
 
     var setupDepthRendering: Boolean = true
 
@@ -47,6 +48,9 @@ class GLTFConf {
     var loadImages: Boolean = true
     var loadAnimations: Boolean = true
     var generateShaders: Boolean = true
+
+    var ibl: Boolean = false
+    var iblMaxMipLevels: Int = 5
 
     /** If not null, will be created shader for solid color rendering channel */
     var solidColor: IVec4? = null
@@ -62,4 +66,6 @@ class GLTFConf {
 
     /** You can make some changes to shader graph, before shaders will be compiled */
     var configureMaterials: (material: GLTFMaterial) -> Unit = {}
+
+    operator fun invoke(block: GLTFConf.() -> Unit) = block(this)
 }

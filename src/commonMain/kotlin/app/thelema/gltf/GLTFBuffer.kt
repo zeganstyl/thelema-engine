@@ -16,6 +16,8 @@
 
 package app.thelema.gltf
 
+import app.thelema.app.APP
+import app.thelema.app.printElapsedTime
 import app.thelema.data.DATA
 import app.thelema.data.DataByteOrder
 import app.thelema.data.IByteData
@@ -44,10 +46,8 @@ class GLTFBuffer(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 // System.out.println(header);
                 val body = headerBody[1]
 
-                bytes = DATA.bytes(byteLength)
+                bytes = DATA.decodeBase64(body)
                 bytes.order = DataByteOrder.LittleEndian
-
-                DATA.decodeBase64(body, bytes)
             } else {
                 val file = gltf.directory.child(DATA.decodeURI(uri))
                 file.readBytes(

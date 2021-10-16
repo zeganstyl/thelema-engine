@@ -10,18 +10,22 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import app.thelema.app.APP
 import app.thelema.app.AbstractApp
+import app.thelema.app.AndroidApp
 import app.thelema.audio.AL
+import app.thelema.concurrency.ATOM
 import app.thelema.data.DATA
 import app.thelema.ecs.ECS
 import app.thelema.fs.FS
 import app.thelema.gl.GL
 import app.thelema.img.IMG
-import app.thelema.input.KB
+import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.json.JSON
 import app.thelema.jvm.JvmLog
+import app.thelema.jvm.concurrency.AtomicProviderJvm
 import app.thelema.jvm.data.JvmData
 import app.thelema.jvm.json.JsonSimpleJson
+import app.thelema.jvm.ode.RigidBodyPhysicsWorld
 import app.thelema.net.WS
 import app.thelema.utils.LOG
 import javax.microedition.khronos.opengles.GL10
@@ -44,8 +48,8 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
     override val height: Int
         get() = view.holder.surfaceFrame.height()
 
-    override val platformType: Int
-        get() = APP.Android
+    override val platformType: String
+        get() = AndroidApp
 
     override val time: Long
         get() = System.currentTimeMillis()
@@ -92,20 +96,25 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
     init {
         ECS.setupDefaultComponents()
 
-        APP.proxy = this
-        LOG.proxy = JvmLog()
-        FS.proxy = fs
-        JSON.proxy = JsonSimpleJson()
-        DATA.proxy = JvmData()
-        IMG.proxy = AndroidImg(this)
-        GL.proxy = AndroidGL(this)
-        MOUSE.proxy = mouse
-        KB.proxy = kb
-        AL.proxy = AndroidAL(context)
-        WS.proxy = KtorWebSocket()
+        ATOM = AtomicProviderJvm()
+        APP = this
+        LOG = JvmLog()
+        FS = fs
+        JSON = JsonSimpleJson()
+        DATA = JvmData()
+        IMG = AndroidImg(this)
+        GL = AndroidGL(this)
+        MOUSE = mouse
+        KEY.proxy = kb
+        AL = AndroidAL(context)
+        WS = KtorWebSocket()
 
         view.setEGLContextClientVersion(glesVersion)
         view.setRenderer(renderer)
+    }
+
+    override fun setupPhysicsComponents() {
+        RigidBodyPhysicsWorld.initOdeComponents()
     }
 
     override fun thread(block: () -> Unit) {

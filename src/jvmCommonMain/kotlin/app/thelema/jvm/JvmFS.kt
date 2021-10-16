@@ -34,10 +34,7 @@ class JvmFS: IFileSystem {
     override val isLocalStorageAvailable: Boolean
         get() = true
 
-    /** Key - file path, value - file */
-    val ram = HashMap<String, IFile>()
-
-    override fun file(path: String, location: Int) = JvmFile(path, location)
+    override fun file(path: String, location: String): IFile = JvmFile(path, location)
 
     companion object {
         val externalPath = System.getProperty("user.home") + File.separator

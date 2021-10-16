@@ -18,36 +18,25 @@ package app.thelema.shader.post
 
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
-import app.thelema.gl.IScreenQuad
+import app.thelema.gl.ScreenQuad
 
 /** @author zeganstyl */
-class Vignette {
-    val shader = PostShader(vignetteCode)
-
-    private var uRadius = 0
-    private var uSoftness = 0
-
+class Vignette: PostShader(vignetteCode) {
     var radius: Float = 0.75f
     var softness: Float = 0.45f
 
     init {
-        shader.bind()
-        uRadius = shader["uRadius"]
-        uSoftness = shader["uSoftness"]
+        bind()
 
-        shader["uTexture"] = 0
+        this["uTexture"] = 0
     }
 
-    fun render(screenQuad: IScreenQuad, inputMap: ITexture, out: IFrameBuffer?) {
-        screenQuad.render(shader, out) {
-            inputMap.bind(0)
-            shader[uRadius] = radius
-            shader[uSoftness] = softness
-        }
-    }
-
-    fun dispose() {
-        shader.destroy()
+    override fun render(inputMap: ITexture, out: IFrameBuffer?) {
+        bind()
+        inputMap.bind(0)
+        this["uRadius"] = radius
+        this["uSoftness"] = softness
+        ScreenQuad.render(this, out)
     }
 
     companion object {
@@ -58,10 +47,10 @@ class Vignette {
         varying vec2 uv;
 
         //RADIUS of our vignette, where 0.5 results in a circle fitting the screen
-        uniform float uRadius = 0.75;
+        uniform float uRadius;
 
         //softness of our vignette, between 0.0 and 1.0
-        uniform float uSoftness = 0.45;
+        uniform float uSoftness;
 
         void main() {
             //sample our texture

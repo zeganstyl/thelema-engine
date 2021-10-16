@@ -16,7 +16,9 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
 import app.thelema.math.IVec3
 
 /** @author zeganstyl */
@@ -25,36 +27,32 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
         get() = this
 
     override val componentName: String
-        get() = Name
+        get() = "RigidBodyPhysicsWorld"
+
+    /** If not 0.0, it will be used as time delta */
+    val fixedDelta: Float
+
+    var isSimulationRunning: Boolean
 
     fun setGravity(x: Float, y: Float, z: Float)
     fun getGravity(out: IVec3): IVec3
 
     fun step(delta: Float)
 
-    /** @param mass if mass is 0, body will be set to static and gravity influence to this body will be disabled */
-    fun rigidBody(block: IRigidBody.() -> Unit = {}): IRigidBody
+    fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact?
+    fun isContactExist(body1: IRigidBody, body2: IRigidBody): Boolean = getContact(body1, body2) != null
 
-    fun boxShape(block: IBoxShape.() -> Unit = {}): IBoxShape
-    fun sphereShape(block: ISphereShape.() -> Unit = {}): ISphereShape
-    fun capsuleShape(block: ICapsuleShape.() -> Unit = {}): ICapsuleShape
-    fun cylinderShape(block: ICylinderShape.() -> Unit = {}): ICylinderShape
-    fun trimeshShape(block: ITrimeshShape.() -> Unit = {}): ITrimeshShape
-    fun planeShape(block: IPlaneShape.() -> Unit = {}): IPlaneShape
-    fun rayShape(block: IRayShape.() -> Unit = {}): IRayShape
-    fun heightField(block: IHeightField.() -> Unit = {}): IHeightField
-
-    fun checkCollision(
-        shape1: IShape,
-        shape2: IShape,
-        out: MutableList<IContactInfo> = ArrayList()
-    ): MutableList<IContactInfo>
-
-    fun isContactExist(body1: IRigidBody, body2: IRigidBody): Boolean
     fun addPhysicsWorldListener(listener: IPhysicsWorldListener)
     fun removePhysicsWorldListener(listener: IPhysicsWorldListener)
 
-    companion object {
-        const val Name = "RigidBodyPhysicsWorld"
+    fun startSimulation() {
+        isSimulationRunning = true
+    }
+
+    fun stopSimulation() {
+        isSimulationRunning = false
     }
 }
+
+fun IEntity.rigidBodyPhysicsWorld(block: IRigidBodyPhysicsWorld.() -> Unit) = component(block)
+fun IEntity.rigidBodyPhysicsWorld() = component<IRigidBodyPhysicsWorld>()

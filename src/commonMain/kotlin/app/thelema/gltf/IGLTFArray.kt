@@ -31,8 +31,8 @@ interface IGLTFArray: IAsyncList<IGLTFArrayElement> {
     val progress: Float
         get() = currentProgress.toFloat() / maxProgress
 
-    val currentProgress: Long
-    val maxProgress: Long
+    val currentProgress: Int
+    val maxProgress: Int
 
     var jsonOrNull: IJsonArray?
     val json: IJsonArray
@@ -40,7 +40,7 @@ interface IGLTFArray: IAsyncList<IGLTFArrayElement> {
 
     fun setJson(json: IJsonArray) {
         jsonOrNull = json
-        json.objs {
+        json.forEachObject {
             addElement(this)
         }
     }
@@ -55,7 +55,7 @@ interface IGLTFArray: IAsyncList<IGLTFArrayElement> {
 
     fun readJson() {
         var i = 0
-        json.objs {
+        json.forEachObject {
             get(i).readJson()
             i++
         }

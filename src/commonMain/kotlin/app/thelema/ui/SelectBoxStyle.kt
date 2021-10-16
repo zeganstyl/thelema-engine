@@ -17,38 +17,26 @@
 package app.thelema.ui
 
 import app.thelema.font.BitmapFont
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
 
 /** The style for a select box, see [SelectBox].
  * @author mzechner
  * @author Nathan Sweet
  */
 class SelectBoxStyle(
-    var font: BitmapFont = BitmapFont.default(),
-    var fontColor: IVec4 = Vec4(1f, 1f, 1f, 1f),
+    var font: BitmapFont = DSKIN.font(),
+    var fontColor: Int = -1,
     var background: Drawable? = null,
     var scrollStyle: ScrollPaneStyle = ScrollPaneStyle.default(),
     var listStyle: ListStyle = ListStyle()
 ) {
     /** Optional.  */
-    var disabledFontColor: IVec4? = null
+    var disabledFontColor: Int? = null
     /** Optional.  */
     var backgroundOver: Drawable? = null
     var backgroundOpen: Drawable? = null
     var backgroundDisabled: Drawable? = null
 
-    constructor(style: SelectBoxStyle): this(style.font, style.fontColor, style.background, style.scrollStyle, style.listStyle) {
-        if (style.disabledFontColor != null) disabledFontColor =
-            Vec4(style.disabledFontColor!!)
-        backgroundOver = style.backgroundOver
-        backgroundOpen = style.backgroundOpen
-        backgroundDisabled = style.backgroundDisabled
-    }
-
     companion object {
-        const val GdxTypeName = "com.badlogic.gdx.scenes.scene2d.ui.SelectBox\$SelectBoxStyle"
-
         var Default: SelectBoxStyle? = null
         fun default(): SelectBoxStyle {
             var style = Default

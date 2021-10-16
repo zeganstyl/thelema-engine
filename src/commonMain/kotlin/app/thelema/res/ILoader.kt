@@ -17,27 +17,36 @@
 package app.thelema.res
 
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
+import app.thelema.fs.IFile
 
 interface ILoader: IEntityComponent {
-    val uri: String
+    var file: IFile?
 
     val progress: Float
-        get() = currentProgress.toFloat() / maxProgress
+        get() = if (maxProgress > 0) currentProgress.toFloat() / maxProgress else 0f
 
-    var currentProgress: Long
-    var maxProgress: Long
+    val currentProgress: Int
+    val maxProgress: Int
 
     val isLoaded: Boolean
-        get() = currentProgress == maxProgress
 
     val isLoading: Boolean
-        get() = currentProgress > 0 && !isLoaded
 
     val holders: List<Any>
 
-    val runOnGLThreadRequest: Boolean
+    var runOnGLThreadRequest: Boolean
 
-    var loadOnSeparateThread: Boolean
+    var separateThread: Boolean?
+
+    fun loadDependency(uri: String, loaderName: String): ILoader =
+        entity.getRootEntity().component<IProject>().load(uri, loaderName)
+
+    fun loadDependencyRelative(path: String, loaderName: String): ILoader =
+        entity.getRootEntity().component<IProject>().load(file!!.parent().path + '/' + path, loaderName)
+
+    fun <T: ILoader> loadDependencyRelative(path: String, loader: T): T =
+        entity.getRootEntity().component<IProject>().load(file!!.parent().path + '/' + path, loader)
 
     fun initProgress()
 
@@ -51,22 +60,22 @@ interface ILoader: IEntityComponent {
 
     fun release(holder: Any)
 
-    fun addResourceListener(listener: ResourceListener)
+    fun addLoaderListener(listener: LoaderListener)
 
-    fun removeResourceListener(listener: ResourceListener)
+    fun removeLoaderListener(listener: LoaderListener)
 
     /** If resource not loaded yet, listener will be added, and then removed after loading.
      * If resource already loaded, [ready] will be called directly.
      *
      * @param notifyOnce if true, listener will be removed after notify */
-    fun onLoaded(notifyOnce: Boolean = true, error: (status: Int) -> Unit = {}, ready: () -> Unit): ResourceListener? {
+    fun onLoaded(notifyOnce: Boolean = true, error: (status: Int) -> Unit = {}, ready: () -> Unit): LoaderListener? {
         if (isLoaded) {
             ready()
         } else {
-            val listener = object : ResourceListenerAdapter() {
-                override fun removeListenerOnLoaded(): Boolean = notifyOnce
+            val listener = object : LoaderListener {
+                override val removeListenerOnLoaded: Boolean = notifyOnce
 
-                override fun loaded(resource: ILoader) {
+                override fun loaded(loader: ILoader) {
                     ready()
                 }
 
@@ -74,11 +83,29 @@ interface ILoader: IEntityComponent {
                     error(status)
                 }
             }
-            addResourceListener(listener)
+            addLoaderListener(listener)
             return listener
         }
         return null
     }
 
+    /** Forced loading on current thread */
+    fun loadBase(file: IFile)
+
     fun load()
+
+    fun reload()
+
+    fun stop(status: Int = 200)
 }
+
+inline fun <reified T: ILoader> ILoader.loadDependency(uri: String): ILoader =
+    loadDependency(uri, T::class.simpleName!!)
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T: ILoader> ILoader.loadDependency(uri: String, noinline block: T.() -> Unit = {}): T =
+    loadDependency(uri, T::class.simpleName!!).apply(block as ILoader.() -> Unit) as T
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T: ILoader> ILoader.loadDependencyRelative(path: String, noinline block: T.() -> Unit = {}): T =
+    loadDependencyRelative(path, T::class.simpleName!!).apply(block as ILoader.() -> Unit) as T

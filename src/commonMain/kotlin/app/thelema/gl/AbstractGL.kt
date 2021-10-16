@@ -22,7 +22,6 @@ abstract class AbstractGL: IGL {
     /** See [call] */
     val singleCalls = ArrayList<() -> Unit>()
 
-    /** See [render] */
     val renderCalls = ArrayList<() -> Unit>()
 
     var maxAnisotropicFilterLevelInternal = 1f
@@ -36,6 +35,11 @@ abstract class AbstractGL: IGL {
     /** Contains texture handles of all texture image units. */
     override val textureUnits: List<Int>
         get() = textureUnitsInternal
+
+    override val textures = ArrayList<Int>()
+    override val buffers = ArrayList<Int>()
+    override val frameBuffers = ArrayList<Int>()
+    override val renderBuffers = ArrayList<Int>()
 
     override var activeTexture: Int = 0
         set(value) {
@@ -81,7 +85,7 @@ abstract class AbstractGL: IGL {
         set(value) {
             if (field != value) {
                 field = value
-                if (value) glEnableBase(GL_CULL_FACE) else glEnableBase(GL_CULL_FACE)
+                if (value) glEnableBase(GL_CULL_FACE) else glDisableBase(GL_CULL_FACE)
             }
         }
 
@@ -145,6 +149,8 @@ abstract class AbstractGL: IGL {
 
     protected var textureUnitCounter = 0
 
+    override fun enableRequiredByDefaultExtensions() {}
+
     protected abstract fun glActiveTextureBase(value: Int)
     protected abstract fun glUseProgramBase(value: Int)
     protected abstract fun glBindBufferBase(target: Int, buffer: Int)
@@ -156,6 +162,16 @@ abstract class AbstractGL: IGL {
     protected abstract fun glDepthFuncBase(value: Int)
     protected abstract fun glDepthMaskBase(value: Boolean)
     protected abstract fun glBindTextureBase(target: Int, texture: Int)
+
+    protected abstract fun glGenTextureBase(): Int
+    protected abstract fun glGenBufferBase(): Int
+    protected abstract fun glGenFrameBufferBase(): Int
+    protected abstract fun glGenRenderBufferBase(): Int
+
+    protected abstract fun glDeleteTextureBase(id: Int)
+    protected abstract fun glDeleteBufferBase(id: Int)
+    protected abstract fun glDeleteFrameBufferBase(id: Int)
+    protected abstract fun glDeleteRenderBufferBase(id: Int)
 
     override fun initGL() {
         // check texture units
@@ -260,9 +276,19 @@ abstract class AbstractGL: IGL {
         this.program = program
     }
 
+    override fun glGenBuffer(): Int = glGenBufferBase().also { buffers.add(it) }
+    override fun glGenFramebuffer(): Int = glGenFrameBufferBase().also { frameBuffers.add(it) }
+    override fun glGenTexture(): Int = glGenTextureBase().also { textures.add(it) }
+    override fun glGenRenderbuffer(): Int = glGenRenderBufferBase().also { renderBuffers.add(it) }
+
+    override fun glDeleteBuffer(buffer: Int) { glDeleteBufferBase(buffer).also { buffers.remove(buffer) } }
+    override fun glDeleteTexture(texture: Int) { glDeleteTextureBase(texture).also { textures.remove(texture) } }
+    override fun glDeleteRenderbuffer(renderbuffer: Int) { glDeleteRenderBufferBase(renderbuffer).also { renderBuffers.remove(renderbuffer) } }
+    override fun glDeleteFramebuffer(framebuffer: Int) { glDeleteFrameBufferBase(framebuffer).also { frameBuffers.remove(framebuffer) } }
+
     /** Simple blending function in most cases.
      * sfactor = GL_SRC_ALPHA; dfactor = GL_ONE_MINUS_SRC_ALPHA */
-    override fun setSimpleAlphaBlending() {
+    override fun setupSimpleAlphaBlending() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     }
 
@@ -307,5 +333,19 @@ abstract class AbstractGL: IGL {
                 renderCalls[i]()
             }
         }
+    }
+
+    fun destroy() {
+        buffers.forEach { glDeleteBufferBase(it) }
+        buffers.clear()
+
+        textures.forEach { glDeleteTextureBase(it) }
+        textures.clear()
+
+        frameBuffers.forEach { glDeleteFrameBufferBase(it) }
+        frameBuffers.clear()
+
+        renderBuffers.forEach { glDeleteRenderBufferBase(it) }
+        renderBuffers.clear()
     }
 }

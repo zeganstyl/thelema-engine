@@ -59,7 +59,7 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
                         for (i in terrain.listeners.indices) {
                             terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
                         }
-                        terrain.planeMesh.render(shader)
+                        terrain.plane.render(shader)
                         terrain.frameMesh.indices = terrain.frameIndexBufferMap6x6[tileIndexZ + zi][tileIndexX + xi]
                         terrain.frameMesh.render(shader)
                     }
@@ -126,7 +126,7 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
                         for (i in terrain.listeners.indices) {
                             terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
                         }
-                        terrain.planeMesh.render(shader)
+                        terrain.plane.render(shader)
                         terrain.frameMesh.indices = terrain.frameIndexBuffers[4] // center
                         terrain.frameMesh.render(shader)
                     }

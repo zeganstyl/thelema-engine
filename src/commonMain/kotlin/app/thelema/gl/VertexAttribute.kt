@@ -16,11 +16,13 @@
 
 package app.thelema.gl
 
+import app.thelema.shader.IShader
+
 /** @author zeganstyl */
 class VertexAttribute(
     override val buffer: IVertexBuffer,
     override val size: Int,
-    override val name: String,
+    override var name: String,
     override val type: Int = GL_FLOAT,
     override val normalized: Boolean = false,
     byteOffset: Int = 0
@@ -48,10 +50,42 @@ class VertexAttribute(
 
     override var divisor: Int = 0
 
+    private val aliasesInternal = ArrayList<String>(0)
+    override val aliases: List<String>
+        get() = aliasesInternal
+
     init {
         if (size < 1 || size > 4) {
             throw RuntimeException("numComponents specified for VertexAttribute is incorrect. It must be >= 1 and <= 4")
         }
+    }
+
+    override fun bind(shader: IShader) {
+        val attributes = shader.attributes
+
+        val a = attributes[name]
+        if (a != null) bind(a)
+
+        for (i in aliases.indices) {
+            val location = attributes[aliases[i]]
+            if (location != null) bind(location)
+        }
+    }
+
+    override fun bind(location: Int) {
+        GL.glEnableVertexAttribArray(location)
+        GL.glVertexAttribPointer(location, size, type, normalized, buffer.bytesPerVertex, byteOffset)
+        GL.glVertexAttribDivisor(location, divisor) // instancing feature required
+    }
+
+    override fun addAlias(name: String) {
+        aliasesInternal.add(name)
+        aliasesInternal.trimToSize()
+    }
+
+    override fun removeAlias(name: String) {
+        aliasesInternal.remove(name)
+        aliasesInternal.trimToSize()
     }
 
     override fun updateOffset() {
@@ -74,6 +108,13 @@ class VertexAttribute(
     override fun rewind() {
         positionInternal = byteOffsetInternal
         vertexPositionInternal = 0
+    }
+
+    override fun prepare(block: IVertexAttribute.() -> Unit) {
+        rewind()
+        block(this)
+        rewind()
+        buffer.requestBufferUploading()
     }
 
     fun copy(container: IVertexBuffer) = VertexAttribute(container, size, name, type, normalized)
@@ -129,11 +170,11 @@ class VertexAttribute(
         nextVertex()
     }
 
-    override fun putFloat(byteOffset: Int, x: Float) {
+    override fun setFloat(byteOffset: Int, x: Float) {
         buffer.bytes.putFloat(positionInternal + byteOffset, x)
     }
 
-    override fun putFloats(vararg values: Float) {
+    override fun setFloats(vararg values: Float) {
         val bytes = buffer.bytes
         var offset = 0
         for (i in values.indices) {
@@ -155,5 +196,20 @@ class VertexAttribute(
                 offset = 0
             }
         }
+    }
+
+    override fun toFloatArray(out: FloatArray?): FloatArray {
+        val floatCount = size * count
+        val array = out ?: FloatArray(floatCount)
+        if (array.size < floatCount) throw IllegalArgumentException("VertexAttribute.toFloatArray: given float array is too small: ${array.size} < $floatCount")
+        val sizeInBytes = floatCount * 4
+        var j = 0
+        var i = 0
+        while (j < sizeInBytes) {
+            array[i] = bytes.getFloat(j)
+            j += 4
+            i++
+        }
+        return array
     }
 }

@@ -39,7 +39,7 @@ class Lwjgl3WindowConf() {
     var idleFPS: Int = 60
 
     var cacheDirectory: String = ".prefs/"
-    var cacheFileLocation: Int = FileLocation.External
+    var cacheFileLocation: String = FileLocation.External
 
     /**
      * Defines how HDPI monitors are handled. Operating systems may have a
@@ -67,7 +67,7 @@ class Lwjgl3WindowConf() {
     var maximized: Boolean = false
     var maximizedMonitor: Lwjgl3Monitor? = null
     var autoIconify: Boolean = false
-    var iconFileLocation: Int? = null
+    var iconFileLocation: String = FileLocation.Internal
     var iconPaths: Array<String>? = null
     var fullscreenMode: Lwjgl3DisplayMode? = null
     var title: String = ""

@@ -16,6 +16,8 @@
 
 package app.thelema.img
 
+import app.thelema.shader.post.IPostEffect
+
 /** It will be switching between two buffers
  * @author zeganstyl */
 class FrameBufferSwapper(var first: IFrameBuffer, var second: IFrameBuffer) {
@@ -34,6 +36,11 @@ class FrameBufferSwapper(var first: IFrameBuffer, var second: IFrameBuffer) {
         val current = current
         this.current = next
         next = current
+    }
+
+    fun render(shader: IPostEffect) {
+        shader.render(currentTexture, next)
+        swap()
     }
 
     /** Get texture of current buffer */

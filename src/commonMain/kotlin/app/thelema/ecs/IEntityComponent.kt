@@ -30,10 +30,6 @@ interface IEntityComponent: IJsonObjectIO {
     val componentDescriptor: ComponentDescriptor<IEntityComponent>
         get() = ECS.getDescriptorTyped(componentName)!!
 
-    /** If component is static, reference to this component must be as absolute path to entity of project tree */
-    val isComponentStatic: Boolean
-        get() = false
-
     val path: String
         get() = if (entityOrNull != null) "${entity.path}:$componentName" else ""
 
@@ -51,7 +47,7 @@ interface IEntityComponent: IJsonObjectIO {
     }
 
     fun setComponent(other: IEntityComponent): IEntityComponent {
-        if (other.componentName == componentName && other != this) {
+        if (isComponentNameAlias(other.componentName) && other != this) {
             componentDescriptor.properties.values.forEach { it.copy(this, other) }
         }
         return this
@@ -59,13 +55,14 @@ interface IEntityComponent: IJsonObjectIO {
 
     /** Set property */
     fun setProperty(name: String, value: Any?) {
-        componentDescriptor.getProperty(name).set(this, value)
+        componentDescriptor.getProperty(name).setValue(this, value)
     }
 
     /** Get property */
-    fun getProperty(name: String): Any? = componentDescriptor.getProperty(name).get(this)
+    fun getProperty(name: String): Any? = componentDescriptor.getProperty(name).getValue(this)
 
-    fun <T: Any> getPropertyTyped(name: String): T? = componentDescriptor.getProperty(name).get(this) as T?
+    @Suppress("UNCHECKED_CAST")
+    fun <T: Any> getPropertyTyped(name: String): T? = componentDescriptor.getProperty(name).getValue(this) as T?
 
     fun containsProperty(name: String): Boolean = false
 
@@ -74,27 +71,29 @@ interface IEntityComponent: IJsonObjectIO {
     fun parentChanged(oldValue: IEntity?, newValue: IEntity?) {}
 
     /** Notify this component, that some entity added to branch of [entity] */
-    fun addedEntityToBranch(entity: IEntity) {
-        entity.forEachComponentInBranch { addedComponentToBranch(it) }
-    }
+    fun addedEntityToBranch(entity: IEntity) {}
+    fun removedEntityFromBranch(entity: IEntity) {}
 
-    /** Notify this component, that some component added to branch of [getOrCreateEntity] */
+    /** Notify this component, that some component added to branch */
     fun addedComponentToBranch(component: IEntityComponent) {}
+    fun removedComponentFromBranch(component: IEntityComponent) {}
 
     /** Notify this component, that some entity added to [entity] */
-    fun addedEntity(entity: IEntity) {
-        entity.forEachComponent { addedComponentToChildEntity(it) }
-    }
+    fun addedEntity(entity: IEntity) {}
+    fun removedEntity(entity: IEntity) {}
 
-    /** Notify this component, that some component added to some child of [getOrCreateEntity] */
-    fun addedComponentToChildEntity(component: IEntityComponent) {}
+    /** Notify this component, that some component added to child entity */
+    fun addedChildComponent(component: IEntityComponent) {}
+    fun removedChildComponent(component: IEntityComponent) {}
 
     fun addedSiblingComponent(component: IEntityComponent) {}
+    fun removedSiblingComponent(component: IEntityComponent) {}
 
     /** Get or create sibling property */
     fun sibling(typeName: String): IEntityComponent = entity.component(typeName)
 
     /** Get or create sibling property with generic */
+    @Suppress("UNCHECKED_CAST")
     fun <T> siblingTyped(typeName: String) = entity.component(typeName) as T
 
     override fun readJson(json: IJsonObject) {
@@ -110,4 +109,4 @@ interface IEntityComponent: IJsonObjectIO {
 
 inline fun <reified T: IEntityComponent> IEntityComponent.sibling(): T = entity.component()
 
-inline fun <reified T: IEntityComponent> IEntityComponent.getSiblingOrNull(): T? = entity.getComponentOrNull()
+inline fun <reified T: IEntityComponent> IEntityComponent.getSiblingOrNull(): T? = entity.componentOrNull()

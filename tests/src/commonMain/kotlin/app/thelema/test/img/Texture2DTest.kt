@@ -16,8 +16,10 @@
 
 package app.thelema.test.img
 
+import app.thelema.app.APP
 import app.thelema.gl.GL
 import app.thelema.gl.GL_LINEAR
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.Texture2D
 import app.thelema.gl.TextureRenderer
 import app.thelema.test.Test
@@ -28,16 +30,8 @@ class Texture2DTest: Test {
         get() = "Texture 2D"
 
     override fun testMain() {
-        val screenQuad = TextureRenderer(flipY = true)
+        val texture = Texture2D("thelema-logo-alpha.png")
 
-        val texture = Texture2D().load(
-            uri = "thelema-logo-128.png",
-            minFilter = GL_LINEAR,
-            magFilter = GL_LINEAR
-        )
-
-        GL.render {
-            screenQuad.render(texture)
-        }
+        APP.onRender = { ScreenQuad.render(texture) }
     }
 }

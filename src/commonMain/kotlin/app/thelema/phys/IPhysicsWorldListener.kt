@@ -18,9 +18,6 @@ package app.thelema.phys
 
 /** @author zeganstyl */
 interface IPhysicsWorldListener {
-    fun collisionBegin(body1: IRigidBody, body2: IRigidBody, penetrationDepth: Float) = Unit
-    fun collisionEnd(body1: IRigidBody, body2: IRigidBody) = Unit
-
-    fun collisionBegin(shape1: IShape, shape2: IShape, penetrationDepth: Float) = Unit
-    fun collisionEnd(shape1: IShape, shape2: IShape) = Unit
+    fun collisionBegin(contact: IBodyContact) = Unit
+    fun collisionEnd(contact: IBodyContact) = Unit
 }

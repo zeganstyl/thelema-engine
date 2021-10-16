@@ -17,14 +17,16 @@
 package app.thelema.app
 
 import app.thelema.audio.AL
+import app.thelema.ecs.ECS
 import app.thelema.gl.GL
+import app.thelema.res.AID
 import app.thelema.res.RES
 
 abstract class AbstractApp: IApp {
-    override var onRender: () -> Unit = {}
-    override var onUpdate: (delta: Float) -> Unit = {}
+    override var onRender: () -> Unit = { ECS.render() }
+    override var onUpdate: (delta: Float) -> Unit = { ECS.update(it) }
 
-    val listeners = ArrayList<AppListener>()
+    val listeners = ArrayList<AppListener>(0)
 
     var destroyBuffersOnExit = true
 
@@ -50,7 +52,7 @@ abstract class AbstractApp: IApp {
     protected fun performDefaultSetup() {
         if (defaultSetup) {
             GL.isDepthTestEnabled = true
-            GL.setSimpleAlphaBlending()
+            GL.setupSimpleAlphaBlending()
             GL.isBlendingEnabled = true
             GL.glClearColor(0f, 0f, 0f, 1f)
             clearOnRender = true
@@ -85,10 +87,12 @@ abstract class AbstractApp: IApp {
             cachedWidth = width
 
             for (i in listeners.indices) {
+                GL.glViewport(0, 0, cachedWidth, cachedHeight)
                 listeners[i].resized(width, height)
             }
         }
 
+        AID.update(deltaTime)
         RES.update(deltaTime)
 
         AL.update()

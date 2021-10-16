@@ -27,8 +27,8 @@ interface IGLTFArrayElement {
     val progress: Float
         get() = currentProgress.toFloat() / maxProgress
 
-    val currentProgress: Long
-    val maxProgress: Long
+    val currentProgress: Int
+    val maxProgress: Int
 
     var arrayOrNull: IGLTFArray?
     val array: IGLTFArray

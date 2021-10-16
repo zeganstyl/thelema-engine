@@ -19,11 +19,10 @@ package app.thelema.test.shader.post
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
-import app.thelema.g3d.mesh.BoxMeshBuilder
-import app.thelema.g3d.mesh.SphereMeshBuilder
+import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.SphereMesh
 import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
@@ -132,43 +131,24 @@ void main() {
         meshShader.bind()
 
         val occlusionTextureBuffer = SimpleFrameBuffer()
-
         val sceneTextureBuffer = SimpleFrameBuffer()
 
-        val sphere = SphereMeshBuilder().apply {
-            radius = 1f
-        }.build()
+        val sphere = SphereMesh { setSize(1f) }
+
         val spherePos = Vec3(5f, 1f, 0f)
 
         val lightPos = Vec3(0f, 1f, 0f)
         val screenSpaceLightPos = Vec3()
 
-        val lightColor = Vec4(1f, 1f, 1f, 0f)
-
+        val lightColor = Vec4(1f, 1f, 1f, 1f)
         val blackColor = Vec4(0f, 0f, 0f, 1f)
 
-        val box = BoxMeshBuilder().apply {
-            xSize = 1f
-            ySize = 1f
-            zSize = 1f
-        }.build()
+        val box = BoxMesh { setSize(1f) }
         val boxPos = Vec3(-5f, 1f, 0f)
 
-        val screenQuad = TextureRenderer()
+        val control = OrbitCameraControl()
 
-        ActiveCamera {
-            near = 0.1f
-            far = 100f
-        }
-
-        val control = OrbitCameraControl(camera = ActiveCamera)
-        control.listenToMouse()
-
-        GL.isDepthTestEnabled = true
-        GL.glClearColor(0f, 0f, 0f, 1f)
         GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
@@ -177,35 +157,35 @@ void main() {
             meshShader["useColor"] = true
 
             occlusionTextureBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+                GL.glClear()
 
                 meshShader["color"] = lightColor
                 meshShader["pos"] = lightPos
-                sphere.render(meshShader)
+                sphere.mesh.render(meshShader)
 
                 meshShader["color"] = blackColor
 
                 meshShader["pos"] = spherePos
-                sphere.render(meshShader)
+                sphere.mesh.render(meshShader)
 
                 meshShader["pos"] = boxPos
-                box.render(meshShader)
+                box.mesh.render(meshShader)
             }
 
             sceneTextureBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+                GL.glClear()
 
                 meshShader["color"] = lightColor
                 meshShader["pos"] = lightPos
-                sphere.render(meshShader)
+                sphere.mesh.render(meshShader)
 
                 meshShader["useColor"] = false
 
                 meshShader["pos"] = spherePos
-                sphere.render(meshShader)
+                sphere.mesh.render(meshShader)
 
                 meshShader["pos"] = boxPos
-                box.render(meshShader)
+                box.mesh.render(meshShader)
             }
 
             screenSpaceLightPos.set(lightPos)
@@ -218,7 +198,7 @@ void main() {
             godRaysShader.set("screenSpaceLightPos", screenSpaceLightPos.x, screenSpaceLightPos.y)
             occlusionTextureBuffer.texture.bind(occlusionTexUnit)
             sceneTextureBuffer.texture.bind(sceneTexUnit)
-            screenQuad.render(godRaysShader, null)
+            ScreenQuad.render(godRaysShader, null)
         }
     }
 }

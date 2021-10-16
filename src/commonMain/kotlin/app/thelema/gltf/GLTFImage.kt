@@ -17,20 +17,20 @@
 package app.thelema.gltf
 
 import app.thelema.data.DATA
-import app.thelema.img.IImageData
+import app.thelema.ecs.component
+import app.thelema.img.IImage
 import app.thelema.img.IMG
 import app.thelema.utils.LOG
 
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-image)
  *
  * @author zeganstyl */
-class GLTFImage(
-    array: IGLTFArray,
-    var image: IImageData = IMG.image()
-): GLTFArrayElementAdapter(array) {
+class GLTFImage(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     var uri: String = ""
     var mimeType: String = ""
     var bufferView: Int = -1
+
+    val image: IImage = gltf.imagesEntity.entity("${defaultName}_$elementIndex").component()
 
     override val defaultName: String
         get() = "Image"
@@ -41,6 +41,8 @@ class GLTFImage(
         uri = json.string("uri", "")
         mimeType = json.string("mimeType", "")
         bufferView = json.int("bufferView", -1)
+
+        if (uri.isNotEmpty()) image.entity.name = gltf.imagesEntity.makeChildName(uri)
 
         if (uri.isNotEmpty() && bufferView >= 0) {
             LOG.error("GLTFImage: uri and bufferView have been set, there must be only uri or only bufferView")
@@ -55,13 +57,14 @@ class GLTFImage(
         if (bufferView >= 0) {
             val view = gltf.bufferViews[bufferView] as GLTFBufferView
             gltf.buffers.getOrWait(view.buffer) {
-                IMG.load(
+                IMG.decode(
                     data = view.createByteView().byteView(),
                     mimeType = mimeType,
                     out = image,
-                    ready = { ready() },
+                    ready = { image.stop(); ready(); },
                     error = {
                         LOG.error("Can't load image (bufferView = $bufferView), status: $it")
+                        image.stop(it)
                         ready()
                     }
                 )
@@ -71,18 +74,11 @@ class GLTFImage(
             if (uri.startsWith("data:")) {
                 throw RuntimeException("GLTFLoader: uri as image data is not supported yet")
             } else {
-                val decoded = DATA.decodeURI(uri)
-
-                val file = gltf.directory.child(decoded)
-                IMG.load(
-                    file = file,
-                    out = image,
-                    ready = { ready() },
-                    error = {
-                        LOG.error("Can't load image ${file.path}, status: $it")
+                gltf.loadDependencyRelative(DATA.decodeURI(uri), image).apply {
+                    onLoaded {
                         ready()
                     }
-                )
+                }
             }
         }
     }

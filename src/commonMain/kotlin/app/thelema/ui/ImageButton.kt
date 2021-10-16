@@ -24,7 +24,7 @@ import app.thelema.g2d.Batch
  * the image.
  * @author Nathan Sweet
  */
-open class ImageButton(style: Style = Style.default()) : Button(style) {
+open class ImageButton(style: ImageButtonStyle = ImageButtonStyle.default()) : Button(style) {
     val image = UIImage()
 
     /** This drawable will override style images */
@@ -38,7 +38,7 @@ open class ImageButton(style: Style = Style.default()) : Button(style) {
 
     /** Updates the Image with the appropriate Drawable from the style before it is drawn.  */
     fun updateImage() {
-        val style = style as Style
+        val style = style as ImageButtonStyle
 
         if (overlayImage == null) {
             image.drawable = if (isDisabled && style.imageDisabled != null) {
@@ -69,7 +69,7 @@ open class ImageButton(style: Style = Style.default()) : Button(style) {
     /** The style for an image button, see [ImageButton].
      * @author Nathan Sweet
      */
-    class Style(
+    class ImageButtonStyle(
             up: Drawable? = null,
             down: Drawable? = null,
             checked: Drawable? = null) : app.thelema.ui.ButtonStyle(up, down, checked) {
@@ -88,14 +88,14 @@ open class ImageButton(style: Style = Style.default()) : Button(style) {
             this.imageChecked = imageChecked
         }
 
-        constructor(style: Style): this(style.up, style.down, style.checked)
+        constructor(style: ImageButtonStyle): this(style.up, style.down, style.checked)
 
         companion object {
-            var Default: Style? = null
-            fun default(): Style {
+            var Default: ImageButtonStyle? = null
+            fun default(): ImageButtonStyle {
                 var style = Default
                 if (style == null) {
-                    style = Style()
+                    style = ImageButtonStyle()
                     Default = style
                 }
                 return style
