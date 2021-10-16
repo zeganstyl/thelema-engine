@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="thelema-studio-js">
+    <output-path>$PROJECT_DIR$/thelema-studio/build/libs</output-path>
+    <root id="archive" name="thelema-studio-js.jar" />
+  </artifact>
+</component>

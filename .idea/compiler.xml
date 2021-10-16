@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11">
-      <module name="thelema.thelema-studio.commonMain" target="1.8" />
-      <module name="thelema.thelema-studio.commonTest" target="1.8" />
-      <module name="thelema.thelema-studio.jvmMain" target="1.8" />
-      <module name="thelema.thelema-studio.jvmTest" target="1.8" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="11" />
   </component>
 </project>
