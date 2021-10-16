@@ -107,15 +107,20 @@ android {
     }
 }
 
-allprojects {
+publishing {
     repositories {
-        google()
-        mavenCentral()
-        mavenLocal()
         maven {
             setUrl("https://maven.pkg.github.com/zeganstyl/thelema-engine")
             name = "github"
             credentials(PasswordCredentials::class)
         }
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
     }
 }

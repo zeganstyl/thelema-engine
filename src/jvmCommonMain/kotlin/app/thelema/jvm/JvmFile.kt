@@ -61,7 +61,7 @@ class JvmFile(
     private fun isInternal(): Boolean = location == FileLocation.Classpath ||
             location == FileLocation.Internal && !file.exists() ||
             location == FileLocation.Local && !file.exists() ||
-            (location == FileLocation.Project && RES.file.location == FileLocation.Internal)
+            (location == FileLocation.Project && RES.file?.location == FileLocation.Internal)
 
     fun inputStream(): InputStream {
         return if (isInternal()) {
@@ -198,8 +198,8 @@ class JvmFile(
             if (file.exists()) true else JvmFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
         }
         FileLocation.Project -> {
-            if (RES.file.location == FileLocation.Internal) {
-                val projectDir = if (RES.absoluteDirectory.path.isNotEmpty()) RES.absoluteDirectory.path + "/" else ""
+            if (RES.file?.location == FileLocation.Internal) {
+                val projectDir = if (RES.absoluteDirectory!!.path.isNotEmpty()) RES.absoluteDirectory!!.path + "/" else ""
                 if (file.exists()) true else JvmFile::class.java.getResource("/$projectDir$path") != null
             } else {
                 file.exists()

@@ -18,6 +18,7 @@ import app.thelema.ecs.ECS
 import app.thelema.fs.FS
 import app.thelema.gl.GL
 import app.thelema.img.IMG
+import app.thelema.input.KB
 import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.json.JSON
@@ -105,7 +106,7 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
         IMG = AndroidImg(this)
         GL = AndroidGL(this)
         MOUSE = mouse
-        KEY.proxy = kb
+        KB = kb
         AL = AndroidAL(context)
         WS = KtorWebSocket()
 

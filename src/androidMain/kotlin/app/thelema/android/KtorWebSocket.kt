@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import app.thelema.data.IByteData
 import app.thelema.jvm.data.JvmByteBuffer
-import app.thelema.net.WS
+import app.thelema.net.*
 import app.thelema.net.WebSocketAdapter
 
 class KtorWebSocket: WebSocketAdapter() {
@@ -24,7 +24,7 @@ class KtorWebSocket: WebSocketAdapter() {
         super.open(url, error, opened)
 
         GlobalScope.launch {
-            readyStateInternal = WS.CONNECTING
+            readyStateInternal = WEBSOCKET_CONNECTING
 
             try {
                 client.webSocket(
@@ -32,7 +32,7 @@ class KtorWebSocket: WebSocketAdapter() {
                     block = {
                         session = this
 
-                        readyStateInternal = WS.OPEN
+                        readyStateInternal = WEBSOCKET_OPEN
                         opened()
 
                         incoming.consumeEach {
@@ -53,12 +53,12 @@ class KtorWebSocket: WebSocketAdapter() {
                             }
                         }
 
-                        readyStateInternal = WS.CLOSING
+                        readyStateInternal = WEBSOCKET_CLOSING
                     }
                 )
 
                 session = null
-                readyStateInternal = WS.CLOSED
+                readyStateInternal = WEBSOCKET_CLOSED
                 for (i in listeners.indices) {
                     listeners[i].closed()
                 }
