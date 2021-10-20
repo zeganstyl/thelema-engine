@@ -354,7 +354,7 @@ class Camera(): ICamera {
     }
 }
 
-var ActiveCameraVar: ICamera? = null
+internal var ActiveCameraVar: ICamera? = null
 var ActiveCamera: ICamera
     get() {
         if (ActiveCameraVar == null) {

@@ -44,16 +44,16 @@ class Project: IProject {
 
     private val loaderListeners = ArrayList<ProjectListener>()
 
-    override var file: IFile? = null
+    override var file: IFile = DefaultProjectFile
         set(value) {
             field = value
-            absoluteDirectoryInternal = value?.parent()
+            absoluteDirectoryInternal = value.parent()
         }
 
     override var mainScene: EntityLoader? = null
 
-    private var absoluteDirectoryInternal: IFile? = null
-    override val absoluteDirectory: IFile?
+    private var absoluteDirectoryInternal: IFile = DefaultProjectDirectory
+    override val absoluteDirectory: IFile
         get() = absoluteDirectoryInternal
 
     override fun addProjectListener(listener: ProjectListener) {

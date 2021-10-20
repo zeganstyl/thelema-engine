@@ -61,11 +61,13 @@ object Color {
     const val DARK_GRAY_INT: Int = 0x3f3f3fff
 
     val BLUE: IVec4 by lazy { Vec4(0f, 0f, 1f, 1f) }
+    const val BLUE_INT: Int = 0x0000ffff
     val NAVY: IVec4 by lazy { Vec4(0f, 0f, 0.5f, 1f) }
     val ROYAL: IVec4 by lazy { int(0x4169e1ff) }
     val SLATE: IVec4 by lazy { int(0x708090ff) }
     val SKY: IVec4 by lazy { int(-0x78311401) }
     val CYAN: IVec4 by lazy { Vec4(0f, 1f, 1f, 1f) }
+    const val CYAN_INT: Int = 0x00ffffff
     val TEAL: IVec4 by lazy { Vec4(0f, 0.5f, 0.5f, 1f) }
     val GREEN: IVec4 by lazy { int(0x00ff00ff) }
     const val GREEN_INT: Int = 0x00ff00ff

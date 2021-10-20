@@ -25,9 +25,11 @@ interface IProject: IEntityComponent {
 
     var loadOnSeparateThreadByDefault: Boolean
 
-    var file: IFile?
+    /** Project file */
+    var file: IFile
 
-    val absoluteDirectory: IFile?
+    /** Project directory */
+    val absoluteDirectory: IFile
 
     var mainScene: EntityLoader?
 

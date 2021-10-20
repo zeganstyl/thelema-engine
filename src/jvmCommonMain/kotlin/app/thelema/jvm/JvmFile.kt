@@ -36,7 +36,7 @@ class JvmFile(
         when (location) {
             FileLocation.External -> File(JvmFS.externalPath, path)
             FileLocation.Local -> File(JvmFS.localPath, path)
-            FileLocation.Project -> File((RES.absoluteDirectory as JvmFile).file, path)
+            FileLocation.Project -> File((RES.absoluteDirectory as IFile?)?.platformPath, path)
             else -> File(path)
         },
         path.replace('\\', '/'),

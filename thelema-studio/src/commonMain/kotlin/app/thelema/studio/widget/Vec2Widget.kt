@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Anton Trushkov
+ * Copyright 2020 Anton Trushkov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package app.thelema.ui
+package app.thelema.studio.widget
 
-/** The style for a [Tree].
- * @author Nathan Sweet
- */
-class TreeStyle(
-    var plus: Drawable = Drawable.Empty,
-    var minus: Drawable = Drawable.Empty,
-    var selection: Drawable? = DSKIN.grey5x5
-) {
-    /** Optional.  */
-    var plusOver: Drawable? = null
-    var minusOver: Drawable? = null
-    var over: Drawable? = DSKIN.darkGrey5x5
-    var background: Drawable? = null
+class Vec2Widget {
 }

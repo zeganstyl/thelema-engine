@@ -14,27 +14,28 @@
  * limitations under the License.
  */
 
-package app.thelema.lwjgl3
+package app.thelema.studio
 
-import app.thelema.fs.FS
-import app.thelema.res.openThelemaProject
-import app.thelema.test.*
-import app.thelema.test.audio.MusicOggTest
-import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
-import app.thelema.test.phys.BoxShapeTest
-import app.thelema.test.phys.TrimeshShapeTest
+import app.thelema.lwjgl3.JvmApp
+import app.thelema.lwjgl3.Lwjgl3WindowConf
 
-object MainTestJvm {
+object ThelemaStudioJvm {
     @JvmStatic
     fun main(args: Array<String>) {
-        val app = JvmApp {
-            width = 1280
-            height = 720
-            msaaSamples = 4
-        }
+        val app = JvmApp(
+            Lwjgl3WindowConf {
+                title = "Thelema Studio"
+                width = 1280
+                height = 720
+                iconPaths = arrayOf(
+                    "thelema-logo-32.png",
+                    "thelema-logo-64.png"
+                )
+                msaaSamples = 4
+            }
+        )
 
-        PBRShaderTest().testMain()
-        //RecastTest().testMain()
+        Studio.fileChooser = JvmFileChooser()
 
         app.startLoop()
     }

@@ -116,6 +116,14 @@ object DSKIN {
         }
     }
 
+    val darkGrey5x5 by lazy {
+        Sprite(whiteTexture).apply {
+            color = Color.DARK_GRAY_INT
+            minWidth = 5f
+            minHeight = 5f
+        }
+    }
+
     val grey5x5 by lazy {
         Sprite(whiteTexture).apply {
             color = Color.GRAY_INT

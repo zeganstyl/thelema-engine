@@ -16,6 +16,7 @@
 
 package app.thelema.fs
 
+import app.thelema.data.DATA
 import app.thelema.data.IByteData
 
 
@@ -163,4 +164,121 @@ interface IFile {
      * for [FileLocation.Classpath] files. On Android, zero is returned for [FileLocation.Internal] files. On the desktop, zero
      * is returned for [FileLocation.Internal] files on the classpath.  */
     fun lastModified(): Long
+}
+
+
+val DefaultProjectFile = object : IFile {
+    override val sourceObject: Any
+        get() = this
+    override val path: String
+        get() = name
+    override val extension: String
+        get() = "thelema"
+    override val name: String
+        get() = "project.thelema"
+    override val nameWithoutExtension: String
+        get() = "project"
+    override val location: String
+        get() = FileLocation.Internal
+    override val isDirectory: Boolean
+        get() = false
+    override val platformPath: String
+        get() = path
+
+    var content: String = "{}"
+
+    override fun readText(charset: String, error: (status: Int) -> Unit, ready: (text: String) -> Unit) {
+        ready(content)
+    }
+
+    override fun readBytes(error: (status: Int) -> Unit, ready: (data: IByteData) -> Unit) {
+        ready(DATA.bytes(content))
+    }
+
+    override fun writeText(text: String, append: Boolean, charset: String?) {
+        if (append) {
+            content += text
+        } else {
+            content = text
+        }
+    }
+
+    override fun writeBytes(bytes: IByteData) {}
+
+    override fun list(): List<IFile> = throw IllegalStateException("$path is not a directory")
+
+    override fun mkdirs() {}
+
+    override fun exists(): Boolean = true
+
+    override fun delete(): Boolean = false
+
+    override fun deleteDirectory(): Boolean = false
+
+    override fun emptyDirectory(preserveTree: Boolean) {}
+
+    override fun copyTo(dest: IFile) {
+        dest.writeText(content)
+    }
+
+    override fun moveTo(dest: IFile) {}
+
+    override fun length(): Long = content.length.toLong()
+
+    override fun lastModified(): Long = 0
+}
+
+val DefaultProjectDirectory = object : IFile {
+    override val sourceObject: Any
+        get() = this
+    override val path: String
+        get() = ""
+    override val extension: String
+        get() = ""
+    override val name: String
+        get() = ""
+    override val nameWithoutExtension: String
+        get() = ""
+    override val location: String
+        get() = FileLocation.Internal
+    override val isDirectory: Boolean
+        get() = true
+    override val platformPath: String
+        get() = path
+
+    override fun readText(charset: String, error: (status: Int) -> Unit, ready: (text: String) -> Unit) {
+        throw IllegalStateException("This is a directory")
+    }
+
+    override fun readBytes(error: (status: Int) -> Unit, ready: (data: IByteData) -> Unit) {
+        throw IllegalStateException("This is a directory")
+    }
+
+    override fun writeText(text: String, append: Boolean, charset: String?) {
+        throw IllegalStateException("This is a directory")
+    }
+
+    override fun writeBytes(bytes: IByteData) {
+        throw IllegalStateException("This is a directory")
+    }
+
+    override fun list(): List<IFile> = listOf(DefaultProjectFile)
+
+    override fun mkdirs() {}
+
+    override fun exists(): Boolean = true
+
+    override fun delete(): Boolean = false
+
+    override fun deleteDirectory(): Boolean = false
+
+    override fun emptyDirectory(preserveTree: Boolean) {}
+
+    override fun copyTo(dest: IFile) {}
+
+    override fun moveTo(dest: IFile) {}
+
+    override fun length(): Long = 0
+
+    override fun lastModified(): Long = 0
 }
