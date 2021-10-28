@@ -39,6 +39,8 @@ interface ILoader: IEntityComponent {
 
     var separateThread: Boolean?
 
+    fun getOrCreateFile(): IFile?
+
     fun loadDependency(uri: String, loaderName: String): ILoader =
         entity.getRootEntity().component<IProject>().load(uri, loaderName)
 

@@ -74,10 +74,7 @@ class TabScenePanel: Table() {
         selection.isMultiple = true
         selection.addSelectionListener(object : SelectionListener<IEntity> {
             override fun lastSelectedChanged(newValue: IEntity?) {
-                if (newValue != null) {
-                    componentsPanel.clearComponents()
-                    newValue.forEachComponent { componentsPanel.setComponent(it) }
-                }
+                componentsPanel.entity = newValue
                 return super.lastSelectedChanged(newValue)
             }
         })

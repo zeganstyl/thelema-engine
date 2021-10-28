@@ -16,20 +16,5 @@
 
 package app.thelema.ui
 
-/** The style for a splitpane, see [SplitPane].
- * @author mzechner
- * @author Nathan Sweet
- */
-open class SplitPaneStyle(var handle: Drawable? = null) {
-    companion object {
-        var Default: SplitPaneStyle? = null
-        fun default(styleName: String = "default-horizontal"): SplitPaneStyle {
-            var style = Default
-            if (style == null) {
-                style = SplitPaneStyle()
-                Default = style
-            }
-            return style
-        }
-    }
-}
+/** @author zeganstyl */
+open class SplitPaneStyle(var handle: Drawable? = DSKIN.white5x5SemiTransparent)

@@ -1,5 +1,8 @@
 import app.thelema.GLFWApp
 import app.thelema.GLFWAppConf
+import app.thelema.test.g3d.BoxMeshTest
+import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
+import app.thelema.test.phys.BoxShapeTest
 
 /*
  * Copyright 2020-2021 Anton Trushkov
@@ -24,7 +27,7 @@ fun main() {
     })
 
 //    FSTest().testMain()
-//    GLTFLoaderTest().testMain()
+    BoxMeshTest().testMain()
 
     app.startLoop()
 }

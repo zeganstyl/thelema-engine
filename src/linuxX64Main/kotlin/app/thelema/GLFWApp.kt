@@ -26,8 +26,9 @@ import app.thelema.fs.FS
 import app.thelema.gl.GL
 import app.thelema.img.IMG
 import app.thelema.json.JSON
-import app.thelema.audio.OpenAL
+//import app.thelema.audio.OpenAL
 import app.thelema.data.NativeData
+import app.thelema.ecs.ECS
 import app.thelema.json.NativeJson
 import app.thelema.utils.LOG
 import kotlin.system.getTimeMillis
@@ -88,7 +89,7 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
 
     private val frameBufferSizeCallback = staticCFunction {
             windowHandle: CPointer<GLFWwindow>?, width: Int, height: Int ->
-        val app = APP.proxy as GLFWApp
+        val app = APP as GLFWApp
         val window = app.currentWindow
 
         app.updateMainFrameBufferSize()
@@ -101,26 +102,28 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
     }
 
     init {
-        APP.proxy = this
-        LOG.proxy = PosixLog()
+        ECS.setupDefaultComponents()
+
+        APP = this
+        LOG = PosixLog()
 
         if (glfwInit() != GLFW_TRUE) {
             LOG.error("Unable to initialize GLFW")
             throw RuntimeException("Unable to initialize GLFW")
         }
 
-        FS.proxy = PosixFS()
-        JSON.proxy = NativeJson()
-        DATA.proxy = NativeData()
-        IMG.proxy = STBImg()
+        FS = PosixFS()
+        JSON = NativeJson()
+        DATA = NativeData()
+        IMG = STBImg()
 
         if (!conf.disableAudio) {
             try {
-                AL.proxy = OpenAL(
-                    conf.audioDeviceSimultaneousSources,
-                    conf.audioDeviceBufferCount,
-                    conf.audioDeviceBufferSize
-                )
+//                AL = OpenAL(
+//                    conf.audioDeviceSimultaneousSources,
+//                    conf.audioDeviceBufferCount,
+//                    conf.audioDeviceBufferSize
+//                )
 
             } catch (t: Throwable) {
                 LOG.info("Couldn't initialize audio, disabling audio", t, "Lwjgl3Application")
@@ -134,7 +137,7 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
         updateMainFrameBufferSize()
         glfwSetFramebufferSizeCallback(mainWindow.handle, frameBufferSizeCallback)
 
-        GL.proxy = gl
+        GL = gl
 
         GL.initGL()
 

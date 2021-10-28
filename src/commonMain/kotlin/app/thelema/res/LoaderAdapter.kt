@@ -61,6 +61,8 @@ abstract class LoaderAdapter: ILoader {
 
     var loader = Loader()
 
+    override fun getOrCreateFile(): IFile? = file
+
     override fun stop(status: Int) {
         loader.stop(status)
     }

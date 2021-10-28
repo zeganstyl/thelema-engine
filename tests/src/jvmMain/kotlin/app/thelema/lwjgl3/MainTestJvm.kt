@@ -33,7 +33,7 @@ object MainTestJvm {
             msaaSamples = 4
         }
 
-        PBRShaderTest().testMain()
+        GLTFDamagedHelmetTest().testMain()
         //RecastTest().testMain()
 
         app.startLoop()

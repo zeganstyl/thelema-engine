@@ -24,9 +24,11 @@ import app.thelema.fs.FS
 import app.thelema.gl.GL
 import app.thelema.img.IImage
 import app.thelema.img.IMG
+import app.thelema.img.Image
 import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.input.BUTTON
+import app.thelema.input.KB
 import kotlin.system.getTimeNanos
 
 class GLFWWindow(conf: GLFWWindowConf, sharedContext: CPointer<GLFWwindow>? = null) {
@@ -267,7 +269,7 @@ class GLFWWindow(conf: GLFWWindowConf, sharedContext: CPointer<GLFWwindow>? = nu
         MOUSE = mouse
 
         kb = GLFWKeyboard(this)
-        KEY.proxy = kb
+        KB = kb
 
         graphics = Graphics(this)
     }
@@ -380,8 +382,8 @@ class GLFWWindow(conf: GLFWWindowConf, sharedContext: CPointer<GLFWwindow>? = nu
     }
 
     fun makeCurrent() {
-        BUTTON.proxy = mouse
-        KEY.proxy = kb
+        MOUSE = mouse
+        KB = kb
         glfwMakeContextCurrent(handle)
     }
 
@@ -403,7 +405,7 @@ class GLFWWindow(conf: GLFWWindowConf, sharedContext: CPointer<GLFWwindow>? = nu
 
         fun setIcon(windowHandle: CPointer<GLFWwindow>?, imagePaths: Array<String>, imageFileLocation: String) {
             val pixmaps = Array(imagePaths.size) {
-                IMG.load(FS.file(imagePaths[it], imageFileLocation)) {}
+                IMG.load(FS.file(imagePaths[it], imageFileLocation), Image()) {}
             }
             setIcon(windowHandle, pixmaps)
         }

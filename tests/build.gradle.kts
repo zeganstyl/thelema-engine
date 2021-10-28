@@ -6,6 +6,8 @@ plugins {
 group = thelema_group
 version = thelema_version
 
+val lwjgl3_package = "$thelema_group.lwjgl3"
+
 repositories {
     mavenCentral()
     mavenLocal()
@@ -83,12 +85,20 @@ kotlin {
                 doFirst {
                     manifest {
                         attributes(
-                            "Main-Class" to "app.thelema.lwjgl3.MainTestJvm"
+                            "Main-Class" to "$lwjgl3_package.MainTestJvm"
                         )
                     }
 
                     from(configurations.getByName("jvmRuntimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
                 }
+            }
+
+            val run by tasks.creating(JavaExec::class) {
+                dependsOn(tasks.getByName("jvmMainClasses"))
+                main = "$lwjgl3_package.MainTestJvm"
+                classpath = configurations.getByName("jvmRuntimeClasspath") +
+                        files("$buildDir/classes/kotlin/jvm/main") +
+                        commonMain.resources.sourceDirectories
             }
         }
 

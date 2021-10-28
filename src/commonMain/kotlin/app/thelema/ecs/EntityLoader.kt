@@ -16,7 +16,10 @@
 
 package app.thelema.ecs
 
+import app.thelema.fs.FS
+import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
+import app.thelema.fs.projectFile
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.LoaderAdapter
@@ -44,13 +47,16 @@ class EntityLoader: LoaderAdapter() {
         stop()
     }
 
-    fun saveTargetEntity() {
+    override fun getOrCreateFile(): IFile? {
         if (file == null) {
             val fileName = entity.name + ext
-            file = RES.file?.parent()?.child(fileName)
+            file = projectFile(fileName)
         }
+        return file
+    }
 
-        file?.writeText(JSON.printObject(targetEntity))
+    fun saveTargetEntity() {
+        getOrCreateFile()?.writeText(JSON.printObject(targetEntity))
     }
 
     override fun writeJson(json: IJsonObject) {

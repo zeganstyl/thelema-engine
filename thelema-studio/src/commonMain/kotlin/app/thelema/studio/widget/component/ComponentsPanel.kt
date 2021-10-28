@@ -16,12 +16,11 @@
 
 package app.thelema.studio.widget.component
 
+import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.studio.ComponentPanelProvider
-import app.thelema.ui.Align
-import app.thelema.ui.ScrollPane
-import app.thelema.ui.Table
-import app.thelema.ui.VBox
+import app.thelema.studio.Studio
+import app.thelema.ui.*
 
 /** Contains all components that exists in entity */
 class ComponentsPanel: Table() {
@@ -30,7 +29,25 @@ class ComponentsPanel: Table() {
 
     val componentPanelsCache = HashMap<String, ComponentPanel<IEntityComponent>>()
 
+    var entity: IEntity? = null
+        set(value) {
+            val oldValue = field
+            if (oldValue != value) {
+                field = value
+                clearComponents()
+                value?.forEachComponent { setComponent(it) }
+            }
+        }
+
     init {
+        add(HBox {
+            add(TextButton("Add/Remove") {
+                onClick {
+                    Studio.entityWindow.entity = entity
+                    headUpDisplay?.also { Studio.entityWindow.show(it) }
+                }
+            })
+        }).newRow()
         add(componentsListScroll).grow()
         componentsListScroll.fadeScrollBars = false
     }

@@ -47,6 +47,7 @@ class SimpleShader3D(block: SimpleShader3D.() -> Unit = {}): Shader() {
     init {
         block(this)
         initShader()
+        println(this)
     }
 
     fun setupOnlyColor(color: IVec4, disableLight: Boolean = true) {
@@ -143,5 +144,9 @@ void main() {
 
     fun render(mesh: IMesh) {
         mesh.render(this)
+    }
+
+    companion object {
+        val instance: SimpleShader3D by lazy { SimpleShader3D() }
     }
 }

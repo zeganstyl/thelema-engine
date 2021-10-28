@@ -17,6 +17,7 @@
 package app.thelema.studio.widget.component
 
 import app.thelema.ecs.*
+import app.thelema.studio.ScriptFile
 import app.thelema.studio.widget.*
 import app.thelema.ui.*
 
@@ -45,6 +46,8 @@ open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaul
                     PropertyType.Vec3.propertyTypeName -> { size = 2; Vec3Widget() }
                     PropertyType.Vec4.propertyTypeName -> { size = 2; Vec4Widget() }
                     PropertyType.File.propertyTypeName -> ProjectFileField()
+                    PropertyType.String.propertyTypeName -> StringField()
+                    ScriptFile.propertyTypeName -> ScriptFileField()
                     else -> null
                 }
                 if (field != null) {

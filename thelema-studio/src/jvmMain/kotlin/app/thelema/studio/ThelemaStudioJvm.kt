@@ -16,8 +16,12 @@
 
 package app.thelema.studio
 
+import app.thelema.app.APP
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
+import kotlin.script.experimental.api.ScriptCompilationConfiguration
+import kotlin.script.experimental.jvm.JvmDependencyFromClassLoader
+import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 object ThelemaStudioJvm {
     @JvmStatic
@@ -34,6 +38,21 @@ object ThelemaStudioJvm {
                 msaaSamples = 4
             }
         )
+
+        val host = BasicJvmScriptingHost()
+
+        KotlinScripting.init(host, JvmDependencyFromClassLoader { app::class.java.classLoader!! })
+
+        Thread {
+            println("Scripting engine is warming up...")
+            val time = APP.time
+            host.eval(
+                SourceCodeImp("fun main(){}", ""),
+                ScriptCompilationConfiguration(),
+                null
+            )
+            println("Scripting engine is ready (${APP.time - time} ms)")
+        }.start()
 
         Studio.fileChooser = JvmFileChooser()
 

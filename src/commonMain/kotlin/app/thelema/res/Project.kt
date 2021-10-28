@@ -170,11 +170,12 @@ inline fun <reified T : ILoader> IProject.load(uri: String, noinline block: T.()
     load(uri, T::class.simpleName!!, block as ILoader.() -> Unit) as T
 
 fun openThelemaProject(file: IFile) {
-    val file2 = if (file.isDirectory) file.child("project.thelema") else file
+    val file2 = if (file.isDirectory) file.child(PROJECT_FILENAME) else file
     file2.readText {
         try {
             val json = JSON.parseObject(it)
             RES.file = file2
+            RES.entity.destroy()
             RES.getOrCreateEntity().readJson(json)
             RES.entity.name = "Project"
         } catch (ex: Exception) {
@@ -183,3 +184,5 @@ fun openThelemaProject(file: IFile) {
         }
     }
 }
+
+const val PROJECT_FILENAME = "project.thelema"

@@ -33,12 +33,16 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(rootProject.path))
+                implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlin_version")
             }
         }
 
         val jvmMain by getting {
             dependencies {
                 implementation(project(rootProject.path))
+
+                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlin_version")
+                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlin_version")
 
                 //val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
                 val platforms = arrayOf("natives-linux")

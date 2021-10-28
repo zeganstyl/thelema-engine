@@ -21,16 +21,16 @@ import app.thelema.json.IJsonObject
 class StringEnumPropertyDesc<T: IEntityComponent>(
     override val name: String,
     val values: List<String>,
-    val getValue: T.() -> String,
-    val setValue: T.(value: String) -> Unit
+    val getValueBlock: T.() -> String,
+    val setValueBlock: T.(value: String) -> Unit
 ): IPropertyDescriptor<T, String> {
     override val type: String = PropertyType.StringEnum.propertyTypeName
     override fun setValue(component: T, value: String) {
         if (!values.contains(value)) throw IllegalStateException("StringEnum: value \"$value\" can't be set as enum")
-        component.setValue(value)
+        component.setValueBlock(value)
     }
-    override fun getValue(component: T): String = getValue(component)
+    override fun getValue(component: T): String = getValueBlock(component)
     override fun default(): String = ""
     override fun readJson(component: T, json: IJsonObject) = setValue(component, json.string(name, default()))
-    override fun writeJson(component: T, json: IJsonObject) { json[name] = component.getValue() }
+    override fun writeJson(component: T, json: IJsonObject) { json[name] = component.getValueBlock() }
 }

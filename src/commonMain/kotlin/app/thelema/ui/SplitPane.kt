@@ -45,7 +45,7 @@ class SplitPane(
     private var firstWidget: Actor,
     private var secondWidget: Actor,
     vertical: Boolean = false,
-    style: SplitPaneStyle = SplitPaneStyle.default("default-" + if (vertical) "vertical" else "horizontal"),
+    style: SplitPaneStyle = SplitPaneStyle(),
     splitValue: Float = 0.5f
 ) : WidgetGroup() {
     var style = style

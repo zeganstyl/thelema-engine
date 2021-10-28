@@ -34,7 +34,7 @@ class ProjectPanel: ComponentPanel<Project>(componentName<Project>()) {
             onClick {
                 newResources = 0
                 findResources(projectFile(""))
-                Studio.statusLabel.text = "New resources: $newResources"
+                Studio.showStatus("New resources: $newResources")
             }
         })
     }

@@ -22,6 +22,7 @@ import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
+import app.thelema.res.RES
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
 import kotlin.math.max

@@ -24,6 +24,9 @@ import app.thelema.gltf.GLTFSceneInstance
 import app.thelema.img.*
 import app.thelema.input.KeyboardHandler
 import app.thelema.input.MouseHandler
+import app.thelema.script.BakedKotlinScripts
+import app.thelema.script.IKotlinScript
+import app.thelema.script.KotlinScript
 import app.thelema.utils.iterate
 import kotlin.native.concurrent.ThreadLocal
 
@@ -67,6 +70,11 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
     override fun removeEntity(entity: IEntity) {
         entitiesInternal.remove(entity)
         systemsInternal.iterate { it.removedScene(entity) }
+    }
+
+    fun removeAllEntities() {
+        entitiesInternal.forEach { entity -> systemsInternal.forEach { entity.removeEntity(entity) } }
+        entitiesInternal.clear()
     }
 
     override fun addSystem(system: IComponentSystem) {
@@ -131,6 +139,13 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
                 refAbs("mainScene", { mainScene }) { mainScene = it }
             }
             descriptor { app.thelema.res.ResourceHolder() }
+        }
+
+        descriptor { BakedKotlinScripts() }
+
+        descriptor({ KotlinScript() }) {
+            setAliases(IKotlinScript::class)
+            string("customMainFunctionName", { customMainFunctionName }) { customMainFunctionName = it }
         }
 
         descriptor { SimulationNode() }

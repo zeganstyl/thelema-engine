@@ -1,6 +1,9 @@
 package app.thelema.studio
 
+import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
+import app.thelema.jvm.JvmFile
+import app.thelema.res.PROJECT_FILENAME
 import app.thelema.res.RES
 import java.io.File
 import javax.swing.JFileChooser
@@ -11,15 +14,35 @@ class JvmFileChooser: IFileChooser {
 
     private val projectFilter = object : FileFilter() {
         override fun accept(f: File): Boolean {
-            return File(f.absolutePath + "project.thelema").exists()
+            return File(f.absolutePath + PROJECT_FILENAME).exists()
         }
 
-        override fun getDescription(): String = "Thelema Engine project (project.thelema)"
+        override fun getDescription(): String = "Thelema Engine project ($PROJECT_FILENAME)"
+    }
+
+    override fun openScriptFile(selectedFile: IFile?, ready: (file: IFile?) -> Unit) {
+        val dir = KotlinScripting.kotlinDirectory
+        if (dir == null) {
+            ready(null)
+        } else {
+            chooser.isMultiSelectionEnabled = false
+            chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
+            chooser.dialogType = JFileChooser.OPEN_DIALOG
+            chooser.currentDirectory = File(dir.platformPath)
+            chooser.selectedFile = if (selectedFile != null) File(selectedFile.platformPath) else null
+            chooser.fileFilter = null
+            chooser.requestFocus()
+            if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
+            val file = chooser.selectedFile
+            if (file != null) {
+                ready(JvmFile(file, file.relativeTo(File(dir.path)).path, FileLocation.Relative))
+            }
+        }
     }
 
     override fun openProjectFile(selectedFile: IFile?, ready: (uri: String) -> Unit) {
-        val projectFile = RES.file ?: throw IllegalStateException("Project is not opened")
-        val dir = RES.absoluteDirectory!!.platformPath
+        val projectFile = RES.file
+        val dir = RES.absoluteDirectory.platformPath
         chooser.isMultiSelectionEnabled = false
         chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
         chooser.dialogType = JFileChooser.OPEN_DIALOG

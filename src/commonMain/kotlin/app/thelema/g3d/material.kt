@@ -20,8 +20,10 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.ecs.componentOrNull
+import app.thelema.gl.GL
 import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
+import app.thelema.shader.SimpleShader3D
 
 /** @author zeganstyl */
 interface IMaterial: IEntityComponent {

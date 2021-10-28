@@ -2,4 +2,4 @@ headers = GLFW/glfw3.h GLES3/gl32.h stb_image.h stb_vorbis.c parson.h
 headerFilter = KHR/* GL/* GLFW/* GLES3/* stb_image.h stb_vorbis.c parson.h
 staticLibraries = bin/stb.a bin/parson.a
 libraryPaths = /home/q/IdeaProjects/thelema-engine/src/nativeInterop/cinterop
-linkerOpts.linux = -L/usr/lib64 -lglfw -lGL
+linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -lglfw -lGL

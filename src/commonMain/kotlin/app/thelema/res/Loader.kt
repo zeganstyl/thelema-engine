@@ -21,6 +21,7 @@ import app.thelema.concurrency.ATOM
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
 import app.thelema.fs.IFile
+import app.thelema.json.IJsonObject
 import app.thelema.net.httpIsSuccess
 
 class Loader: ILoader {
@@ -65,6 +66,13 @@ class Loader: ILoader {
 
     override fun updateProgress() {
         proxy?.updateProgress()
+    }
+
+    override fun getOrCreateFile(): IFile? = proxy?.getOrCreateFile()
+
+    override fun writeJson(json: IJsonObject) {
+        getOrCreateFile()
+        super.writeJson(json)
     }
 
     override fun load() {

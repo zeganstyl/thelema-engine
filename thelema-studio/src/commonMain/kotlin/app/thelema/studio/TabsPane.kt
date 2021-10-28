@@ -42,4 +42,11 @@ class TabsPane<T: Tab> {
             if (switch) activeTab = tabsInternal.lastOrNull()
         }
     }
+
+    fun clearTabs() {
+        activeTab = null
+        titleBar.clearChildren()
+        tabsInternal.forEach { it.tabRemovedFromPane() }
+        tabsInternal.clear()
+    }
 }
