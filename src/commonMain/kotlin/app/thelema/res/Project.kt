@@ -175,7 +175,7 @@ fun openThelemaProject(file: IFile) {
         try {
             val json = JSON.parseObject(it)
             RES.file = file2
-            RES.entity.destroy()
+            RES.destroy()
             RES.getOrCreateEntity().readJson(json)
             RES.entity.name = "Project"
         } catch (ex: Exception) {

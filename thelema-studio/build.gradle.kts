@@ -44,8 +44,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlin_version")
                 implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlin_version")
 
-                //val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
-                val platforms = arrayOf("natives-linux")
+                val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
                 platforms.forEach {
                     implementation("$lwjgl_prefix:$lwjgl_version:$it")
                     implementation("$lwjgl_prefix-glfw:$lwjgl_version:$it")
