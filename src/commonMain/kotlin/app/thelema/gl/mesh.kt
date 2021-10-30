@@ -392,6 +392,12 @@ class Mesh(): IMesh {
     override fun render(shader: IShader, scene: IScene?, offset: Int, count: Int) {
         if (count == 0 || !isVisible) return
 
+        //if (count > 10000) println("$path $count")
+        if (path == ":Mesh") {
+            println("$entity ${entity.name}")
+            throw IllegalStateException()
+        }
+
         bind(shader)
 
         val numInstances = instancesCountToRender
@@ -431,15 +437,17 @@ class Mesh(): IMesh {
     }
 
     override fun destroy() {
-        if (vaoHandle > 0) {
-            GL.glDeleteVertexArrays(vaoHandle)
-            vaoHandle = 0
+        if (inheritedMesh == null) {
+            if (vaoHandle > 0) {
+                GL.glDeleteVertexArrays(vaoHandle)
+                vaoHandle = 0
+            }
+
+            destroyVertexBuffers()
+
+            indices?.destroy()
+            indices = null
         }
-
-        destroyVertexBuffers()
-
-        indices?.destroy()
-        indices = null
     }
 
     companion object {

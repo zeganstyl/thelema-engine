@@ -38,8 +38,8 @@ class TabsPane<T: Tab> {
             tab.tabsPaneOrNull = this as TabsPane<Tab>
             tabsInternal.remove(tab)
             titleBar.removeActor(tab.tabTitle)
-            tab.tabRemovedFromPane()
             if (switch) activeTab = tabsInternal.lastOrNull()
+            tab.tabRemovedFromPane()
         }
     }
 
