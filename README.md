@@ -2,6 +2,7 @@
 ### Thelema Engine
 
 [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
+[![Discord](https://img.shields.io/discord/904058648572072038)](https://discord.gg/6j9tBJBE9g)
 
 **Thelema** is multiplatform 3d graphics engine on Kotlin. It was based on libGDX sources and completely redesigned.
 
