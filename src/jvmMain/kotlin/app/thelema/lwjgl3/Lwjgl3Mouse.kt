@@ -52,6 +52,7 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
         }
 
     val listeners = ArrayList<IMouseListener>()
+    val listenersTemp = ArrayList<IMouseListener>()
     private var mouseX = 0
     private var mouseY = 0
     private var mousePressed = 0
@@ -140,9 +141,12 @@ class Lwjgl3Mouse(private val window: Lwjgl3Window): IMouse {
     }
 
     private inline fun forEachListener(block: (listener: IMouseListener) -> Unit) {
-        for (i in listeners.indices) {
-            block(listeners[i])
+        listenersTemp.clear()
+        listenersTemp.addAll(listeners)
+        for (i in listenersTemp.indices) {
+            block(listenersTemp[i])
         }
+        listenersTemp.clear()
     }
 
     fun windowHandleChanged(windowHandle: Long) {

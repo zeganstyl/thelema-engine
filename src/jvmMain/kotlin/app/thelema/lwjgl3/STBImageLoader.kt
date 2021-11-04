@@ -65,7 +65,7 @@ class STBImageLoader: IImageLoader {
             1 -> GL_LUMINANCE
             3 -> GL_RGB
             4 -> GL_RGBA
-            else -> throw IllegalStateException("Unknown image channels format")
+            else -> throw IllegalStateException("Unknown image channels format ${comp[0]}")
         }
 
         out.width = w[0]

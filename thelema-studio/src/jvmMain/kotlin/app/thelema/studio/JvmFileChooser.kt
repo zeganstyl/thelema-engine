@@ -5,12 +5,26 @@ import app.thelema.fs.IFile
 import app.thelema.jvm.JvmFile
 import app.thelema.res.PROJECT_FILENAME
 import app.thelema.res.RES
+import java.awt.Component
+import java.awt.Dialog
+import java.awt.FileDialog
+import java.awt.Frame
 import java.io.File
+import javax.swing.JDialog
 import javax.swing.JFileChooser
+import javax.swing.JFrame
 import javax.swing.filechooser.FileFilter
 
 class JvmFileChooser: IFileChooser {
-    private val chooser: JFileChooser by lazy { JFileChooser() }
+    private val chooser: JFileChooser by lazy {
+        object : JFileChooser() {
+            override fun createDialog(parent: Component?): JDialog {
+                return super.createDialog(parent).also {
+                    it.isAlwaysOnTop = true
+                }
+            }
+        }
+    }
 
     private val projectFilter = object : FileFilter() {
         override fun accept(f: File): Boolean {

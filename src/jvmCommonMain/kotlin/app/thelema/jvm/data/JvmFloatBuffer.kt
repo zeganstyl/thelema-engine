@@ -22,7 +22,7 @@ import java.nio.Buffer
 import java.nio.FloatBuffer
 
 /** @author zeganstyl */
-class JvmFloatBuffer(val floatBuffer: FloatBuffer): IFloatData, JvmBuffer<Float>() {
+class JvmFloatBuffer(val floatBuffer: FloatBuffer): IFloatData, JvmBuffer() {
     override val buffer: Buffer
         get() = floatBuffer
 

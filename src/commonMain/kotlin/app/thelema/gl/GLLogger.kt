@@ -27,18 +27,6 @@ class GLLogger(var proxy: IGL): AbstractGL() {
     override val mainFrameBufferWidth: Int
         get() = 0
 
-    override val majVer: Int
-        get() = 0
-
-    override val minVer: Int
-        get() = 0
-
-    override val relVer: Int
-        get() = 0
-
-    override val glslVer: Int
-        get() = 0
-
     override fun glActiveTextureBase(value: Int) {
         proxy.glActiveTexture(value)
         LOG.info("glActiveTexture($value)")

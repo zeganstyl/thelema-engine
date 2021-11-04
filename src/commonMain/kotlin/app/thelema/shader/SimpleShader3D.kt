@@ -23,7 +23,12 @@ import app.thelema.img.ITexture2D
 import app.thelema.math.*
 
 /** Can be used for debugging purpose */
-class SimpleShader3D(block: SimpleShader3D.() -> Unit = {}): Shader() {
+class SimpleShader3D(compile: Boolean): Shader(compile = compile) {
+    constructor(compile: Boolean = true, block: SimpleShader3D.() -> Unit = {}): this(compile) {
+        block(this)
+        initShader()
+    }
+
     var positionsName: String = "POSITION"
     var uvsName: String = "UV"
     var normalsName: String = "NORMAL"
@@ -43,12 +48,6 @@ class SimpleShader3D(block: SimpleShader3D.() -> Unit = {}): Shader() {
     var lightDirection: IVec3? = Vec3(1f, 1f, 1f)
     var lightIntensity: Float = 1f
     var minLightIntensity: Float = 0.2f
-
-    init {
-        block(this)
-        initShader()
-        println(this)
-    }
 
     fun setupOnlyColor(color: IVec4, disableLight: Boolean = true) {
         if (disableLight) lightDirection = null

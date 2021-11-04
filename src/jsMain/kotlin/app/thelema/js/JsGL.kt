@@ -31,9 +31,9 @@ import org.w3c.dom.HTMLImageElement
 class JsGL(
     val app: JsApp,
     val gl: WebGL2RenderingContext,
-    override val majVer: Int = 1,
-    override val minVer: Int = 0,
-    override val glslVer: Int = 100
+    override var majVer: Int = 1,
+    override var minVer: Int = 0,
+    override var glslVer: Int = 100
 ): AbstractGL() {
     val textureObjects = GLObjectArray<WebGLTexture, TextureWrap> { TextureWrap(it) }
     val programs = GLObjectArray<WebGLProgram, ProgramWrap> { ProgramWrap(it) }
@@ -53,8 +53,6 @@ class JsGL(
 
     override val mainFrameBufferHandle: Int
         get() = 0
-
-    override val relVer: Int = 0
 
     override val glesMajVer: Int
         get() = majVer + 1

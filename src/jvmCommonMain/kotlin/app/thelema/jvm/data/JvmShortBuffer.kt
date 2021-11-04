@@ -24,7 +24,7 @@ import java.nio.ByteOrder
 import java.nio.ShortBuffer
 
 /** @author zeganstyl */
-class JvmShortBuffer(val shortBuffer: ShortBuffer): JvmBuffer<Short>(), IShortData {
+class JvmShortBuffer(val shortBuffer: ShortBuffer): JvmBuffer(), IShortData {
     constructor(capacity: Int): this(ByteBuffer.allocateDirect(capacity * 2).order(ByteOrder.nativeOrder()).asShortBuffer())
 
     override val buffer: Buffer

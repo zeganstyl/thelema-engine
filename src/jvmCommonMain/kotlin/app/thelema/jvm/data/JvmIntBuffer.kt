@@ -24,7 +24,7 @@ import java.nio.ByteOrder
 import java.nio.IntBuffer
 
 /** @author zeganstyl */
-class JvmIntBuffer(val intBuffer: IntBuffer): IIntData, JvmBuffer<Int>() {
+class JvmIntBuffer(val intBuffer: IntBuffer): IIntData, JvmBuffer() {
     constructor(capacity: Int): this(ByteBuffer.allocateDirect(capacity * 4).order(ByteOrder.nativeOrder()).asIntBuffer())
 
     override val buffer: Buffer

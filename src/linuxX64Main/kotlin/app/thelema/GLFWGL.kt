@@ -31,10 +31,8 @@ class GLFWGL: AbstractGL() {
     override val mainFrameBufferHandle: Int
         get() = 0
 
-    override var majVer: Int = 0
-    override var minVer: Int = 0
-    override var relVer: Int = 0
-    override var glslVer: Int = 0
+    override val isGLES: Boolean
+        get() = false
 
     val strBufLen = 4096
     val strBuf = nativeHeap.allocArray<ByteVar>(strBufLen)
@@ -112,20 +110,6 @@ class GLFWGL: AbstractGL() {
     private fun readStrBuf(): String {
         strBuf[retLen.value + 1] = 0
         return strBuf.toKString()
-    }
-
-    override fun initGL() {
-        val verStr = glGetString(GL_VERSION)
-        val spaceSplit = verStr.split("\\s+".toRegex())
-        val dotSplit = spaceSplit[0].split('.')
-        majVer = dotSplit[0].toInt()
-        minVer = dotSplit[1].toInt()
-        relVer = dotSplit.getOrNull(2)?.toInt() ?: 0
-
-        val glslVerStr = glGetString(GL_SHADING_LANGUAGE_VERSION)
-        val glslSpaceSplit = glslVerStr.split("\\s+".toRegex())
-        val glslDotSplit = glslSpaceSplit[0].split('.')
-        glslVer = glslDotSplit[0].toInt() * 100 + glslDotSplit[1].toInt()
     }
 
     override fun isExtensionSupported(extension: String) = glfwExtensionSupported(extension) == 1
@@ -337,7 +321,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glGetBufferParameteriv(target: Int, pname: Int, params: IntArray) {
-        glfw.glGetBufferParameteriv(target.uint(), pname.uint(), params.toCValues())
+        glfw.glGetBufferParameteriv(target.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetError(): Int {
@@ -355,11 +339,11 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glGetFramebufferAttachmentParameteriv(target: Int, attachment: Int, pname: Int, params: IntArray) {
-        glfw.glGetFramebufferAttachmentParameteriv(target.uint(), attachment.uint(), pname.uint(), params.toCValues())
+        glfw.glGetFramebufferAttachmentParameteriv(target.uint(), attachment.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetIntegerv(pname: Int, params: IntArray) {
-        glfw.glGetIntegerv(pname.uint(), params.toCValues())
+        glfw.glGetIntegerv(pname.uint(), params.refTo(0))
     }
 
     override fun glGetProgramInfoLog(program: Int): String {
@@ -383,7 +367,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glGetShaderPrecisionFormat(shadertype: Int, precisiontype: Int, range: IntArray, precision: IntArray) {
-        glfw.glGetShaderPrecisionFormat(shadertype.uint(), precisiontype.uint(), range.toCValues(), precision.toCValues())
+        glfw.glGetShaderPrecisionFormat(shadertype.uint(), precisiontype.uint(), range.refTo(0), precision.refTo(0))
     }
 
     override fun glGetShaderiv(shader: Int, pname: Int, params: IntArray) {
@@ -538,7 +522,8 @@ class GLFWGL: AbstractGL() {
 
     override fun glShaderSource(shader: Int, string: String) {
         memScoped {
-            glfw.glShaderSource(shader.uint(), 1, cValuesOf(string.cstr.getPointer(this)), cValuesOf(string.length))
+            val str = string.cstr
+            glfw.glShaderSource(shader.uint(), 1, cValuesOf(str.getPointer(this)), cValuesOf(str.size))
         }
     }
 
@@ -590,7 +575,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glTexParameteriv(target: Int, pname: Int, params: IntArray) {
-        glfw.glTexParameteriv(target.uint(), pname.uint(), params.toCValues())
+        glfw.glTexParameteriv(target.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glTexSubImage2D(target: Int, level: Int, xoffset: Int, yoffset: Int, width: Int, height: Int, format: Int, type: Int, pixels: IByteData) {
@@ -602,7 +587,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform1fv(location: Int, count: Int, v: FloatArray) {
-        glfw.glUniform1fv(location, count, v.toCValues())
+        glfw.glUniform1fv(location, count, v.refTo(0))
     }
 
     override fun glUniform1fv(location: Int, count: Int, v: FloatArray, offset: Int) {
@@ -614,7 +599,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform1iv(location: Int, count: Int, v: IntArray) {
-        glfw.glUniform1iv(location, count, v.toCValues())
+        glfw.glUniform1iv(location, count, v.refTo(0))
     }
 
     override fun glUniform1iv(location: Int, count: Int, v: IntArray, offset: Int) {
@@ -626,7 +611,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform2fv(location: Int, count: Int, v: FloatArray) {
-        glfw.glUniform2fv(location, count, v.toCValues())
+        glfw.glUniform2fv(location, count, v.refTo(0))
     }
 
     override fun glUniform2fv(location: Int, count: Int, v: FloatArray, offset: Int) {
@@ -638,7 +623,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform2iv(location: Int, count: Int, v: IntArray) {
-        glfw.glUniform2iv(location, count, v.toCValues())
+        glfw.glUniform2iv(location, count, v.refTo(0))
     }
 
     override fun glUniform2iv(location: Int, count: Int, v: IntArray, offset: Int) {
@@ -650,7 +635,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform3fv(location: Int, count: Int, v: FloatArray) {
-        glfw.glUniform3fv(location, count, v.toCValues())
+        glfw.glUniform3fv(location, count, v.refTo(0))
     }
 
     override fun glUniform3fv(location: Int, count: Int, v: FloatArray, offset: Int) {
@@ -662,7 +647,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform3iv(location: Int, count: Int, v: IntArray) {
-        glfw.glUniform3iv(location, count, v.toCValues())
+        glfw.glUniform3iv(location, count, v.refTo(0))
     }
 
     override fun glUniform3iv(location: Int, count: Int, v: IntArray, offset: Int) {
@@ -674,7 +659,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform4fv(location: Int, count: Int, v: FloatArray) {
-        glfw.glUniform4fv(location, count, v.toCValues())
+        glfw.glUniform4fv(location, count, v.refTo(0))
     }
 
     override fun glUniform4fv(location: Int, count: Int, v: FloatArray, offset: Int) {
@@ -686,7 +671,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glUniform4iv(location: Int, count: Int, v: IntArray) {
-        glfw.glUniform4iv(location, count, v.toCValues())
+        glfw.glUniform4iv(location, count, v.refTo(0))
     }
 
     override fun glUniform4iv(location: Int, count: Int, v: IntArray, offset: Int) {
@@ -827,7 +812,7 @@ class GLFWGL: AbstractGL() {
 
     override fun glGetQueryiv(target: Int, pname: Int, params: IntArray) {
         // FIXME
-        glfw.glGetQueryiv(target.uint(), pname.uint(), params.toCValues())
+        glfw.glGetQueryiv(target.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetQueryObjectuiv(id: Int, pname: Int, params: IntArray) {
@@ -908,7 +893,7 @@ class GLFWGL: AbstractGL() {
 
     override fun glGetRenderbufferParameteriv(target: Int, pname: Int, params: IntArray) {
         // FIXME
-        glfw.glGetRenderbufferParameteriv(target.uint(), pname.uint(), params.toCValues())
+        glfw.glGetRenderbufferParameteriv(target.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glIsFramebuffer(framebuffer: Int): Boolean {
@@ -991,7 +976,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glGetVertexAttribIiv(index: Int, pname: Int, params: IntArray) {
-        glfw.glGetVertexAttribIiv(index.uint(), pname.uint(), params.toCValues())
+        glfw.glGetVertexAttribIiv(index.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetVertexAttribIuiv(index: Int, pname: Int, params: IntArray) {
@@ -1063,7 +1048,7 @@ class GLFWGL: AbstractGL() {
 
     override fun glGetActiveUniformsiv(program: Int, uniformCount: Int, uniformIndices: IntArray, pname: Int, params: IntArray) {
         // FIXME
-        glfw.glGetActiveUniformsiv(program.uint(), uniformCount, uniformIndices.uintPtr(), pname.uint(), params.toCValues())
+        glfw.glGetActiveUniformsiv(program.uint(), uniformCount, uniformIndices.uintPtr(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetUniformBlockIndex(program: Int, uniformBlockName: String): Int {
@@ -1077,7 +1062,7 @@ class GLFWGL: AbstractGL() {
 
     override fun glGetActiveUniformBlockName(program: Int, uniformBlockIndex: Int, length: IntArray, uniformBlockName: IByteData) {
         // FIXME
-        glfw.glGetActiveUniformBlockName(program.uint(), uniformBlockIndex.uint(), length.size, length.toCValues(), uniformBlockName.ptr())
+        glfw.glGetActiveUniformBlockName(program.uint(), uniformBlockIndex.uint(), length.size, length.refTo(0), uniformBlockName.ptr())
     }
 
     override fun glGetActiveUniformBlockName(program: Int, uniformBlockIndex: Int): String {
@@ -1099,12 +1084,12 @@ class GLFWGL: AbstractGL() {
 
     override fun glGetInteger64v(pname: Int, params: LongArray) {
         // FIXME
-        glfw.glGetInteger64v(pname.uint(), params.toCValues())
+        glfw.glGetInteger64v(pname.uint(), params.refTo(0))
     }
 
     override fun glGetBufferParameteri64v(target: Int, pname: Int, params: LongArray) {
         // FIXME
-        glfw.glGetBufferParameteri64v(target.uint(), pname.uint(), params.toCValues())
+        glfw.glGetBufferParameteri64v(target.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGenSamplers(): Int {
@@ -1136,7 +1121,7 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glSamplerParameteriv(sampler: Int, pname: Int, param: IntArray) {
-        glfw.glSamplerParameteriv(sampler.uint(), pname.uint(), param.toCValues())
+        glfw.glSamplerParameteriv(sampler.uint(), pname.uint(), param.refTo(0))
     }
 
     override fun glSamplerParameterf(sampler: Int, pname: Int, param: Float) {
@@ -1144,15 +1129,15 @@ class GLFWGL: AbstractGL() {
     }
 
     override fun glSamplerParameterfv(sampler: Int, pname: Int, param: FloatArray) {
-        glfw.glSamplerParameterfv(sampler.uint(), pname.uint(), param.toCValues())
+        glfw.glSamplerParameterfv(sampler.uint(), pname.uint(), param.refTo(0))
     }
 
     override fun glGetSamplerParameteriv(sampler: Int, pname: Int, params: IntArray) {
-        glfw.glGetSamplerParameteriv(sampler.uint(), pname.uint(), params.toCValues())
+        glfw.glGetSamplerParameteriv(sampler.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glGetSamplerParameterfv(sampler: Int, pname: Int, params: FloatArray) {
-        glfw.glGetSamplerParameterfv(sampler.uint(), pname.uint(), params.toCValues())
+        glfw.glGetSamplerParameterfv(sampler.uint(), pname.uint(), params.refTo(0))
     }
 
     override fun glVertexAttribDivisor(index: Int, divisor: Int) {

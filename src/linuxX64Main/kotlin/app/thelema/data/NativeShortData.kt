@@ -20,8 +20,9 @@ import app.thelema.data.IShortData
 
 class NativeShortData(
     capacity: Int,
-    ptr: CPointer<ShortVar> = nativeHeap.allocArray(capacity)
-): NativeDataArray<Short, ShortVar>(capacity, ptr), IShortData {
+    ptr: CPointer<ShortVar> = nativeHeap.allocArray(capacity),
+    val parentBuffer: NativeByteData? = null
+): NativeDataArray<ShortVar>(capacity, ptr), IShortData {
     override fun set(index: Int, value: Short) {
         ptr[index] = value
     }

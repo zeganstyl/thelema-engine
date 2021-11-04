@@ -20,8 +20,9 @@ import app.thelema.data.IIntData
 
 class NativeIntData(
     capacity: Int,
-    ptr: CPointer<IntVar> = nativeHeap.allocArray(capacity)
-): NativeDataArray<Int, IntVar>(capacity, ptr), IIntData {
+    ptr: CPointer<IntVar> = nativeHeap.allocArray(capacity),
+    val parentBuffer: NativeByteData? = null
+): NativeDataArray<IntVar>(capacity, ptr), IIntData {
     override fun set(index: Int, value: Int) {
         ptr[index] = value
     }

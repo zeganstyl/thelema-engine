@@ -20,6 +20,7 @@ import app.thelema.fs.FS
 import app.thelema.res.openThelemaProject
 import app.thelema.test.*
 import app.thelema.test.audio.MusicOggTest
+import app.thelema.test.g3d.BoxMeshTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.phys.TrimeshShapeTest
@@ -33,7 +34,7 @@ object MainTestJvm {
             msaaSamples = 4
         }
 
-        GLTFDamagedHelmetTest().testMain()
+        BoxMeshTest().testMain()
         //RecastTest().testMain()
 
         app.startLoop()

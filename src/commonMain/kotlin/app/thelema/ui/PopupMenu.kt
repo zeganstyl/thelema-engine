@@ -30,13 +30,13 @@ import app.thelema.math.Vec2
  *
  * @author Kotcrab
  */
-open class PopupMenu : Table() {
+open class PopupMenu() : Table() {
     private var stageListener: InputListener? = null
     private var sharedMenuItemInputListener: InputListener? = null
     private var sharedMenuItemChangeListener: ChangeListener? = null
     private var defaultInputListener: InputListener? = null
     /** The parent sub-menu, that this popup menu belongs to or null if this sub menu is root  */
-    private var parentSubMenu: PopupMenu? = null
+    var parentSubMenu: PopupMenu? = null
     /** The current sub-menu, set by MenuItem  */
     private var activeSubMenu: PopupMenu? = null
     private var activeItem: MenuItem? = null
@@ -46,6 +46,12 @@ open class PopupMenu : Table() {
     var targetActor: Actor? = null
 
     var removeRequest = false
+
+    var contextObject: Any? = null
+
+    constructor(block: PopupMenu.() -> Unit): this() {
+        block(this)
+    }
 
     override fun act(delta: Float) {
         super.act(delta)
@@ -230,11 +236,14 @@ open class PopupMenu : Table() {
      * @param x stage x position
      * @param y stage y position
      */
-    fun showMenu(headUpDisplay: HeadUpDisplay, x: Float, y: Float) {
-        setPosition(x, y - height)
-        if (headUpDisplay.height - this.y > headUpDisplay.height) this.y = this.y + height
+    fun showMenu(headUpDisplay: HeadUpDisplay, x: Float, y: Float, contextObject: Any? = null) {
+        headUpDisplay.removeActor(this)
+        this.contextObject = contextObject
+        //if (headUpDisplay.height - this.y > headUpDisplay.height) this.y = this.y + height
         ActorUtils.keepWithinStage(headUpDisplay, this)
         headUpDisplay.addActor(this)
+        setPosition(x, y - height)
+        toFront()
     }
 
     /**
@@ -244,8 +253,7 @@ open class PopupMenu : Table() {
      */
     fun showMenu(headUpDisplay: HeadUpDisplay, actor: Actor) {
         val pos = actor.localToStageCoordinates(tmpVector.set(0f, 0f))
-        val menuY: Float
-        menuY = if (pos.y - height <= 0) {
+        val menuY: Float = if (pos.y - height <= 0) {
             pos.y + actor.height + height - borderSize
         } else {
             pos.y + borderSize
@@ -262,7 +270,7 @@ open class PopupMenu : Table() {
         if (activeSubMenu === newSubMenu) return
         if (activeSubMenu != null) activeSubMenu!!.remove()
         activeSubMenu = newSubMenu
-        newSubMenu?.setParentMenu(this)
+        newSubMenu?.parentSubMenu = this
     }
 
     override var headUpDisplay: HeadUpDisplay?
@@ -293,10 +301,6 @@ open class PopupMenu : Table() {
     }
 
     fun getActiveItem(): MenuItem? = activeItem
-
-    fun setParentMenu(parentSubMenu: PopupMenu?) {
-        this.parentSubMenu = parentSubMenu
-    }
 
     private val tmpVector = Vec2()
 

@@ -28,6 +28,7 @@ import app.thelema.gl.GL_RGBA
 import app.thelema.img.IImage
 import app.thelema.img.IImageLoader
 import app.thelema.data.NativeByteData
+import app.thelema.gl.GL_LUMINANCE
 
 class STBImg: IImageLoader {
     override fun decode(
@@ -46,9 +47,10 @@ class STBImg: IImageLoader {
                 ?: throw RuntimeException("Failed to load image: " + stbi_failure_reason())
 
             val pixelFormat = when (comp.value) {
+                1 -> GL_LUMINANCE
                 3 -> GL_RGB
                 4 -> GL_RGBA
-                else -> throw IllegalStateException("Unknown image channels format")
+                else -> throw IllegalStateException("Unknown image channels format ${comp.value}")
             }
 
             out.width = w.value

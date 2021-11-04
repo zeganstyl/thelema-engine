@@ -134,7 +134,11 @@ open class Shader(
             } else {
                 LOG.error("==== Errors in shader ====")
             }
-            LOG.info(log)
+            if (log.isNotBlank()) {
+                LOG.info("=== INFO LOG ===")
+                LOG.info(log)
+                LOG.info("=== INFO LOG END ===")
+            }
             LOG.info(printCode())
         }
     }
@@ -304,7 +308,6 @@ open class Shader(
         if (isCompiled) destroy()
         load(vertCode, fragCode)
         if (!isCompiled) {
-            LOG.info(printCode())
             throw RuntimeException("Errors in generated shader")
         }
         bind()

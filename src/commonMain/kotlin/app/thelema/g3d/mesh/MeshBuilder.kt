@@ -16,9 +16,11 @@
 
 package app.thelema.g3d.mesh
 
+import app.thelema.concurrency.ATOM
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.gl.*
+import app.thelema.json.IJsonObject
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
@@ -46,16 +48,29 @@ class MeshBuilder: IMeshBuilder {
     var indexType: Int = GL_UNSIGNED_SHORT
 
     var meshInternal: IMesh = Mesh()
+        set(value) {
+            field = value
+            requestMeshUpdate()
+        }
+
     override val mesh: IMesh
         get() = meshInternal
 
-    override var isMeshUpdateRequested: Boolean = true
+    private val isMeshUpdateRequestedInternal = ATOM.bool(false)
+    override var isMeshUpdateRequested: Boolean
+        get() = isMeshUpdateRequestedInternal.value
+        set(value) { isMeshUpdateRequestedInternal.value = value }
 
     val position = Vec3(0f, 0f, 0f)
     val rotation = Vec4(0f, 0f, 0f, 1f)
     val scale = Vec3(1f, 1f, 1f)
 
     var proxy: IMeshBuilder? = null
+
+    override fun readJson(json: IJsonObject) {
+        super.readJson(json)
+        requestMeshUpdate()
+    }
 
     override fun getVerticesCount(): Int = proxy?.getVerticesCount() ?: 0
 
@@ -124,8 +139,6 @@ class MeshBuilder: IMeshBuilder {
     }
 
     override fun updateMesh() {
-        isMeshUpdateRequested = false
-
         if (tangents && !uvs) throw IllegalStateException("MeshBuilder: tangents attribute enabled, but uvs not")
 
         mesh.vertexBuffers.forEach { buffer ->
@@ -135,16 +148,14 @@ class MeshBuilder: IMeshBuilder {
         mesh.indices?.rewind()
 
         val verticesCount = getVerticesCount()
-        if (mesh.verticesCount != verticesCount) {
-            mesh.verticesCount = verticesCount
-            mesh.destroyVertexBuffers()
-            mesh.addVertexBuffer {
-                addAttribute(3, positionName)
-                if (uvs) addAttribute(2, uvName)
-                if (normals) addAttribute(3, normalName)
-                if (tangents) addAttribute(4, tangentName)
-                initVertexBuffer(mesh.verticesCount)
-            }
+        mesh.verticesCount = verticesCount
+        mesh.destroyVertexBuffers()
+        mesh.addVertexBuffer {
+            addAttribute(3, positionName)
+            if (uvs) addAttribute(2, uvName)
+            if (normals) addAttribute(3, normalName)
+            if (tangents) addAttribute(4, tangentName)
+            initVertexBuffer(mesh.verticesCount)
         }
         applyVertices()
 
@@ -169,5 +180,7 @@ class MeshBuilder: IMeshBuilder {
         }
         mesh.indices?.rewind()
         mesh.indices?.requestBufferUploading()
+
+        isMeshUpdateRequested = false
     }
 }

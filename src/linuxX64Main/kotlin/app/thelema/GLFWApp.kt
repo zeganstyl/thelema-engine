@@ -34,6 +34,9 @@ import app.thelema.utils.LOG
 import kotlin.system.getTimeMillis
 
 class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
+    override var width: Int = 0
+    override var height: Int = 0
+
     val windows = ArrayList<GLFWWindow>()
     val windowsMap = HashMap<Long, GLFWWindow>()
     var currentWindow: GLFWWindow
@@ -47,12 +50,6 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
 
     override val platformType
         get() = DesktopApp
-
-    override val width: Int
-        get() = mainWindow.width
-
-    override val height: Int
-        get() = mainWindow.height
 
     override var clipboardString: String
         get() = glfwGetClipboardString(mainWindow.handle)?.toKString() ?: ""
@@ -132,6 +129,13 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
 
         gl = GLFWGL()
         mainWindow = createWindow(conf, null)
+
+        width = mainWindow.graphics.logicalWidth
+        height = mainWindow.graphics.logicalHeight
+
+        cachedWidth = width
+        cachedHeight = height
+
         currentWindow = mainWindow
 
         updateMainFrameBufferSize()
@@ -142,6 +146,8 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
         GL.initGL()
 
         GL.runSingleCalls()
+
+        performDefaultSetup()
     }
 
     private fun updateMainFrameBufferSize() {
@@ -169,9 +175,13 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
     private fun loop() {
         val closedWindows = ArrayList<GLFWWindow>()
         while (running && windows.size > 0) { // FIXME put it on a separate thread
-            GL.runSingleCalls()
+            width = mainWindow.graphics.logicalWidth
+            height = mainWindow.graphics.logicalHeight
 
-            AL.update()
+            updateDeltaTime()
+
+            update()
+
             closedWindows.clear()
             for (window in windows) {
                 window.makeCurrent()

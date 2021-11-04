@@ -1,7 +1,7 @@
 package app.thelema.studio
 
 import app.thelema.studio.widget.EntityTab
-import app.thelema.studio.widget.MenuBar
+import app.thelema.studio.widget.StudioMenuBar
 import app.thelema.app.APP
 import app.thelema.app.AppListener
 import app.thelema.ecs.*
@@ -10,8 +10,6 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.*
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.boxMesh
-import app.thelema.g3d.mesh.sphereMesh
-import app.thelema.gltf.gltf
 import app.thelema.input.MOUSE
 import app.thelema.input.KB
 import app.thelema.json.IJsonObject
@@ -20,8 +18,6 @@ import app.thelema.json.JSON
 import app.thelema.res.*
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
-import app.thelema.shader.PBRShader
-import app.thelema.shader.SimpleShader3D
 import app.thelema.studio.widget.SimulationEntityTab
 import app.thelema.ui.*
 import app.thelema.utils.Color
@@ -31,7 +27,7 @@ object Studio: AppListener, IJsonObjectIO {
 
     var projectTab = EntityTab(RES.entity, null)
 
-    val menuBar = MenuBar()
+    val menuBar = StudioMenuBar()
 
     val statusLabel = Label("")
     val statusBar = Table {
@@ -66,6 +62,33 @@ object Studio: AppListener, IJsonObjectIO {
 
     val entityWindow = EntityWindow()
 
+    private val prefsName = "thelema-studio"
+
+    val popupMenu = PopupMenu {
+        item("Add Entity") {
+            label.alignH = -1
+            onClickWithContextTyped<EntityTreeNode> {
+                it.entity.addEntity(Entity("New Entity"))
+                it.isExpanded = true
+            }
+        }
+        separator()
+        item("Edit") {
+            label.alignH = -1
+            onClickWithContextTyped<EntityTreeNode> {
+                entityWindow.entity = it.entity
+                entityWindow.show(hud)
+            }
+        }
+        separator()
+        item("Remove") {
+            label.alignH = -1
+            onClickWithContextTyped<EntityTreeNode> {
+                it.entity.parentEntity?.removeEntity(it.entity)
+            }
+        }
+    }
+
     init {
         APP.setupPhysicsComponents()
 
@@ -81,9 +104,14 @@ object Studio: AppListener, IJsonObjectIO {
 
         RES.loadOnSeparateThreadByDefault = true
 
-        openProject(FS.absolute("/home/q/IdeaProjects/thelema-script-test/src/main/resources"))
-//        openProjectTab()
-//        createNewScene()
+        openProjectTab()
+
+        val str = APP.loadPreferences(prefsName)
+        if (str.isNotEmpty()) {
+            readJson(JSON.parseObject(str))
+        } else {
+            createNewScene()
+        }
 
         ActiveCamera {
             setNearFar(0.01f, 1000f)
@@ -124,7 +152,14 @@ object Studio: AppListener, IJsonObjectIO {
     fun openProjectDialog() {
         fileChooser.openProject {
             openProject(FS.absolute(it))
+            savePreferences()
         }
+    }
+
+    fun createNewProject() {
+        RES.destroy()
+        RES.file = DefaultProjectFile
+        createNewScene()
     }
 
     fun createNewScene() {
@@ -167,9 +202,26 @@ object Studio: AppListener, IJsonObjectIO {
         tabsPane.activeTab = projectTab
     }
 
-    override fun readJson(json: IJsonObject) {}
+    override fun readJson(json: IJsonObject) {
+        json.string("lastProject") {
+            val file = FS.absolute(it)
+            if (file.exists()) openProject(file)
+        }
 
-    override fun writeJson(json: IJsonObject) {}
+        json.array("openedScenes") {}
+        json.string("lastScene") {}
+
+        if (json.string("lastProject", "").isEmpty()) createNewScene()
+    }
+
+    override fun writeJson(json: IJsonObject) {
+        val lastProject = RES.file.path
+        if (lastProject.isNotEmpty()) json["lastProject"] = lastProject
+    }
+
+    fun savePreferences() {
+        APP.savePreferences(prefsName, JSON.printObject(this))
+    }
 
     fun saveProject() {
         if (RES.file == DefaultProjectFile) {
@@ -177,9 +229,13 @@ object Studio: AppListener, IJsonObjectIO {
                 val file = FS.absolute(it)
                 RES.file = if (file.isDirectory) file.child(PROJECT_FILENAME) else file
                 RES.file.writeText(JSON.printObject(RES.entity))
+                savePreferences()
+                showStatus("Project saved")
             }
         } else {
             RES.file.writeText(JSON.printObject(RES.entity))
+            savePreferences()
+            showStatus("Project saved")
         }
     }
 

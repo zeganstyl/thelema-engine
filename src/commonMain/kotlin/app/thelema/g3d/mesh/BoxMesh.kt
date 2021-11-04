@@ -18,7 +18,7 @@ package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
-import app.thelema.math.Vec3
+import app.thelema.json.IJsonObject
 
 class BoxMesh(): MeshBuilderAdapter() {
     constructor(block: BoxMesh.() -> Unit): this() {
@@ -53,6 +53,11 @@ class BoxMesh(): MeshBuilderAdapter() {
                 requestMeshUpdate()
             }
         }
+
+    override fun readJson(json: IJsonObject) {
+        super.readJson(json)
+        requestMeshUpdate()
+    }
 
     override fun getVerticesCount(): Int = 24
 

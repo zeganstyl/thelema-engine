@@ -29,16 +29,6 @@ class GLStub: AbstractGL() {
     override val mainFrameBufferHandle: Int
         get() = 0
 
-    override val majVer: Int
-        get() = 0
-    override val minVer: Int
-        get() = 0
-    override val relVer: Int
-        get() = 0
-
-    override val glslVer: Int
-        get() = 110
-
     override fun enableExtension(extension: String): Boolean = true
     override fun glActiveTextureBase(value: Int) = Unit
     override fun glUseProgramBase(value: Int) = Unit

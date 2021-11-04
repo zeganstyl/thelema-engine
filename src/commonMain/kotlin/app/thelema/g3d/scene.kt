@@ -249,4 +249,20 @@ class Scene: IScene {
             translucent.iterate { it.render(this, shaderChannel) }
         }
     }
+
+    override fun destroy() {
+        super.destroy()
+        meshes.clear()
+        lights.clear()
+        opaque.clear()
+        masked.clear()
+        translucent.clear()
+        stopSimulation()
+        simulationNodes.clear()
+        renderingPipeline = null
+        world = null
+        keyboardHandler = null
+        mouseHandler = null
+        activeCamera = null
+    }
 }

@@ -44,8 +44,8 @@ class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextB
         defaults().space(3f)
         image.scaling = Scaling.fit
         add(image).size(22f)
-        label.alignH = -1
         add(label).expand().fill()
+        label.alignH = -1
         add(shortcutLabel).padLeft(10f).padRight(10f).align(Align.right)
         addListener(object : InputListener {
             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
@@ -68,6 +68,27 @@ class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextB
                 if (subMenu == null) containerMenu?.removeRequest = true
             }
         })
+    }
+
+    fun onClickWithContext(block: (context: Any) -> Unit) {
+        onClick {
+            getContext()?.also { block(it) }
+        }
+    }
+
+    inline fun <reified T: Any> onClickWithContextTyped(noinline block: (context: T) -> Unit) {
+        onClick {
+            getContext()?.also { if (it is T) block(it) }
+        }
+    }
+
+    fun getContext(): Any? {
+        var p = containerMenu
+        while (p != null) {
+            if (p.contextObject != null) return p.contextObject
+            p = p.parentSubMenu
+        }
+        return null
     }
 
     fun packContainerMenu() {

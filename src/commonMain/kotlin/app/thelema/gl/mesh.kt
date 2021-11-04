@@ -200,6 +200,8 @@ class Mesh(): IMesh {
             }
         }
 
+    private var inheritedVertexBuffers: List<IVertexBuffer>? = null
+
     override var material: IMaterial? = null
         get() = field ?: inheritedMesh?.material
         set(value) {
@@ -345,6 +347,8 @@ class Mesh(): IMesh {
     }
 
     override fun destroyVertexBuffers() {
+        inheritedVertexBuffers?.also { vertexBuffersInternal.removeAll(it) }
+        inheritedVertexBuffers = null
         for (i in vertexBuffersInternal.indices) {
             vertexBuffersInternal[i].destroy()
         }
@@ -361,6 +365,7 @@ class Mesh(): IMesh {
     override fun setComponent(other: IEntityComponent): IEntityComponent {
         if (other is IMesh) {
             vertexBuffersInternal.clear()
+            inheritedVertexBuffers = other.vertexBuffers
             vertexBuffersInternal.addAll(other.vertexBuffers)
             vertexBuffersInternal.trimToSize()
             boundings = other.boundings
@@ -379,7 +384,7 @@ class Mesh(): IMesh {
 
             if (vaoHandle > 0) GL.glBindVertexArray(vaoHandle)
 
-            if (indices?.bytes?.limit ?: 0 > 0) indices?.bind()
+            if ((indices?.bytes?.limit ?: 0) > 0) indices?.bind()
         } else {
             inheritedMesh.bind(shader)
         }
@@ -391,12 +396,6 @@ class Mesh(): IMesh {
 
     override fun render(shader: IShader, scene: IScene?, offset: Int, count: Int) {
         if (count == 0 || !isVisible) return
-
-        //if (count > 10000) println("$path $count")
-        if (path == ":Mesh") {
-            println("$entity ${entity.name}")
-            throw IllegalStateException()
-        }
 
         bind(shader)
 

@@ -55,6 +55,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         get() = verts
 
     private val mesh = Mesh().apply {
+        getOrCreateEntity().name = "Sprite Batch"
         vertexBuffers.add(verts)
 
         indices = IndexBuffer(DATA.bytes(size * 6 * 2).apply {

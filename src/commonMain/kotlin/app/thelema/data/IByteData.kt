@@ -19,7 +19,7 @@ package app.thelema.data
 import kotlin.math.min
 
 /** @author zeganstyl */
-interface IByteData: IDataArray<Byte> {
+interface IByteData: IDataArray {
     var order: DataByteOrder
 
     val isAlive: Boolean
@@ -69,6 +69,33 @@ interface IByteData: IDataArray<Byte> {
     fun getFloat(byteIndex: Int): Float
 
     fun getUShort(byteIndex: Int): Int
+
+    operator fun set(index: Int, value: Byte)
+
+    operator fun get(index: Int): Byte
+
+    /** Get element and increment position (index in array) */
+    fun get(): Byte {
+        val value = get(position)
+        position++
+        return value
+    }
+
+    /** Put element and increment position (index in array) */
+    fun put(value: Byte) {
+        set(position, value)
+        position++
+    }
+
+    fun put(index: Int, value: Byte) {
+        set(index, value)
+    }
+
+    fun put(vararg values: Byte) {
+        for (i in values.indices) {
+            put(values[i])
+        }
+    }
 
     fun put(array: ByteArray): IByteData {
         for (i in array.indices) {

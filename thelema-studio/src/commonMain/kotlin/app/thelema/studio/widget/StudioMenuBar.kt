@@ -3,9 +3,10 @@ package app.thelema.studio.widget
 import app.thelema.studio.*
 import app.thelema.studio.SKIN
 import app.thelema.app.APP
+import app.thelema.res.RES
 import app.thelema.ui.*
 
-class MenuBar: Table() {
+class StudioMenuBar: Table() {
     val bar = MenuBar {
         background = null
 
@@ -16,7 +17,7 @@ class MenuBar: Table() {
         menu("File") {
             item("New project") {
                 onClick {
-
+                    Studio.createNewProject()
                 }
             }
             item("New scene") {

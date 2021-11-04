@@ -22,7 +22,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /** @author zeganstyl */
-class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer<Byte>() {
+class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer() {
     //val bytes4 = ByteBuffer.allocate(4)
 
     override val buffer: Buffer

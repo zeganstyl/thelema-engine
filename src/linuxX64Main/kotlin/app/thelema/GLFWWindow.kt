@@ -371,7 +371,8 @@ class GLFWWindow(conf: GLFWWindowConf, sharedContext: CPointer<GLFWwindow>? = nu
             }
             frames++
 
-            GL.runRenderCalls()
+            app.render()
+
             glfwSwapBuffers(handle)
         }
         return shouldRender

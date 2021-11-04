@@ -228,7 +228,9 @@ interface IEntity: IJsonObjectIO {
 
     fun removeEntity(name: String)
 
-    fun removeAllComponents()
+    fun clearComponents()
+
+    fun clearChildren()
 
     fun forEachComponent(block: (component: IEntityComponent) -> Unit)
 

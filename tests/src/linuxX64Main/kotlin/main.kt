@@ -1,8 +1,16 @@
 import app.thelema.GLFWApp
 import app.thelema.GLFWAppConf
+import app.thelema.app.APP
+import app.thelema.gl.GL
+import app.thelema.test.PBRShaderTest
+import app.thelema.test.SelectionByColorTest
 import app.thelema.test.g3d.BoxMeshTest
+import app.thelema.test.g3d.SimpleSkyboxTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.phys.BoxShapeTest
+import kotlinx.cinterop.*
+import platform.posix.PATH_MAX
+import platform.posix.getcwd
 
 /*
  * Copyright 2020-2021 Anton Trushkov
@@ -27,7 +35,12 @@ fun main() {
     })
 
 //    FSTest().testMain()
-    BoxMeshTest().testMain()
+
+    val bytes = ByteArray(PATH_MAX)
+    getcwd(bytes.refTo(0), PATH_MAX)
+    println(bytes.toKString())
+
+    PBRShaderTest().testMain()
 
     app.startLoop()
 }

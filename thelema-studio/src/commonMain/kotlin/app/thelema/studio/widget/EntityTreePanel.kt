@@ -3,6 +3,9 @@ package app.thelema.studio.widget
 import app.thelema.studio.EntityTreeNode
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
+import app.thelema.input.BUTTON
+import app.thelema.input.MOUSE
+import app.thelema.studio.Studio
 import app.thelema.ui.*
 
 class EntityTreePanel: Table() {
@@ -41,6 +44,15 @@ class EntityTreePanel: Table() {
     init {
         tree.setPadding(5f, 5f)
         add(scroll).grow()
+
+        tree.addListener(object : ClickListener(BUTTON.RIGHT) {
+            override fun clicked(event: InputEvent, x: Float, y: Float) {
+                (tree.overNode as EntityTreeNode?)?.also { node ->
+                    println(event.stageY)
+                    Studio.popupMenu.showMenu(event.headUpDisplay!!, event.stageX, event.stageY, node)
+                }
+            }
+        })
     }
 
     fun onSelected(block: (node: EntityTreeNode?) -> Unit) {

@@ -17,7 +17,7 @@
 package app.thelema.data
 
 /** @author zeganstyl */
-interface IDataArray<T> {
+interface IDataArray {
     val sourceObject: Any
         get() = this
 
@@ -46,33 +46,6 @@ interface IDataArray<T> {
     fun flip() {
         limit = position
         position = 0
-    }
-
-    operator fun set(index: Int, value: T)
-
-    operator fun get(index: Int): T
-
-    /** Get element and increment position (index in array) */
-    fun get(): T {
-        val value = get(position)
-        position++
-        return value
-    }
-
-    /** Put element and increment position (index in array) */
-    fun put(value: T) {
-        set(position, value)
-        position++
-    }
-
-    fun put(index: Int, value: T) {
-        set(index, value)
-    }
-
-    fun put(vararg values: T) {
-        for (i in values.indices) {
-            put(values[i])
-        }
     }
 
     /** Read element and convert it to int (byte and short types will be unsigned). */

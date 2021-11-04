@@ -166,6 +166,16 @@ class Entity() : IEntity {
         getEntityByName(name)?.also { removeEntity(it) }
     }
 
+    override fun clearChildren() {
+        val tmp = childrenInternal.toTypedArray()
+        childrenInternal.clear()
+        tmp.iterate { entity ->
+            forEachComponent { it.removedEntity(entity) }
+            removedEntityNotifyAscending(entity)
+            listeners?.apply { for (i in indices) { get(i).removedEntity(entity) } }
+        }
+    }
+
     override fun addedEntityNotifyAscending(entity: IEntity) {
         forEachComponent { it.addedEntityToBranch(entity) }
         parentEntity?.addedEntityNotifyAscending(entity)
@@ -214,7 +224,7 @@ class Entity() : IEntity {
         listeners?.iterate { it.removedComponent(component) }
     }
 
-    override fun removeAllComponents() {
+    override fun clearComponents() {
         val tmp = ArrayList<IEntityComponent>()
         tmp.addAll(componentsInternal)
         componentsInternal.clear()

@@ -28,10 +28,14 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
         set(value) {
             field = value
             builder = value?.component() ?: MeshBuilder()
-            builder.proxy = this
         }
 
     open var builder = MeshBuilder()
+        set(value) {
+            field = value
+            value.proxy = this
+            requestMeshUpdate()
+        }
 
     override val mesh: IMesh
         get() = builder.mesh
@@ -40,11 +44,19 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
         get() = builder.isMeshUpdateRequested
         set(value) { builder.isMeshUpdateRequested = value }
 
-    override fun preparePositions(block: IVertexAttribute.() -> Unit) = builder.preparePositions(block)
-    override fun prepareUvs(block: IVertexAttribute.() -> Unit) = builder.prepareUvs(block)
-    override fun prepareNormals(block: IVertexAttribute.() -> Unit) = builder.prepareNormals(block)
+    override fun preparePositions(block: IVertexAttribute.() -> Unit) {
+        if (getVerticesCount() > 0) builder.preparePositions(block)
+    }
+    override fun prepareUvs(block: IVertexAttribute.() -> Unit) {
+        if (getVerticesCount() > 0) builder.prepareUvs(block)
+    }
+    override fun prepareNormals(block: IVertexAttribute.() -> Unit) {
+        if (getVerticesCount() > 0) builder.prepareNormals(block)
+    }
 
-    override fun prepareIndices(block: IIndexBuffer.() -> Unit) = builder.prepareIndices(block)
+    override fun prepareIndices(block: IIndexBuffer.() -> Unit) {
+        if (getIndicesCount() > 0) builder.prepareIndices(block)
+    }
 
     override fun updateMesh() {
         builder.updateMesh()

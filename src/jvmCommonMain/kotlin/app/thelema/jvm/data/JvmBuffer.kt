@@ -20,7 +20,7 @@ import app.thelema.data.IDataArray
 import java.nio.Buffer
 
 /** @author zeganstyl */
-abstract class JvmBuffer<T>: IDataArray<T> {
+abstract class JvmBuffer: IDataArray {
     abstract val buffer: Buffer
 
     override val sourceObject: Any

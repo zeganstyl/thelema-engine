@@ -17,11 +17,38 @@
 package app.thelema.data
 
 /** @author zeganstyl */
-interface IFloatData: IDataArray<Float> {
+interface IFloatData: IDataArray {
     fun put(data: FloatArray, length: Int = data.size, offset: Int = 0) {
         for (i in offset until length) {
             put(data[i])
         }
+    }
+
+    /** Put element and increment position (index in array) */
+    fun put(value: Float) {
+        set(position, value)
+        position++
+    }
+
+    fun put(index: Int, value: Float) {
+        set(index, value)
+    }
+
+    fun put(vararg values: Float) {
+        for (i in values.indices) {
+            put(values[i])
+        }
+    }
+
+    operator fun set(index: Int, value: Float)
+
+    operator fun get(index: Int): Float
+
+    /** Get element and increment position (index in array) */
+    fun get(): Float {
+        val value = get(position)
+        position++
+        return value
     }
 
     /** Fill output array with values from this float data buffer */

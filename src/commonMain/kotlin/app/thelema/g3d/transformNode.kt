@@ -198,7 +198,10 @@ class TransformNode: ITransformNode {
                 }
                 descriptor { SimpleSkybox() }
                 descriptor { Skybox() }
-                descriptor({ PointLight() }) {}
+                descriptor({ PointLight() }) {
+                    float("range", { range }) { range = it }
+                    vec3("color", { color }) { color.set(it) }
+                }
                 descriptor({ DirectionalLight() }) {
                     vec3("color", { color }) { color.set(it) }
                 }

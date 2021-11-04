@@ -17,7 +17,34 @@
 package app.thelema.data
 
 /** @author zeganstyl */
-interface IIntData: IDataArray<Int> {
+interface IIntData: IDataArray {
     override fun toUInt(index: Int): Int = get(index)
     override fun toUFloat(index: Int): Float = get(index).toFloat()
+
+    operator fun set(index: Int, value: Int)
+
+    operator fun get(index: Int): Int
+
+    /** Put element and increment position (index in array) */
+    fun put(value: Int) {
+        set(position, value)
+        position++
+    }
+
+    fun put(index: Int, value: Int) {
+        set(index, value)
+    }
+
+    fun put(vararg values: Int) {
+        for (i in values.indices) {
+            put(values[i])
+        }
+    }
+
+    /** Get element and increment position (index in array) */
+    fun get(): Int {
+        val value = get(position)
+        position++
+        return value
+    }
 }

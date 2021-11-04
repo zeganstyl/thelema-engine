@@ -22,8 +22,10 @@ import app.thelema.ecs.component
 import app.thelema.ecs.componentOrNull
 import app.thelema.gl.GL
 import app.thelema.gl.IMesh
+import app.thelema.math.Vec4
 import app.thelema.shader.IShader
 import app.thelema.shader.SimpleShader3D
+import kotlin.native.concurrent.ThreadLocal
 
 /** @author zeganstyl */
 interface IMaterial: IEntityComponent {
@@ -69,4 +71,20 @@ class Material: IMaterial {
 
     override val componentName: String
         get() = "Material"
+
+    init {
+        shader = DEFAULT_SHADER
+    }
 }
+
+var DEFAULT_SHADER: IShader? = null
+    get() {
+        if (field == null)
+            field = SimpleShader3D(false).also {
+                it.name = "Default Shader"
+                it.renderAttributeName = ""
+                it.color = Vec4(0.5f, 0.5f, 0.5f, 1f)
+                GL.call { it.initShader() }
+            }
+        return field
+    }

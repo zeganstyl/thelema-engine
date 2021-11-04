@@ -19,6 +19,11 @@ package app.thelema.gl
 import kotlin.collections.ArrayList
 
 abstract class AbstractGL: IGL {
+    override var majVer: Int = 0
+    override var minVer: Int = 0
+    override var relVer: Int = 0
+    override var glslVer: Int = 0
+
     /** See [call] */
     val singleCalls = ArrayList<() -> Unit>()
 
@@ -174,6 +179,20 @@ abstract class AbstractGL: IGL {
     protected abstract fun glDeleteRenderBufferBase(id: Int)
 
     override fun initGL() {
+        glGetString(GL_VERSION)?.also { verStr ->
+            val spaceSplit = verStr.split("\\s+".toRegex())
+            val dotSplit = spaceSplit[0].split('.')
+            majVer = dotSplit[0].toInt()
+            minVer = dotSplit[1].toInt()
+            relVer = dotSplit.getOrNull(2)?.toInt() ?: 0
+        }
+
+        glGetString(GL_SHADING_LANGUAGE_VERSION)?.also { glslVerStr ->
+            val glslSpaceSplit = glslVerStr.split("\\s+".toRegex())
+            val glslDotSplit = glslSpaceSplit[0].split('.')
+            glslVer = glslDotSplit[0].toInt() * 100 + glslDotSplit[1].toInt()
+        }
+
         // check texture units
         val buffer1 = IntArray(1)
         glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, buffer1)

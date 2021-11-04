@@ -21,10 +21,10 @@ import kotlinx.cinterop.toCPointer
 import kotlinx.cinterop.toLong
 import app.thelema.data.IDataArray
 
-abstract class NativeDataArray<T, C: CPointed>(
+abstract class NativeDataArray<C: CPointed>(
     capacity: Int,
     val ptr: CPointer<C>
-): IDataArray<T> {
+): IDataArray {
     override val capacity: Int = capacity
 
     override var limit: Int = capacity

@@ -155,7 +155,19 @@ class Project: IProject {
 
     override fun destroy() {
         super.destroy()
+        entityOrNull?.also { entity ->
+            entity.children.forEach { it.destroy() }
+            entity.clearChildren()
+        }
+        mainScene = null
         loaderListeners.clear()
+        loadingResourcesToRemove.clear()
+        loadingLoaders.clear()
+        loadersInternal.clear()
+        loaderListeners.trimToSize()
+        loadingResourcesToRemove.trimToSize()
+        loadingLoaders.trimToSize()
+        loadersInternal.trimToSize()
         entity.children.forEach { it.destroy() }
     }
 }
