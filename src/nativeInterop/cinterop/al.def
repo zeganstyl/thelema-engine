@@ -1,3 +1,4 @@
 headers = AL/al.h AL/alc.h
 headerFilter = AL/*
-linkerOpts.linux = -L/usr/lib64 -lopenal
+compilerOpts = -I/usr/include -I/usr/include/x86_64-linux-gnu/ -I../libs/linuxX64/include
+linkerOpts = -L/usr/lib/x86_64-linux-gnu -L../libs/linuxX64/lib/x86_64-linux-gnu -lopenal

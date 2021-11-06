@@ -21,13 +21,13 @@ kotlin {
                 }
                 includeDirs.headerFilterOnly(includeDir, "$projectDir/src/nativeInterop/cinterop")
             }
-//            val al by creating {
+            val al by creating {
 //                val includeDir = when (target.preset) {
 //                    presets["linuxX64"] -> "/usr/include"
 //                    else -> throw NotImplementedError()
 //                }
-//                includeDirs.headerFilterOnly(includeDir)
-//            }
+                includeDirs.headerFilterOnly("$projectDir/libs/linuxX64/include")
+            }
         }
     }
 

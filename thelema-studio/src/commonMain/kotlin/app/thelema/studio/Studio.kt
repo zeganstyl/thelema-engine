@@ -245,6 +245,8 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     override fun render() {
+        Selection3D.prepareSelection()
+        Selection3D.render()
         hud.render()
     }
 

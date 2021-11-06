@@ -21,6 +21,7 @@ import cnames.structs.GLFWwindow
 import glfw.*
 import kotlinx.cinterop.*
 import app.thelema.audio.AL
+import app.thelema.audio.OpenAL
 import app.thelema.data.DATA
 import app.thelema.fs.FS
 import app.thelema.gl.GL
@@ -116,11 +117,11 @@ class GLFWApp(val conf: GLFWAppConf = GLFWAppConf()) : AbstractApp() {
 
         if (!conf.disableAudio) {
             try {
-//                AL = OpenAL(
-//                    conf.audioDeviceSimultaneousSources,
-//                    conf.audioDeviceBufferCount,
-//                    conf.audioDeviceBufferSize
-//                )
+                AL = OpenAL(
+                    conf.audioDeviceSimultaneousSources,
+                    conf.audioDeviceBufferCount,
+                    conf.audioDeviceBufferSize
+                )
 
             } catch (t: Throwable) {
                 LOG.info("Couldn't initialize audio, disabling audio", t, "Lwjgl3Application")

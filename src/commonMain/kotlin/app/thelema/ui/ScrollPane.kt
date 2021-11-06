@@ -40,7 +40,7 @@ import kotlin.math.min
 open class ScrollPane (
     widget: Actor? = null,
     focusOnMouseEnter: Boolean = true,
-    style: ScrollPaneStyle = ScrollPaneStyle.default()
+    style: ScrollPaneStyle = ScrollPaneStyle()
 ) : WidgetGroup() {
     var style: ScrollPaneStyle = style
         set(value) {

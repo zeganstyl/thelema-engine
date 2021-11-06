@@ -59,6 +59,9 @@ open class EntityTab(entity: IEntity, tabCloseButton: TextButton? = TextButton("
         } else {
             ECS.removeEntity(scene.entity)
         }
+
         tabTitle.background = if (activated) SKIN.titleBackground else null
+
+        Selection3D.selection = (newTab as EntityTab?)?.scene?.selection
     }
 }

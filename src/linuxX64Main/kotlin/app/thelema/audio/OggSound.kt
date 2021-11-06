@@ -16,42 +16,42 @@
 
 package app.thelema.audio
 
-//import kotlinx.cinterop.*
-//import app.thelema.fs.IFile
-//import app.thelema.data.NativeByteData
-//import app.thelema.ubytePtr
-//
-///** STB Vorbis implementation
-// *
-// * @author zeganstyl */
-//class OggSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
-//    init {
-//        if (!audio.noDevice) {
-//            file.readBytes(
-//                error = { throw IllegalArgumentException("Error reading file, status: $it") },
-//                ready = { data ->
-//                    memScoped {
-//                        val channelsBuffer = alloc<IntVar>()
-//                        val sampleRateBuffer = alloc<IntVar>()
-//
-//                        val rawAudioBuffer = allocPointerTo<ShortVar>()
-//
-//                        val samplesPerChannel = glfw.stb_vorbis_decode_memory(
-//                            data.ubytePtr(),
-//                            data.limit,
-//                            channelsBuffer.ptr,
-//                            sampleRateBuffer.ptr,
-//                            rawAudioBuffer.ptr
-//                        )
-//
-//                        setup(
-//                            NativeByteData(samplesPerChannel * channelsBuffer.value * 2, rawAudioBuffer.value!!.reinterpret()),
-//                            channelsBuffer.value,
-//                            sampleRateBuffer.value
-//                        )
-//                    }
-//                }
-//            )
-//        }
-//    }
-//}
+import kotlinx.cinterop.*
+import app.thelema.fs.IFile
+import app.thelema.data.NativeByteData
+import app.thelema.ubytePtr
+
+/** STB Vorbis implementation
+ *
+ * @author zeganstyl */
+class OggSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
+    init {
+        if (!audio.noDevice) {
+            file.readBytes(
+                error = { throw IllegalArgumentException("Error reading file, status: $it") },
+                ready = { data ->
+                    memScoped {
+                        val channelsBuffer = alloc<IntVar>()
+                        val sampleRateBuffer = alloc<IntVar>()
+
+                        val rawAudioBuffer = allocPointerTo<ShortVar>()
+
+                        val samplesPerChannel = glfw.stb_vorbis_decode_memory(
+                            data.ubytePtr(),
+                            data.limit,
+                            channelsBuffer.ptr,
+                            sampleRateBuffer.ptr,
+                            rawAudioBuffer.ptr
+                        )
+
+                        setup(
+                            NativeByteData(samplesPerChannel * channelsBuffer.value * 2, rawAudioBuffer.value!!.reinterpret()),
+                            channelsBuffer.value,
+                            sampleRateBuffer.value
+                        )
+                    }
+                }
+            )
+        }
+    }
+}

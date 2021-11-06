@@ -26,7 +26,7 @@ class SelectBoxStyle(
     var font: BitmapFont = DSKIN.font(),
     var fontColor: Int = -1,
     var background: Drawable? = null,
-    var scrollStyle: ScrollPaneStyle = ScrollPaneStyle.default(),
+    var scrollStyle: ScrollPaneStyle = ScrollPaneStyle(),
     var listStyle: ListStyle = ListStyle()
 ) {
     /** Optional.  */

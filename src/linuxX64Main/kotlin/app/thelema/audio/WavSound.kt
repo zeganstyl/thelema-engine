@@ -18,15 +18,15 @@ package app.thelema.audio
 
 import app.thelema.fs.IFile
 
-//class WavSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
-//    init {
-//        if (!audio.noDevice) {
-//            val input = WavData(file)
-//            setup(
-//                pcm = input.bytes!!,
-//                channels = input.channels,
-//                sampleRate = input.sampleRate
-//            )
-//        }
-//    }
-//}
+class WavSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
+    init {
+        if (!audio.noDevice) {
+            val input = WavData(file)
+            setup(
+                pcm = input.bytes!!,
+                channels = input.channels,
+                sampleRate = input.sampleRate
+            )
+        }
+    }
+}

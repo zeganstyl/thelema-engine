@@ -1,5 +1,6 @@
 package app.thelema.studio.widget
 
+import app.thelema.app.APP
 import app.thelema.ecs.IEntity
 import app.thelema.g2d.Sprite
 import app.thelema.img.texture2D
@@ -49,6 +50,8 @@ class TabScenePanel: Table() {
             }
 
             override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (button == BUTTON.LEFT) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
+
                 CameraControl.control.isEnabled = true
                 headUpDisplay?.scrollFocus = this@Stack
             }
@@ -74,7 +77,13 @@ class TabScenePanel: Table() {
         selection.isMultiple = true
         selection.addSelectionListener(object : SelectionListener<IEntity> {
             override fun lastSelectedChanged(newValue: IEntity?) {
+                if (newValue != null) {
+                    componentsPanel.clearComponents()
+                    newValue.forEachComponent { componentsPanel.setComponent(it) }
+                }
+
                 componentsPanel.entity = newValue
+
                 return super.lastSelectedChanged(newValue)
             }
         })

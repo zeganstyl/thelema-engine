@@ -3,6 +3,7 @@ package app.thelema.studio
 import app.thelema.g2d.Sprite
 import app.thelema.img.Texture2D
 import app.thelema.ui.DSKIN
+import app.thelema.ui.ScrollPaneStyle
 import app.thelema.utils.Color
 
 object SKIN {
@@ -28,4 +29,8 @@ object SKIN {
     }
 
     val hLine = Sprite(DSKIN.whiteTexture).apply { color = lineColor; minHeight = 4f }
+
+    val scroll = ScrollPaneStyle().apply {
+        background = this@SKIN.background
+    }
 }

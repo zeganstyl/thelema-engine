@@ -1,9 +1,11 @@
 import app.thelema.GLFWApp
 import app.thelema.GLFWAppConf
 import app.thelema.app.APP
+import app.thelema.audio.WavSound
 import app.thelema.gl.GL
 import app.thelema.test.PBRShaderTest
 import app.thelema.test.SelectionByColorTest
+import app.thelema.test.audio.SoundOggTest
 import app.thelema.test.g3d.BoxMeshTest
 import app.thelema.test.g3d.SimpleSkyboxTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
@@ -40,7 +42,7 @@ fun main() {
     getcwd(bytes.refTo(0), PATH_MAX)
     println(bytes.toKString())
 
-    PBRShaderTest().testMain()
+    SoundOggTest().testMain()
 
     app.startLoop()
 }

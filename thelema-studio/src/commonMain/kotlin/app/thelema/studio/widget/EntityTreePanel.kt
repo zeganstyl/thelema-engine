@@ -5,13 +5,14 @@ import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
 import app.thelema.input.BUTTON
 import app.thelema.input.MOUSE
+import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
 import app.thelema.ui.*
 
 class EntityTreePanel: Table() {
     val tree = Tree()
 
-    val scroll = ScrollPane(tree)
+    val scroll = ScrollPane(tree, style = SKIN.scroll)
 
     var rootEntity: IEntity = Entity()
         set(value) {
@@ -48,7 +49,6 @@ class EntityTreePanel: Table() {
         tree.addListener(object : ClickListener(BUTTON.RIGHT) {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
                 (tree.overNode as EntityTreeNode?)?.also { node ->
-                    println(event.stageY)
                     Studio.popupMenu.showMenu(event.headUpDisplay!!, event.stageX, event.stageY, node)
                 }
             }

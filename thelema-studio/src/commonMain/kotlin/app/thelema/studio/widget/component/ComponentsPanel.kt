@@ -19,13 +19,14 @@ package app.thelema.studio.widget.component
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.studio.ComponentPanelProvider
+import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
 import app.thelema.ui.*
 
 /** Contains all components that exists in entity */
 class ComponentsPanel: Table() {
     val componentsListPanel = VBox { align = Align.topLeft }
-    val componentsListScroll = ScrollPane(componentsListPanel)
+    val componentsListScroll = ScrollPane(componentsListPanel, style = SKIN.scroll)
 
     val componentPanelsCache = HashMap<String, ComponentPanel<IEntityComponent>>()
 
