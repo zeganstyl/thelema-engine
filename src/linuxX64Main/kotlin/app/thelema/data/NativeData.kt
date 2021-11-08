@@ -41,6 +41,6 @@ class NativeData: IData {
         NativeByteData(text.cstr.size, interpretCPointer(text.cstr.objcPtr())!!)
 
     override fun destroyBytes(data: IByteData) {
-        if (data.isAlive) nativeHeap.free(data.ptr())
+        if (data.isAlive) nativeHeap.free((data as NativeByteData).ptr)
     }
 }

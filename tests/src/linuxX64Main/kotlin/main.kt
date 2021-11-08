@@ -2,6 +2,7 @@ import app.thelema.GLFWApp
 import app.thelema.GLFWAppConf
 import app.thelema.app.APP
 import app.thelema.audio.WavSound
+import app.thelema.data.DATA
 import app.thelema.gl.GL
 import app.thelema.test.PBRShaderTest
 import app.thelema.test.SelectionByColorTest
@@ -36,13 +37,11 @@ fun main() {
         windowHeight = 720
     })
 
-//    FSTest().testMain()
-
     val bytes = ByteArray(PATH_MAX)
     getcwd(bytes.refTo(0), PATH_MAX)
     println(bytes.toKString())
 
-    SoundOggTest().testMain()
+    GLTFDamagedHelmetTest().testMain()
 
     app.startLoop()
 }
