@@ -31,8 +31,6 @@ dependencies {
 
 [Quick Start](https://github.com/zeganstyl/thelema-engine/wiki/Quick-Start)
 
-[Live TeaVM tests](https://zeganstyl.github.io/thelema-teavm-tests/)
-
 [Live Kotlin/JS tests](https://zeganstyl.github.io/thelema-kxjs-demo/)
 
 [Thelema vs LibGDX](https://github.com/zeganstyl/thelema-engine/wiki/Thelema-vs-LibGDX)
