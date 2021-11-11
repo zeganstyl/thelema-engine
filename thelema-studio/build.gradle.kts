@@ -75,6 +75,7 @@ kotlin {
                 classpath = configurations.getByName("jvmRuntimeClasspath") +
                         files("$buildDir/classes/kotlin/jvm/main") +
                         commonMain.resources.sourceDirectories
+                jvmArgs = listOf("-XstartOnFirstThread")
             }
         }
     }
