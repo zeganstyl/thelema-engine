@@ -40,14 +40,15 @@ open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaul
         ECS.getDescriptor(componentName)?.apply {
             properties.forEach { (key, value) ->
                 var size = 1
-                val field = when (value.type) {
-                    PropertyType.Int.propertyTypeName -> { size = 1; IntField() }
-                    PropertyType.Float.propertyTypeName -> { size = 1; FloatField() }
-                    PropertyType.Vec3.propertyTypeName -> { size = 2; Vec3Widget() }
-                    PropertyType.Vec4.propertyTypeName -> { size = 2; Vec4Widget() }
-                    PropertyType.File.propertyTypeName -> ProjectFileField()
-                    PropertyType.String.propertyTypeName -> StringField()
-                    ScriptFile.propertyTypeName -> ScriptFileField()
+                val field = when (val type = value.type) {
+                    PropertyType.Int -> { size = 1; IntField() }
+                    PropertyType.Float -> { size = 1; FloatField() }
+                    PropertyType.Vec3 -> { size = 2; Vec3Widget() }
+                    PropertyType.Vec4 -> { size = 2; Vec4Widget() }
+                    PropertyType.File -> ProjectFileField()
+                    PropertyType.String -> StringField()
+                    ScriptFile -> ScriptFileField()
+                    is ComponentRefType -> ComponentReferenceField(type.componentName)
                     else -> null
                 }
                 if (field != null) {

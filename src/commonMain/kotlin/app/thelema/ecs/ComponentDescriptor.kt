@@ -71,7 +71,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define boolean property */
     fun bool(name: String, get: T.() -> Boolean, set: T.(value: Boolean) -> Unit) = property(object : IPropertyDescriptor<T, Boolean> {
         override val name: String = name
-        override val type: String = PropertyType.Bool.propertyTypeName
+        override val type = PropertyType.Bool
         override fun setValue(component: T, value: Boolean) = set(component, value)
         override fun getValue(component: T): Boolean = get(component)
         override fun default(): Boolean = false
@@ -82,7 +82,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define integer property */
     fun int(name: String, get: T.() -> Int, set: T.(value: Int) -> Unit) = property(object : IPropertyDescriptor<T, Int> {
         override val name: String = name
-        override val type: String = PropertyType.Int.propertyTypeName
+        override val type = PropertyType.Int
         override fun setValue(component: T, value: Int) = set(component, value)
         override fun getValue(component: T): Int = get(component)
         override fun default(): Int = 0
@@ -93,7 +93,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define float property */
     fun float(name: String, get: T.() -> Float, set: T.(value: Float) -> Unit) = property(object : IPropertyDescriptor<T, Float> {
         override val name: String = name
-        override val type: String = PropertyType.Float.propertyTypeName
+        override val type = PropertyType.Float
         override fun setValue(component: T, value: Float) = set(component, value)
         override fun getValue(component: T): Float = get(component)
         override fun default(): Float = 0f
@@ -104,7 +104,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define 2-dimensional float vector property */
     fun vec2(name: String, get: T.() -> IVec2, set: T.(value: IVec2) -> Unit) = property(object : IPropertyDescriptor<T, IVec2> {
         override val name: String = name
-        override val type: String = PropertyType.Vec2.propertyTypeName
+        override val type = PropertyType.Vec2
         override fun setValue(component: T, value: IVec2) = set(component, value)
         override fun getValue(component: T): IVec2 = get(component)
         override fun default(): IVec2 = MATH.Zero2
@@ -123,7 +123,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define 3-dimensional float vector property */
     fun vec3(name: String, get: T.() -> IVec3, set: T.(value: IVec3) -> Unit) = property(object : IPropertyDescriptor<T, IVec3> {
         override val name: String = name
-        override val type: String = PropertyType.Vec3.propertyTypeName
+        override val type = PropertyType.Vec3
         override fun setValue(component: T, value: IVec3) = set(component, value)
         override fun getValue(component: T): IVec3 = get(component)
         override fun default(): IVec3 = MATH.Zero3
@@ -141,7 +141,7 @@ class ComponentDescriptor<T: IEntityComponent>(
 
     fun vec3(name: String, default: IVec3, get: T.() -> IVec3, set: T.(value: IVec3) -> Unit) = property(object : IPropertyDescriptor<T, IVec3> {
         override val name: String = name
-        override val type: String = PropertyType.Vec3.propertyTypeName
+        override val type = PropertyType.Vec3
         override fun setValue(component: T, value: IVec3) = set(component, value)
         override fun getValue(component: T): IVec3 = get(component)
         override fun default(): IVec3 = default
@@ -160,7 +160,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define 4-dimensional float vector property */
     fun vec4(name: String, get: T.() -> IVec4, set: T.(value: IVec4) -> Unit) = property(object : IPropertyDescriptor<T, IVec4> {
         override val name: String = name
-        override val type: String = PropertyType.Vec4.propertyTypeName
+        override val type = PropertyType.Vec4
         override fun setValue(component: T, value: IVec4) = set(component, value)
         override fun getValue(component: T): IVec4 = get(component)
         override fun default(): IVec4 = MATH.Zero3One1
@@ -179,7 +179,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define 4x4 matrix property */
     fun mat4(name: String, get: T.() -> IMat4, set: T.(value: IMat4) -> Unit) = property(object : IPropertyDescriptor<T, IMat4> {
         override val name: String = name
-        override val type: String = PropertyType.Mat4.propertyTypeName
+        override val type = PropertyType.Mat4
         override val useJsonReadWrite: Boolean = false
         override fun setValue(component: T, value: IMat4) = set(component, value)
         override fun getValue(component: T): IMat4 = get(component)
@@ -191,7 +191,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define string-property */
     fun string(name: String, get: T.() -> String, set: T.(value: String) -> Unit) = property(object : IPropertyDescriptor<T, String> {
         override val name: String = name
-        override val type: String = PropertyType.String.propertyTypeName
+        override val type = PropertyType.String
         override fun setValue(component: T, value: String) = set(component, value)
         override fun getValue(component: T): String = get(component)
         override fun default(): String = ""
@@ -205,7 +205,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     /** Define File-property (string) */
     fun file(name: String, get: T.() -> IFile?, set: T.(value: IFile?) -> Unit) = property(object : IPropertyDescriptor<T, IFile?> {
         override val name: String = name
-        override val type: String = PropertyType.File.propertyTypeName
+        override val type = PropertyType.File
         override fun setValue(component: T, value: IFile?) = set(component, value)
         override fun getValue(component: T): IFile? = get(component)
         override fun default(): IFile? = null
@@ -227,7 +227,7 @@ class ComponentDescriptor<T: IEntityComponent>(
      * @param set set component reference to this component's property */
     fun <V: IEntityComponent> ref(name: String, requiredComponent: String, get: T.() -> V?, set: T.(value: V?) -> Unit) = property(object : IPropertyDescriptor<T, V?> {
         override val name: String = name
-        override val type: String = requiredComponent
+        override val type = ComponentRefType(requiredComponent)
         override fun setValue(component: T, value: V?) = set(component, value)
         override fun getValue(component: T): V? = get(component)
         override fun default(): V? = null
@@ -268,7 +268,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     @Suppress("UNCHECKED_CAST")
     fun <V: IEntityComponent> refAbs(name: String, requiredComponent: String, get: T.() -> V?, set: T.(value: V?) -> Unit) = property(object : IPropertyDescriptor<T, V?> {
         override val name: String = name
-        override val type: String = requiredComponent
+        override val type = ComponentRefType(requiredComponent)
         override fun setValue(component: T, value: V?) = set(component, value)
         override fun getValue(component: T): V? = get(component)
         override fun default(): V? = null

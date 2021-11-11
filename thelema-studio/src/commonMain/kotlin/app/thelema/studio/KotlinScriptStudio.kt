@@ -60,7 +60,7 @@ class KotlinScriptStudio: KotlinScriptAdapter() {
 fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(name: String, get: T.() -> IFile?, set: T.(value: IFile?) -> Unit) = property(object :
     IPropertyDescriptor<T, IFile?> {
     override val name: String = name
-    override val type: String = ScriptFile.propertyTypeName
+    override val type = ScriptFile
     override fun setValue(component: T, value: IFile?) = set(component, value)
     override fun getValue(component: T): IFile? = get(component)
     override fun default(): IFile? = null

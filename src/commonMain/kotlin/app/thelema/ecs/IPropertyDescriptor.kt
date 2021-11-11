@@ -21,7 +21,7 @@ import app.thelema.json.IJsonObject
 interface IPropertyDescriptor<T: IEntityComponent, V: Any?> {
     val name: String
 
-    val type: String
+    val type: IPropertyType
 
     val useJsonReadWrite: Boolean
         get() = true

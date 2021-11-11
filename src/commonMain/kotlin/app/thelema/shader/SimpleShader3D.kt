@@ -23,6 +23,7 @@ import app.thelema.img.ITexture2D
 import app.thelema.math.*
 
 /** Can be used for debugging purpose */
+// TODO add skinning
 class SimpleShader3D(compile: Boolean): Shader(compile = compile) {
     constructor(compile: Boolean = true, block: SimpleShader3D.() -> Unit = {}): this(compile) {
         block(this)

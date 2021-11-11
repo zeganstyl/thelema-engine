@@ -24,7 +24,7 @@ class StringEnumPropertyDesc<T: IEntityComponent>(
     val getValueBlock: T.() -> String,
     val setValueBlock: T.(value: String) -> Unit
 ): IPropertyDescriptor<T, String> {
-    override val type: String = PropertyType.StringEnum.propertyTypeName
+    override val type = PropertyType.StringEnum
     override fun setValue(component: T, value: String) {
         if (!values.contains(value)) throw IllegalStateException("StringEnum: value \"$value\" can't be set as enum")
         component.setValueBlock(value)

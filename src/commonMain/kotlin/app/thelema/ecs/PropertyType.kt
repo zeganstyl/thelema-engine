@@ -17,7 +17,8 @@
 package app.thelema.ecs
 
 class PropertyType(override val propertyTypeName: String): IPropertyType {
-    override val generics: Array<PropertyType> = emptyArray()
+    override val generics: Array<PropertyType>
+        get() = emptyArray()
 
     companion object {
         val Unknown = PropertyType("thelema/Unknown")
@@ -33,4 +34,11 @@ class PropertyType(override val propertyTypeName: String): IPropertyType {
         val Mat4 = PropertyType("thelema/Mat4")
         val File = PropertyType("thelema/File")
     }
+}
+
+class ComponentRefType(var componentName: String): IPropertyType {
+    override val generics: Array<PropertyType> = emptyArray()
+
+    override val propertyTypeName: String
+        get() = "thelema/Reference"
 }

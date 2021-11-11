@@ -62,6 +62,8 @@ object Studio: AppListener, IJsonObjectIO {
 
     val entityWindow = EntityWindow()
 
+    val entityTreeWindow = EntityTreeWindow()
+
     private val prefsName = "thelema-studio"
 
     val popupMenu = PopupMenu {
