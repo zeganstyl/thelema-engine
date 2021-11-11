@@ -54,6 +54,28 @@ kotlin {
                     implementation("$lwjgl_prefix-stb:$lwjgl_version:$it")
                 }
             }
+
+            val jvmMainClass = "app.thelema.studio.ThelemaStudioJvm"
+
+            val jvmJar by tasks.getting(Jar::class) {
+                doFirst {
+                    manifest {
+                        attributes(
+                            "Main-Class" to jvmMainClass
+                        )
+                    }
+
+                    from(configurations.getByName("jvmRuntimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
+                }
+            }
+
+            val run by tasks.creating(JavaExec::class) {
+                dependsOn(tasks.getByName("jvmMainClasses"))
+                main = jvmMainClass
+                classpath = configurations.getByName("jvmRuntimeClasspath") +
+                        files("$buildDir/classes/kotlin/jvm/main") +
+                        commonMain.resources.sourceDirectories
+            }
         }
     }
 }
