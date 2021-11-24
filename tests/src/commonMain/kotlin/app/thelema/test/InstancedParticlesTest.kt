@@ -5,10 +5,7 @@ import app.thelema.ecs.component
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.mesh.planeMesh
-import app.thelema.g3d.particles.IParticleSystem
-import app.thelema.g3d.particles.MoveParticleNode
-import app.thelema.g3d.particles.ParticleTextureRandomFrame
-import app.thelema.g3d.particles.particlesEmitter
+import app.thelema.g3d.particles.*
 import app.thelema.g3d.scene
 import app.thelema.img.Texture2D
 import app.thelema.math.MATH
@@ -16,8 +13,6 @@ import app.thelema.math.Mat3
 
 class InstancedParticlesTest: Test {
     override fun testMain() {
-        val mat3Tmp = Mat3()
-
         Entity {
             makeCurrent()
             scene()
@@ -69,25 +64,23 @@ void main() {
                         )
                     }
 
+                    val frameNode = ParticleTextureRandomFrame().apply {
+                        setupFrames(6, 5)
+                    }
+
                     addParticleNodes(
                         MoveParticleNode(),
-                        ParticleTextureRandomFrame().apply {
-                            setupFrames(6, 5)
-                        }
+                        frameNode
                     )
 
-                    val particleLifeTime = 5f
-
                     val smokeTexture = Texture2D("Smoke30Frames.png")
-                    val framesU = 6 // 6 frames by horizontal
-                    val framesV = 5 // 5 frames by vertical
-                    val smokeSizeU = 1f / framesU
-                    val smokeSizeV = 1f / framesV
+
+                    val mat3Tmp = Mat3()
 
                     shader.bind()
                     shader["tex"] = 0
-                    shader.set("texSize", smokeSizeU, smokeSizeV)
-                    shader["maxLife"] = particleLifeTime
+                    shader.set("texSize", frameNode.sizeU, frameNode.sizeV)
+                    shader["maxLife"] = 5f
                     shader.depthMask = false
                     shader.onPrepareShader = { mesh, scene ->
                         smokeTexture.bind(0)
@@ -100,7 +93,7 @@ void main() {
             }
 
             entity("smoke") {
-                particlesEmitter {
+                particleEmitter {
                     this.particleSystem = particleSystem.component()
                 }
             }

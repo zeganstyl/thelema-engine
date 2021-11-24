@@ -3,7 +3,6 @@ package app.thelema.g3d.particles
 import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexBuffer
-import app.thelema.math.IVec2
 import app.thelema.math.IVec3
 import app.thelema.shader.IShader
 

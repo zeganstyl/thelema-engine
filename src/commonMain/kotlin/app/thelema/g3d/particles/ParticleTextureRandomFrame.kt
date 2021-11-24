@@ -8,17 +8,21 @@ class ParticleTextureRandomFrame: IParticleNode {
     var framesU = 1
         private set(value) {
             field = value
-            smokeSizeU = 1f / framesU
+            sizeU = 1f / framesU
         }
     /** Vertical frames count */
     var framesV = 1
         private set(value) {
             field = value
-            smokeSizeV = 1f / framesV
+            sizeV = 1f / framesV
         }
-    var smokeSizeU = 1f / framesU
+
+    /** Horizontal frame size for shader */
+    var sizeU = 1f / framesU
         private set
-    var smokeSizeV = 1f / framesV
+
+    /** Vertical frame size for shader */
+    var sizeV = 1f / framesV
         private set
 
     lateinit var uvs: MutableList<IVec2>
@@ -39,8 +43,8 @@ class ParticleTextureRandomFrame: IParticleNode {
     override fun emitParticle(system: IParticleSystem, emitter: IParticleEmitter, particle: Int) {
         if (counter >= uvs.size) counter = 0
         uvs[particle].set(
-            smokeSizeU * Random.nextInt(framesU),
-            smokeSizeV * Random.nextInt(framesV)
+            sizeU * counter % framesU,
+            sizeV * particle % framesV
         )
         counter++
     }

@@ -24,5 +24,5 @@ interface IParticleEmitter: IEntityComponent {
     fun updateParticles(delta: Float)
 }
 
-fun IEntity.particlesEmitter(block: IParticleEmitter.() -> Unit) = component(block)
-fun IEntity.particlesEmitter() = component<IParticleEmitter>()
+fun IEntity.particleEmitter(block: IParticleEmitter.() -> Unit) = component(block)
+fun IEntity.particleEmitter() = component<IParticleEmitter>()
