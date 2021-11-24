@@ -65,7 +65,7 @@ class SimpleShader3D(compile: Boolean): Shader(compile = compile) {
     }
 
     fun initShader() {
-        vertCode = """
+        if (vertCode.isEmpty()) vertCode = """
 attribute vec3 $positionsName;
 ${if (uvsName.isNotEmpty()) "attribute vec2 $uvsName;" else "" }
 ${if (normalsName.isNotEmpty() || lightDirection != null) "attribute vec3 $normalsName;" else "" }
@@ -85,7 +85,7 @@ void main() {
     gl_Position = viewProj * worldMatrix * vec4($positionsName, 1.0);
 }
 """
-        fragCode = """
+        if (fragCode.isEmpty()) fragCode = """
 varying vec3 pos;
 varying vec2 uv;
 varying vec3 normal;

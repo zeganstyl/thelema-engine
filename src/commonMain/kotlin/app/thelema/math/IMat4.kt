@@ -243,14 +243,21 @@ interface IMat4: IJsonObjectIO {
     fun getCol2Vec3(out: IVec3): IVec3 = out.set(m02, m12, m22)
     fun getCol3Vec3(out: IVec3): IVec3 = out.set(m03, m13, m23)
 
-    /** Get forward vector of world matrix */
-    fun getWorldForward(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m02, m12, m22).nor()
+    /** Get forward vector of world matrix (column 2) */
+    fun getWorldForward(out: IVec3): IVec3 = out.set(m02, m12, m22)
 
-    /** Get up vector of world matrix */
-    fun getWorldUp(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m01, m11, m21).nor()
+    /** Get up vector of world matrix (column 1) */
+    fun getWorldUp(out: IVec3): IVec3 = out.set(m01, m11, m21)
 
-    /** Get right vector of world matrix */
-    fun getWorldRight(out: IVec3, normalize: Boolean = true): IVec3 = out.set(m00, m10, m20).nor()
+    /** Get up vector of world matrix (column 1) */
+    fun setWorldUp(vec: IVec3) {
+        m01 = vec.x
+        m11 = vec.y
+        m21 = vec.z
+    }
+
+    /** Get right vector of world matrix (column 0) */
+    fun getWorldRight(out: IVec3): IVec3 = out.set(m00, m10, m20)
 
     fun isEqualTo(other: IMat4): Boolean {
         val values1 = values

@@ -17,6 +17,9 @@
 package app.thelema.gl
 
 import app.thelema.data.IByteData
+import app.thelema.math.IVec2
+import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 import app.thelema.shader.IShader
 
 /** Vertex attribute input
@@ -89,6 +92,18 @@ interface IVertexAttribute {
      * @param byteOffset relative to [bytePosition] */
     fun getFloat(byteOffset: Int): Float
 
+    /** Get first float without skipping vertex. */
+    fun getFloat(): Float
+
+    /** Get first vec2 without skipping vertex. */
+    fun getVec2(out: IVec2): IVec2
+
+    /** Get first vec3 without skipping vertex. */
+    fun getVec3(out: IVec3): IVec3
+
+    /** Get first vec4 without skipping vertex. */
+    fun getVec4(out: IVec4): IVec4
+
     fun updateOffset()
 
     /** Move cursor to next vertex */
@@ -97,7 +112,11 @@ interface IVertexAttribute {
     /** Move cursor to the begin */
     fun rewind()
 
+    /** Rewind buffer, and after [block], request buffer upload to GPU, and rewind again */
     fun prepare(block: IVertexAttribute.() -> Unit)
+
+    /** Rewind buffer, and request buffer upload to GPU */
+    fun prepare()
 
     /** Move cursor to vertex by index */
     fun setVertexPosition(index: Int)
@@ -117,6 +136,18 @@ interface IVertexAttribute {
 
     /** Put float at the current vertex with offset */
     fun setFloat(byteOffset: Int, x: Float)
+
+    /** Put first float at the current vertex */
+    fun setFloat(value: Float)
+
+    /** Put first vec2 at the current vertex */
+    fun setVec2(value: IVec2)
+
+    /** Put first vec3 at the current vertex */
+    fun setVec3(value: IVec3)
+
+    /** Put first vec4 at the current vertex */
+    fun setVec4(value: IVec4)
 
     /** Put floats at the current vertex */
     fun setFloats(vararg values: Float)

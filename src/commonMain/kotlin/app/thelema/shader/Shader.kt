@@ -93,7 +93,7 @@ open class Shader(
         }
     }
 
-    fun load(vertCode: String, fragCode: String) {
+    override fun load(vertCode: String, fragCode: String) {
         val ver = getVersionStr()
 
         val fullVertCode = ver + floatPrecision + vertCode

@@ -17,6 +17,7 @@
 package app.thelema.gl
 
 import app.thelema.data.IByteData
+import app.thelema.utils.LOG
 
 interface IGLBuffer {
     var bufferHandle: Int
@@ -40,9 +41,13 @@ interface IGLBuffer {
     }
 
     fun uploadBufferToGpu() {
-        if (bufferHandle == 0) bufferHandle = GL.glGenBuffer()
-        GL.glBindBuffer(target, bufferHandle)
-        GL.glBufferData(target, bytes.limit, bytes, usage)
+        if (bytes.limit > 0) {
+            if (bufferHandle == 0) bufferHandle = GL.glGenBuffer()
+            GL.glBindBuffer(target, bufferHandle)
+            GL.glBufferData(target, bytes.limit, bytes, usage)
+        } else {
+            LOG.error("$this uploadBufferToGpu(): buffer limit = 0 ")
+        }
         gpuUploadRequested = false
     }
 

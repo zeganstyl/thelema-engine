@@ -20,12 +20,16 @@ import app.thelema.ecs.*
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.light.ILight
+import app.thelema.g3d.particles.IParticleEmitter
+import app.thelema.g3d.particles.IParticleSystem
 import app.thelema.gl.IMesh
 import app.thelema.input.*
 import app.thelema.shader.IRenderingPipeline
 import app.thelema.utils.iterate
 
-/** @author zeganstyl */
+/** Root object. Main purpose - render all contained objects as one whole
+ *
+ * @author zeganstyl */
 interface IScene: IEntityComponent {
     var activeCamera: ICamera?
 
@@ -38,6 +42,8 @@ interface IScene: IEntityComponent {
     val lights: List<ILight>
 
     val meshes: List<IMesh>
+
+    val particleEmitters: List<IParticleEmitter>
 
     var keyboardHandler: KeyboardHandler?
     var mouseHandler: MouseHandler?
@@ -54,7 +60,7 @@ interface IScene: IEntityComponent {
 fun IEntity.scene(block: IScene.() -> Unit) = component(block)
 fun IEntity.scene() = component<IScene>()
 
-/** Root object. Main purpose - render all contained objects as one whole
+/** See [IScene]
  *
  * @author zeganstyl */
 class Scene: IScene {
@@ -99,6 +105,9 @@ class Scene: IScene {
     }
 
     override val meshes = ArrayList<IMesh>()
+
+    override val particleEmitters = ArrayList<IParticleEmitter>()
+    private val particleSystems = HashSet<IParticleSystem>()
 
     override val lights = ArrayList<ILight>()
 
@@ -182,12 +191,14 @@ class Scene: IScene {
         if (component is IMesh) meshes.add(component)
         if (component is ILight) lights.add(component)
         if (component is SimulationNode) simulationNodes.add(component)
+        if (component is IParticleEmitter) particleEmitters.add(component)
     }
 
     override fun removedComponentFromBranch(component: IEntityComponent) {
         if (component is IMesh) meshes.remove(component)
         if (component is ILight) lights.remove(component)
         if (component is SimulationNode) simulationNodes.remove(component)
+        if (component is IParticleEmitter) particleEmitters.remove(component)
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
@@ -247,6 +258,15 @@ class Scene: IScene {
         if (translucent.size > 0) {
             translucent.sortWith(translucentSorter)
             translucent.iterate { it.render(this, shaderChannel) }
+        }
+
+        particleSystems.clear()
+        particleEmitters.iterate {
+            it.particleSystem?.also { system ->
+                if (particleSystems.add(system)) {
+                    system.mesh?.render(this, shaderChannel)
+                }
+            }
         }
     }
 

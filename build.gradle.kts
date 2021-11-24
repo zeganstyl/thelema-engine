@@ -38,12 +38,6 @@ kotlin {
     android {
         publishLibraryVariants("release", "debug")
     }
-
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
     
     sourceSets {
         val commonMain by getting
@@ -95,11 +89,11 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(30)
+    compileSdkVersion(31)
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdkVersion(24)
-        targetSdkVersion(30)
+        minSdkVersion(21)
+        targetSdkVersion(31)
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

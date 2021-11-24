@@ -69,6 +69,8 @@ interface IShader {
 
     var depthMask: Boolean
 
+    fun load(vertCode: String, fragCode: String)
+
     /** For shader node GLSL-variables */
     fun getUID(data: IShaderData): String
 

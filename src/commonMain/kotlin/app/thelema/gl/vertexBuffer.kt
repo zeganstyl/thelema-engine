@@ -65,6 +65,10 @@ interface IVertexBuffer: IGLBuffer {
 
     fun getAttributeOrNull(name: String): IVertexAttribute?
 
+    fun getOrCreateAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute
+
+    fun getOrCreateAttribute(size: Int, name: String): IVertexAttribute
+
     fun containsInput(name: String): Boolean = getAttributeOrNull(name) != null
 
     fun bind(shader: IShader)
@@ -127,6 +131,12 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 
     private fun lastInputByte(): Int = vertexAttributes.lastOrNull()?.nextInputByte ?: 0
 
+    override fun getOrCreateAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute =
+        getAttributeOrNull(name) ?: addAttribute(size, name, type, normalized)
+
+    override fun getOrCreateAttribute(size: Int, name: String): IVertexAttribute =
+        getAttributeOrNull(name) ?: addAttribute(size, name)
+
     override fun addAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute {
         val input = VertexAttribute(this, size, name, type, normalized, lastInputByte())
         vertexAttributesInternal.add(input)
@@ -184,6 +194,10 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         for (i in vertexAttributes.indices) {
             vertexAttributes[i].bind(shader)
         }
+    }
+
+    override fun toString(): String {
+        return super.toString() + "[bufferHandle=$bufferHandle]"
     }
 
     override fun printVertexAttributes(): String  = StringBuilder().apply {

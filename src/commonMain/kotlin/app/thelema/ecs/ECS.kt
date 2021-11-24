@@ -19,6 +19,10 @@ package app.thelema.ecs
 import app.thelema.action.*
 import app.thelema.g3d.Blending
 import app.thelema.g3d.TransformNode
+import app.thelema.g3d.particles.IParticleEmitter
+import app.thelema.g3d.particles.IParticleSystem
+import app.thelema.g3d.particles.ParticleEmitter
+import app.thelema.g3d.particles.ParticleSystem
 import app.thelema.gl.Mesh
 import app.thelema.gltf.GLTFSceneInstance
 import app.thelema.img.*
@@ -170,6 +174,14 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
             int("tWrap", { tWrap }) { tWrap = it }
         }
         descriptor { TextureCube() }
+
+        descriptor({ ParticleSystem() }) {
+            setAliases(IParticleSystem::class)
+        }
+
+        descriptor({ ParticleEmitter() }) {
+            setAliases(IParticleEmitter::class)
+        }
 
         Action.setupActionComponents()
 

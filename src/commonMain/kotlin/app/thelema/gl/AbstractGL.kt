@@ -178,7 +178,7 @@ abstract class AbstractGL: IGL {
     protected abstract fun glDeleteFrameBufferBase(id: Int)
     protected abstract fun glDeleteRenderBufferBase(id: Int)
 
-    override fun initGL() {
+    open fun initVersions() {
         glGetString(GL_VERSION)?.also { verStr ->
             val spaceSplit = verStr.split("\\s+".toRegex())
             val dotSplit = spaceSplit[0].split('.')
@@ -192,6 +192,10 @@ abstract class AbstractGL: IGL {
             val glslDotSplit = glslSpaceSplit[0].split('.')
             glslVer = glslDotSplit[0].toInt() * 100 + glslDotSplit[1].toInt()
         }
+    }
+
+    override fun initGL() {
+        initVersions()
 
         // check texture units
         val buffer1 = IntArray(1)

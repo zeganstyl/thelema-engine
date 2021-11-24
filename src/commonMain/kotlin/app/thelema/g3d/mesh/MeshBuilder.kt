@@ -25,6 +25,7 @@ import app.thelema.math.Mat4
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
 import app.thelema.math.mul
+import kotlin.math.tan
 
 class MeshBuilder: IMeshBuilder {
     override val componentName: String
@@ -66,6 +67,8 @@ class MeshBuilder: IMeshBuilder {
     val scale = Vec3(1f, 1f, 1f)
 
     var proxy: IMeshBuilder? = null
+
+    var vertexBuffer: IVertexBuffer? = null
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
@@ -149,13 +152,34 @@ class MeshBuilder: IMeshBuilder {
 
         val verticesCount = getVerticesCount()
         mesh.verticesCount = verticesCount
-        mesh.destroyVertexBuffers()
-        mesh.addVertexBuffer {
-            addAttribute(3, positionName)
-            if (uvs) addAttribute(2, uvName)
-            if (normals) addAttribute(3, normalName)
-            if (tangents) addAttribute(4, tangentName)
-            initVertexBuffer(mesh.verticesCount)
+        if (vertexBuffer == null) {
+            vertexBuffer = mesh.addVertexBuffer {
+                addAttribute(3, positionName)
+                if (uvs) addAttribute(2, uvName)
+                if (normals) addAttribute(3, normalName)
+                if (tangents) addAttribute(4, tangentName)
+                initVertexBuffer(mesh.verticesCount)
+            }
+        } else {
+            vertexBuffer?.apply {
+                if (!mesh.vertexBuffers.contains(this)) mesh.vertexBuffers.add(this)
+
+                val positions = !containsInput(positionName)
+                if (positions) addAttribute(3, positionName)
+
+                val uvs = uvs && !containsInput(uvName)
+                if (uvs) addAttribute(2, uvName)
+
+                val normals = normals && !containsInput(normalName)
+                if (normals) addAttribute(3, normalName)
+
+                val tangents = tangents && !containsInput(tangentName)
+                if (tangents) addAttribute(4, tangentName)
+
+                if (positions || uvs || normals || tangents || verticesCount != mesh.verticesCount) {
+                    initVertexBuffer(mesh.verticesCount)
+                }
+            }
         }
         applyVertices()
 

@@ -18,16 +18,20 @@ package app.thelema.data
 
 /** @author zeganstyl */
 interface IDataArray {
+    /** Source platform object */
     val sourceObject: Any
         get() = this
 
-    /** Limit of data, limit can't be greater than capacity. */
+    /** End of data for read/write by this array, limit can't be greater than capacity. */
     var limit: Int
 
+    /** Begin of data for read/write by this array, limit can't be greater than capacity. */
     var position: Int
 
+    /** Maximum number of elements allocated for this array and that can be read/write. */
     val capacity: Int
 
+    /** Size of this data array (size is difference [limit] - [position]). Counting in elements */
     val remaining
         get() = limit - position
 
@@ -37,12 +41,12 @@ interface IDataArray {
         position = 0
     }
 
-    /** Position to zero */
+    /** Set [position] to zero */
     fun rewind() {
         position = 0
     }
 
-    /** Set size to current position and then set position to zero */
+    /** Set [limit] to current [position] and then set position to zero */
     fun flip() {
         limit = position
         position = 0

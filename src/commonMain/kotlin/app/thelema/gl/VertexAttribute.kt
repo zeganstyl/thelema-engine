@@ -16,6 +16,9 @@
 
 package app.thelema.gl
 
+import app.thelema.math.IVec2
+import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 import app.thelema.shader.IShader
 
 /** @author zeganstyl */
@@ -117,6 +120,11 @@ class VertexAttribute(
         buffer.requestBufferUploading()
     }
 
+    override fun prepare() {
+        rewind()
+        buffer.requestBufferUploading()
+    }
+
     fun copy(container: IVertexBuffer) = VertexAttribute(container, size, name, type, normalized)
 
     override fun toString() = "$name: size=$size, byteOffset=$byteOffset"
@@ -129,6 +137,29 @@ class VertexAttribute(
     }
 
     override fun getFloat(byteOffset: Int): Float = bytes.getFloat(bytePosition + byteOffset)
+
+    override fun getFloat(): Float = bytes.getFloat(bytePosition)
+
+    override fun getVec2(out: IVec2): IVec2 {
+        out.x = bytes.getFloat(bytePosition)
+        out.y = bytes.getFloat(bytePosition + 4)
+        return out
+    }
+
+    override fun getVec3(out: IVec3): IVec3 {
+        out.x = bytes.getFloat(bytePosition)
+        out.y = bytes.getFloat(bytePosition + 4)
+        out.z = bytes.getFloat(bytePosition + 8)
+        return out
+    }
+
+    override fun getVec4(out: IVec4): IVec4 {
+        out.x = bytes.getFloat(bytePosition)
+        out.y = bytes.getFloat(bytePosition + 4)
+        out.z = bytes.getFloat(bytePosition + 8)
+        out.w = bytes.getFloat(bytePosition + 12)
+        return out
+    }
 
     override fun putBytesNext(vararg values: Int) {
         val bytes = buffer.bytes
@@ -172,6 +203,28 @@ class VertexAttribute(
 
     override fun setFloat(byteOffset: Int, x: Float) {
         buffer.bytes.putFloat(positionInternal + byteOffset, x)
+    }
+
+    override fun setFloat(value: Float) {
+        buffer.bytes.putFloat(positionInternal, value)
+    }
+
+    override fun setVec2(value: IVec2) {
+        buffer.bytes.putFloat(positionInternal, value.x)
+        buffer.bytes.putFloat(positionInternal + 4, value.y)
+    }
+
+    override fun setVec3(value: IVec3) {
+        buffer.bytes.putFloat(positionInternal, value.x)
+        buffer.bytes.putFloat(positionInternal + 4, value.y)
+        buffer.bytes.putFloat(positionInternal + 8, value.z)
+    }
+
+    override fun setVec4(value: IVec4) {
+        buffer.bytes.putFloat(positionInternal, value.x)
+        buffer.bytes.putFloat(positionInternal + 4, value.y)
+        buffer.bytes.putFloat(positionInternal + 8, value.z)
+        buffer.bytes.putFloat(positionInternal + 12, value.w)
     }
 
     override fun setFloats(vararg values: Float) {

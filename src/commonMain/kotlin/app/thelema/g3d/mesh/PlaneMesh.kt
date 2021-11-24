@@ -18,6 +18,9 @@ package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
+import app.thelema.gl.IVertexAttribute
+import app.thelema.math.IVec3
+import app.thelema.math.Vec3
 
 class PlaneMesh(): MeshBuilderAdapter() {
     constructor(block: PlaneMesh.() -> Unit): this() {
@@ -63,6 +66,8 @@ class PlaneMesh(): MeshBuilderAdapter() {
 
     var heightProvider: (hIndex: Int, vIndex: Int) -> Float = { _, _ -> 0f }
 
+    var normal: IVec3 = Vec3(0f, 1f, 0f)
+
     override fun getVerticesCount(): Int = (hDivisions + 1) * (vDivisions + 1)
 
     override fun getIndicesCount(): Int = 6 * hDivisions * vDivisions
@@ -105,6 +110,13 @@ class PlaneMesh(): MeshBuilderAdapter() {
         val yStep = height / vDivisions
         val vStep = yStep / height
 
+        val pointFunction = when {
+            normal.isEqual(0f, 1f, 0f) -> ::putPositionsAsNormalY
+            normal.isEqual(1f, 0f, 0f) -> ::putPositionsAsNormalX
+            normal.isEqual(0f, 0f, 1f) -> ::putPositionsAsNormalZ
+            else -> ::putPositionsByNormal
+        }
+
         var y = yStart
         var v = 0f
         var iy = 0
@@ -114,9 +126,7 @@ class PlaneMesh(): MeshBuilderAdapter() {
             var u = 0f
             var ix = 0
             while (ix < xNum) {
-                positions.putFloatsNext(x, heightProvider(ix, iy), y)
-                uvs?.putFloatsNext(u, v)
-                normals?.putFloatsNext(0f, 1f, 0f)
+                pointFunction(positions, uvs, normals, x, y, ix, iy, u, v)
 
                 u += uStep
                 x += xStep
@@ -135,6 +145,70 @@ class PlaneMesh(): MeshBuilderAdapter() {
         positions.buffer.requestBufferUploading()
         uvs?.buffer?.requestBufferUploading()
         normals?.buffer?.requestBufferUploading()
+    }
+
+    private fun putPositionsAsNormalX(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        x: Float,
+        y: Float,
+        ix: Int,
+        iy: Int,
+        u: Float,
+        v: Float
+    ) {
+        positions.putFloatsNext(heightProvider(ix, iy), y, x)
+        uvs?.putFloatsNext(u, v)
+        normals?.putFloatsNext(1f, 0f, 0f)
+    }
+
+    private fun putPositionsAsNormalY(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        x: Float,
+        y: Float,
+        ix: Int,
+        iy: Int,
+        u: Float,
+        v: Float
+    ) {
+        positions.putFloatsNext(x, heightProvider(ix, iy), y)
+        uvs?.putFloatsNext(u, v)
+        normals?.putFloatsNext(0f, 1f, 0f)
+    }
+
+    private fun putPositionsAsNormalZ(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        x: Float,
+        y: Float,
+        ix: Int,
+        iy: Int,
+        u: Float,
+        v: Float
+    ) {
+        positions.putFloatsNext(x, y, heightProvider(ix, iy))
+        uvs?.putFloatsNext(u, v)
+        normals?.putFloatsNext(0f, 0f, 1f)
+    }
+
+    private fun putPositionsByNormal(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        x: Float,
+        y: Float,
+        ix: Int,
+        iy: Int,
+        u: Float,
+        v: Float
+    ) {
+        positions.putFloatsNext(x, heightProvider(ix, iy), y)
+        uvs?.putFloatsNext(u, v)
+        normals?.putFloatsNext(normal.x, normal.y, normal.z)
     }
 
     override fun applyIndices() {

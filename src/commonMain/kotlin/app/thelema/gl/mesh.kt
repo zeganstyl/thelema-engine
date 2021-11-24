@@ -178,6 +178,7 @@ class Mesh(): IMesh {
         set(value) {
             field = value
             if (material == null) material = value?.componentOrNull()
+            if (material == null) material = DEFAULT_MATERIAL
         }
 
     override var positionsName: String = "POSITION"

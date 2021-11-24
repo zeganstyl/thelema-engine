@@ -88,3 +88,10 @@ var DEFAULT_SHADER: IShader? = null
             }
         return field
     }
+
+var DEFAULT_MATERIAL: IMaterial? = null
+    get() {
+        if (field == null)
+            field = Material()
+        return field
+    }

@@ -33,12 +33,6 @@ kotlin {
         }
     }
 
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
-
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -122,12 +116,12 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(30)
+    compileSdkVersion(31)
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        applicationId = "app.thelema.test.AndroidMain"
-        minSdkVersion(24)
-        targetSdkVersion(30)
+        applicationId = "app.thelema.test.android.AndroidMain"
+        minSdkVersion(21)
+        targetSdkVersion(31)
         versionCode = 1
         versionName = "1.0"
     }

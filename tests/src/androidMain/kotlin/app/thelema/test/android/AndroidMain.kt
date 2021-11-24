@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package app.thelema.android
+package app.thelema.test.android
 
 import android.app.Activity
 import android.os.Bundle
-import app.thelema.gl.GL
-import app.thelema.app.APP
+import app.thelema.android.AndroidApp
 import app.thelema.test.MainTest
+import app.thelema.gl.GL
 
 class AndroidMain : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,8 +35,6 @@ class AndroidMain : Activity() {
         app.view.holder.setFixedSize((metrics.widthPixels * scale / metrics.xdpi).toInt(), (metrics.heightPixels * scale / metrics.ydpi).toInt())
 
         GL.call {
-            println(GL.mainFrameBufferWidth)
-
             MainTest()
         }
     }

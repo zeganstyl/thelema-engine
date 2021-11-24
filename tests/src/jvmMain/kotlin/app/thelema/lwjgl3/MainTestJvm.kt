@@ -34,7 +34,7 @@ object MainTestJvm {
             msaaSamples = 4
         }
 
-        BoxMeshTest().testMain()
+        MainTest()
         //RecastTest().testMain()
 
         app.startLoop()

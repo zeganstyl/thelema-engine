@@ -129,6 +129,6 @@ class ForwardRenderingPipeline: IEntityComponent, IRenderingPipeline {
             swapper.render(vignette)
         }
 
-        ScreenQuad.render(swapper.currentTexture)
+        ScreenQuad.render(swapper.currentTexture, false)
     }
 }

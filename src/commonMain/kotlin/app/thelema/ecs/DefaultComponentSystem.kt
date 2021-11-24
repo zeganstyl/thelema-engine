@@ -22,6 +22,8 @@ import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.MeshBuilder
 import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.particles.IParticleEmitter
+import app.thelema.g3d.particles.IParticleSystem
 import app.thelema.gl.IMesh
 import app.thelema.phys.IRigidBodyPhysicsWorld
 import app.thelema.utils.iterate
@@ -35,6 +37,8 @@ class DefaultComponentSystem: IComponentSystem {
     private val physicsWorlds = ArrayList<IRigidBodyPhysicsWorld>(1)
     private val actions = ArrayList<IAction>()
     private val mainLoops = ArrayList<MainLoop>()
+    private val particleEmitters = ArrayList<IParticleEmitter>()
+    private val particleSystems = HashSet<IParticleSystem>()
 
     private var idCounter = 1
     private val syncMap = HashMap<Int, Any>()
@@ -58,6 +62,7 @@ class DefaultComponentSystem: IComponentSystem {
             if (component is ITransformNode) nodes.add(component)
             if (component is MeshBuilder) meshBuilders.add(component)
             if (component is MainLoop) mainLoops.add(component)
+            if (component is IParticleEmitter) particleEmitters.add(component)
         }
 
         override fun removedComponentFromBranch(component: IEntityComponent) {
@@ -66,6 +71,7 @@ class DefaultComponentSystem: IComponentSystem {
             if (component is ITransformNode) nodes.remove(component)
             if (component is MeshBuilder) meshBuilders.remove(component)
             if (component is MainLoop) mainLoops.remove(component)
+            if (component is IParticleEmitter) particleEmitters.remove(component)
         }
     }
 
@@ -109,6 +115,13 @@ class DefaultComponentSystem: IComponentSystem {
         nodes.iterate { if (it.isTransformUpdateRequested) it.updateTransform() }
 
         if (ActiveCamera.isCameraUpdateRequested) ActiveCamera.updateCamera()
+
+        particleSystems.clear()
+        particleEmitters.iterate {
+            it.particleSystem?.also { particleSystems.add(it) }
+            it.updateParticles(delta)
+        }
+        particleSystems.forEach { it.updateParticleSystem(delta) }
 
         armatures.iterate { it.updateBoneMatrices() }
         meshBuilders.iterate { if (it.isMeshUpdateRequested) it.updateMesh() }

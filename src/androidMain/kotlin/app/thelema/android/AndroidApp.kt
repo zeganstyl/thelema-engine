@@ -57,7 +57,10 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
 
     val renderer = object : GLSurfaceView.Renderer {
         override fun onSurfaceCreated(p0: GL10, p1: javax.microedition.khronos.egl.EGLConfig) {
-            GL.runSingleCalls()
+            cachedWidth = width
+            cachedHeight = height
+
+            GL.initGL()
 
             performDefaultSetup()
         }

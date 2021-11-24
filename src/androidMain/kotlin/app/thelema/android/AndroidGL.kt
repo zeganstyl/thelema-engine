@@ -9,23 +9,23 @@ import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 
 class AndroidGL(val app: AndroidApp): AbstractGL() {
-    override val majVer: Int
-        get() = app.glesVersion
-
-    override val minVer: Int
-        get() = 0
-
-    override val relVer: Int
-        get() = 0
-
-    override val glslVer: Int
-        get() = if (app.glesVersion == 3) 200 else 100
-
     override val mainFrameBufferWidth: Int
         get() = app.view.holder.surfaceFrame.width()
 
     override val mainFrameBufferHeight: Int
         get() = app.view.holder.surfaceFrame.height()
+
+    override fun initVersions() {
+        majVer = app.glesVersion
+        minVer = 0
+        relVer = 0
+
+        glslVer = if (app.glesVersion == 3) 200 else 100
+    }
+
+    override fun isExtensionSupported(extension: String): Boolean {
+        return true
+    }
 
     override fun glGenTextureBase(): Int = arrayToInt { GLES30.glGenTextures(1, it, 0) }
 
@@ -53,6 +53,18 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
 
     override fun enableExtension(extension: String): Boolean {
         return GLES30.glGetString(GLES30.GL_EXTENSIONS).contains(extension)
+    }
+
+    override fun glGetString(name: Int): String? {
+        return GLES30.glGetString(name)
+    }
+
+    override fun glGetIntegerv(pname: Int, params: IntArray) {
+        GLES30.glGetIntegerv(pname, params, 0)
+    }
+
+    override fun glGetFloatv(pname: Int, params: FloatArray) {
+        GLES30.glGetFloatv(pname, params, 0)
     }
 
     override fun glActiveTextureBase(value: Int) {
@@ -316,6 +328,14 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
 
     override fun glUniform4f(location: Int, x: Float, y: Float, z: Float, w: Float) {
         GLES30.glUniform4f(location, x, y, z, w)
+    }
+
+    override fun glUniformMatrix3fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) {
+        GLES30.glUniformMatrix3fv(location, count, transpose, value, offset)
+    }
+
+    override fun glUniformMatrix3fv(location: Int, count: Int, transpose: Boolean, value: IFloatData) {
+        GLES30.glUniformMatrix3fv(location, count, transpose, value.sourceObject as FloatBuffer)
     }
 
     override fun glUniformMatrix4fv(location: Int, count: Int, transpose: Boolean, value: FloatArray, offset: Int) {
