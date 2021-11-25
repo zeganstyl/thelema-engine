@@ -25,20 +25,20 @@ class UVNode() : ShaderNode() {
     override val name: String
         get() = "UV"
 
-    var aUVName: String = "TEXCOORD_0"
+    var uvName: String = "TEXCOORD_0"
 
     val uv = defOut(GLSLVec2("uv"))
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
 
-        aUVName = json.string("aUVName", "TEXCOORD_0")
+        uvName = json.string("aUVName", "TEXCOORD_0")
     }
 
     override fun writeJson(json: IJsonObject) {
         super.writeJson(json)
 
-        json["aUVName"] = aUVName
+        json["aUVName"] = uvName
     }
 
     override fun declarationFrag(out: StringBuilder) {
@@ -46,12 +46,12 @@ class UVNode() : ShaderNode() {
     }
 
     override fun executionVert(out: StringBuilder) {
-        if (uv.isUsed) out.append("${uv.ref} = $aUVName;\n")
+        if (uv.isUsed) out.append("${uv.ref} = $uvName;\n")
     }
 
     override fun declarationVert(out: StringBuilder) {
         if (uv.isUsed) {
-            out.append("$attribute ${uv.typeStr} $aUVName;\n")
+            out.append("$attribute ${uv.typeStr} $uvName;\n")
             out.append("$varOut ${uv.typedRef};\n")
         }
     }

@@ -24,6 +24,8 @@ import app.thelema.math.*
 import app.thelema.res.RES
 import app.thelema.utils.LOG
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty
 
 class ComponentDescriptor<T: IEntityComponent>(
     typeName: String,
@@ -90,6 +92,16 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
+    fun int(property: KMutableProperty1<T, Int>) = property(object : IPropertyDescriptor<T, Int> {
+        override val name: String = property.name
+        override val type = PropertyType.Int
+        override fun setValue(component: T, value: Int) = property.set(component, value)
+        override fun getValue(component: T): Int = property.get(component)
+        override fun default(): Int = 0
+        override fun readJson(component: T, json: IJsonObject) = property.set(component, json.int(name, default()))
+        override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
+    })
+
     /** Define float property */
     fun float(name: String, get: T.() -> Float, set: T.(value: Float) -> Unit) = property(object : IPropertyDescriptor<T, Float> {
         override val name: String = name
@@ -99,6 +111,16 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun default(): Float = 0f
         override fun readJson(component: T, json: IJsonObject) = set(component, json.float(name, default()))
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
+    })
+
+    fun float(property: KMutableProperty1<T, Float>) = property(object : IPropertyDescriptor<T, Float> {
+        override val name: String = property.name
+        override val type = PropertyType.Float
+        override fun setValue(component: T, value: Float) = property.set(component, value)
+        override fun getValue(component: T): Float = property.get(component)
+        override fun default(): Float = 0f
+        override fun readJson(component: T, json: IJsonObject) = property.set(component, json.float(name, default()))
+        override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
 
     /** Define 2-dimensional float vector property */
@@ -132,6 +154,24 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
         override fun writeJson(component: T, json: IJsonObject) {
             get(component).also {
+                if (it.x != 0f || it.y != 0f || it.z != 0f) {
+                    json.setArray(name) { add(it.x, it.y, it.z) }
+                }
+            }
+        }
+    })
+
+    fun vec3(property: KMutableProperty1<T, IVec3>) = property(object : IPropertyDescriptor<T, IVec3> {
+        override val name: String = property.name
+        override val type = PropertyType.Vec3
+        override fun setValue(component: T, value: IVec3) = property.set(component, value)
+        override fun getValue(component: T): IVec3 = property.get(component)
+        override fun default(): IVec3 = MATH.Zero3
+        override fun readJson(component: T, json: IJsonObject) {
+            json.array(name) { property.set(component, Vec3(float(0, 0f), float(1, 0f), float(2, 0f))) }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            property.get(component).also {
                 if (it.x != 0f || it.y != 0f || it.z != 0f) {
                     json.setArray(name) { add(it.x, it.y, it.z) }
                 }
@@ -199,6 +239,16 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
+    fun string(property: KMutableProperty1<T, String>) = property(object : IPropertyDescriptor<T, String> {
+        override val name: String = property.name
+        override val type = PropertyType.String
+        override fun setValue(component: T, value: String) = property.set(component, value)
+        override fun getValue(component: T): String = property.get(component)
+        override fun default(): String = ""
+        override fun readJson(component: T, json: IJsonObject) = property.set(component, json.string(name, default()))
+        override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
+    })
+
     fun stringEnum(name: String, values: List<String>, get: T.() -> String, set: T.(value: String) -> Unit) =
         property(StringEnumPropertyDesc(name, values, get, set))
 
@@ -260,6 +310,41 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
+    fun <V: IEntityComponent> ref(property: KMutableProperty1<T, V?>, requiredComponent: String) = property(object : IPropertyDescriptor<T, V?> {
+        override val name: String = property.name
+        override val type = ComponentRefType(requiredComponent)
+        override fun setValue(component: T, value: V?) = property.set(component, value)
+        override fun getValue(component: T): V? = property.get(component)
+        override fun default(): V? = null
+        @Suppress("UNCHECKED_CAST")
+        override fun copy(component: T, other: T) {
+            val otherRef = property.get(other) as IEntityComponent?
+            if (otherRef != null) {
+                val path = other.entity.getRelativePathTo(otherRef.entity)
+                val ref = component.entity.getEntityByPath(path)?.componentOrNull(requiredComponent)
+                if (ref != null) {
+                    property.set(component, ref as V)
+                } else {
+                    LOG.error("${component.path}: can't link component reference $name to path: $path")
+                }
+            } else {
+                property.set(component, null)
+            }
+        }
+        @Suppress("UNCHECKED_CAST")
+        override fun readJson(component: T, json: IJsonObject) {
+            val path = json.string(name, "")
+            val entity = component.entityOrNull
+            if (path.isNotEmpty() && entity != null) {
+                property.set(component, entity.getRootEntity().makePath(path).componentTyped<V>(requiredComponent))
+            }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            val path = property.get(component)?.entityOrNull?.path ?: ""
+            if (path.isNotEmpty()) json[name] = path
+        }
+    })
+
     /** Define absolute reference-property to component
      * @param name property name
      * @param requiredComponent component name
@@ -291,6 +376,10 @@ class ComponentDescriptor<T: IEntityComponent>(
      * @param set set component reference to this component's property */
     inline fun <reified V: IEntityComponent> ref(name: String, noinline get: T.() -> V?, noinline set: T.(value: V?) -> Unit) {
         ref(name, V::class.simpleName!!, get, set)
+    }
+
+    inline fun <reified V: IEntityComponent> ref(property: KMutableProperty1<T, V?>) {
+        ref(property, V::class.simpleName!!)
     }
 
     inline fun <reified V: IEntityComponent> refAbs(name: String, noinline get: T.() -> V?, noinline set: T.(value: V?) -> Unit) {

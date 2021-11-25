@@ -19,6 +19,7 @@ package app.thelema.shader.node
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.IMesh
+import app.thelema.math.Mat3
 
 /** @author zeganstyl */
 class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
@@ -32,6 +33,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
 
     val cameraPosition = defOut(GLSLVec3("cameraPosition"))
     val viewProjectionMatrix = defOut(GLSLMat4("viewProjectionMatrix"))
+    val rotateToCameraMatrix = defOut(GLSLMat3("rotateToCameraMatrix"))
     val previousViewProjectionMatrix = defOut(GLSLMat4("prevViewProjectionMatrix"))
     val viewMatrix = defOut(GLSLMat4("viewMatrix"))
     val projectionMatrix = defOut(GLSLMat4("projectionMatrix"))
@@ -47,6 +49,12 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
     /** Position after multiply View * vertex */
     val viewSpacePosition = defOut(GLSLVec4("viewSpacePosition"))
 
+    var instancePositionName = "INSTANCE_POSITION"
+    var useInstancePosition = false
+    var alwaysRotateObjectToCamera = false
+
+    private val mat3Tmp by lazy { Mat3() }
+
     init {
         setInput("vertexPosition", vertexPosition)
     }
@@ -61,25 +69,41 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
         shader[viewMatrix.ref] = cam.viewMatrix
         shader[projectionMatrix.ref] = cam.projectionMatrix
         shader[inverseViewProjectionMatrix.ref] = cam.inverseViewProjectionMatrix
+
+        if (alwaysRotateObjectToCamera) {
+            mat3Tmp.set(ActiveCamera.viewMatrix)
+            mat3Tmp.m10 = -mat3Tmp.m10
+            mat3Tmp.m11 = -mat3Tmp.m11
+            mat3Tmp.m12 = -mat3Tmp.m12
+            shader.set(rotateToCameraMatrix.ref, mat3Tmp, true)
+        }
     }
 
     override fun executionFrag(out: StringBuilder) {
         if (normalizedViewVector.isUsed) {
-            out.append("${normalizedViewVector.ref} = normalize(${cameraPosition.asVec3()} - ${vertexPosition.asVec3()});\n")
+            out.append("${normalizedViewVector.ref} = normalize(${cameraPosition.asVec3()} - (${getPositionRef()}));\n")
         }
     }
 
     override fun executionVert(out: StringBuilder) {
         if (clipSpacePosition.isUsed || viewZDepth.isUsed) {
-            out.append("${clipSpacePosition.ref} = ${viewProjectionMatrix.ref} * ${vertexPosition.asVec4()};\n")
+            out.append("${clipSpacePosition.ref} = ${viewProjectionMatrix.ref} * ${getPositionRefVec4()};\n")
             if (viewZDepth.isUsed) {
                 out.append("${viewZDepth.ref} = ${clipSpacePosition.ref}.z;\n")
             }
         }
         if (viewSpacePosition.isUsed) {
-            out.append("${viewSpacePosition.ref} = ${viewMatrix.ref} * ${vertexPosition.asVec4()};\n")
+            out.append("${viewSpacePosition.ref} = ${viewMatrix.ref} * ${getPositionRefVec4()};\n")
         }
     }
+
+    private fun getPositionRef(): String = if (useInstancePosition) {
+        "${if (alwaysRotateObjectToCamera) "${rotateToCameraMatrix.ref} * " else ""}${vertexPosition.asVec3()} + $instancePositionName"
+    } else {
+        "${if (alwaysRotateObjectToCamera) "${rotateToCameraMatrix.ref} * " else ""}${vertexPosition.asVec3()}"
+    }
+
+    private fun getPositionRefVec4(): String = "vec4(${getPositionRef()}, 1.0)"
 
     override fun declarationVert(out: StringBuilder) {
         if (cameraPosition.isUsed || normalizedViewVector.isUsed) {
@@ -91,6 +115,9 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
         if (previousViewProjectionMatrix.isUsed) {
             out.append("uniform ${previousViewProjectionMatrix.typedRef};\n")
         }
+        if (alwaysRotateObjectToCamera) {
+            out.append("uniform ${rotateToCameraMatrix.typedRef};\n")
+        }
         if (viewSpacePosition.isUsed || viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
         if (projectionMatrix.isUsed) out.append("uniform ${projectionMatrix.typedRef};\n")
         if (inverseViewProjectionMatrix.isUsed) out.append("uniform ${inverseViewProjectionMatrix.typedRef};\n")
@@ -101,6 +128,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
             }
         }
         if (viewSpacePosition.isUsed) out.append("$varOut ${viewSpacePosition.typedRef};\n")
+        if (instancePositionName.isNotEmpty()) out.append("$attribute vec3 $instancePositionName;\n")
     }
 
     override fun declarationFrag(out: StringBuilder) {

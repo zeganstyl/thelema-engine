@@ -21,10 +21,12 @@ import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.g3d.BoxMeshTest
 import app.thelema.test.g3d.MeshCubeTest
+import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.g3d.gltf.GLTFLoadMultithreaded
 import app.thelema.test.gl.MeshTest
 import app.thelema.test.gl.ScreenQuadTest
 import app.thelema.test.gl.TriangleBaseTest
+import app.thelema.test.img.Texture2DTest
 import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.ui.UITest
 

@@ -19,10 +19,7 @@ package app.thelema.ecs
 import app.thelema.action.*
 import app.thelema.g3d.Blending
 import app.thelema.g3d.TransformNode
-import app.thelema.g3d.particles.IParticleEmitter
-import app.thelema.g3d.particles.IParticleSystem
-import app.thelema.g3d.particles.ParticleEmitter
-import app.thelema.g3d.particles.ParticleSystem
+import app.thelema.g3d.particles.*
 import app.thelema.gl.Mesh
 import app.thelema.gltf.GLTFSceneInstance
 import app.thelema.img.*
@@ -149,7 +146,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
 
         descriptor({ KotlinScript() }) {
             setAliases(IKotlinScript::class)
-            string("customMainFunctionName", { customMainFunctionName }) { customMainFunctionName = it }
+            string(KotlinScript::customMainFunctionName)
         }
 
         descriptor { SimulationNode() }
@@ -159,11 +156,11 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
 
         descriptor({ Image() }) {
             setAliases(IImage::class)
-            int("width", { width }) { width = it }
-            int("height", { height }) { height = it }
-            int("pixelFormat", { pixelFormat }) { pixelFormat = it }
-            int("pixelChannelType", { pixelChannelType }) { pixelChannelType = it }
-            int("internalFormat", { internalFormat }) { internalFormat = it }
+            int(Image::width)
+            int(Image::height)
+            int(Image::pixelFormat)
+            int(Image::pixelChannelType)
+            int(Image::internalFormat)
         }
         descriptor({ Texture2D() }) {
             setAliases(ITexture2D::class)
@@ -177,10 +174,28 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
 
         descriptor({ ParticleSystem() }) {
             setAliases(IParticleSystem::class)
-        }
 
-        descriptor({ ParticleEmitter() }) {
-            setAliases(IParticleEmitter::class)
+            ref(ParticleSystem::mesh)
+            string(ParticleSystem::instancePositionName)
+            string(ParticleSystem::instanceLifeTimeName)
+
+            descriptor({ ParticleEmitter() }) {
+                setAliases(IParticleEmitter::class)
+
+                ref(ParticleEmitter::particleSystem)
+                int(ParticleEmitter::maxParticles)
+                float(ParticleEmitter::particleEmissionSpeed)
+                float(ParticleEmitter::maxParticleLifeTime)
+            }
+
+            descriptor({ MoveParticleEffect() }) {
+                vec3(MoveParticleEffect::speed)
+            }
+
+            descriptor({ ParticleTextureFrameEffect() }) {
+                int(ParticleTextureFrameEffect::framesU)
+                int(ParticleTextureFrameEffect::framesV)
+            }
         }
 
         Action.setupActionComponents()

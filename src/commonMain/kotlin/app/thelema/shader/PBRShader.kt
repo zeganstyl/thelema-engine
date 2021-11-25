@@ -31,7 +31,7 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
     val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
     val uvNode = addNode(UVNode {
-        aUVName = "UV"
+        uvName = "UV"
     })
 
     val baseColorNode: TextureNode by lazy {

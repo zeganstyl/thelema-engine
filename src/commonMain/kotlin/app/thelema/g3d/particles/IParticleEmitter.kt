@@ -15,11 +15,13 @@ interface IParticleEmitter: IEntityComponent {
 
     var maxParticles: Int
 
-    /** @return visible particles (emitted or already alive) */
+    /** Visible particles (emitted or already alive) */
     val visibleParticles: List<Int>
 
     /** If max lifetime is zero, particle must never die. */
-    var maxLifeTime: Float
+    var maxParticleLifeTime: Float
+
+    var particleEmissionSpeed: Float
 
     fun updateParticles(delta: Float)
 }

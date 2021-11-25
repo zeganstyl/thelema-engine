@@ -30,22 +30,20 @@ class ParticleEmitter: IParticleEmitter {
     val node: ITransformNode
         get() = _node
 
-    override var maxParticles = 1000
+    override var maxParticles = 100
 
-    var particlesEmissionSpeed = 1f
+    override var particleEmissionSpeed = 1f
         set(value) {
             field = value
-            particlesEmissionSpeedInv = 1 / particlesEmissionSpeed
+            particlesEmissionSpeedInv = 1 / particleEmissionSpeed
         }
 
-    var maxParticleLifeTime = 5f
+    override var maxParticleLifeTime = 1f
 
-    var particlesEmissionSpeedInv = 1 / particlesEmissionSpeed
+    var particlesEmissionSpeedInv = 1 / particleEmissionSpeed
         private set
 
     private var emissionTime = 0f
-
-    override var maxLifeTime: Float = 1f
 
     private val toShutdown = ArrayList<Int>()
     private val _visibleParticles = ArrayList<Int>()
@@ -65,11 +63,11 @@ class ParticleEmitter: IParticleEmitter {
             for (i in _visibleParticles.indices) {
                 val particle = _visibleParticles[i]
                 val time = particleSystem.lifeTimes[particle]
-                if (time <= maxParticleLifeTime) {
+                if (time <= this.maxParticleLifeTime) {
                     particleSystem.addParticleLifeTime(particle, delta)
                 }
-                if (time > maxParticleLifeTime) {
-                    particleSystem.setParticleLifeTime(particle, maxParticleLifeTime)
+                if (time > this.maxParticleLifeTime) {
+                    particleSystem.setParticleLifeTime(particle, this.maxParticleLifeTime)
                     toShutdown.add(i)
                 }
             }
@@ -84,7 +82,7 @@ class ParticleEmitter: IParticleEmitter {
                 for (i in 0 until maxParticles) {
                     if (emissionTime <= delta) {
                         emissionTime += particlesEmissionSpeedInv
-                        val particle = particleSystem.emitParticle(this, maxParticleLifeTime, if (emissionTime < delta) emissionTime else 0f)
+                        val particle = particleSystem.emitParticle(this, this.maxParticleLifeTime, if (emissionTime < delta) emissionTime else 0f)
                         _visibleParticles.add(particle)
                         placeParticle(particle, particleSystem.positions[particle])
                     }

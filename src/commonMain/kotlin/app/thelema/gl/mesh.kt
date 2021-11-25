@@ -123,6 +123,7 @@ interface IMesh: IEntityComponent {
         render(shader, scene, 0, indices?.count ?: verticesCount)
 
     fun render(scene: IScene? = null, shaderChannel: String? = null) {
+        val material = material ?: DEFAULT_MATERIAL
         val shader = if (shaderChannel == null) material?.shader else material?.shaderChannels?.get(shaderChannel)
         if (shader != null) render(shader, scene)
     }
@@ -178,7 +179,6 @@ class Mesh(): IMesh {
         set(value) {
             field = value
             if (material == null) material = value?.componentOrNull()
-            if (material == null) material = DEFAULT_MATERIAL
         }
 
     override var positionsName: String = "POSITION"
@@ -483,8 +483,9 @@ class Mesh(): IMesh {
                     }
 
                     descriptor({ PlaneMesh() }) {
-                        float("width", { width }) { width = it }
-                        float("height", { height }) { height = it }
+                        vec3(PlaneMesh::normal)
+                        float(PlaneMesh::width)
+                        float(PlaneMesh::height)
                         int("xDivisions", { hDivisions }) { hDivisions = it }
                         int("yDivisions", { vDivisions }) { vDivisions = it }
                     }

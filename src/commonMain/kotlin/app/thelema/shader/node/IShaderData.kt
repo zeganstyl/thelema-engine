@@ -28,10 +28,7 @@ interface IShaderData {
 
     /** Float number representation of ref */
     val fRef: String
-        get() {
-            val ref = ref
-            return if (ref.contains('.')) ref else "$ref.0"
-        }
+        get() = ref
 
     var inlineCode: String
 

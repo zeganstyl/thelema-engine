@@ -21,7 +21,6 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.IMaterial
 import app.thelema.g3d.ShaderChannel
 import app.thelema.gl.GL_BACK
-import app.thelema.gl.GL_CULL_FACE
 import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
@@ -64,7 +63,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         var node = map[attributeName]
         if (node == null) {
             node = shader.addNode(UVNode())
-            node.aUVName = attributeName
+            node.uvName = attributeName
             map[attributeName] = node
         }
         return node

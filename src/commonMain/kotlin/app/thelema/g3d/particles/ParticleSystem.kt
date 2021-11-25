@@ -1,15 +1,22 @@
 package app.thelema.g3d.particles
 
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.ecs.sibling
 import app.thelema.g3d.IMaterial
+import app.thelema.g3d.mesh.planeMesh
+import app.thelema.gl.GL
 import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexBuffer
 import app.thelema.gl.VertexBuffer
+import app.thelema.img.texture2D
 import app.thelema.math.IVec3
+import app.thelema.math.MATH
+import app.thelema.res.RES
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
+import app.thelema.shader.node.*
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
@@ -22,6 +29,11 @@ class ParticleSystem: IParticleSystem {
             field = value
             if (mesh == null) mesh = value?.component()
             value?.component<IMaterial>()?.shader = shader
+            value?.forEachComponent { if (it is IParticleEffect) addParticleEffect(it) }
+            value?.planeMesh {
+                normal = MATH.Z
+                setSize(1f)
+            }
         }
 
     override var mesh: IMesh? = null
@@ -42,15 +54,28 @@ class ParticleSystem: IParticleSystem {
     override var instancePositionName: String = "INSTANCE_POSITION"
     override var instanceLifeTimeName: String = "INSTANCE_LIFE_TIME"
 
+    private val _aliveParticles = ArrayList<Int>()
+    private val freeParticles = ArrayList<Int>()
+    private val freeParticlesSet = HashSet<Int>()
+
     private val _emitters = ArrayList<IParticleEmitter>()
     override val emitters: List<IParticleEmitter>
         get() = _emitters
 
-    override val particleNodes = ArrayList<IParticleNode>()
+    private var _lifeTimes: MutableList<Float> = ArrayList()
+    override val lifeTimes: List<Float>
+        get() = _lifeTimes
+
+    override val particleEffects = ArrayList<IParticleEffect>()
 
     override val shader: IShader = Shader()
 
     override val vertexBuffer: IVertexBuffer = VertexBuffer()
+
+    private var rebuildDataRequested = false
+
+    private val processingListeners = ArrayList<ParticleProcessingListener>()
+    private val emissionListeners = ArrayList<ParticleEmissionListener>()
 
     /** If [vertexBuffer] capacity not enough, it's size will grow as bufferReserve * (visible particles count)  */
     override var bufferReserve: Float = 1.5f
@@ -63,12 +88,6 @@ class ParticleSystem: IParticleSystem {
     override val positions: List<IVec3>
         get() = _positions
 
-    private var _lifeTimes: MutableList<Float> = ArrayList()
-    override val lifeTimes: List<Float>
-        get() = _lifeTimes
-
-    private val _aliveParticles = ArrayList<Int>()
-
     override var lifeTimesAsAttribute = false
         set(value) {
             if (field != value) {
@@ -80,8 +99,6 @@ class ParticleSystem: IParticleSystem {
             }
         }
 
-    private var rebuildDataRequested = false
-
     override fun setParticleLifeTime(particle: Int, time: Float) {
         _lifeTimes[particle] = time
     }
@@ -90,15 +107,17 @@ class ParticleSystem: IParticleSystem {
         _lifeTimes[particle] += time
     }
 
-    override fun addParticleNode(node: IParticleNode) {
-        val oldSize = vertexBuffer.vertexAttributes.size
-        particleNodes.add(node)
-        node.setupData(this)
-        if (oldSize != vertexBuffer.vertexAttributes.size) rebuildDataRequested = true
+    override fun addParticleEffect(effect: IParticleEffect) {
+        if (effect is ParticleProcessingListener) processingListeners.add(effect)
+        if (effect is ParticleEmissionListener) emissionListeners.add(effect)
+        particleEffects.add(effect)
+        effect.setupParticleData(this)
     }
 
-    override fun removeParticleNode(node: IParticleNode) {
-        particleNodes.remove(node)
+    override fun removeParticleEffect(effect: IParticleEffect) {
+        if (effect is ParticleProcessingListener) processingListeners.remove(effect)
+        if (effect is ParticleEmissionListener) emissionListeners.remove(effect)
+        particleEffects.remove(effect)
     }
 
     override fun addEmitter(emitter: IParticleEmitter) {
@@ -117,19 +136,17 @@ class ParticleSystem: IParticleSystem {
         updateParticleSystemRequested = false
 
         mesh?.also { mesh ->
-            var visibleParticles = 0
+            val visibleParticles = _aliveParticles.size
 
-            _emitters.iterate {
-                it.updateParticles(delta)
-                visibleParticles += it.visibleParticles.size
+            particleEffects.iterate { node ->
+                node.beginProcessParticleSystem(this, visibleParticles, delta)
             }
 
-            particleNodes.iterate { node ->
-                node.beginProcessParticleSystem(this, visibleParticles, delta)
+            processingListeners.iterate { listener ->
                 emitters.iterate { emitter ->
-                    node.beginProcessEmitter(this, emitter, delta)
+                    listener.beginProcessEmitter(this, emitter, delta)
                     emitter.visibleParticles.iterate { particle ->
-                        node.processParticle(this, particle, delta)
+                        listener.processParticle(this, particle, delta)
                     }
                 }
             }
@@ -157,8 +174,75 @@ class ParticleSystem: IParticleSystem {
         }
     }
 
-    val freeParticles = ArrayList<Int>()
-    val freeParticlesSet = HashSet<Int>()
+
+
+    init {
+        // FIXME
+
+        GL.call {
+            shader.apply {
+                val vertex = addNode(VertexNode())
+
+                val particleData = addNode(ParticleDataNode())
+                particleData.maxLifeTime = 5f
+                particleData.instanceLifeTimeName = instanceLifeTimeName
+
+                val scaling = addNode(ParticleScaleNode().apply {
+                    scaling = 5f
+                    lifeTimePercent = particleData.lifeTimePercent
+                    inputPosition = vertex.position
+                })
+
+                val camera = addNode(CameraDataNode(scaling.scaledPosition))
+                camera.useInstancePosition = true
+                camera.alwaysRotateObjectToCamera = true
+
+                val uvNode = addNode(UVNode().apply {
+                    uvName = "UV"
+                })
+
+                val textureFrame = addNode(ParticleUVFrameNode().apply {
+                    inputUv = uvNode.uv
+                    frameSizeU = 1f / 6f
+                    frameSizeV = 1f / 5f
+                })
+
+                val texture = addNode(TextureNode(texture = RES.texture2D("Smoke30Frames.png")))
+                texture.uv = textureFrame.resultUv
+
+                val particleColor = addNode(ParticleColorNode().apply {
+                    lifeTimePercent = particleData.lifeTimePercent
+                    inputColor = texture.color
+                    color1 = GLSLVec4Inline(1f, 1f, 1f, 0f)
+                })
+
+                addNode(OutputNode(camera.clipSpacePosition, particleColor.result))
+
+                depthMask = false
+
+                build()
+
+                println(printCode())
+            }
+        }
+    }
+
+
+    override fun addedChildComponent(component: IEntityComponent) {
+        if (component is IParticleEffect) addParticleEffect(component)
+    }
+
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        if (component is IParticleEffect) addParticleEffect(component)
+    }
+
+    override fun removedChildComponent(component: IEntityComponent) {
+        if (component is IParticleEffect) addParticleEffect(component)
+    }
+
+    override fun removedSiblingComponent(component: IEntityComponent) {
+        if (component is IParticleEffect) removeParticleEffect(component)
+    }
 
     override fun emitParticle(
         emitter: IParticleEmitter,
@@ -168,7 +252,7 @@ class ParticleSystem: IParticleSystem {
         _lifeTimes.size.also { particle ->
             if (!lifeTimesAsAttribute) _lifeTimes.add(initialLifeTime)
             particlesDataChannels.values.forEach { it.data.add(it.newDataElement()) }
-            particleNodes.iterate { it.emitParticle(this, emitter, particle) }
+            emissionListeners.iterate { it.emitParticle(this, emitter, particle) }
         }
     } else {
         freeParticles.removeLast().also { i ->
@@ -181,7 +265,7 @@ class ParticleSystem: IParticleSystem {
         if (freeParticlesSet.add(particle)) {
             freeParticles.add(particle)
             _aliveParticles.remove(particle)
-            particleNodes.iterate { it.shutdownParticle(this, particle) }
+            emissionListeners.iterate { it.shutdownParticle(this, particle) }
         } else {
             LOG.error("You can't shutdown particle $particle, it is already shutdown")
         }
@@ -201,6 +285,8 @@ class ParticleSystem: IParticleSystem {
             }.build(attribute) as IParticleDataChannel<T>
             particlesDataChannels[name] = channel as IParticleDataChannel<Any?>
             rebuildDataRequested = true
+            _aliveParticles.iterate { channel.data.add(channel.newDataElement()) }
+            freeParticles.iterate { channel.data.add(channel.newDataElement()) }
         }
 
         return channel

@@ -17,7 +17,7 @@ interface IParticleSystem: IEntityComponent {
 
     val emitters: List<IParticleEmitter>
 
-    val particleNodes: List<IParticleNode>
+    val particleEffects: List<IParticleEffect>
 
     val shader: IShader
 
@@ -46,13 +46,13 @@ interface IParticleSystem: IEntityComponent {
 
     fun <T: Any> getParticlesData(name: String): MutableList<T> = particlesData[name] as MutableList<T>
 
-    fun addParticleNode(node: IParticleNode)
+    fun addParticleEffect(effect: IParticleEffect)
 
-    fun addParticleNodes(vararg nodes: IParticleNode) {
-        nodes.forEach { addParticleNode(it) }
+    fun addParticleEffects(vararg nodes: IParticleEffect) {
+        nodes.forEach { addParticleEffect(it) }
     }
 
-    fun removeParticleNode(node: IParticleNode)
+    fun removeParticleEffect(effect: IParticleEffect)
 
     fun addEmitter(emitter: IParticleEmitter)
 

@@ -1,18 +1,25 @@
 package app.thelema.g3d.particles
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec2
-import kotlin.random.Random
 
-class ParticleTextureRandomFrame: IParticleNode {
+class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionListener, IEntityComponent {
+    override var entityOrNull: IEntity? = null
+
+    override val componentName: String
+        get() = "ParticleTextureFrameEffect"
+
     /** Horizontal frames count */
     var framesU = 1
-        private set(value) {
+        set(value) {
             field = value
             sizeU = 1f / framesU
         }
+
     /** Vertical frames count */
     var framesV = 1
-        private set(value) {
+        set(value) {
             field = value
             sizeV = 1f / framesV
         }
@@ -36,7 +43,7 @@ class ParticleTextureRandomFrame: IParticleNode {
         framesV = v
     }
 
-    override fun setupData(particleSystem: IParticleSystem) {
+    override fun setupParticleData(particleSystem: IParticleSystem) {
         uvs = particleSystem.getOrCreateDataChannel<IVec2>(2, instanceUvStartName).data
     }
 

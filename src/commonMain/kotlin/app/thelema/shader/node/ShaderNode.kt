@@ -20,6 +20,8 @@ import app.thelema.g3d.IScene
 import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 /** @author zeganstyl */
 abstract class ShaderNode: IShaderNode {
@@ -89,4 +91,31 @@ abstract class ShaderNode: IShaderNode {
     override fun readJson(json: IJsonObject) {}
 
     override fun writeJson(json: IJsonObject) {}
+
+    /** Create shader input with specified name */
+    fun shaderInput(name: String): ReadWriteProperty<IShaderNode, IShaderData> =
+        object : ReadWriteProperty<IShaderNode, IShaderData> {
+            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData = thisRef.input[name] ?: GLSL.zeroFloat
+            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData) {
+                thisRef.setInput(name, value)
+            }
+        }
+
+    /** Create shader input named as property */
+    fun shaderInput(default: IShaderData = GLSL.zeroFloat): ReadWriteProperty<IShaderNode, IShaderData> =
+        object : ReadWriteProperty<IShaderNode, IShaderData> {
+            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData = thisRef.input[property.name] ?: default
+            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData) {
+                thisRef.setInput(property.name, value)
+            }
+        }
+
+    /** Create shader input named as property */
+    fun shaderInputOrNull(): ReadWriteProperty<IShaderNode, IShaderData?> =
+        object : ReadWriteProperty<IShaderNode, IShaderData?> {
+            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData? = thisRef.input[property.name]
+            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData?) {
+                thisRef.setInput(property.name, value)
+            }
+        }
 }

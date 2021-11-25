@@ -30,45 +30,16 @@ class PBRNode(): ShaderNode() {
     override val name: String
         get() = "PBR"
 
-    var worldPosition: IShaderData
-        get() = input[WorldPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(WorldPosition, value)
-
-    var normalizedViewVector: IShaderData
-        get() = input[NormalizedViewVector] ?: GLSL.zeroFloat
-        set(value) = setInput(NormalizedViewVector, value)
-
-    var baseColor: IShaderData?
-        get() = input[BaseColor]
-        set(value) = setInput(BaseColor, value)
-
-    var alpha: IShaderData?
-        get() = input["alpha"]
-        set(value) = setInput("alpha", value)
-
-    var normal: IShaderData?
-        get() = input[Normal]
-        set(value) = setInput(Normal, value)
-
-    var occlusion: IShaderData?
-        get() = input[Occlusion]
-        set(value) = setInput(Occlusion, value)
-
-    var roughness: IShaderData?
-        get() = input[Roughness]
-        set(value) = setInput(Roughness, value)
-
-    var metallic: IShaderData?
-        get() = input[Metallic]
-        set(value) = setInput(Metallic, value)
-
-    var emissive: IShaderData?
-        get() = input["emissive"]
-        set(value) = setInput("emissive", value)
-
-    var clipSpacePosition: IShaderData?
-        get() = input[ClipSpacePosition]
-        set(value) = setInput(ClipSpacePosition, value)
+    var worldPosition by shaderInput()
+    var normalizedViewVector by shaderInput()
+    var baseColor by shaderInputOrNull()
+    var alpha by shaderInputOrNull()
+    var normal by shaderInputOrNull()
+    var occlusion by shaderInputOrNull()
+    var roughness by shaderInputOrNull()
+    var metallic by shaderInputOrNull()
+    var emissive by shaderInputOrNull()
+    var clipSpacePosition by shaderInputOrNull()
 
     val result: IShaderData = defOut(GLSLVec4("result"))
 
@@ -816,16 +787,5 @@ f_diffuse += getIBLRadianceLambertian(n, v, materialInfo.perceptualRoughness, ma
     return vec4(color, baseColor.a);
 }
 """
-    }
-
-    companion object {
-        const val WorldPosition = "worldPosition"
-        const val NormalizedViewVector = "normalizedViewVector"
-        const val BaseColor = "baseColor"
-        const val Normal = "normal"
-        const val Occlusion = "occlusion"
-        const val Roughness = "roughness"
-        const val Metallic = "metallic"
-        const val ClipSpacePosition = "clipSpacePosition"
     }
 }
