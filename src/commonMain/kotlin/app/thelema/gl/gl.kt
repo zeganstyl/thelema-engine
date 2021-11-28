@@ -21,6 +21,7 @@ import app.thelema.data.IFloatData
 import app.thelema.data.IIntData
 import app.thelema.img.IImage
 import app.thelema.math.IVec4
+import app.thelema.shader.IShader
 import app.thelema.utils.LOG
 
 /**
@@ -524,6 +525,13 @@ interface IGL {
     fun glClearColor(red: Float, green: Float, blue: Float, alpha: Float)
 
     fun glClearColor(vec: IVec4) = glClearColor(vec.x, vec.y, vec.z, vec.w)
+
+    fun glClearColor(rgba8888: Int) = glClearColor(
+        (rgba8888 and -0x1000000 ushr 24) * inv255,
+        (rgba8888 and 0x00ff0000 ushr 16) * inv255,
+        (rgba8888 and 0x0000ff00 ushr 8) * inv255,
+        (rgba8888 and 0x000000ff) * inv255
+    )
 
     fun glClearDepthf(depth: Float) { throw NotImplementedError() }
 
@@ -1061,6 +1069,10 @@ interface IGL {
         } else {
             LOG.error(getErrorString(error))
         }
+    }
+
+    companion object {
+        private const val inv255 = 1f / 255f
     }
 }
 

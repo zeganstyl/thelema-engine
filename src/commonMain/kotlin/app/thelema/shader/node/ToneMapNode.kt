@@ -29,7 +29,7 @@ class ToneMapNode(
     inputColor: IShaderData = GLSL.oneFloat,
     var toneMapType: Int = LinearToSRGBToneMap
 ): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Tone Map"
 
     var inputColor

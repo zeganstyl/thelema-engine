@@ -18,7 +18,7 @@ package app.thelema.shader.node
 
 /** @author zeganstyl */
 class SplitVec4Node(vector: IShaderData = GLSL.zeroFloat): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Split Vec4"
 
     var vector

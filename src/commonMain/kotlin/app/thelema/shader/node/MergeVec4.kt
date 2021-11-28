@@ -23,7 +23,7 @@ class MergeVec4(
     z: IShaderData = GLSL.zeroFloat,
     w: IShaderData = GLSL.oneFloat
 ): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Merge Vec4"
 
     var x: IShaderData

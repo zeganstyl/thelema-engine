@@ -81,7 +81,6 @@ var DEFAULT_SHADER: IShader? = null
     get() {
         if (field == null)
             field = SimpleShader3D(false).also {
-                it.name = "Default Shader"
                 it.renderAttributeName = ""
                 it.color = Vec4(0.5f, 0.5f, 0.5f, 1f)
                 GL.call { it.initShader() }

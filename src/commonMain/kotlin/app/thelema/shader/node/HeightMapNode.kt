@@ -27,7 +27,7 @@ class HeightMapNode(
     vertexPosition: IShaderData,
     var texture: ITexture? = null
 ): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Height Map"
 
     /** Component from [vertexPosition] will be used as U texture coordinate */

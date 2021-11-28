@@ -23,9 +23,7 @@ import app.thelema.g3d.IScene
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.img.ITexture
-import app.thelema.math.IMat4
-import app.thelema.math.IVec3
-import app.thelema.math.Vec3
+import app.thelema.math.*
 
 /** @author zeganstyl */
 class PointLight: ILight {
@@ -45,7 +43,7 @@ class PointLight: ILight {
 
     override var isLightEnabled: Boolean = true
     override var intensity = 1f
-    override var color: IVec3 = Vec3(1f, 1f, 1f)
+    override var color: IVec4 = Vec4(1f)
 
     override var range = 100f
 

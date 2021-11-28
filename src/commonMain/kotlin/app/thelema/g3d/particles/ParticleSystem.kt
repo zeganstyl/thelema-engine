@@ -271,6 +271,7 @@ class ParticleSystem: IParticleSystem {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T> getOrCreateDataChannel(dimension: Int, name: String): IParticleDataChannel<T> {
         val attribute = vertexBuffer.getOrCreateAttribute(dimension, name)
 

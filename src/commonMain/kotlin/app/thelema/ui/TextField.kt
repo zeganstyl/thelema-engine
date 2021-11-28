@@ -327,7 +327,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                 if (style.messageFontColor != null) {
                     messageFont!!.color = Color.mulAlpha(style.messageFontColor!!, Color.getAlpha(color) * parentAlpha)
                 } else {
-                    messageFont!!.color = Color.mulAlpha(Color.LIGHT_GRAY_INT, Color.getAlpha(color) * parentAlpha)
+                    messageFont!!.color = Color.mulAlpha(Color.LIGHT_GRAY, Color.getAlpha(color) * parentAlpha)
                 }
                 drawMessageText(batch, messageFont, x + bgLeftWidth, y + textY + yOffset, width - bgLeftWidth - bgRightWidth)
             }

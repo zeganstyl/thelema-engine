@@ -37,10 +37,10 @@ class Vec4Widget(): FloatsWidget(), PropertyProvider<IVec4> {
     override var get: () -> IVec4 = { MATH.Zero3One1 }
 
     init {
-        addFloatField(xField, "X", Color.RED_INT, { value.x }) { value.x = it }
-        addFloatField(yField, "Y", Color.GREEN_INT, { value.y }) { value.y = it }
+        addFloatField(xField, "X", Color.RED, { value.x }) { value.x = it }
+        addFloatField(yField, "Y", Color.GREEN, { value.y }) { value.y = it }
         addFloatField(zField, "Z", Color.CYAN_INT, { value.z }) { value.z = it }
-        addFloatField(wField, "W", Color.GRAY_INT, { value.w }) { value.w = it }
+        addFloatField(wField, "W", Color.GRAY, { value.w }) { value.w = it }
     }
 
     override fun act(delta: Float) {

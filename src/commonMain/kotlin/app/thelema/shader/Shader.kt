@@ -16,21 +16,21 @@
 
 package app.thelema.shader
 
+import app.thelema.ecs.ECS
+import app.thelema.ecs.IEntity
 import app.thelema.g3d.IScene
 import app.thelema.gl.*
-import app.thelema.shader.node.IShaderData
-import app.thelema.shader.node.IShaderNode
+import app.thelema.shader.node.*
 import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 open class Shader(
     vertCode: String = "",
     fragCode: String = "",
-    override var name: String = "",
     compile: Boolean = true,
 
     /** Precision will be added as first line */
-    var floatPrecision: String = if (GL.isGLES) "precision mediump float;\n" else "",
+    override var floatPrecision: String = "mediump",
     override var version: Int = 110,
     override var profile: String = ""
 ): IShader {
@@ -69,6 +69,11 @@ open class Shader(
 
     override var depthMask: Boolean = true
 
+    override val componentName: String
+        get() = "Shader"
+
+    override var entityOrNull: IEntity? = null
+
     init {
         if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
             load(vertCode, fragCode)
@@ -78,10 +83,12 @@ open class Shader(
     override fun getUID(data: IShaderData): String = uids[data] ?: ""
 
     override fun vertSourceCode(title: String, pad: Int): String =
-        numerateLines(title, getVersionStr() + floatPrecision + vertCode, pad)
+        numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vertCode, pad)
 
     override fun fragSourceCode(title: String, pad: Int): String =
-        numerateLines(title, getVersionStr() + floatPrecision + fragCode, pad)
+        numerateLines(title, getVersionStr() + getFloatPrecisionStr() + fragCode, pad)
+
+    private fun getFloatPrecisionStr(): String = if (GL.isGLES) "precision $floatPrecision float;\n" else ""
 
     private fun getVersionStr(): String = if (GL.isGLES) {
         if (version < 330) "#version 100\n" else "#version 300 es\n"
@@ -95,6 +102,7 @@ open class Shader(
 
     override fun load(vertCode: String, fragCode: String) {
         val ver = getVersionStr()
+        val floatPrecision = getFloatPrecisionStr()
 
         val fullVertCode = ver + floatPrecision + vertCode
         val fullFragCode = ver + floatPrecision + fragCode
@@ -129,8 +137,9 @@ open class Shader(
                 uniforms[name] = location
             }
         } else {
-            if (name.isNotEmpty()) {
-                LOG.error("==== Errors in shader \"$name\" ====")
+            val path = entityOrNull?.path ?: ""
+            if (path.isNotEmpty()) {
+                LOG.error("==== Errors in shader \"$path\" ====")
             } else {
                 LOG.error("==== Errors in shader ====")
             }
@@ -339,5 +348,42 @@ open class Shader(
         fragmentShaderHandle = 0
         programHandle = 0
         super.destroy()
+    }
+
+    companion object {
+        fun setupShaderComponents() {
+            ECS.descriptor({ Shader() }) {
+                setAliases(IShader::class)
+
+                int(Shader::version)
+                string(Shader::profile)
+                string(Shader::floatPrecision)
+                bool(Shader::depthMask)
+
+                descriptor({ VertexNode() }) {
+
+                }
+
+                descriptor({ CameraDataNode() }) {
+
+                }
+
+                descriptor({ UVNode() }) {
+
+                }
+
+                descriptor({ TextureNode() }) {
+
+                }
+
+                descriptor({ PBRNode() }) {
+
+                }
+
+                descriptor({ OutputNode() }) {
+
+                }
+            }
+        }
     }
 }

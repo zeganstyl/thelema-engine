@@ -271,7 +271,7 @@ class MultiSplitPane(
         return if (getHandleContaining(x, y) != null) {
             this
         } else {
-            super.hit(x, y, touchable)
+            super.hit(x, y, touchable).let { if (it == this) null else it }
         }
     }
 

@@ -17,8 +17,6 @@
 package app.thelema.ui
 
 import app.thelema.font.BitmapFont
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
 import app.thelema.utils.Color
 
 /** The style for a list, see [UIList].
@@ -27,7 +25,7 @@ import app.thelema.utils.Color
  */
 class ListStyle(
     var font: BitmapFont = DSKIN.font(),
-    var fontColorSelected: Int = Color.GREEN_INT,
+    var fontColorSelected: Int = Color.GREEN,
     var fontColorUnselected: Int = -1,
     var selection: Drawable? = null
 ) {

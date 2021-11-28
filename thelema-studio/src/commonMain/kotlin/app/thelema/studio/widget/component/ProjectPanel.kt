@@ -26,7 +26,7 @@ import app.thelema.res.RES
 import app.thelema.studio.Studio
 import app.thelema.ui.TextButton
 
-class ProjectPanel: ComponentPanel<Project>(componentName<Project>()) {
+class ProjectPanel: ComponentPanel<Project>(Project::class) {
     var newResources = 0
 
     init {

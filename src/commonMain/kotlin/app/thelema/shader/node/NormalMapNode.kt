@@ -20,7 +20,7 @@ package app.thelema.shader.node
 class NormalMapNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
     constructor(block: NormalMapNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "Normal Map"
 
     /** normalize(cameraPosition - worldPosition), for back-facing surface */

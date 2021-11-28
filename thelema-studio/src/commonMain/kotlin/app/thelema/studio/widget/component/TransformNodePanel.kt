@@ -21,7 +21,7 @@ import app.thelema.studio.widget.Vec3Widget
 import app.thelema.studio.widget.Vec4Widget
 import app.thelema.ui.TextButton
 
-class TransformNodePanel: ComponentPanel<ITransformNode>(componentName<ITransformNode>(), true) {
+class TransformNodePanel: ComponentPanel<ITransformNode>(ITransformNode::class, true) {
     init {
         val block: (String) -> Unit = { component?.requestTransformUpdate() }
         fieldWidget<Vec3Widget>("position") {

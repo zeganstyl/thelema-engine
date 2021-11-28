@@ -28,13 +28,14 @@ import app.thelema.test.gl.ScreenQuadTest
 import app.thelema.test.gl.TriangleBaseTest
 import app.thelema.test.img.Texture2DTest
 import app.thelema.test.phys.BoxShapeTest
+import app.thelema.test.phys.TrimeshShapeTest
 import app.thelema.test.ui.UITest
 
 class MainTest {
     init {
         //BoxMeshTest().testMain()
 
-        InstancedParticlesTest().testMain()
+        TrimeshShapeTest().testMain()
 
 //        val box = BoxMesh { setSize(2f, 1f, 1f) }
 //        val shader = SimpleShader3D()

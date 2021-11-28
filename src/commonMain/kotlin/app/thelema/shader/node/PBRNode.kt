@@ -27,7 +27,7 @@ import app.thelema.gl.IMesh
 class PBRNode(): ShaderNode() {
     constructor(block: PBRNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "PBR"
 
     var worldPosition by shaderInput()
@@ -83,7 +83,7 @@ class PBRNode(): ShaderNode() {
             for (i in lights.indices) {
                 val light = lights[i]
                 if (light.isLightEnabled) {
-                    shader["u_Lights[$i].color"] = light.color
+                    light.color.also { shader.set("u_Lights[$i].color", it.r, it.g, it.b) }
                     shader["u_Lights[$i].intensity"] = light.intensity
                     shader["u_Lights[$i].direction"] = light.direction
                     shader["u_Lights[$i].position"] = light.node.worldPosition

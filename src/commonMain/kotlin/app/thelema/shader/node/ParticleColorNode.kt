@@ -1,7 +1,7 @@
 package app.thelema.shader.node
 
 class ParticleColorNode: ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "ParticleColorNode"
 
     var lifeTimePercent by shaderInput(GLSL.oneFloat)

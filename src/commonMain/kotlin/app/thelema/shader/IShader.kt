@@ -17,6 +17,7 @@
 package app.thelema.shader
 
 import app.thelema.data.IFloatData
+import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
 import app.thelema.gl.GL
 import app.thelema.gl.IVertexAttribute
@@ -24,12 +25,15 @@ import app.thelema.math.*
 import app.thelema.gl.IMesh
 import app.thelema.shader.node.IShaderData
 import app.thelema.shader.node.IShaderNode
+import app.thelema.utils.Color
 
 /** @author zeganstyl */
-interface IShader {
+interface IShader: IEntityComponent {
     /** GLSL version, by default is 110
      * [OpenGL documentation](https://www.khronos.org/opengl/wiki/Core_Language_(GLSL)#Version) */
     var version: Int
+
+    var floatPrecision: String
 
     /** If profile is empty, Core profile will be used.
      * [OpenGL documentation](https://www.khronos.org/opengl/wiki/OpenGL_Context#Context_types) */
@@ -61,8 +65,6 @@ interface IShader {
 
     /** From nodes can be generated source code */
     val nodes: MutableList<IShaderNode>
-
-    var name: String
 
     /** Sometimes may be useful for custom shaders. For example, to bind textures before render mesh */
     var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit
@@ -289,6 +291,14 @@ interface IShader {
 
     operator fun set(name: String, value: Int) = setUniformi(name, value)
 
+    /** Set vec4 color from RGBA8888 integer value */
+    fun setColor(name: String, rgba8888: Int) = set(name,
+        (rgba8888 and -0x1000000 ushr 24) * inv255,
+        (rgba8888 and 0x00ff0000 ushr 16) * inv255,
+        (rgba8888 and 0x0000ff00 ushr 8) * inv255,
+        (rgba8888 and 0x000000ff) * inv255
+    )
+
     operator fun set(name: String, value: Float) = GL.glUniform1f(getUniformLocation(name), value)
 
     /** Reduce value to float and set to uniform */
@@ -331,7 +341,9 @@ interface IShader {
     }
 
     /** Disposes all resources associated with this shader. Must be called when the shader is no longer used.  */
-    fun destroy() {
+    override fun destroy() {
+        super.destroy()
+
         GL.glUseProgram(0)
         GL.glDeleteShader(vertexShaderHandle)
         GL.glDeleteShader(fragmentShaderHandle)
@@ -339,5 +351,9 @@ interface IShader {
 
         attributes.clear()
         uniforms.clear()
+    }
+
+    companion object {
+        private const val inv255 = 1f / 255f
     }
 }

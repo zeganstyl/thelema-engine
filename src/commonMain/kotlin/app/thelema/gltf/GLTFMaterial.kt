@@ -80,8 +80,12 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         val uvNodes = HashMap<String, UVNode>()
 
-        val shader = Shader(version = if (gltf.conf.ibl && gltf.conf.shaderVersion < 130) 130 else gltf.conf.shaderVersion)
-        shader.name = name
+        val materialEntity = material.getOrCreateEntity()
+        val shaderEntity = materialEntity.entity("Default")
+
+        val shader = shaderEntity.component<Shader> {
+            version = if (gltf.conf.ibl && gltf.conf.shaderVersion < 130) 130 else gltf.conf.shaderVersion
+        }
 
         material.shader = shader
         material.shaderChannels[ShaderChannel.Default] = shader

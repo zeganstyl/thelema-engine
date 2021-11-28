@@ -20,8 +20,11 @@ import app.thelema.ecs.*
 import app.thelema.studio.ScriptFile
 import app.thelema.studio.widget.*
 import app.thelema.ui.*
+import kotlin.reflect.KClass
 
 open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaultSetup: Boolean = true): Section(componentName) {
+    constructor(c: KClass<T>, defaultSetup: Boolean = true): this(c.simpleName!!, defaultSetup)
+
     open var component: T? = null
 
     val fieldWidgets = HashMap<String, Actor>()

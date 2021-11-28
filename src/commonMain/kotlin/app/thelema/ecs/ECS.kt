@@ -18,6 +18,7 @@ package app.thelema.ecs
 
 import app.thelema.action.*
 import app.thelema.g3d.Blending
+import app.thelema.g3d.Material
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.particles.*
 import app.thelema.gl.Mesh
@@ -28,6 +29,7 @@ import app.thelema.input.MouseHandler
 import app.thelema.script.BakedKotlinScripts
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
+import app.thelema.shader.Shader
 import app.thelema.utils.iterate
 import kotlin.native.concurrent.ThreadLocal
 
@@ -105,11 +107,13 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
     fun setupDefaultComponents() {
         TransformNode.setupTransformNodeComponents()
         Mesh.setupMeshComponents()
+        Shader.setupShaderComponents()
 
         descriptor({ app.thelema.g3d.Material() }) {
             setAliases(app.thelema.g3d.IMaterial::class)
             stringEnum("alphaMode", Blending.items, { alphaMode }) { alphaMode = it }
             int("translucentPriority", { translucentPriority }) { translucentPriority = it }
+            refAbs(Material::shader)
         }
         descriptor({ app.thelema.g3d.Armature() }) {
             setAliases(app.thelema.g3d.IArmature::class)

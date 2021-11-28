@@ -29,7 +29,7 @@ import app.thelema.gl.IMesh
 class GBufferOutputNode(): ShaderNode() {
     constructor(block: GBufferOutputNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "G-Buffer Output"
 
     /** Clip space vertex position */

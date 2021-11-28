@@ -16,6 +16,7 @@
 
 package app.thelema.math
 
+import app.thelema.utils.Color
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -136,6 +137,11 @@ interface IVec4: IVec {
         this.y = y
         this.z = z
         this.w = w
+        return this
+    }
+
+    fun setColor(rgba8888: Int): IVec4 {
+        Color.int(rgba8888)
         return this
     }
 

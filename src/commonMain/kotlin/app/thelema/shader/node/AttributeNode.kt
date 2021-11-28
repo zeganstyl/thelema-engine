@@ -25,7 +25,7 @@ class AttributeNode(
     attributeName: String = "",
     type: String = GLSLType.Float
 ): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Attribute"
 
     var type: String

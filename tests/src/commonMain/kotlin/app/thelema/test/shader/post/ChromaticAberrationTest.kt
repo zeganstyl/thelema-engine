@@ -34,7 +34,7 @@ class ChromaticAberrationTest: Test {
     override fun testMain() {
         val box = BoxMesh { setSize(2f) }
         val boxShader = SimpleShader3D {
-            color = Color.WHITE
+            setColor(Color.WHITE)
         }
 
         val frameBuffer = SimpleFrameBuffer()

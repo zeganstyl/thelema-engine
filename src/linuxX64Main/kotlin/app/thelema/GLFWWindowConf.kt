@@ -18,6 +18,7 @@ package app.thelema
 
 import app.thelema.fs.FileLocation
 import app.thelema.math.IVec4
+import app.thelema.math.Vec4
 import app.thelema.utils.Color
 
 open class GLFWWindowConf {
@@ -35,7 +36,7 @@ open class GLFWWindowConf {
     var windowListener: GLFWWindowListener? = null
     var fullscreenMode: GLFWVideoMode? = null
     var title: String = THELEMA.nameVer
-    var initialBackgroundColor: IVec4 = Color.BLACK
+    var initialBackgroundColor: IVec4 = Vec4(Color.BLACK)
     var initialVisible: Boolean = true
     var vSyncEnabled: Boolean = true
 

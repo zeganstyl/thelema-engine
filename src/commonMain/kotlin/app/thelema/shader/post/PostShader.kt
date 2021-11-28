@@ -25,7 +25,6 @@ import app.thelema.shader.Shader
 /** @author zeganstyl */
 open class PostShader(
     fragCode: String,
-    name: String = "",
     compile: Boolean = true,
     defaultPrecision: String = if (GL.isGLES) "precision mediump float;\n" else "",
     uvName: String = "uv",
@@ -44,7 +43,6 @@ void main() {
     gl_Position = vec4($attributePositionName, 0.0, 1.0);
 }""",
         fragCode = fragCode,
-        name = name,
         compile = compile,
         floatPrecision = defaultPrecision,
         version = version

@@ -18,6 +18,7 @@ package app.thelema.lwjgl3
 
 import app.thelema.fs.FileLocation
 import app.thelema.math.IVec4
+import app.thelema.math.Vec4
 import app.thelema.utils.Color
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
@@ -71,7 +72,7 @@ class Lwjgl3WindowConf() {
     var iconPaths: Array<String>? = null
     var fullscreenMode: Lwjgl3DisplayMode? = null
     var title: String = ""
-    var initialBackgroundColor: IVec4 = Color.BLACK
+    var initialBackgroundColor: IVec4 = Vec4(Color.BLACK)
     var initialVisible: Boolean = true
     var vSyncEnabled: Boolean = true
 

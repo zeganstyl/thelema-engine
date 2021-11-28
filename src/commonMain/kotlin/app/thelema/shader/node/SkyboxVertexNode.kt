@@ -29,7 +29,7 @@ class SkyboxVertexNode(
 ): ShaderNode() {
     constructor(block: SkyboxVertexNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "Skybox Vertex"
 
     var positionsName = "POSITION"

@@ -67,7 +67,7 @@ class DirectionalLight: ILight {
     var lightPositionOffset: Float = 50f
 
     override var intensity: Float = 1f
-    override val color: IVec3 = Vec3(1f)
+    override val color: IVec4 = Vec4(1f)
     override val direction: IVec3 = Vec3(0f, 0f, 1f)
     override var isLightEnabled: Boolean = true
     override var isShadowEnabled: Boolean = false

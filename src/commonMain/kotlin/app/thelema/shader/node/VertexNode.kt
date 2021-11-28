@@ -34,7 +34,7 @@ class VertexNode(
 ): ShaderNode() {
     constructor(block: VertexNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "Vertex"
 
     var positionName = "POSITION"

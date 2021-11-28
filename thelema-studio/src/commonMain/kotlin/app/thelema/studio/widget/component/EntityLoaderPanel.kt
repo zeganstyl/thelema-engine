@@ -4,7 +4,7 @@ import app.thelema.ecs.EntityLoader
 import app.thelema.studio.Studio
 import app.thelema.ui.TextButton
 
-class EntityLoaderPanel: ComponentPanel<EntityLoader>(componentName<EntityLoader>()) {
+class EntityLoaderPanel: ComponentPanel<EntityLoader>(EntityLoader::class) {
     init {
         content.add(TextButton("Open scene") {
             onClick {

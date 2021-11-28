@@ -100,10 +100,12 @@ class SelectionByColorTest: Test {
                 selected = colorMap[colorId]
             }
 
+            val defaultColor = Vec4(0.75f, 0.75f, 0.75f, 1f)
+
             // render scene
             for (i in meshes.indices) {
                 val mesh = meshes[i]
-                sceneShader.color?.set(if (selected == mesh) highlightColor else Color.LIGHT_GRAY)
+                sceneShader.color?.set(if (selected == mesh) highlightColor else defaultColor)
                 mesh.render(sceneShader)
             }
         }

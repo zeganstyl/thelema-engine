@@ -33,7 +33,7 @@ class OutputNode(
 ): ShaderNode() {
     constructor(block: OutputNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "Output"
 
     /** Clip space vertex position */

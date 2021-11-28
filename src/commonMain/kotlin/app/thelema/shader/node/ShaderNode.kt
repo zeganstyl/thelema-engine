@@ -16,6 +16,7 @@
 
 package app.thelema.shader.node
 
+import app.thelema.ecs.IEntity
 import app.thelema.g3d.IScene
 import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
@@ -29,6 +30,8 @@ abstract class ShaderNode: IShaderNode {
     protected val outputInternal = LinkedHashMap<String, IShaderData>()
 
     override var shaderOrNull: IShader? = null
+
+    override var entityOrNull: IEntity? = null
 
     override val input: Map<String, IShaderData>
         get() = inputInternal

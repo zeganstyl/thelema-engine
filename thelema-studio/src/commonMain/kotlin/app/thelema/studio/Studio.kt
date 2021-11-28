@@ -40,6 +40,10 @@ object Studio: AppListener, IJsonObjectIO {
         addTab(projectTab)
     }
 
+    val scenesSplit = MultiSplitPane( true) {
+        setWidgets(tabsPane.tabContent)
+    }
+
     val root = VBox {
         fillParent = true
         add(menuBar).growX()
@@ -49,7 +53,7 @@ object Studio: AppListener, IJsonObjectIO {
             add(tabsPane.titleBar).growX()
         }).growX()
         add(UIImage(SKIN.hLine)).growX().height(1f)
-        add(tabsPane.tabContent).grow()
+        add(scenesSplit).grow()
         add(UIImage(SKIN.hLine)).growX().height(1f)
         add(statusBar).growX()
     }
@@ -91,6 +95,18 @@ object Studio: AppListener, IJsonObjectIO {
         }
     }
 
+    var componentScenePanel: IComponentScenePanel<IEntityComponent>? = null
+        set(value) {
+            field = value
+            val split = scenesSplit.splits.getOrNull(0) ?: 1f
+            if (value != null) {
+                scenesSplit.setWidgets(tabsPane.tabContent, value.componentSceneContent)
+                scenesSplit.setSplit(0, split)
+            } else {
+                scenesSplit.setWidgets(tabsPane.tabContent)
+            }
+        }
+
     init {
         APP.setupPhysicsComponents()
 
@@ -120,12 +136,12 @@ object Studio: AppListener, IJsonObjectIO {
         }
     }
 
-    fun showStatus(text: String, color: Int = Color.WHITE_INT) {
+    fun showStatus(text: String, color: Int = Color.WHITE) {
         statusLabel.text = text
         statusLabel.color = color
     }
 
-    fun showStatusAlert(text: String, color: Int = Color.RED_INT) {
+    fun showStatusAlert(text: String, color: Int = Color.RED) {
         statusLabel.text = text
         statusLabel.color = color
     }

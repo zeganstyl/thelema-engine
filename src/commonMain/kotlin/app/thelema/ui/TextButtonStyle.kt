@@ -30,8 +30,8 @@ open class TextButtonStyle(
     var label: LabelStyle = DSKIN.label
 
     var fontColor: Int = -1
-    var downFontColor: Int? = Color.RED_INT
-    var overFontColor: Int? = Color.GREEN_INT
+    var downFontColor: Int? = Color.RED
+    var overFontColor: Int? = Color.GREEN
     var checkedFontColor: Int? = null
     var checkedOverFontColor: Int? = null
     var disabledFontColor: Int? = null

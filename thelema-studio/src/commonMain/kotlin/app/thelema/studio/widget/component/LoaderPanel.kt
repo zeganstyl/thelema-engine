@@ -19,7 +19,7 @@ package app.thelema.studio.widget.component
 import app.thelema.res.ILoader
 import app.thelema.ui.TextButton
 
-class LoaderPanel: ComponentPanel<ILoader>(componentName<ILoader>()) {
+class LoaderPanel: ComponentPanel<ILoader>(ILoader::class) {
     init {
         content.add(TextButton("Load") {
             onClick {

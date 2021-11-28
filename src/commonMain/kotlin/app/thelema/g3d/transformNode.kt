@@ -200,10 +200,10 @@ class TransformNode: ITransformNode {
                 descriptor { Skybox() }
                 descriptor({ PointLight() }) {
                     float("range", { range }) { range = it }
-                    vec3("color", { color }) { color.set(it) }
+                    vec4("color", { color }) { color.set(it) }
                 }
                 descriptor({ DirectionalLight() }) {
-                    vec3("color", { color }) { color.set(it) }
+                    vec4("color", { color }) { color.set(it) }
                 }
                 descriptor({ Camera() }) {
                     setAliases(ICamera::class)

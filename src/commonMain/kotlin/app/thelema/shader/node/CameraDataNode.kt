@@ -23,7 +23,7 @@ import app.thelema.math.Mat3
 
 /** @author zeganstyl */
 class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Camera Data"
 
     /** World space vertex position */

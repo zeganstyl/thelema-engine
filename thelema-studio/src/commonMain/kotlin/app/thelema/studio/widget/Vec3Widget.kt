@@ -36,8 +36,8 @@ class Vec3Widget(): FloatsWidget(), PropertyProvider<IVec3> {
     override var get: () -> IVec3 = { MATH.Zero3 }
 
     init {
-        addFloatField(xField, "X", Color.RED_INT, { value.x }) { value.x = it }
-        addFloatField(yField, "Y", Color.GREEN_INT, { value.y }) { value.y = it }
+        addFloatField(xField, "X", Color.RED, { value.x }) { value.x = it }
+        addFloatField(yField, "Y", Color.GREEN, { value.y }) { value.y = it }
         addFloatField(zField, "Z", Color.CYAN_INT, { value.z }) { value.z = it }
     }
 

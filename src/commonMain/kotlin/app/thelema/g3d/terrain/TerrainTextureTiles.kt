@@ -31,7 +31,7 @@ class TerrainTextureTiles(
     val textures = Array(tilesPerSide) {
         Array(tilesPerSide) {
             Texture2D {
-                initTexture(Color.BLACK_INT)
+                initTexture(Color.BLACK)
             }
         }
     }
@@ -78,7 +78,7 @@ class TerrainTextureTiles(
                             currentUris[i][j] = file
                             texture.load(file)
                         } else {
-                            texture.initTexture(Color.BLACK_INT)
+                            texture.initTexture(Color.BLACK)
                         }
                     }
 

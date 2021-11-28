@@ -24,7 +24,7 @@ abstract class ShaderData: IShaderData {
 
     override var container: IShaderNode? = null
 
-    protected val connectedToInternal = ArrayList<ShaderNodeLink>()
+    protected val connectedToInternal = ArrayList<ShaderNodeLink>(0)
 
     override val connectedTo
         get() = connectedToInternal

@@ -22,12 +22,13 @@ import app.thelema.g3d.ITransformNode
 import app.thelema.img.ITexture
 import app.thelema.math.IMat4
 import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 
 /** @author zeganstyl */
 interface ILight: IEntityComponent {
     val node: ITransformNode
 
-    val color: IVec3
+    val color: IVec4
 
     val direction: IVec3
 

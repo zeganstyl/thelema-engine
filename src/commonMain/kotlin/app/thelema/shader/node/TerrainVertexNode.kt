@@ -20,7 +20,7 @@ import app.thelema.g3d.terrain.Terrain
 import app.thelema.img.ITexture
 
 class TerrainVertexNode: ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "Terrain Vertex"
 
     var heightMap: ITexture? = null

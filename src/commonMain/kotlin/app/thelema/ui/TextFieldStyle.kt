@@ -17,8 +17,6 @@
 package app.thelema.ui
 
 import app.thelema.font.BitmapFont
-import app.thelema.math.IVec4
-import app.thelema.math.Vec4
 import app.thelema.utils.Color
 
 /** The style for a text field, see [TextField].
@@ -41,7 +39,7 @@ open class TextFieldStyle(
     /** Optional.  */
     var messageFont: BitmapFont? = null
     /** Optional.  */
-    var messageFontColor: Int? = Color.GRAY_INT
+    var messageFontColor: Int? = Color.GRAY
     var errorBorder: Drawable? = null
 
     var focusBorder: Drawable? = null

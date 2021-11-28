@@ -78,7 +78,7 @@ object DSKIN {
 
     val black5x5 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.BLACK_INT
+            color = Color.BLACK
             width = 5f
             height = 5f
         }
@@ -86,7 +86,7 @@ object DSKIN {
 
     val white5x5 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.WHITE_INT
+            color = Color.WHITE
             width = 5f
             height = 5f
         }
@@ -94,7 +94,7 @@ object DSKIN {
 
     val white1x1 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.WHITE_INT
+            color = Color.WHITE
             minWidth = 1f
             minHeight = 1f
         }
@@ -102,7 +102,7 @@ object DSKIN {
 
     val green1x1 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.GREEN_INT
+            color = Color.GREEN
             minWidth = 1f
             minHeight = 1f
         }
@@ -118,7 +118,7 @@ object DSKIN {
 
     val darkGrey5x5 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.DARK_GRAY_INT
+            color = Color.DARK_GRAY
             minWidth = 5f
             minHeight = 5f
         }
@@ -126,7 +126,7 @@ object DSKIN {
 
     val grey5x5 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.GRAY_INT
+            color = Color.GRAY
             minWidth = 5f
             minHeight = 5f
         }
@@ -134,7 +134,7 @@ object DSKIN {
 
     val grey1x1 by lazy {
         Sprite(whiteTexture).apply {
-            color = Color.GRAY_INT
+            color = Color.GRAY
             minWidth = 1f
             minHeight = 1f
         }

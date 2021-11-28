@@ -45,54 +45,36 @@ object Color {
         return newVec
     }
 
-    val WHITE: IVec4 by lazy { Vec4(1f, 1f, 1f, 1f) }
-    val BLACK: IVec4 by lazy { Vec4(0f, 0f, 0f, 1f) }
-    const val BLACK_INT: Int = 0x000000FF
-
-    /** vec4(0, 0, 0, 0) */
-    val CLEAR: IVec4 by lazy { Vec4(0f, 0f, 0f, 0f) }
-
-    const val WHITE_INT = -1
-    val LIGHT_GRAY: IVec4 by lazy { int(-0x40404001) }
-    const val LIGHT_GRAY_INT: Int = -0x40404001
-    val GRAY: IVec4 by lazy { int(0x7f7f7fff) }
-    const val GRAY_INT: Int = 0x7f7f7fff
-    val DARK_GRAY: IVec4 by lazy { int(0x3f3f3fff) }
-    const val DARK_GRAY_INT: Int = 0x3f3f3fff
-
-    val BLUE: IVec4 by lazy { Vec4(0f, 0f, 1f, 1f) }
+    const val BLACK: Int = 0x000000FF
+    const val WHITE = -1
+    const val LIGHT_GRAY: Int = -0x40404001
+    const val GRAY: Int = 0x7f7f7fff
+    const val DARK_GRAY: Int = 0x3f3f3fff
     const val BLUE_INT: Int = 0x0000ffff
-    val NAVY: IVec4 by lazy { Vec4(0f, 0f, 0.5f, 1f) }
-    val ROYAL: IVec4 by lazy { int(0x4169e1ff) }
-    val SLATE: IVec4 by lazy { int(0x708090ff) }
-    val SKY: IVec4 by lazy { int(-0x78311401) }
-    val CYAN: IVec4 by lazy { Vec4(0f, 1f, 1f, 1f) }
+    const val NAVY = 0x000080FF
+    const val ROYAL = 0x4169e1ff
+    const val SLATE = 0x708090ff
+    const val SKY = -0x78311401
+    const val CYAN: Int = 0x00FFFFFF
     const val CYAN_INT: Int = 0x00ffffff
-    val TEAL: IVec4 by lazy { Vec4(0f, 0.5f, 0.5f, 1f) }
-    val GREEN: IVec4 by lazy { int(0x00ff00ff) }
-    const val GREEN_INT: Int = 0x00ff00ff
-    val CHARTREUSE: IVec4 by lazy {  int(0x7fff00ff) }
-    val LIME: IVec4 by lazy { int(0x32cd32ff) }
-    val FOREST: IVec4 by lazy { int(0x228b22ff) }
-    val OLIVE: IVec4 by lazy { int(0x6b8e23ff) }
-    val YELLOW: IVec4 by lazy { int(-0xff01) }
-    const val YELLOW_INT: Int = -0xff01
-    val GOLD: IVec4 by lazy { int(-0x28ff01) }
-    val GOLDENROD: IVec4 by lazy { int(-0x255adf01) }
-    val ORANGE: IVec4 by lazy { int(255, 128, 0) }
-    val BROWN: IVec4 by lazy { int(-0x74baec01) }
-    val TAN: IVec4 by lazy { int(-0x2d4b7301) }
-    val FIREBRICK: IVec4 by lazy { int(-0x4ddddd01) }
-    val RED: IVec4 by lazy { int(255, 0, 0) }
-    const val RED_INT: Int = 0xFF0000FF.toInt()
-    val SCARLET: IVec4 by lazy { int(255, 36, 0) }
-    val CORAL: IVec4 by lazy { int(-0x80af01) }
-    val SALMON: IVec4 by lazy { int(-0x57f8d01) }
-    val PINK: IVec4 by lazy { int(-0x964b01) }
-    val MAGENTA: IVec4 by lazy {  Vec4(1f, 0f, 1f, 1f) }
-    val PURPLE: IVec4 by lazy { int(-0x5fdf0f01) }
-    val VIOLET: IVec4 by lazy { int(-0x117d1101) }
-    val MAROON: IVec4 by lazy { int(-0x4fcf9f01) }
+    const val TEAL: Int = 0x008080FF
+    const val GREEN: Int = 0x00ff00ff
+    const val CHARTREUSE = 0x7fff00ff
+    const val LIME = 0x32cd32ff
+    const val FOREST = 0x228b22ff
+    const val OLIVE = 0x6b8e23ff
+    const val YELLOW: Int = -0xff01
+    const val GOLD = -0x28ff01
+    const val GOLDENROD = -0x255adf01
+    const val ORANGE: Int = 0xFF8000FF.toInt()
+    const val BROWN = -0x74baec01
+    const val TAN = -0x2d4b7301
+    const val FIREBRICK = -0x4ddddd01
+    const val RED: Int = 0xFF0000FF.toInt()
+    const val SCARLET: Int = 0xFF2400FF.toInt()
+    const val CORAL = -0x80af01
+    const val SALMON = -0x57f8d01
+    const val PINK = -0x964b01
 
     /** Packs the color components into a 32-bit integer with the format ABGR and then converts it to a float.
      * See [intToFloatColor]

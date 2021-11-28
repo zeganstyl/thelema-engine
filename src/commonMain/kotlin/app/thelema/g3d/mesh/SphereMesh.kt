@@ -19,6 +19,7 @@ package app.thelema.g3d.mesh
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.math.MATH
+import kotlin.math.abs
 
 class SphereMesh(): MeshBuilderAdapter() {
     constructor(block: SphereMesh.() -> Unit): this() {
@@ -81,6 +82,7 @@ class SphereMesh(): MeshBuilderAdapter() {
                 val zenith = v * MATH.PI
 
                 val yn = MATH.cos(zenith)
+                val xzWeight = 1f - abs(yn)
                 val y = radius * yn
                 val zenithSinR = radius * MATH.sin(zenith)
 
@@ -95,7 +97,7 @@ class SphereMesh(): MeshBuilderAdapter() {
 
                     putFloatsNext(x, y, z)
                     uvs?.putFloatsNext(u, v)
-                    normals?.putFloatsNext(xn, yn, zn)
+                    normals?.putFloatsNext(xn * xzWeight, yn, zn * xzWeight)
                 }
             }
         }

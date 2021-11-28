@@ -65,7 +65,7 @@ class FrustumMeshTest: Test {
             shader.color?.set(Color.ORANGE)
             perspectiveFrustumMesh.render(shader)
 
-            shader.color?.set(Color.GREEN)
+            shader.color?.setColor(Color.GREEN)
             orthographicFrustumMesh.render(shader)
         }
     }

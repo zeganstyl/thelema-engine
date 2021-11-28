@@ -60,10 +60,25 @@ open class Label constructor(
     /** Allows subclasses to access the cache in [draw].  */
     protected var bitmapFontCache = BitmapFontCache(style.font)
         private set
+
     var alignH = -1
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     var alignV = 1
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     var lineAlign = -1
-        private set
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     private var wrap = false
     private var lastPrefHeight = 0f
     private var prefSizeInvalid = true

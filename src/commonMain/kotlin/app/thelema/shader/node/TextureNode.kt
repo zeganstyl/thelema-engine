@@ -41,7 +41,7 @@ class TextureNode(): ShaderNode() {
         this.textureType = textureType
     }
 
-    override val name: String
+    override val componentName: String
         get() = "Texture"
 
     var uv

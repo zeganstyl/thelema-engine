@@ -424,7 +424,7 @@ class TabbedPane (private val style: Style = Style()) {
             }
             button.setProgrammaticChangeEvents(false)
             closeButton.image.scaling = Scaling.fill
-            closeButton.image.color = Color.RED_INT
+            closeButton.image.color = Color.RED
             addListeners()
             //buttonStyle = TextButtonStyle(button.style as TextButtonStyle)
             buttonStyle = TextButtonStyle()

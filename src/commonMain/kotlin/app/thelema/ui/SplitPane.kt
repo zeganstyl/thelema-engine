@@ -272,8 +272,6 @@ class SplitPane(
             0.5f * (effectiveMinAmount + effectiveMaxAmount) else max(min(splitValue, effectiveMaxAmount), effectiveMinAmount)
     }
 
-    /** @param widget May be null.
-     */
     fun setFirstWidget(widget: Actor) {
         super.removeActor(firstWidget)
         firstWidget = widget
@@ -281,8 +279,6 @@ class SplitPane(
         invalidate()
     }
 
-    /** @param widget May be null.
-     */
     fun setSecondWidget(widget: Actor) {
         super.removeActor(secondWidget)
         secondWidget = widget
@@ -310,9 +306,6 @@ class SplitPane(
         throw NotImplementedError("cannot do this")
     }
 
-    /** @param firstWidget May be null.
-     * @param secondWidget May be null.
-     */
     init {
         setFirstWidget(firstWidget)
         setSecondWidget(secondWidget)

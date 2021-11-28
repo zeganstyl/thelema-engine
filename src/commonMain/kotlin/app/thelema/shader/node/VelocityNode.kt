@@ -36,7 +36,7 @@ class VelocityNode(): ShaderNode() {
 
     var bonesSetsNum: Int = 1
 
-    override val name: String
+    override val componentName: String
         get() = "Vertex"
 
     var aPositionName = "POSITION"

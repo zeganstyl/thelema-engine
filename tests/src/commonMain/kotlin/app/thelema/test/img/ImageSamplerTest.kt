@@ -38,7 +38,7 @@ class ImageSamplerTest: Test {
         val tWrap = GL_REPEAT
 
         val texture = Texture2D()
-        texture.initTexture(Color.WHITE_INT)
+        texture.initTexture(Color.WHITE)
 
         val pixels = DATA.bytes(4 * 4)
         pixels.put(255.toByte(), 0, 0, 255.toByte())

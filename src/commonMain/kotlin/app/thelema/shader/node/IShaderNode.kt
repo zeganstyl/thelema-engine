@@ -16,15 +16,13 @@
 
 package app.thelema.shader.node
 
+import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
-import app.thelema.json.IJsonObjectIO
 import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
 
 /** @author zeganstyl */
-interface IShaderNode: IJsonObjectIO {
-    val name: String
-
+interface IShaderNode: IEntityComponent {
     var shaderOrNull: IShader?
 
     val shader: IShader

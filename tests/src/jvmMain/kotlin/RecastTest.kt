@@ -15,6 +15,7 @@ import app.thelema.input.IKeyListener
 import app.thelema.input.KB
 import app.thelema.input.KEY
 import app.thelema.lwjgl3.JvmApp
+import app.thelema.math.Vec4
 import app.thelema.res.RES
 import app.thelema.res.load
 import app.thelema.shader.SimpleShader3D
@@ -49,7 +50,7 @@ fun main() {
         scene()
         entity {
             directionalLight {
-                color.set(Color.SLATE)
+                color.setColor(Color.SLATE)
                 setDirectionFromPosition(1f, 1f, 1f)
                 setupShadowMaps(1024, 1024)
             }
@@ -111,7 +112,7 @@ fun IEntity.createLineEntity(path: List<StraightPathItem>) {
             }
         }
         material {
-            shader = SimpleShader3D { color = Color.RED }
+            shader = SimpleShader3D { color = Vec4(1f, 0f, 0f, 1f) }
         }
     }
 }

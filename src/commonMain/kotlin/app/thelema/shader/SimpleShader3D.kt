@@ -50,10 +50,19 @@ class SimpleShader3D(compile: Boolean): Shader(compile = compile) {
     var lightIntensity: Float = 1f
     var minLightIntensity: Float = 0.2f
 
+    fun setColor(rgba8888: Int) { color = Vec4(rgba8888) }
+
     fun setupOnlyColor(color: IVec4, disableLight: Boolean = true) {
         if (disableLight) lightDirection = null
         alphaCutoff = 0f
         this.color = Vec4(color)
+        renderAttributeName = ""
+    }
+
+    fun setupOnlyColor(rgba8888: Int, disableLight: Boolean = true) {
+        if (disableLight) lightDirection = null
+        alphaCutoff = 0f
+        this.color = Vec4(rgba8888)
         renderAttributeName = ""
     }
 

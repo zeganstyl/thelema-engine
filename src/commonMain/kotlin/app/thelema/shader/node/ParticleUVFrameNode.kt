@@ -1,7 +1,7 @@
 package app.thelema.shader.node
 
 class ParticleUVFrameNode: ShaderNode() {
-    override val name: String
+    override val componentName: String
         get() = "ParticleUVFrameNode"
 
     var frameSizeU = 1f

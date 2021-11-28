@@ -30,6 +30,17 @@ class Vec4(
     /** Creates a vector from the given vector */
     constructor(other: IVec4): this(other.x, other.y, other.z)
 
+    constructor(rgba8888: Int): this(
+        (rgba8888 and -0x1000000 ushr 24) * inv255,
+        (rgba8888 and 0x00ff0000 ushr 16) * inv255,
+        (rgba8888 and 0x0000ff00 ushr 8) * inv255,
+        (rgba8888 and 0x000000ff) * inv255
+    )
+
     /** Converts this `Vector3` to a string in the format `(x,y,z,w)`. */
     override fun toString() = "($x,$y,$z,$w)"
+
+    companion object {
+        private const val inv255 = 1f / 255f
+    }
 }

@@ -35,8 +35,8 @@ class Op2Node(
 ): ShaderNode() {
     constructor(): this(GLSL.oneFloat, GLSL.oneFloat)
 
-    override val name: String
-        get() = "Operation"
+    override val componentName: String
+        get() = "Op2"
 
     var in1: IShaderData
         get() = input["in1"] ?: GLSL.oneFloat

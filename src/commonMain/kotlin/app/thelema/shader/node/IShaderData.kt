@@ -72,7 +72,7 @@ interface IShaderData {
 
     fun declaration(): String {
         return if (scope == GLSLScope.Inline) {
-            LOG.info("Inline value can't be declared, shader node: ${container?.name}")
+            LOG.info("Inline value can't be declared, shader node: ${container?.componentName}")
             ""
         } else {
             val scope = GLSLScope.getTypeText(scope, container?.shader?.version ?: 110)

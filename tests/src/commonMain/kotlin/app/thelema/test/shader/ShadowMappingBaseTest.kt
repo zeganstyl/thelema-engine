@@ -209,7 +209,7 @@ void main() {
             }
 
             // render light frustum
-            shader["color"] = Color.GREEN
+            shader.setColor("color", Color.GREEN)
             shader.set("pos", 0f, 0f, 0f)
             lightFrustumMesh.render(shader)
 

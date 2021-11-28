@@ -22,7 +22,7 @@ import app.thelema.json.IJsonObject
 class UVNode() : ShaderNode() {
     constructor(block: UVNode.() -> Unit): this() { block(this) }
 
-    override val name: String
+    override val componentName: String
         get() = "UV"
 
     var uvName: String = "TEXCOORD_0"

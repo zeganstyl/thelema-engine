@@ -21,6 +21,7 @@ import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.render
+import app.thelema.math.Vec4
 import app.thelema.shader.SimpleShader3D
 import app.thelema.shader.post.PostShader
 import app.thelema.test.Test
@@ -34,7 +35,7 @@ class SobelBaseTest: Test {
     override fun testMain() {
         val box = BoxMesh { setSize(2f) }
         val boxShader = SimpleShader3D {
-            color = Color.WHITE
+            setColor(Color.WHITE)
         }
 
         val frameBuffer = SimpleFrameBuffer()

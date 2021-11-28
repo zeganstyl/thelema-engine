@@ -1,7 +1,6 @@
 package app.thelema.studio
 
 import app.thelema.g2d.Sprite
-import app.thelema.img.Texture2D
 import app.thelema.ui.DSKIN
 import app.thelema.ui.ScrollPaneStyle
 import app.thelema.utils.Color
@@ -17,7 +16,7 @@ object SKIN {
     }
 
     val titleBackground = Sprite(DSKIN.whiteTexture).apply {
-        color = Color.mulAlpha(Color.DARK_GRAY_INT, 0.8f)
+        color = Color.mulAlpha(Color.DARK_GRAY, 0.8f)
         minWidth = 0f
         minHeight = 0f
     }
