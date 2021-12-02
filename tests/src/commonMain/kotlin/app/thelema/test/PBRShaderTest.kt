@@ -19,14 +19,13 @@ package app.thelema.test
 import app.thelema.ecs.Entity
 import app.thelema.ecs.component
 import app.thelema.g3d.*
-import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.cam.orbitCameraControl
-import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.SphereMesh
 import app.thelema.gl.GL
 import app.thelema.shader.PBRShader
 import app.thelema.utils.Color
+import app.thelema.utils.LOG
 
 class PBRShaderTest: Test {
     override val name: String

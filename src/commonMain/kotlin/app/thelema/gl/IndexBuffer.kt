@@ -18,6 +18,7 @@ package app.thelema.gl
 
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
+import app.thelema.utils.LOG
 
 /**
  * In IndexBufferObject wraps OpenGL's index buffer functionality to be used in conjunction with VBOs.
@@ -148,6 +149,10 @@ class IndexBuffer(override var bytes: IByteData = DATA.nullBuffer): IIndexBuffer
 
     override fun toIntArray(out: IntArray?): IntArray {
         val size = count
+        if (!bytes.isAlive) {
+            LOG.error("Index buffer is not alive")
+            return IntArray(0)
+        }
         val bytesCount = bytes.limit
         when (indexType) {
             GL_UNSIGNED_SHORT -> {

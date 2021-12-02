@@ -27,4 +27,20 @@ object GLSL {
     val oneFloat = GLSLFloatInline(1f)
 
     val defaultNormal = GLSLVec3Inline(0.5f, 0.5f, 1f)
+
+    private var idCounter = 0L
+
+    fun id() = idCounter++
+
+    fun resetIdCounter() {
+        idCounter = 0
+    }
+}
+
+object GLSLNode {
+    val vertex = VertexNode()
+
+    val camera = CameraDataNode(vertex.position)
+
+    val uv = UVNode()
 }

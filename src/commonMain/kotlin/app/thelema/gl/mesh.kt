@@ -102,7 +102,7 @@ interface IMesh: IEntityComponent {
                 return input
             }
         }
-        return null
+        return inheritedMesh?.getAttribute(name)
     }
 
     fun containsAttribute(name: String): Boolean {
@@ -259,9 +259,9 @@ class Mesh(): IMesh {
             }
         }
 
-    private val vertexBuffersInternal = ArrayList<IVertexBuffer>(0)
+    private val _vertexBuffers = ArrayList<IVertexBuffer>(0)
     override val vertexBuffers: MutableList<IVertexBuffer>
-        get() = vertexBuffersInternal
+        get() = _vertexBuffers
 
     override var vaoHandle: Int = -1
     override var instancesCountToRender: Int = -1
@@ -333,8 +333,8 @@ class Mesh(): IMesh {
     }
 
     override fun addVertexBuffer(buffer: IVertexBuffer) {
-        vertexBuffersInternal.add(buffer)
-        vertexBuffersInternal.trimToSize()
+        _vertexBuffers.add(buffer)
+        _vertexBuffers.trimToSize()
         verticesCount = buffer.verticesCount
         buffer.addBufferListener(vertexBufferListener)
         listeners?.forEach { it.addedVertexBuffer(this, buffer) }
@@ -348,12 +348,12 @@ class Mesh(): IMesh {
     }
 
     override fun destroyVertexBuffers() {
-        inheritedVertexBuffers?.also { vertexBuffersInternal.removeAll(it) }
+        inheritedVertexBuffers?.also { _vertexBuffers.removeAll(it) }
         inheritedVertexBuffers = null
-        for (i in vertexBuffersInternal.indices) {
-            vertexBuffersInternal[i].destroy()
+        for (i in _vertexBuffers.indices) {
+            _vertexBuffers[i].destroy()
         }
-        vertexBuffersInternal.clear()
+        _vertexBuffers.clear()
     }
 
     override fun setIndexBuffer(block: IIndexBuffer.() -> Unit): IIndexBuffer {
@@ -365,11 +365,12 @@ class Mesh(): IMesh {
 
     override fun setComponent(other: IEntityComponent): IEntityComponent {
         if (other is IMesh) {
-            vertexBuffersInternal.clear()
-            inheritedVertexBuffers = other.vertexBuffers
-            vertexBuffersInternal.addAll(other.vertexBuffers)
-            vertexBuffersInternal.trimToSize()
-            boundings = other.boundings
+//            vertexBuffersInternal.clear()
+//            inheritedVertexBuffers = other.vertexBuffers
+//            vertexBuffersInternal.addAll(other.vertexBuffers)
+//            vertexBuffersInternal.trimToSize()
+//            boundings = other.boundings
+//            inheritedMesh = other
         }
         return super.setComponent(other)
     }
@@ -454,24 +455,43 @@ class Mesh(): IMesh {
         fun setupMeshComponents() {
             ECS.descriptor({ Mesh() }) {
                 setAliases(IMesh::class)
-                int("primitiveType", { primitiveType }) { primitiveType = it }
-                int("verticesCount", { verticesCount }) { verticesCount = it }
-                ref("armature", { armature }) { armature = it }
-                refAbs("material", { material }) { material = it }
-                refAbs("inheritedMesh", { inheritedMesh }) { inheritedMesh = it }
+                intEnum(
+                    Mesh::primitiveType,
+                    GL_POINTS to "Points",
+                    GL_LINES to "Lines",
+                    GL_LINE_LOOP to "Line loop",
+                    GL_LINE_STRIP to "Line strip",
+                    GL_TRIANGLES to "Triangles",
+                    GL_TRIANGLE_FAN to "Triangle fan",
+                    GL_TRIANGLE_STRIP to "Triangle strip"
+                )
+                int(Mesh::verticesCount)
+                ref(Mesh::armature)
+                refAbs(Mesh::material)
+                refAbs(Mesh::inheritedMesh)
 
                 descriptor({ MeshBuilder() }) {
-                    int("indexType", { indexType }) { indexType = it }
-                    bool("uvs", { uvs }) { uvs = it }
-                    bool("normals", { normals }) { normals = it }
-                    string("positionName", { positionName }) { positionName = it }
-                    string("uvName", { uvName }) { uvName = it }
-                    string("normalName", { normalName }) { normalName = it }
+                    intEnum(
+                        MeshBuilder::indexType,
+                        GL_UNSIGNED_BYTE to "Byte",
+                        GL_UNSIGNED_SHORT to "Short",
+                        GL_UNSIGNED_INT to "Int"
+                    )
+                    bool(MeshBuilder::uvs)
+                    bool(MeshBuilder::normals)
+                    string(MeshBuilder::positionName)
+                    string(MeshBuilder::uvName)
+                    string(MeshBuilder::normalName)
+                    string(MeshBuilder::tangentName)
+                    bool(MeshBuilder::calculateNormals)
+                    vec3(MeshBuilder::position)
+                    vec4(MeshBuilder::rotation)
+                    vec3(MeshBuilder::scale)
 
                     descriptor({ BoxMesh() }) {
-                        float("xSize", { xSize }) { xSize = it }
-                        float("ySize", { ySize }) { ySize = it }
-                        float("zSize", { zSize }) { zSize = it }
+                        float(BoxMesh::xSize)
+                        float(BoxMesh::ySize)
+                        float(BoxMesh::zSize)
                     }
 
                     descriptor({ SkyboxMesh() }) {}
@@ -515,7 +535,7 @@ interface MeshListener: VertexBufferListener {
 
 fun IMesh.positionsOrNull(): IVertexAttribute? = getAttributeOrNull(positionsName)
 /** Get vertex positions attribute */
-fun IMesh.positions(): IVertexAttribute = getAttributeOrNull(positionsName)!!
+fun IMesh.positions(): IVertexAttribute = getAttribute(positionsName)
 fun IMesh.uvs(): IVertexAttribute? = getAttributeOrNull(uvsName)
 fun IMesh.normals(): IVertexAttribute? = getAttributeOrNull(normalsName)
-fun IMesh.tangents(): IVertexAttribute? = getAttributeOrNull(normalsName)
+fun IMesh.tangents(): IVertexAttribute? = getAttributeOrNull(tangentsName)

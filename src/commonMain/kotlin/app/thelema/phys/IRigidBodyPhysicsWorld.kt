@@ -30,12 +30,13 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
         get() = "RigidBodyPhysicsWorld"
 
     /** If not 0.0, it will be used as time delta */
-    val fixedDelta: Float
+    var fixedDelta: Float
 
     var isSimulationRunning: Boolean
 
-    fun setGravity(x: Float, y: Float, z: Float)
-    fun getGravity(out: IVec3): IVec3
+    var maxContacts: Int
+
+    var gravity: IVec3
 
     fun step(delta: Float)
 

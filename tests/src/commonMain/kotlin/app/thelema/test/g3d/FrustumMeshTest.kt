@@ -62,7 +62,7 @@ class FrustumMeshTest: Test {
         APP.onRender = {
             control.updateNow()
 
-            shader.color?.set(Color.ORANGE)
+            shader.color?.setColor(Color.ORANGE)
             perspectiveFrustumMesh.render(shader)
 
             shader.color?.setColor(Color.GREEN)

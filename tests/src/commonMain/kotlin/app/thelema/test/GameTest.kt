@@ -80,7 +80,7 @@ class GameTest: Test {
             entity("sun") {
                 directionalLight {
                     setDirectionFromPosition(1f, 1f, 1f)
-                    color.set(1f, 0.8f, 0.5f)
+                    color.set(1f, 0.8f, 0.5f, 1f)
                     intensity = 5f
                     setupShadowMaps(2048, 2048)
                     lightPositionOffset = 100f
@@ -90,7 +90,7 @@ class GameTest: Test {
 
         val player = mainScene.entity("atrocita") {
             component<PointLight> {
-                color.set(0f, 0.2f, 1f)
+                color.set(0f, 0.2f, 1f, 1f)
                 range = 2f
                 intensity = 1f
             }

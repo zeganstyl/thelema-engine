@@ -17,52 +17,34 @@
 package app.thelema.shader.node
 
 /** @author zeganstyl */
-class MergeVec4(
-    x: IShaderData = GLSL.zeroFloat,
-    y: IShaderData = GLSL.zeroFloat,
-    z: IShaderData = GLSL.zeroFloat,
-    w: IShaderData = GLSL.oneFloat
-): ShaderNode() {
+class MergeVec4(): ShaderNode() {
+    constructor(
+        x: IShaderData = GLSL.zeroFloat,
+        y: IShaderData = GLSL.zeroFloat,
+        z: IShaderData = GLSL.zeroFloat,
+        w: IShaderData = GLSL.oneFloat
+    ): this() {
+        this.x = x
+        this.y = y
+        this.z = z
+        this.w = w
+    }
+
     override val componentName: String
-        get() = "Merge Vec4"
+        get() = "MergeVec4"
 
-    var x: IShaderData
-        get() = input[X] ?: GLSL.zeroFloat
-        set(value) = setInput(X, value)
+    var x by input(GLSL.zeroFloat)
+    var y by input(GLSL.zeroFloat)
+    var z by input(GLSL.zeroFloat)
+    var w by input(GLSL.oneFloat)
 
-    var y: IShaderData
-        get() = input[Y] ?: GLSL.zeroFloat
-        set(value) = setInput(Y, value)
-
-    var z: IShaderData
-        get() = input[Z] ?: GLSL.zeroFloat
-        set(value) = setInput(Z, value)
-
-    var w: IShaderData
-        get() = input[W] ?: GLSL.oneFloat
-        set(value) = setInput(W, value)
-
-    val result = defOut(GLSLValue("result", GLSLType.Vec4).apply {
+    val result = output(GLSLValue("result", GLSLType.Vec4).apply {
         inlineCode = "vec4(${x.asFloat()}, ${y.asFloat()}, ${z.asFloat()}, ${w.asFloat()})"
         scope = GLSLScope.Inline
     })
 
-    init {
-        setInput(X, x)
-        setInput(Y, y)
-        setInput(Z, z)
-        setInput(W, w)
-    }
-
     override fun prepareToBuild() {
         super.prepareToBuild()
         result.inlineCode = "vec4(${x.asFloat()}, ${y.asFloat()}, ${z.asFloat()}, ${w.asFloat()})"
-    }
-
-    companion object {
-        const val X = "x"
-        const val Y = "y"
-        const val Z = "z"
-        const val W = "w"
     }
 }

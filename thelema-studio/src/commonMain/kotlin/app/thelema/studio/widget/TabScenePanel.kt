@@ -54,6 +54,7 @@ class TabScenePanel: Table() {
 
                 CameraControl.control.isEnabled = true
                 headUpDisplay?.scrollFocus = this@Stack
+                headUpDisplay?.setKeyboardFocus(this@Stack)
             }
 
             override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {

@@ -24,6 +24,7 @@ class PropertyType(override val propertyTypeName: String): IPropertyType {
         val Unknown = PropertyType("thelema/Unknown")
         val String = PropertyType("thelema/String")
         val StringEnum = PropertyType("thelema/StringEnum")
+        val IntEnum = PropertyType("thelema/IntEnum")
         val Bool = PropertyType("thelema/Bool")
         val Int = PropertyType("thelema/Int")
         val Float = PropertyType("thelema/Float")

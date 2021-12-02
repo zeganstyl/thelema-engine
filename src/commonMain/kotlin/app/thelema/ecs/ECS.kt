@@ -21,8 +21,10 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.Material
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.particles.*
-import app.thelema.gl.Mesh
+import app.thelema.gl.*
+import app.thelema.gltf.GLTF
 import app.thelema.gltf.GLTFSceneInstance
+import app.thelema.gltf.IGLTF
 import app.thelema.img.*
 import app.thelema.input.KeyboardHandler
 import app.thelema.input.MouseHandler
@@ -35,7 +37,7 @@ import kotlin.native.concurrent.ThreadLocal
 
 /** Entity component system */
 @ThreadLocal
-object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
+object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
     val allDescriptors = LinkedHashMap<String, ComponentDescriptor<IEntityComponent>>()
 
     private val systemsInternal = ArrayList<IComponentSystem>()
@@ -133,7 +135,19 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
             file("file", { file }) { file = it }
 
             descriptor { EntityLoader() }
-            descriptor({ app.thelema.gltf.GLTF() }) {
+            descriptor({ GLTF() }) {
+                setAliases(IGLTF::class)
+
+                bool(GLTF::saveMeshesInCPUMem)
+                bool(GLTF::mergeVertexAttributes)
+                bool(GLTF::generateShaders)
+                bool(GLTF::setupDepthRendering)
+                bool(GLTF::setupVelocityShader)
+                bool(GLTF::setupGBufferShader)
+                bool(GLTF::receiveShadows)
+                bool(GLTF::ibl)
+                int(GLTF::iblMaxMipLevels)
+
                 descriptor({ GLTFSceneInstance() }) {
                     refAbs("model", { model }) { model = it }
                 }
@@ -169,10 +183,25 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("") {
         descriptor({ Texture2D() }) {
             setAliases(ITexture2D::class)
             ref("image", { image }) { image = it }
-            int("minFilter", { minFilter }) { minFilter = it }
-            int("magFilter", { magFilter }) { magFilter = it }
+            intEnum(
+                Texture2D::minFilter,
+                linkedMapOf(
+                    GL_NEAREST to "Nearest",
+                    GL_LINEAR to "Linear",
+                    GL_LINEAR_MIPMAP_NEAREST to "Linear Mipmap Nearest",
+                    GL_NEAREST_MIPMAP_LINEAR to "Nearest Mipmap Linear",
+                    GL_LINEAR_MIPMAP_LINEAR to "Linear Mipmap Linear"
+                ),
+                "???"
+            )
+            intEnum(
+                Texture2D::magFilter,
+                linkedMapOf(GL_NEAREST to "Nearest", GL_LINEAR to "Linear"),
+                "???"
+            )
             int("sWrap", { sWrap }) { sWrap = it }
             int("tWrap", { tWrap }) { tWrap = it }
+            float(Texture2D::anisotropicFilter)
         }
         descriptor { TextureCube() }
 

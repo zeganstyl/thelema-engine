@@ -21,6 +21,7 @@ import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.getSiblingOrNull
 import app.thelema.gl.*
 import app.thelema.phys.ITrimeshShape
+import app.thelema.utils.LOG
 import org.ode4j.ode.DMass
 import org.ode4j.ode.DTriMesh
 import org.ode4j.ode.DTriMeshData
@@ -32,6 +33,7 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
 
     override var mesh: IMesh? = null
         set(value) {
+            println(value?.path)
             if (field != value) {
                 field?.removeMeshListener(meshListener)
                 field = value
@@ -48,10 +50,10 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
 
     private val meshListener = object : MeshListener {
         override fun bufferUploadedToGPU(buffer: IGLBuffer) { setupBody() }
-        override fun addedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
-        override fun removedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
-        override fun indexBufferChanged(mesh: IMesh, newIndexBuffer: IIndexBuffer?) { setupBody() }
-        override fun inheritedMeshChanged(mesh: IMesh, newInheritedMesh: IMesh?) { setupBody() }
+//        override fun addedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
+//        override fun removedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) { setupBody() }
+//        override fun indexBufferChanged(mesh: IMesh, newIndexBuffer: IIndexBuffer?) { setupBody() }
+//        override fun inheritedMeshChanged(mesh: IMesh, newInheritedMesh: IMesh?) { setupBody() }
     }
 
     private fun setupBody() {
@@ -71,24 +73,40 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
     }
 
     override fun createGeom(): DTriMesh? {
+        if (mesh == null) LOG.error("$path: Mesh is null")
         mesh?.also { mesh ->
-            val positions = mesh.positions()
+            val positions = mesh.getAttributeOrNull(mesh.positionsName)
+            if (positions == null) {
+                LOG.error("$path: Positions attribute \"${mesh.positionsName}\" is not found in ${mesh.path}")
+                return null
+            }
 
             val verticesCount = positions.count
-            val floatsCount = verticesCount * 3
-            val positionsArray = FloatArray(floatsCount)
-            positions.prepare {
-                var i = 0
-                while (i < floatsCount) {
-                    positionsArray[i] = positions.getFloat(0)
-                    positionsArray[i+1] = positions.getFloat(4)
-                    positionsArray[i+2] = positions.getFloat(8)
-                    positions.nextVertex()
-                    i += 3
-                }
+
+            if (verticesCount <= 0) {
+                LOG.error("$path: Vertices count must be > 0 in ${mesh.path}")
+                return null
             }
 
             val indicesArray = mesh.indices?.toIntArray() ?: IntArray(verticesCount) { it }
+
+            if (indicesArray.isEmpty()) {
+                LOG.error("$path: Indices size must be > 0 in ${mesh.path}")
+                return null
+            }
+
+            val floatsCount = verticesCount * 3
+            val positionsArray = FloatArray(floatsCount)
+            positions.rewind {
+                var i = 0
+                while (i < floatsCount) {
+                    positionsArray[i] = getFloat(0)
+                    positionsArray[i+1] = getFloat(4)
+                    positionsArray[i+2] = getFloat(8)
+                    nextVertex()
+                    i += 3
+                }
+            }
 
             val trimeshData = OdeHelper.createTriMeshData()
             trimeshData.build(positionsArray, indicesArray)

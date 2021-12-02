@@ -22,7 +22,6 @@ import app.thelema.math.Vec3
 import app.thelema.phys.*
 import app.thelema.utils.Pool
 import app.thelema.utils.iterate
-import org.ode4j.math.DVector3
 import org.ode4j.math.DVector3C
 import org.ode4j.ode.*
 import kotlin.math.max
@@ -64,7 +63,11 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
             }
         }
 
-    private val tmp = DVector3()
+    override var gravity: IVec3 = Vec3(0f, -3f, 0f)
+        set(value) {
+            field.set(value)
+            world.setGravity(value.x.toDouble(), value.y.toDouble(), value.z.toDouble())
+        }
 
     val bodies = ArrayList<RigidBody>()
 
@@ -83,7 +86,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     var space = OdeHelper.createHashSpace(null)
     val contactGroup = OdeHelper.createJointGroup()
 
-    var maxContacts = 40
+    override var maxContacts = 40
 
     val newContacts = HashSet<BodyContact>()
     val currentContacts = HashSet<BodyContact>()
@@ -92,7 +95,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     val listeners = ArrayList<IPhysicsWorldListener>()
 
-    override val fixedDelta: Float = 0.02f
+    override var fixedDelta: Float = 0.02f
 
     var nearCallback = DGeom.DNearCallback { _, o1, o2 ->
         val g1 = o1.data as IShape
@@ -149,6 +152,10 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     override val sourceObject: Any
         get() = world
 
+    init {
+        gravity = gravity
+    }
+
     override fun addedEntityToBranch(entity: IEntity) {
         entity.forEachChildEntity { child ->
             child.forEachComponentInBranch { addedComponentToBranch(it) }
@@ -170,16 +177,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     override fun addedSiblingComponent(component: IEntityComponent) {
         addedComponentToBranch(component)
-    }
-
-    override fun setGravity(x: Float, y: Float, z: Float) {
-        world.setGravity(x.toDouble(), y.toDouble(), z.toDouble())
-    }
-
-    override fun getGravity(out: IVec3): IVec3 {
-        world.getGravity(tmp)
-        out.set(tmp.get0().toFloat(), tmp.get1().toFloat(), tmp.get2().toFloat())
-        return out
     }
 
     override fun addPhysicsWorldListener(listener: IPhysicsWorldListener) {
@@ -244,6 +241,8 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     }
 
     override fun destroy() {
+        bodies.iterate { it.destroy() }
+        bodies.clear()
         contactGroup.destroy()
         space.destroy()
         world.destroy()
@@ -254,25 +253,34 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
             ECS.descriptor({ RigidBodyPhysicsWorld() }) {
                 setAliases(IRigidBodyPhysicsWorld::class)
 
+                vec3(RigidBodyPhysicsWorld::gravity)
+                float(RigidBodyPhysicsWorld::fixedDelta, 0.02f)
+                int(RigidBodyPhysicsWorld::maxContacts, 40)
+                bool(RigidBodyPhysicsWorld::isSimulationRunning)
+
                 descriptor({ BoxShape() }) {
                     setAliases(IBoxShape::class)
-                    float("xSize", { xSize }) { xSize = it }
-                    float("ySize", { ySize }) { ySize = it }
-                    float("zSize", { zSize }) { zSize = it }
+                    float(BoxShape::mass, 1f)
+                    float(BoxShape::xSize, 1f)
+                    float(BoxShape::ySize, 1f)
+                    float(BoxShape::zSize, 1f)
                 }
                 descriptor({ SphereShape() }) {
                     setAliases(ISphereShape::class)
-                    float("radius", { radius }) { radius = it }
+                    float(SphereShape::radius, 1f)
                 }
                 descriptor({ TrimeshShape() }) {
                     setAliases(ITrimeshShape::class)
-                    ref("mesh", { mesh }) { mesh }
+                    refAbs(TrimeshShape::mesh)
                 }
                 descriptor({ RigidBody() }) {
                     setAliases(IRigidBody::class)
-                    float("friction", { friction }) { friction = it }
-                    bool("isStatic", { isStatic }) { isStatic = it }
-                    bool("influenceOtherBodies", { influenceOtherBodies }) { influenceOtherBodies = it }
+                    float(RigidBody::maxAngularSpeed)
+                    float(RigidBody::friction, 1f)
+                    bool(RigidBody::isStatic, false)
+                    bool(RigidBody::isGravityEnabled, true)
+                    bool(RigidBody::isKinematic)
+                    bool(RigidBody::influenceOtherBodies, true)
                 }
             }
         }

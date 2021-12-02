@@ -25,17 +25,11 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
     constructor(deferredRendering: Boolean = false, block: PBRShader.() -> Unit): this(deferredRendering) {
         block(this)
         build()
+        println(printCode())
     }
 
-    val vertexNode = addNode(VertexNode())
-    val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-
-    val uvNode = addNode(UVNode {
-        uvName = "UV"
-    })
-
     val baseColorNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             if (pbrNode.baseColor == null) {
                 pbrNode.baseColor = color
             } else {
@@ -46,72 +40,63 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
     }
 
     val baseColorTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             pbrNode.baseColor = color
         }
     }
 
     val alphaTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             pbrNode.alpha = color
         }
     }
 
     val normalTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = true).apply {
+        TextureNode(sRGB = true).apply {
             normalMapNode.normalColor = color
             normalMapNode.uv = uv
-        })
+        }
     }
 
     val normalMapNode: NormalMapNode by lazy {
-        addNode(NormalMapNode {
-            vertexPosition = vertexNode.position
-            tbn = vertexNode.tbn
-            normalizedViewVector = cameraDataNode.normalizedViewVector
-
+        NormalMapNode {
             pbrNode.normal = normalResult
-        })
+        }
     }
 
     val metallicTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             pbrNode.metallic = color
         }
     }
 
     val roughnessTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             pbrNode.roughness = color
         }
     }
 
     val occlusionTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
+        TextureNode(sRGB = false).apply {
             pbrNode.occlusion = color
         }
     }
 
     val metallicRoughnessTextureNode: TextureNode by lazy {
-        addNode(TextureNode(uvNode.uv, sRGB = false)).apply {
-            val splitNode = addNode(SplitVec4Node(color))
+        TextureNode(sRGB = false).apply {
+            val splitNode = SplitVec4Node(color)
             pbrNode.occlusion = splitNode.x
             pbrNode.roughness = splitNode.y
             pbrNode.metallic = splitNode.z
         }
     }
 
-    val pbrNode = addNode(PBRNode {
-        worldPosition = vertexNode.position
-        normalizedViewVector = cameraDataNode.normalizedViewVector
-        clipSpacePosition = cameraDataNode.clipSpacePosition
-    })
+    val pbrNode = PBRNode {}
 
-    val toneMapNode = addNode(ToneMapNode(pbrNode.result))
+    val toneMapNode = ToneMapNode(pbrNode.result)
 
     val outputNode: OutputNode by lazy {
         addNode(OutputNode {
-            vertPosition = cameraDataNode.clipSpacePosition
             fragColor = toneMapNode.result
             fadeStart = -1f
         })
@@ -119,24 +104,13 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
 
     val gBufferOutputNode: GBufferOutputNode by lazy {
         addNode(GBufferOutputNode {
-            vertPosition = cameraDataNode.clipSpacePosition
-            fragColor = GLSL.oneFloat
-            fragNormal = vertexNode.normal
-            fragPosition = cameraDataNode.viewSpacePosition
+
         })
     }
 
     init {
         if (deferredRendering) version = 330
         (if (deferredRendering) gBufferOutputNode else outputNode).apply {  }
-    }
-
-    fun setupBones(bonesNum: Int) {
-        vertexNode.maxBones = bonesNum
-    }
-
-    fun disableTransformation() {
-        vertexNode.worldTransformType = TransformDataType.None
     }
 
     private inline fun setTex(uri: String, block: ITexture.() -> Unit): ITexture =

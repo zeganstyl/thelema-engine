@@ -30,32 +30,28 @@ class SkyboxVertexNode(
     constructor(block: SkyboxVertexNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "Skybox Vertex"
+        get() = "SkyboxVertexNode"
 
     var positionsName = "POSITION"
 
-    var viewProjectionMatrix
-        get() = input["viewProjectionMatrix"] ?: GLSL.oneFloat
-        set(value) = setInput("viewProjectionMatrix", value)
+    var viewProjectionMatrix by input(GLSL.oneFloat)
 
-    var previousViewProjectionMatrix
-        get() = input["previousViewProjectionMatrix"] ?: GLSL.oneFloat
-        set(value) = setInput("previousViewProjectionMatrix", value)
+    var previousViewProjectionMatrix by input(GLSL.oneFloat)
 
-    val textureCoordinates = defOut(GLSLVec3("textureCoordinates"))
+    val textureCoordinates = output(GLSLVec3("textureCoordinates"))
 
-    val worldSpacePosition = defOut(GLSLVec3("worldSpacePosition"))
+    val worldSpacePosition = output(GLSLVec3("worldSpacePosition"))
 
-    val clipSpacePosition = defOut(GLSLVec4("clipSpacePosition"))
+    val clipSpacePosition = output(GLSLVec4("clipSpacePosition"))
 
     /** For velocity rendering */
-    val velocity = defOut(GLSLVec2("velocity"))
+    val velocity = output(GLSLVec2("velocity"))
 
     val uSkyboxVertexTransformName
         get() = "uSkyboxVertexTransform"
 
     init {
-        setInput("viewProjectionMatrix", viewProjectionMatrix)
+        this.viewProjectionMatrix = viewProjectionMatrix
     }
 
     override fun readJson(json: IJsonObject) {

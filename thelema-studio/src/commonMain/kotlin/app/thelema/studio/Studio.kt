@@ -15,6 +15,7 @@ import app.thelema.input.KB
 import app.thelema.json.IJsonObject
 import app.thelema.json.IJsonObjectIO
 import app.thelema.json.JSON
+import app.thelema.phys.rigidBody
 import app.thelema.res.*
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
@@ -119,6 +120,8 @@ object Studio: AppListener, IJsonObjectIO {
         ComponentPanelProvider.init()
 
         APP.addListener(this)
+
+        ECS.addSystem(StudioComponentSystem(hud))
 
         RES.loadOnSeparateThreadByDefault = true
 

@@ -97,7 +97,7 @@ open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
         }
 
     /** Alignment of the selected item in the select box */
-    var alignment = Align.left
+    var alignment = -1
 
     override var headUpDisplay: HeadUpDisplay?
         get() = super.headUpDisplay

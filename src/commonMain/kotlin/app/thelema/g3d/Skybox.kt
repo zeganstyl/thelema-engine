@@ -20,7 +20,6 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.ecs.sibling
-import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.mesh.SkyboxMesh
 import app.thelema.img.TextureCube
 import app.thelema.shader.IShader

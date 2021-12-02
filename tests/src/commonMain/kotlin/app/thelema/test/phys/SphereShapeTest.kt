@@ -83,7 +83,6 @@ class SphereShapeTest: Test {
             }
 
             rigidBodyPhysicsWorld {
-                setGravity(0f, -2f, 0f)
                 startSimulation()
 
                 addPhysicsWorldListener(object: IPhysicsWorldListener {

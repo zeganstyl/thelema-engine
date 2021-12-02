@@ -28,13 +28,9 @@ interface IShaderNode: IEntityComponent {
     val shader: IShader
         get() = shaderOrNull!!
 
-    /** Do not remove or add values from external class, just replace value by index */
-    val input: Map<String, IShaderData>
+    val inputs: List<IShaderNodeInput<IShaderData?>>
 
-    val output: Map<String, IShaderData>
-
-    /** Input data for [input] must be linked through this method */
-    fun setInput(name: String, value: IShaderData?)
+    val outputs: List<IShaderData>
 
     /** Before code will be generated */
     fun prepareToBuild()
@@ -56,6 +52,4 @@ interface IShaderNode: IEntityComponent {
 
     /** Fragment shader code, that will be in global section */
     fun declarationFrag(out: StringBuilder)
-
-    fun set(other: IShaderNode): IShaderNode
 }

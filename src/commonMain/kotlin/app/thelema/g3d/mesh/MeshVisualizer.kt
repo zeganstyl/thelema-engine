@@ -21,8 +21,9 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.math.IVec4
 import app.thelema.shader.Shader
+import app.thelema.utils.Color
 
-class MeshVisualizer(shader: Shader) {
+class MeshVisualizer(val shader: Shader) {
     constructor(): this(
         Shader(
             vertCode = """
@@ -31,10 +32,11 @@ attribute vec3 COLOR;
 
 varying vec3 color;
 uniform mat4 viewProj;
+uniform mat4 worldMat;
 
 void main() {
     color = COLOR;
-    gl_Position = viewProj * vec4(POSITION, 1.0);
+    gl_Position = viewProj * worldMat * vec4(POSITION, 1.0);
 }
 """,
             fragCode = """
@@ -60,12 +62,25 @@ void main() {
 
     init {
         mesh.primitiveType = GL_LINES
-        mesh.material = Material().apply { this.shader = shader }
+        mesh.material = Material().also { it.shader = shader }
     }
 
     fun render() {
-        mesh.material?.shader?.set("viewProj", ActiveCamera.viewProjectionMatrix)
+        shader.bind()
+        shader["viewProj"] = ActiveCamera.viewProjectionMatrix
+        mesh.worldMatrix?.also { shader["worldMat"] = it }
         mesh.render()
+    }
+
+    fun reset() {
+        buffer.initVertexBuffer(0)
+
+        mesh.getAttribute("POSITION").rewind()
+        mesh.getAttribute("COLOR").rewind()
+    }
+
+    fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: Int, scale: Float = 1f) {
+        addVectors3D(positions, vectors, Color.int(color), scale)
     }
 
     fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: IVec4, scale: Float = 1f) {

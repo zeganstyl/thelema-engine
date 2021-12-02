@@ -1,14 +1,16 @@
 package app.thelema.studio.shader
 
 import app.thelema.app.APP
-import app.thelema.g2d.Batch
 import app.thelema.input.BUTTON
+import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.math.Vec2
 import app.thelema.shader.IShader
+import app.thelema.studio.ComponentPanelProvider
 import app.thelema.studio.ComponentScenePanel
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
+import app.thelema.studio.widget.component.ComponentPanel
 import app.thelema.ui.*
 
 object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
@@ -18,6 +20,18 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
     val resetViewButton = TextButton("Reset view")
 
     val wrapper = Group()
+
+    val allChannels = listOf("All channels")
+    var channels: List<String> = allChannels
+        set(value) {
+            field = value
+            channel.items = allChannels + value
+        }
+
+    val channel = SelectBox<String> {
+        items = channels
+        selectedItem = allChannels[0]
+    }
 
     var diagram: ShaderFlowDiagram? = null
         set(value) {
@@ -34,12 +48,12 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
             }
         }
 
-    var overInput: ShaderInput? = null
-    var tempLink: ShaderLink? = null
+    var overInput: ShaderInputView? = null
+    var tempLink: ShaderLinkView? = null
 
     val shaderInputListener = object: InputListener {
         override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-            overInput = event.target as ShaderInput?
+            overInput = event.target as ShaderInputView?
         }
 
         override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
@@ -49,7 +63,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
             if (event.target == event.listenerActor && MOUSE.isButtonPressed(BUTTON.LEFT)) {
                 val diagram = diagram
-                val target = event.target as ShaderInput?
+                val target = event.target as ShaderInputView?
                 if (tempLink == null && diagram != null && target != null) {
                     val link = diagram.links.firstOrNull { it.destination == target }
                     if (link != null) {
@@ -65,7 +79,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
             val diagram = diagram
             if (tempLink == null && diagram != null) {
-                val source = event.target as ShaderOutput?
+                val source = event.target as ShaderOutputView?
                 if (source != null) {
                     tempLink = diagram.addLink(source = source, overDestination = dragVec)
                 }
@@ -115,11 +129,12 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         }
     }
 
-    val headTable = HBox().apply {
+    val headTable = HBox {
         align = Align.topLeft
         background = SKIN.background
         add(buildButton).padLeft(10f)
         add(glslCodeButton).padLeft(10f)
+        add(channel).padLeft(10f)
         add(errorsButton).padLeft(10f)
         add(Actor()).growX()
         add(resetViewButton).padRight(10f).padLeft(10f)
@@ -131,8 +146,29 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         add(headTable).growX()
     }
 
+    val boxesSelection
+        get() = listPanel.selection
+
     init {
-        listPanel.itemToString = { it.node.componentName }
+        listPanel.selection.isMultiple = true
+        listPanel.selection.addSelectionListener(object : SelectionListener<ShaderNodeBox> {
+            override fun lastSelectedChanged(newValue: ShaderNodeBox?) {
+                itemPanelTable.clearChildren()
+                if (newValue != null) itemPanelTable.add(
+                    ComponentPanelProvider.getOrCreatePanel(newValue.node).also { it.isExpanded = true }
+                )
+            }
+
+            override fun removed(item: ShaderNodeBox) {
+                item.selected = false
+            }
+
+            override fun added(item: ShaderNodeBox) {
+                item.selected = true
+            }
+        })
+
+        listPanel.itemToString = { it.titleLabel.text }
 
         setupScene(wrapper, sceneOverlay)
 
@@ -184,6 +220,24 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         })
 
         rootSceneStack.addListener(object : InputListener {
+            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+                when (keycode) {
+                    KEY.DEL, KEY.FORWARD_DEL -> {
+                        boxesSelection.selected.forEach {
+                            diagram?.removeBox(it)
+                        }
+                        boxesSelection.selected.clear()
+                    }
+                    else -> {
+                        if (keycode == KEY.A && KEY.shiftPressed) {
+
+                        }
+                    }
+                }
+
+                return super.keyDown(event, keycode)
+            }
+
             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
                 rootSceneStack.headUpDisplay?.scrollFocus = diagram
             }
@@ -192,6 +246,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
                 startDragX = x
                 startDragY = y
                 pressedButton = button
+                rootSceneStack.headUpDisplay?.setKeyboardFocus(rootSceneStack)
                 return super.touchDown(event, x, y, pointer, button)
             }
 
@@ -255,16 +310,14 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
 
                     val oldLink = diagram.links.firstOrNull { it.destination == overInput }
                     if (oldLink != null) {
-                        val dest = oldLink.destination
-                        dest?.box?.node?.setInput(dest.inputName, null)
+                        oldLink.destination?.input?.value = null
                         diagram.links.remove(oldLink)
                     }
 
-                    val dest = tempLink.destination
-                    dest?.box?.node?.setInput(dest.inputName, null)
+                    tempLink.destination?.input?.value = null
 
                     if (overInput != null) {
-                        overInput.box.node.setInput(overInput.inputName, source.shaderData)
+                        overInput.input.value = source.shaderData
                         tempLink.destination = overInput
                         tempLink.overDestination = null
                     } else {

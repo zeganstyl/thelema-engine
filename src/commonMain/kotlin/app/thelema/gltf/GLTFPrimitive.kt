@@ -38,6 +38,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
     val mesh: IMesh = gltfMesh.entity.entity("${defaultName}_$elementIndex").component()
 
+    private var indexBufferUploadedToGPU = false
+
     override fun readJson() {
         super.readJson()
 
@@ -82,7 +84,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
                 mesh.indices = indices
 
-                gltf.runGLCall { indices.uploadBufferToGpu() }
+                gltf.runGLCall { uploadIndices() }
 
                 if (gltf.conf.mergeVertexAttributes) mergeBuffers(json) else addBuffersAsIs(json)
             }
@@ -167,9 +169,11 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
                 gltf.runGLCall {
                     vertices.uploadBufferToGpu()
+                    uploadIndices()
                     if (!gltf.conf.saveMeshesInCPUMem) {
                         vertices.bytes.destroy()
-                        mesh.indices?.bytes?.destroy()
+                        // FIXME
+                        //mesh.indices?.bytes?.destroy()
                     }
                 }
             }
@@ -203,8 +207,17 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         }
     }
 
+    private fun uploadIndices() {
+        if (!indexBufferUploadedToGPU) {
+            indexBufferUploadedToGPU = true
+            mesh.indices?.uploadBufferToGpu()
+        }
+    }
+
     override fun initProgress() {
         super.initProgress()
+        indexBufferUploadedToGPU = false
+
         val attributes = json.obj("attributes")
 
         //if (!attributes.contains("NORMAL")) maxProgress += mesh.indices?.size ?: mesh.verticesCount
@@ -252,9 +265,11 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
             gltf.runGLCall {
                 mesh.vertexBuffers.forEach { it.uploadBufferToGpu() }
+                uploadIndices()
                 if (!gltf.conf.saveMeshesInCPUMem) {
                     mesh.vertexBuffers.forEach { it.bytes.destroy() }
-                    mesh.indices?.bytes?.destroy()
+                    // FIXME
+                    //mesh.indices?.bytes?.destroy()
                 }
             }
         }

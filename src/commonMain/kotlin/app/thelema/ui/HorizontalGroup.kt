@@ -35,7 +35,7 @@ import kotlin.math.roundToLong
  * will be given a width of 0 (eg, a label with [word wrap][Label.setWrap] enabled).
  * @author Nathan Sweet
  */
-class HorizontalGroup() : WidgetGroup() {
+open class HorizontalGroup() : WidgetGroup() {
     constructor(block: HorizontalGroup.() -> Unit): this() { block(this) }
 
     override var prefWidth = 0f

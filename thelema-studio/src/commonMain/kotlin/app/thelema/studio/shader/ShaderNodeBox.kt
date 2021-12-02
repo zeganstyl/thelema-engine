@@ -3,29 +3,44 @@ package app.thelema.studio.shader
 import app.thelema.math.Vec4
 import app.thelema.shader.node.GLSLType
 import app.thelema.shader.node.IShaderNode
-import app.thelema.ui.Actor
-import app.thelema.ui.Label
-import app.thelema.ui.Window
+import app.thelema.studio.SKIN
+import app.thelema.studio.componentNameView
+import app.thelema.ui.*
 import app.thelema.utils.Color
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
 
-class ShaderNodeBox(val flowDiagram: ShaderFlowDiagram, val node: IShaderNode): Window(
-    title = node.componentName,
+class ShaderNodeBox(val diagram: ShaderFlowDiagram, val node: IShaderNode): Window(
+    title = componentNameView(node.componentName).let { if (it.endsWith("Node")) it.substringBeforeLast("Node") else it },
     addCloseButton = false
 ) {
-    val inputs = ArrayList<ShaderInput>()
-    val outputs = ArrayList<ShaderOutput>()
+    val inputs = ArrayList<ShaderInputView>()
+    val outputs = ArrayList<ShaderOutputView>()
+
+    var selected: Boolean = false
+        set(value) {
+            field = value
+            background = if (value) SKIN.solidFrameSelected else DSKIN.solidFrame
+        }
 
     init {
         keepWithinStage = false
 
-        node.input.forEach {
-            val label = ShaderInput(this, it.key)
-            content.add(label)
-            content.add(Label(it.key).apply { lineAlign = -1 }).growX().padLeft(5f)
-            content.add(Actor()).newRow()
-            inputs.add(label)
+        content.touchable = Touchable.ChildrenOnly
+
+        node.outputs.iterate {
+            val label = ShaderOutputView(this, it)
+            content.add(Actor())
+            content.add(Label(it.name)).align(Align.right).padRight(5f)
+            content.add(label).newRow()
+            outputs.add(label)
         }
+
+        addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent, x: Float, y: Float) {
+                if (event.target == this@ShaderNodeBox) ShaderComponentScene.listPanel.selection.choose(this@ShaderNodeBox)
+            }
+        })
 
         // TODO
 //        if (node is Op2Node) {
@@ -40,21 +55,20 @@ class ShaderNodeBox(val flowDiagram: ShaderFlowDiagram, val node: IShaderNode): 
     }
 
     fun setupLinks() {
-        node.output.forEach { outputEntry ->
-            val label = ShaderOutput(this, outputEntry.value)
-            outputs.add(label)
+        node.inputs.iterate { input ->
+            val inputLabel = ShaderInputView(this, input)
+            content.add(inputLabel)
+            content.add(Label(input.name)).align(Align.left).padLeft(5f)
+            content.add(Actor()).newRow()
+            inputs.add(inputLabel)
 
-            content.add(Actor())
-            content.add(Label(outputEntry.key).apply { lineAlign = 1 }).growX().padRight(5f)
-            content.add(label).newRow()
-
-            outputEntry.value.connectedTo.forEach { linkEntry ->
-                flowDiagram.boxes.firstOrNull { it.node == linkEntry.node }?.also { box ->
-                    val input = box.inputs.firstOrNull { it.inputName == linkEntry.inputName }
-                    if (input != null)  {
-                        flowDiagram.addLink(label, input)
+            input.value?.also { value ->
+                diagram.boxes.firstOrNull { it.node == value.container }?.also { box ->
+                    val outputLabel = box.outputs.firstOrNull { it.shaderData == value }
+                    if (outputLabel != null)  {
+                        diagram.addLink(outputLabel, inputLabel)
                     } else {
-                        LOG.error("${box.name}: can't link \"${label.name}\" to \"${linkEntry.inputName}\"")
+                        LOG.error("${box.name}: can't link \"${inputLabel.name}\" to \"${input.name}\"")
                     }
                 }
             }

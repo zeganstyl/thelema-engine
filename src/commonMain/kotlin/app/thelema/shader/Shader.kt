@@ -22,6 +22,7 @@ import app.thelema.g3d.IScene
 import app.thelema.gl.*
 import app.thelema.shader.node.*
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
 
 /** @author zeganstyl */
 open class Shader(
@@ -61,9 +62,9 @@ open class Shader(
     override var fragmentShaderHandle: Int = 0
     override var programHandle: Int = 0
 
-    override val nodes: MutableList<IShaderNode> = ArrayList()
+    override val nodes: MutableList<IShaderNode> = ArrayList(1)
 
-    protected val uids = HashMap<IShaderData, String>()
+    var actualNodes: Array<IShaderNode> = emptyArray()
 
     override var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit = { _, _ -> }
 
@@ -79,8 +80,6 @@ open class Shader(
             load(vertCode, fragCode)
         }
     }
-
-    override fun getUID(data: IShaderData): String = uids[data] ?: ""
 
     override fun vertSourceCode(title: String, pad: Int): String =
         numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vertCode, pad)
@@ -229,6 +228,19 @@ open class Shader(
         return program
     }
 
+    override fun prepareShader(mesh: IMesh, scene: IScene?) {
+        GL.resetTextureUnitCounter()
+        bind()
+
+        onPrepareShader(mesh, scene)
+
+        for (i in actualNodes.indices) {
+            val node = actualNodes[i]
+            node.shaderOrNull = this
+            node.prepareShaderNode(mesh, scene)
+        }
+    }
+
     override fun disableAllAttributes() {
         attributes.values.forEach {
             GL.glDisableVertexAttribArray(it)
@@ -266,23 +278,49 @@ open class Shader(
         }
     }
 
-    override fun buildByNodes() {
-        uids.clear()
-        var uid = 0
-        for (i in nodes.indices) {
-            val node = nodes[i]
-            node.shaderOrNull = this
-            node.output.forEach {
-                uids[it.value] = uid.toString()
-                uid++
+    private fun findMaxChildrenTreeDepth(root: IShaderNode, count: Int = 0): Int {
+        if (root.inputs.isNotEmpty()) {
+            val incCount = count + 1
+            var maxCount = incCount
+            root.inputs.iterate {
+                val container = it.value?.container
+                if (container != root && container != null) {
+                    val childCount = findMaxChildrenTreeDepth(container, incCount)
+                    if (childCount > maxCount) {
+                        maxCount = childCount
+                    }
+                }
+            }
+            return maxCount
+        }
+        return count
+    }
+
+    private fun collectNodes(root: IShaderNode, out: MutableSet<IShaderNode>) {
+        if (out.add(root)) {
+            root.inputs.iterate { input ->
+                input.value?.container?.also {
+                    collectNodes(it, out)
+                }
             }
         }
+    }
 
-        nodes.forEach { it.prepareToBuild() }
+    override fun buildByNodes() {
+        // collect all connected nodes to know about full tree
+        val nodeSet = HashSet<IShaderNode>()
+        nodes.iterate { collectNodes(it, nodeSet) }
+        actualNodes = nodeSet.toTypedArray()
+        actualNodes.iterate { node ->
+            node.shaderOrNull = this
+        }
+
+        actualNodes.forEach { it.prepareToBuild() }
 
         // Sort nodes with order: less dependencies depth - first, more dependencies depth - last
         val countMap = HashMap<IShaderNode, Int>()
-        nodes.forEach { countMap[it] = findMaxChildrenTreeDepth(it) }
+        actualNodes.forEach { countMap[it] = findMaxChildrenTreeDepth(it) }
+        actualNodes.sortBy { countMap[it] }
         nodes.sortBy { countMap[it] }
 
         val vertDecl = StringBuilder()
@@ -290,7 +328,7 @@ open class Shader(
         val fragDecl = StringBuilder()
         val fragExe = StringBuilder()
 
-        nodes.forEach {
+        actualNodes.forEach {
             it.declarationVert(vertDecl)
             it.executionVert(vertExe)
             it.declarationFrag(fragDecl)
@@ -317,28 +355,10 @@ open class Shader(
         if (isCompiled) destroy()
         load(vertCode, fragCode)
         if (!isCompiled) {
-            throw RuntimeException("Errors in generated shader")
+            LOG.error("Errors in generated shader")
         }
         bind()
-        nodes.forEach { it.shaderCompiled() }
-    }
-
-    private fun findMaxChildrenTreeDepth(node: IShaderNode, count: Int = 0): Int {
-        if (node.input.isNotEmpty()) {
-            val incCount = count + 1
-            var maxCount = incCount
-            node.input.values.forEach {
-                val container = it.container
-                if (container != node && container != null) {
-                    val childCount = findMaxChildrenTreeDepth(container, incCount)
-                    if (childCount > maxCount) {
-                        maxCount = childCount
-                    }
-                }
-            }
-            return maxCount
-        }
-        return count
+        actualNodes.forEach { it.shaderCompiled() }
     }
 
     override fun destroy() {
@@ -361,26 +381,73 @@ open class Shader(
                 bool(Shader::depthMask)
 
                 descriptor({ VertexNode() }) {
-
+                    int(VertexNode::maxBones)
+                    int(VertexNode::bonesSetsNum)
+                    string(VertexNode::positionName)
+                    string(VertexNode::normalName)
+                    string(VertexNode::tangentName)
+                    string(VertexNode::worldTransformType)
+                    string(VertexNode::bonesName)
+                    string(VertexNode::boneWeightsName)
                 }
 
                 descriptor({ CameraDataNode() }) {
-
+                    string(CameraDataNode::instancePositionName)
+                    bool(CameraDataNode::alwaysRotateObjectToCamera)
+                    bool(CameraDataNode::useInstancePosition)
                 }
 
                 descriptor({ UVNode() }) {
-
+                    string(UVNode::uvName)
                 }
 
                 descriptor({ TextureNode() }) {
+                    refAbs(TextureNode::texture)
+                    bool(TextureNode::sRGB)
+                    stringEnum(
+                        TextureNode::textureType,
+                        listOf(GLSLType.Sampler1D, GLSLType.Sampler2D, GLSLType.Sampler2DArray, GLSLType.SamplerCube, GLSLType.Sampler3D)
+                    )
+                }
+
+                descriptor({ NormalMapNode() }) {
 
                 }
 
                 descriptor({ PBRNode() }) {
-
+                    bool(PBRNode::iblEnabled)
+                    bool(PBRNode::receiveShadows)
+                    int(PBRNode::shadowCascadesNum)
                 }
 
                 descriptor({ OutputNode() }) {
+                    intEnum(
+                        OutputNode::cullFaceMode,
+                        mapOf(
+                            0 to "Disabled",
+                            GL_BACK to "Back",
+                            GL_FRONT to "Front",
+                            GL_FRONT_AND_BACK to "Front and Back"
+                        ),
+                        "Disabled"
+                    )
+                }
+
+                descriptor({ ParticleDataNode() }) {
+
+                }
+
+                descriptor({ ParticleScaleNode() }) {
+                    float(ParticleScaleNode::scaling)
+                }
+
+                descriptor({ ParticleUVFrameNode() }) {
+                    float(ParticleUVFrameNode::frameSizeU)
+                    float(ParticleUVFrameNode::frameSizeV)
+                    string(ParticleUVFrameNode::instanceUvStartName)
+                }
+
+                descriptor({ ParticleColorNode() }) {
 
                 }
             }

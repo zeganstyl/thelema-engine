@@ -32,6 +32,12 @@ object Mesh3DTool {
         normals.rewind()
     }
 
+    fun calculateFlatNormals(mesh: IMesh) = calculateFlatNormals(
+        mesh,
+        mesh.getAttribute(mesh.positionsName),
+        mesh.getAttribute(mesh.normalsName)
+    )
+
     /** After calculate tangent, it is recommended to use [orthogonalizeTangents] */
     inline fun calculateTangents(
         mesh: IMesh,

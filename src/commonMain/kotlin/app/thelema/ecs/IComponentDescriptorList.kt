@@ -17,7 +17,15 @@
 package app.thelema.ecs
 
 interface IComponentDescriptorList {
+    val componentName: String
+
     val descriptors: List<ComponentDescriptor<IEntityComponent>>
+
+    val listeners: List<ComponentDescriptorListListener>
+
+    fun addListListener(listener: ComponentDescriptorListListener)
+
+    fun removeListListener(listener: ComponentDescriptorListListener)
 
     /** Set descriptor */
     fun addDescriptor(descriptor: ComponentDescriptor<IEntityComponent>)
@@ -58,4 +66,9 @@ inline fun <reified New: IEntityComponent> IComponentDescriptorList.replaceDescr
     noinline block: ComponentDescriptor<New>.() -> Unit
 ) {
     replaceDescriptor(name, descriptor(name, create, block) as ComponentDescriptor<IEntityComponent>)
+}
+
+interface ComponentDescriptorListListener {
+    fun addedDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {}
+    fun removedDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {}
 }

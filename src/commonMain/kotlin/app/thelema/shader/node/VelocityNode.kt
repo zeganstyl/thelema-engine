@@ -16,7 +16,6 @@
 
 package app.thelema.shader.node
 
-import app.thelema.app.APP
 import app.thelema.g3d.IScene
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
@@ -37,39 +36,29 @@ class VelocityNode(): ShaderNode() {
     var bonesSetsNum: Int = 1
 
     override val componentName: String
-        get() = "Vertex"
+        get() = "VelocityNode"
 
     var aPositionName = "POSITION"
     var aBonesName = "JOINTS_"
     var aBoneWeightsName = "WEIGHTS_"
 
-    val prevPosition = defOut(GLSLVec3("prevPosition"))
-    val velocity = defOut(GLSLVec2("velocity"))
-    val stretchedClipSpacePosition = defOut(GLSLVec4("stretchedPosition"))
+    val prevPosition = output(GLSLVec3("prevPosition"))
+    val velocity = output(GLSLVec2("velocity"))
+    val stretchedClipSpacePosition = output(GLSLVec4("stretchedPosition"))
 
     /** Current world space position. It can be taken from [VertexNode.position] */
-    var worldSpacePosition: IShaderData
-        get() = input["worldSpacePosition"] ?: GLSL.zeroFloat
-        set(value) = setInput("worldSpacePosition", value)
+    var worldSpacePosition by input(GLSL.zeroFloat)
 
     /** Current clip space position. It can be taken from [CameraDataNode.clipSpacePosition] */
-    var clipSpacePosition: IShaderData
-        get() = input["clipSpacePosition"] ?: GLSL.zeroFloat
-        set(value) = setInput("clipSpacePosition", value)
+    var clipSpacePosition by input(GLSL.zeroFloat)
 
     /** Previous clip space position. It can be taken from [CameraDataNode.previousViewProjectionMatrix] */
-    var previousViewProjectionMatrix: IShaderData
-        get() = input["previousViewProjectionMatrix"] ?: GLSL.oneFloat
-        set(value) = setInput("previousViewProjectionMatrix", value)
+    var previousViewProjectionMatrix by input(GLSL.oneFloat)
 
     /** Vertex shader normal, used for stretching */
-    var normal: IShaderData
-        get() = input["normal"] ?: GLSL.defaultNormal
-        set(value) = setInput("normal", value)
+    var normal by input(GLSL.defaultNormal)
 
-    var viewProjectionMatrix: IShaderData
-        get() = input["viewProjectionMatrix"] ?: GLSL.oneFloat
-        set(value) = setInput("viewProjectionMatrix", value)
+    var viewProjectionMatrix by input(GLSL.oneFloat)
 
     private val uPrevBoneMatricesName: String
         get() = "uPrevBoneMatrices$uid"
@@ -82,13 +71,6 @@ class VelocityNode(): ShaderNode() {
 
     private val hasBones
         get() = maxBones > 0 && bonesSetsNum > 0
-
-    init {
-        setInput("worldSpacePosition", worldSpacePosition)
-        setInput("clipSpacePosition", clipSpacePosition)
-        setInput("previousViewProjectionMatrix", previousViewProjectionMatrix)
-        setInput("normal", normal)
-    }
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)

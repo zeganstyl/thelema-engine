@@ -21,11 +21,7 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
-import app.thelema.math.Vec4
-import app.thelema.math.mul
-import kotlin.math.tan
+import app.thelema.math.*
 
 class MeshBuilder: IMeshBuilder {
     override val componentName: String
@@ -42,9 +38,11 @@ class MeshBuilder: IMeshBuilder {
     var tangents = false
 
     var positionName: String = "POSITION"
-    var uvName: String = "UV"
+    var uvName: String = "TEXCOORD_0"
     var normalName: String = "NORMAL"
     var tangentName: String = "TANGENT"
+
+    var calculateNormals = false
 
     var indexType: Int = GL_UNSIGNED_SHORT
 
@@ -62,9 +60,12 @@ class MeshBuilder: IMeshBuilder {
         get() = isMeshUpdateRequestedInternal.value
         set(value) { isMeshUpdateRequestedInternal.value = value }
 
-    val position = Vec3(0f, 0f, 0f)
-    val rotation = Vec4(0f, 0f, 0f, 1f)
-    val scale = Vec3(1f, 1f, 1f)
+    var position: IVec3 = Vec3(0f, 0f, 0f)
+        set(value) { field.set(value) }
+    var rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
+        set(value) { field.set(value) }
+    var scale: IVec3 = Vec3(1f, 1f, 1f)
+        set(value) { field.set(value) }
 
     var proxy: IMeshBuilder? = null
 
@@ -150,8 +151,8 @@ class MeshBuilder: IMeshBuilder {
         }
         mesh.indices?.rewind()
 
-        val verticesCount = getVerticesCount()
-        mesh.verticesCount = verticesCount
+        val verticesNum = getVerticesCount()
+        mesh.verticesCount = verticesNum
         if (vertexBuffer == null) {
             vertexBuffer = mesh.addVertexBuffer {
                 addAttribute(3, positionName)
@@ -176,8 +177,8 @@ class MeshBuilder: IMeshBuilder {
                 val tangents = tangents && !containsInput(tangentName)
                 if (tangents) addAttribute(4, tangentName)
 
-                if (positions || uvs || normals || tangents || verticesCount != mesh.verticesCount) {
-                    initVertexBuffer(mesh.verticesCount)
+                if (positions || uvs || normals || tangents || verticesNum != verticesCount) {
+                    initVertexBuffer(verticesNum)
                 }
             }
         }
@@ -191,6 +192,8 @@ class MeshBuilder: IMeshBuilder {
             }
         }
         applyIndices()
+
+        if (calculateNormals) Mesh3DTool.calculateFlatNormals(mesh)
 
         if (tangents) {
             Mesh3DTool.calculateTangents(mesh, mesh.getAttribute(positionName), mesh.getAttribute(uvName), mesh.getAttribute(tangentName))

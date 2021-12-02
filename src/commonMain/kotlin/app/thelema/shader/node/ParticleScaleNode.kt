@@ -2,11 +2,11 @@ package app.thelema.shader.node
 
 class ParticleScaleNode: ShaderNode() {
     override val componentName: String
-        get() = "ParticleColorNode"
+        get() = "ParticleScaleNode"
 
-    var lifeTimePercent by shaderInput(GLSL.oneFloat)
-    var inputPosition by shaderInput(GLSL.oneFloat)
-    val scaledPosition = defOut(GLSLVec3("scaledPosition"))
+    var lifeTimePercent by input(GLSL.oneFloat)
+    var inputPosition by input(GLSL.oneFloat)
+    val scaledPosition = output(GLSLVec3("scaledPosition"))
     var scaling = 1f
 
     override fun declarationVert(out: StringBuilder) {

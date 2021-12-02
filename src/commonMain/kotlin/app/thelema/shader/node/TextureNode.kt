@@ -26,7 +26,7 @@ class TextureNode(): ShaderNode() {
     constructor(block: TextureNode.() -> Unit): this() { block(this) }
 
     constructor(
-        uv: IShaderData = GLSL.zeroFloat,
+        uv: IShaderData = GLSLNode.uv.uv,
         texture: ITexture? = null,
 
         /** If you use JPEG images, better to set it false */
@@ -42,15 +42,13 @@ class TextureNode(): ShaderNode() {
     }
 
     override val componentName: String
-        get() = "Texture"
+        get() = "TextureNode"
 
-    var uv
-        get() = input["uv"] ?: GLSL.zeroFloat
-        set(value) = setInput("uv", value)
+    var uv by input(GLSLNode.uv.uv)
 
-    val sampler = defOut(GLSLFloat("tex"))
-    val color = defOut(GLSLVec4("texColor"))
-    val alpha = defOut(GLSLFloat("texAlpha").apply { scope = GLSLScope.Inline })
+    val sampler = output(GLSLFloat("tex"))
+    val color = output(GLSLVec4("texColor"))
+    val alpha = output(GLSLFloat("texAlpha").apply { scope = GLSLScope.Inline })
 
     var texture: ITexture? = null
 

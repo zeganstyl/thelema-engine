@@ -6,11 +6,25 @@ import app.thelema.math.Vec2
 import app.thelema.shader.node.GLSLType
 import app.thelema.utils.Color
 
-class ShaderLink(
-    var source: ShaderOutput,
-    var destination: ShaderInput? = null,
+class ShaderLinkView(
+    source: ShaderOutputView,
+    destination: ShaderInputView? = null,
     var overDestination: IVec2? = null
 ) {
+    var source: ShaderOutputView = source
+        set(value) {
+            value.links.remove(this)
+            field = value
+            value.links.add(this)
+        }
+
+    var destination: ShaderInputView? = null
+        set(value) {
+            field?.link = null
+            field = value
+            value?.link = this
+        }
+
     private var x1Old: Float = 0f
     private var y1Old: Float = 0f
     private var x2Old: Float = 0f
@@ -24,6 +38,11 @@ class ShaderLink(
         this[Batch.C2] = c
         this[Batch.C3] = c
         this[Batch.C4] = c
+    }
+
+    init {
+        this.source = source
+        this.destination = destination
     }
 
     fun updateLink() {
@@ -78,25 +97,5 @@ class ShaderLink(
         var halfWidth = 1f
 
         val zero2 = Vec2(0f, 0f)
-
-        const val majLum: Float = 1f
-        const val minLum: Float = 0.5f
-        val floatColor = Color.toFloatBits(majLum, minLum, minLum, 1f)
-        val vec2Color = Color.toFloatBits(minLum, majLum, minLum, 1f)
-        val vec3Color = Color.toFloatBits(minLum, minLum, majLum, 1f)
-        val vec4Color = Color.toFloatBits(majLum, majLum, minLum, 1f)
-        val mat3Color = Color.toFloatBits(minLum, majLum, majLum, 1f)
-        val mat4Color = Color.toFloatBits(majLum, minLum, majLum, 1f)
-        val default = Color.toFloatBits(1f, 1f, 1f, 1f)
-
-        fun getTypeColor(glslType: String): Float = when (glslType) {
-            GLSLType.Float -> floatColor
-            GLSLType.Vec2 -> vec2Color
-            GLSLType.Vec3 -> vec3Color
-            GLSLType.Vec4 -> vec4Color
-            GLSLType.Mat3 -> mat3Color
-            GLSLType.Mat4 -> mat4Color
-            else -> default
-        }
     }
 }

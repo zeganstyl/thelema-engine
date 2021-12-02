@@ -32,6 +32,7 @@ import app.thelema.utils.LOG
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
  *
  * @author zeganstyl */
+// FIXME attach array entities to gltf entity only when whole gltf is loaded, because of multithreading
 class GLTF: IGLTF, LoaderAdapter() {
     var source: Any = ""
     var sourceType: GLTFSourceType = GLTFSourceType.Auto
@@ -74,7 +75,7 @@ class GLTF: IGLTF, LoaderAdapter() {
     override val animationsEntity: IEntity
         get() = entity.entity(animations.name).apply { serializeEntity = false }
     override val scenesEntity: IEntity
-        get() = entity.entity(scenes.name)
+        get() = entity.entity(scenes.name).apply { serializeEntity = false }
 
     override val extra: MutableMap<String, Any> = HashMap(0)
 

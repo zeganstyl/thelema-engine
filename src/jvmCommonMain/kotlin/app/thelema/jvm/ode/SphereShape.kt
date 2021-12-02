@@ -23,7 +23,7 @@ import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
 class SphereShape: SpecificShape<DSphere>(), ISphereShape {
-    override var radius: Float = 0f
+    override var radius: Float = 1f
         set(value) {
             field = value
             geom?.radius = value.toDouble()

@@ -25,7 +25,6 @@ import app.thelema.gl.IMesh
 import app.thelema.math.Vec4
 import app.thelema.shader.IShader
 import app.thelema.shader.SimpleShader3D
-import kotlin.native.concurrent.ThreadLocal
 
 /** @author zeganstyl */
 interface IMaterial: IEntityComponent {

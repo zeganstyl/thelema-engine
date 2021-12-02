@@ -51,6 +51,16 @@ open class Selection<T>(val selected: MutableList<T> = ArrayList()): MutableList
         listeners.add(listener)
     }
 
+    open fun onSelectedChanged(block: (element: T?) -> Unit): SelectionListener<T> {
+        val listener = object : SelectionListener<T> {
+            override fun lastSelectedChanged(newValue: T?) {
+                block(newValue)
+            }
+        }
+        listeners.add(listener)
+        return listener
+    }
+
     open fun removeSelectionListener(listener: SelectionListener<T>) {
         listeners.remove(listener)
     }
@@ -59,7 +69,7 @@ open class Selection<T>(val selected: MutableList<T> = ArrayList()): MutableList
      * This is typically invoked by user interaction.  */
     open fun choose(item: T?) {
         if (item == null) {
-            clear()
+            if (!KEY.ctrlPressed) clear()
             return
         }
 

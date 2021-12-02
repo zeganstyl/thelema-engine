@@ -21,6 +21,7 @@ interface ILog {
     var infoEnabled: Boolean
     var debugEnabled: Boolean
     var errorEnabled: Boolean
+    var throwExceptionOnError: Boolean
 
     fun info(message: Boolean) = info(message.toString())
     fun info(message: Int) = info(message.toString())

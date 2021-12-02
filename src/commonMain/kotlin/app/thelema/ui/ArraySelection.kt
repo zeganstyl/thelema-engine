@@ -26,7 +26,7 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
     private var rangeStart: T? = null
     override fun choose(item: T?) {
         if (item == null) {
-            clear()
+            if (!KEY.ctrlPressed) clear()
             return
         }
         if (isDisabled) return
@@ -47,8 +47,8 @@ class ArraySelection<T>(var array: List<T>) : Selection<T>() {
                     end = start
                     start = temp
                 }
-                if (!KEY.ctrlPressed) selected.clear()
-                for (i in start..end) selected.add(array[i])
+                if (!KEY.ctrlPressed) clear()
+                for (i in start..end) addBase(array[i])
                 changed()
                 rangeStart = oldRangeStart
                 cleanup()

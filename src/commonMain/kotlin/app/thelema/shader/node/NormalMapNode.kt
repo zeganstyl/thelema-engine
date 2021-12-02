@@ -17,48 +17,39 @@
 package app.thelema.shader.node
 
 /** @author zeganstyl */
-class NormalMapNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
+class NormalMapNode(vertexPosition: IShaderData = GLSLNode.vertex.position): ShaderNode() {
     constructor(block: NormalMapNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "Normal Map"
+        get() = "NormalMapNode"
 
     /** normalize(cameraPosition - worldPosition), for back-facing surface */
-    var normalizedViewVector
-        get() = input[NormalizedViewVector] ?: GLSL.zeroFloat
-        set(value) = setInput(NormalizedViewVector, value)
+    var normalizedViewVector by input(GLSL.zeroFloat)
 
     /** World space vertex position */
-    var vertexPosition: IShaderData
-        get() = input[VertexPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(VertexPosition, value)
+    var vertexPosition by input(GLSL.zeroFloat)
 
     /** Texture coordinates */
-    var uv: IShaderData
-        get() = input[UV] ?: GLSL.zeroFloat
-        set(value) = setInput(UV, value)
+    var uv by input(GLSLNode.uv.uv)
 
     /** Optional. Normal scaling float value */
-    var normalScale: IShaderData
-        get() = input[NormalScale] ?: GLSL.oneFloat
-        set(value) = setInput(NormalScale, value)
+    var normalScale by input(GLSL.oneFloat)
 
     /** Normal from texture */
-    var normalColor: IShaderData
-        get() = input[NormalColor] ?: GLSL.defaultNormal
-        set(value) = setInput(NormalColor, value)
+    var normalColor by input(GLSL.defaultNormal)
 
     /** Matrix 3x3 with tangent, binormal, normal vectors */
-    var tbn: IShaderData
-        get() = input[TBN] ?: GLSL.zeroFloat
-        set(value) = setInput(TBN, value)
+    var tbn by input(GLSL.zeroFloat)
 
-    val tangentResult = defOut(GLSLVec3("tangent"))
-    val biNormalResult = defOut(GLSLVec3("biNormal"))
-    val normalResult = defOut(GLSLVec3("normal"))
+    val tangentResult = output(GLSLVec3("tangent"))
+    val biNormalResult = output(GLSLVec3("biNormal"))
+    val normalResult = output(GLSLVec3("normal"))
 
     init {
-        setInput("vertexPosition", vertexPosition)
+        uv = GLSLNode.uv.uv
+        this.vertexPosition = vertexPosition
+        tbn = GLSLNode.vertex.tbn
+        normalizedViewVector = GLSLNode.camera.normalizedViewVector
     }
 
     override fun executionFrag(out: StringBuilder) {
@@ -75,13 +66,6 @@ class NormalMapNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() 
     }
 
     companion object {
-        const val NormalizedViewVector = "normalizedViewVector"
-        const val VertexPosition = "vertexPosition"
-        const val UV = "uv"
-        const val NormalScale = "normalScale"
-        const val NormalColor = "normalColor"
-        const val TBN = "tbn"
-
         // TODO https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
         fun normalCode(outTangentName: String, outBiNormalName: String, outNormalName: String): String {
             return """

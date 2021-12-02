@@ -140,10 +140,7 @@ interface IVec4: IVec {
         return this
     }
 
-    fun setColor(rgba8888: Int): IVec4 {
-        Color.int(rgba8888)
-        return this
-    }
+    fun setColor(rgba8888: Int): IVec4 = Color.int(rgba8888, this)
 
     fun set(other: IVec4) = set(other.x, other.y, other.z, other.w)
     fun set(other: IVec3, w: Float): IVec4 {

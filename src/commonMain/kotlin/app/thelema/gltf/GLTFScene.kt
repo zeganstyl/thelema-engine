@@ -22,7 +22,6 @@ import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
-import app.thelema.res.RES
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
 import kotlin.math.max
@@ -36,7 +35,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
     val loader = gltf.scenesEntity.entity("${defaultName}_$elementIndex").entityLoader {
         separateThread = false
-        file = gltf.directory.child(entity.name + EntityLoader.ext)
+        file = gltf.directory.child("${array.gltf.file?.name}_${entity.name}${EntityLoader.ext}")
     }
     val scene: IEntity = loader.targetEntity
 

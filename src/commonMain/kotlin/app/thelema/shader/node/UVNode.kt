@@ -16,30 +16,16 @@
 
 package app.thelema.shader.node
 
-import app.thelema.json.IJsonObject
-
 /** @author zeganstyl */
 class UVNode() : ShaderNode() {
     constructor(block: UVNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "UV"
+        get() = "UVNode"
 
     var uvName: String = "TEXCOORD_0"
 
-    val uv = defOut(GLSLVec2("uv"))
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        uvName = json.string("aUVName", "TEXCOORD_0")
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        json["aUVName"] = uvName
-    }
+    val uv = output(GLSLVec2("uv"))
 
     override fun declarationFrag(out: StringBuilder) {
         if (uv.isUsed) out.append("$varIn ${uv.typedRef};\n")

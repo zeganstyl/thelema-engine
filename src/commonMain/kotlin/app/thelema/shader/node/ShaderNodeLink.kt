@@ -17,4 +17,8 @@
 package app.thelema.shader.node
 
 /** @author zeganstyl */
-class ShaderNodeLink(val node: IShaderNode, var inputName: String)
+class ShaderNodeLink(
+    val dst: IShaderNodeInput<IShaderData?>,
+    val dstNode: IShaderNode,
+    val src: IShaderData,
+)

@@ -25,22 +25,18 @@ import org.lwjgl.glfw.GLFW
 import java.io.PrintStream
 
 
-class Lwjgl3WindowConf() {
-    constructor(block: Lwjgl3WindowConf.() -> Unit): this() {
-        block(this)
-    }
-
-    var disableAudio: Boolean = false
-    var audioDeviceSimultaneousSources: Int = 16
-    var audioDeviceBufferSize: Int = 512
-    var audioDeviceBufferCount: Int = 9
+data class Lwjgl3WindowConf(
+    var disableAudio: Boolean,
+    var audioDeviceSimultaneousSources: Int,
+    var audioDeviceBufferSize: Int,
+    var audioDeviceBufferCount: Int,
 
     /**Sets the polling rate during idle time in non-continuous rendering mode. Must be positive.
      * Default is 60.  */
-    var idleFPS: Int = 60
+    var idleFPS: Int,
 
-    var cacheDirectory: String = ".prefs/"
-    var cacheFileLocation: String = FileLocation.External
+    var cacheDirectory: String,
+    var cacheFileLocation: String,
 
     /**
      * Defines how HDPI monitors are handled. Operating systems may have a
@@ -50,54 +46,104 @@ class Lwjgl3WindowConf() {
      * you to specify whether you want to work in logical or raw pixel units.
      * Note that some OpenGL functions like glViewport and glScissor require raw pixel units.
      */
-    var useLogicalCoordinates: Boolean = true
+    var useLogicalCoordinates: Boolean,
 
-    var debug: Boolean = false
-    var debugStream: PrintStream = System.err
+    var debug: Boolean,
+    var debugStream: PrintStream,
 
-    var x: Int = -1
-    var y: Int = -1
-    var width: Int = 640
-    var height: Int = 480
-    var minWidth: Int = -1
-    var minHeight: Int = -1
-    var maxWidth: Int = -1
-    var maxHeight: Int = -1
-    var resizable: Boolean = true
-    var decorated: Boolean = true
-    var maximized: Boolean = false
-    var maximizedMonitor: Lwjgl3Monitor? = null
-    var autoIconify: Boolean = false
-    var iconFileLocation: String = FileLocation.Internal
-    var iconPaths: Array<String>? = null
-    var fullscreenMode: Lwjgl3DisplayMode? = null
-    var title: String = ""
-    var initialBackgroundColor: IVec4 = Vec4(Color.BLACK)
-    var initialVisible: Boolean = true
-    var vSyncEnabled: Boolean = true
+    var x: Int,
+    var y: Int,
+    var width: Int,
+    var height: Int,
+    var minWidth: Int,
+    var minHeight: Int,
+    var maxWidth: Int,
+    var maxHeight: Int,
+    var resizable: Boolean,
+    var decorated: Boolean,
+    var maximized: Boolean,
+    var maximizedMonitor: Lwjgl3Monitor?,
+    var autoIconify: Boolean,
+    var iconFileLocation: String,
+    var iconPaths: Array<String>?,
+    var fullscreenMode: Lwjgl3DisplayMode?,
+    var title: String,
+    var initialBackgroundColor: IVec4,
+    var initialVisible: Boolean,
+    var vSyncEnabled: Boolean,
 
-    var redBits: Int = 8
-    var greenBits: Int = 8
-    var blueBits: Int = 8
-    var alphaBits: Int = 8
-    var depthBits: Int = 16
-    var stencilBits: Int = 0
-    var msaaSamples: Int = 0
+    var redBits: Int,
+    var greenBits: Int,
+    var blueBits: Int,
+    var alphaBits: Int,
+    var depthBits: Int,
+    var stencilBits: Int,
+    var msaaSamples: Int,
 
     /** Set transparent window hint */
     var transparentFramebuffer: Boolean = false
+) {
+    constructor() : this(
+        disableAudio = false,
+        audioDeviceSimultaneousSources = 16,
+        audioDeviceBufferSize = 512,
+        audioDeviceBufferCount = 9,
 
-    fun set(config: Lwjgl3WindowConf) {
-        disableAudio = config.disableAudio
-        audioDeviceSimultaneousSources = config.audioDeviceSimultaneousSources
-        audioDeviceBufferSize = config.audioDeviceBufferSize
-        audioDeviceBufferCount = config.audioDeviceBufferCount
-        idleFPS = config.idleFPS
-        cacheDirectory = config.cacheDirectory
-        cacheFileLocation = config.cacheFileLocation
-        useLogicalCoordinates = config.useLogicalCoordinates
-        debug = config.debug
-        debugStream = config.debugStream
+        /**Sets the polling rate during idle time in non-continuous rendering mode. Must be positive.
+         * Default is 60.  */
+        idleFPS = 60,
+
+        cacheDirectory = ".prefs/",
+        cacheFileLocation = FileLocation.External,
+
+        /**
+         * Defines how HDPI monitors are handled. Operating systems may have a
+         * per-monitor HDPI scale setting. The operating system may report window
+         * width/height and mouse coordinates in a logical coordinate system at a
+         * lower resolution than the actual physical resolution. This setting allows
+         * you to specify whether you want to work in logical or raw pixel units.
+         * Note that some OpenGL functions like glViewport and glScissor require raw pixel units.
+         */
+        useLogicalCoordinates = true,
+
+        debug = false,
+        debugStream = System.err,
+
+        x = -1,
+        y = -1,
+        width = 640,
+        height = 480,
+        minWidth = -1,
+        minHeight = -1,
+        maxWidth = -1,
+        maxHeight = -1,
+        resizable = true,
+        decorated = true,
+        maximized = false,
+        maximizedMonitor = null,
+        autoIconify = false,
+        iconFileLocation = FileLocation.Internal,
+        iconPaths = null,
+        fullscreenMode = null,
+        title = "",
+        initialBackgroundColor = Vec4(Color.BLACK),
+        initialVisible = true,
+        vSyncEnabled = true,
+
+        redBits = 8,
+        greenBits = 8,
+        blueBits = 8,
+        alphaBits = 8,
+        depthBits = 16,
+        stencilBits = 0,
+        msaaSamples = 0,
+
+        /** Set transparent window hint */
+        transparentFramebuffer = false
+    )
+
+    constructor(block: Lwjgl3WindowConf.() -> Unit) : this() {
+        block(this)
     }
 
     /**
@@ -117,12 +163,6 @@ class Lwjgl3WindowConf() {
     }
 
     companion object {
-        fun copy(config: Lwjgl3WindowConf): Lwjgl3WindowConf {
-            val copy = Lwjgl3WindowConf()
-            copy.set(config)
-            return copy
-        }
-
         /**
          * @return the currently active [DisplayMode] of the primary monitor
          */

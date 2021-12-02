@@ -23,19 +23,23 @@ import app.thelema.test.g3d.BoxMeshTest
 import app.thelema.test.g3d.MeshCubeTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.g3d.gltf.GLTFLoadMultithreaded
+import app.thelema.test.g3d.mesh.DebugMeshTest
 import app.thelema.test.gl.MeshTest
 import app.thelema.test.gl.ScreenQuadTest
 import app.thelema.test.gl.TriangleBaseTest
 import app.thelema.test.img.Texture2DTest
 import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.phys.TrimeshShapeTest
+import app.thelema.test.shader.node.SkyboxVertexNodeTest
+import app.thelema.test.shader.node.VelocityNodeTest
+import app.thelema.test.shader.node.VertexNodeTest
 import app.thelema.test.ui.UITest
 
 class MainTest {
     init {
         //BoxMeshTest().testMain()
 
-        TrimeshShapeTest().testMain()
+        DebugMeshTest().testMain()
 
 //        val box = BoxMesh { setSize(2f, 1f, 1f) }
 //        val shader = SimpleShader3D()

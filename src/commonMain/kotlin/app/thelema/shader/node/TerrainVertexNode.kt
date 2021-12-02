@@ -21,7 +21,7 @@ import app.thelema.img.ITexture
 
 class TerrainVertexNode: ShaderNode() {
     override val componentName: String
-        get() = "Terrain Vertex"
+        get() = "TerrainVertexNode"
 
     var heightMap: ITexture? = null
 
@@ -32,8 +32,8 @@ class TerrainVertexNode: ShaderNode() {
     var terrainMaxHeight: Float = 1f
     var terrainY = 0f
 
-    val sourceHeight = defOut(GLSLVec3("height"))
-    val terrainUV = defOut(GLSLVec3("terrainUV"))
+    val sourceHeight = output(GLSLVec3("height"))
+    val terrainUV = output(GLSLVec3("terrainUV"))
 
     companion object {
         const val NormalizedViewVector = "normalizedViewVector"

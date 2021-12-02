@@ -73,21 +73,7 @@ interface IShader: IEntityComponent {
 
     fun load(vertCode: String, fragCode: String)
 
-    /** For shader node GLSL-variables */
-    fun getUID(data: IShaderData): String
-
-    fun prepareShader(mesh: IMesh, scene: IScene?) {
-        GL.resetTextureUnitCounter()
-        bind()
-
-        onPrepareShader(mesh, scene)
-
-        for (i in nodes.indices) {
-            val node = nodes[i]
-            node.shaderOrNull = this
-            node.prepareShaderNode(mesh, scene)
-        }
-    }
+    fun prepareShader(mesh: IMesh, scene: IScene?)
 
     fun setVertexAttributes(attributes: List<IVertexAttribute>) {
         attributes.forEach {

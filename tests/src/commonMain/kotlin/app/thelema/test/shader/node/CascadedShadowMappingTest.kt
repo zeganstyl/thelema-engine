@@ -27,13 +27,11 @@ import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.gl.TextureRenderer
-import app.thelema.gltf.GLTF
 import app.thelema.gltf.gltf
 import app.thelema.res.RES
 import app.thelema.shader.Shader
 import app.thelema.shader.node.*
 import app.thelema.test.Test
-import app.thelema.res.load
 
 /** @author zeganstyl */
 class CascadedShadowMappingTest : Test {
@@ -52,7 +50,7 @@ class CascadedShadowMappingTest : Test {
 
             entity("light1") {
                 directionalLight {
-                    color.set(0.1f, 0.1f, 1f)
+                    color.set(0.1f, 0.1f, 1f, 1f)
                     setDirectionFromPosition(1f, 1f, 1f)
                     setupShadowMaps(1024, 1024)
                     lightPositionOffset = 50f

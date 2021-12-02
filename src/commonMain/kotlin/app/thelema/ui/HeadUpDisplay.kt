@@ -74,14 +74,13 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
     private var mouseScreenX = 0
     private var mouseScreenY = 0
     private var mouseOverActor: Actor? = null
-    /** Gets the actor that will receive key events.
-     * @return May be null.
-     */
+
+    /** Gets the actor that will receive key events. */
     var keyboardFocus: Actor? = null
-    /** Gets the actor that will receive scroll events.
-     * @return May be null.
-     */
+
+    /** Gets the actor that will receive scroll events. */
     var scrollFocus: Actor? = null
+
     val touchFocuses = ArrayList<TouchFocus>()
     private val touchFocusesTemp = ArrayList<TouchFocus>()
 

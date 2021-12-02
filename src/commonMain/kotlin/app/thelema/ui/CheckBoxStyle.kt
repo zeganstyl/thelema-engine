@@ -20,8 +20,8 @@ package app.thelema.ui
  * @author Nathan Sweet
  */
 class CheckBoxStyle constructor(
-    var checkboxOn: Drawable = DSKIN.white5x5,
-    var checkboxOff: Drawable = DSKIN.solidFrame
+    var checkboxOn: Drawable? = DSKIN.white5x5,
+    var checkboxOff: Drawable? = DSKIN.solidFrame
 ) : TextButtonStyle(checkboxOn, checkboxOn) {
     var checkboxOnOver: Drawable? = null
     var checkboxOver: Drawable? = null

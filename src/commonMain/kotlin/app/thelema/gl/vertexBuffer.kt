@@ -43,6 +43,7 @@ interface IVertexBuffer: IGLBuffer {
     /** You can use this after adding all vertex inputs */
     fun initVertexBuffer(verticesCount: Int, block: IByteData.() -> Unit = {})
 
+    /** Set capacity and keep old data */
     fun resizeVertexBuffer(newVerticesCount: Int)
 
     fun addAttribute(

@@ -30,16 +30,14 @@ class ToneMapNode(
     var toneMapType: Int = LinearToSRGBToneMap
 ): ShaderNode() {
     override val componentName: String
-        get() = "Tone Map"
+        get() = "ToneMapNode"
 
-    var inputColor
-        get() = input[InputColor] ?: GLSL.oneFloat
-        set(value) = setInput(InputColor, value)
+    var inputColor by input(GLSL.oneFloat)
 
-    val result = defOut(GLSLVec4("toneMappedColor"))
+    val result = output(GLSLVec4("toneMappedColor"))
 
     init {
-        setInput(InputColor, inputColor)
+        this.inputColor = inputColor
     }
 
     override fun readJson(json: IJsonObject) {

@@ -21,13 +21,12 @@ import app.thelema.math.Vec4
 
 /** Color utils */
 object Color {
-    fun int(rgba8888: Int): IVec4 {
-        val newVec = Vec4()
-        newVec.r = (rgba8888 and -0x1000000 ushr 24) * inv255
-        newVec.g = (rgba8888 and 0x00ff0000 ushr 16) * inv255
-        newVec.b = (rgba8888 and 0x0000ff00 ushr 8) * inv255
-        newVec.a = (rgba8888 and 0x000000ff) * inv255
-        return newVec
+    fun int(rgba8888: Int, out: IVec4 = Vec4()): IVec4 {
+        out.r = (rgba8888 and -0x1000000 ushr 24) * inv255
+        out.g = (rgba8888 and 0x00ff0000 ushr 16) * inv255
+        out.b = (rgba8888 and 0x0000ff00 ushr 8) * inv255
+        out.a = (rgba8888 and 0x000000ff) * inv255
+        return out
     }
 
     fun int(r: Int, g: Int, b: Int, a: Int = 255): IVec4 =
@@ -50,13 +49,12 @@ object Color {
     const val LIGHT_GRAY: Int = -0x40404001
     const val GRAY: Int = 0x7f7f7fff
     const val DARK_GRAY: Int = 0x3f3f3fff
-    const val BLUE_INT: Int = 0x0000ffff
+    const val BLUE: Int = 0x0000ffff
     const val NAVY = 0x000080FF
     const val ROYAL = 0x4169e1ff
     const val SLATE = 0x708090ff
     const val SKY = -0x78311401
     const val CYAN: Int = 0x00FFFFFF
-    const val CYAN_INT: Int = 0x00ffffff
     const val TEAL: Int = 0x008080FF
     const val GREEN: Int = 0x00ff00ff
     const val CHARTREUSE = 0x7fff00ff
@@ -211,7 +209,7 @@ object Color {
 
     fun setAlpha(color: Int, a: Float): Int = (color and rgbMask) or ((255f * a).toInt())
 
-    fun mulAlpha(color: Int, a: Float) = (color and rgbMask) or ((getAlpha(color) * a).toInt())
+    fun mulAlpha(color: Int, a: Float) = (color and rgbMask) or ((getAlpha(color) * a).toInt() and alphaMask)
 
     fun mulColors(color1: Int, color2: Int): Int = toIntBits(
         getRed(color1) * getRed(color2) / 255,

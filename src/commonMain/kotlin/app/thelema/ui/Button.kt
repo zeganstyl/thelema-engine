@@ -147,7 +147,7 @@ open class Button(style: ButtonStyle = ButtonStyle()) : Table() {
         return listener
     }
 
-    fun setChecked(isChecked: Boolean, fireEvent: Boolean) {
+    open fun setChecked(isChecked: Boolean, fireEvent: Boolean) {
         if (this.isChecked == isChecked) return
         if (buttonGroup != null && !buttonGroup!!.canCheck(this, isChecked)) return
         this.isChecked = isChecked

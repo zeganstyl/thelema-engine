@@ -21,6 +21,8 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.mesh.MeshVisualizer
+import app.thelema.gl.normals
+import app.thelema.gl.positions
 import app.thelema.math.Vec4
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -30,20 +32,23 @@ class DebugMeshTest: Test {
         get() = "Debug mesh"
 
     override fun testMain() {
-        val box = BoxMesh { setSize(2f) }
+        val box = BoxMesh {
+            builder.normals = true
+            setSize(2f)
+        }
         val boxShader = SimpleShader3D()
 
         val debugMesh = MeshVisualizer {
             addVectors3D(
-                box.mesh.getAttribute("POSITION"),
-                box.mesh.getAttribute("NORMAL"),
+                box.mesh.positions(),
+                box.mesh.normals()!!,
                 Vec4(0f, 0f, 1f, 1f),
                 0.5f
             )
 
             addVectors3D(
-                box.mesh.getAttribute("POSITION"),
-                box.mesh.getAttribute("POSITION"),
+                box.mesh.positions(),
+                box.mesh.positions(),
                 Vec4(1f, 1f, 1f, 1f),
                 0.25f
             )

@@ -31,7 +31,7 @@ class ComponentDescriptor<T: IEntityComponent>(
     val create: () -> T,
     block: ComponentDescriptor<T>.() -> Unit = {}
 ): ComponentDescriptorList(typeName), IPropertyType {
-    val properties = LinkedHashMap<String, IPropertyDescriptor<T, Any?>>()
+    val properties = LinkedHashMap<String, IPropertyDescriptor<T, Any?>>(0)
 
     override val propertyTypeName: String
         get() = componentName
@@ -80,12 +80,12 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
-    fun bool(property: KMutableProperty1<T, Boolean>) = property(object : IPropertyDescriptor<T, Boolean> {
+    fun bool(property: KMutableProperty1<T, Boolean>, default: Boolean = false) = property(object : IPropertyDescriptor<T, Boolean> {
         override val name: String = property.name
         override val type = PropertyType.Bool
         override fun setValue(component: T, value: Boolean) = property.set(component, value)
         override fun getValue(component: T): Boolean = property.get(component)
-        override fun default(): Boolean = false
+        override fun default(): Boolean = default
         override fun readJson(component: T, json: IJsonObject) = property.set(component, json.bool(name, default()))
         override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
@@ -101,12 +101,12 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
-    fun int(property: KMutableProperty1<T, Int>) = property(object : IPropertyDescriptor<T, Int> {
+    fun int(property: KMutableProperty1<T, Int>, default: Int = 0) = property(object : IPropertyDescriptor<T, Int> {
         override val name: String = property.name
         override val type = PropertyType.Int
         override fun setValue(component: T, value: Int) = property.set(component, value)
         override fun getValue(component: T): Int = property.get(component)
-        override fun default(): Int = 0
+        override fun default(): Int = default
         override fun readJson(component: T, json: IJsonObject) = property.set(component, json.int(name, default()))
         override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
@@ -122,12 +122,12 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
-    fun float(property: KMutableProperty1<T, Float>) = property(object : IPropertyDescriptor<T, Float> {
+    fun float(property: KMutableProperty1<T, Float>, default: Float = 0f) = property(object : IPropertyDescriptor<T, Float> {
         override val name: String = property.name
         override val type = PropertyType.Float
         override fun setValue(component: T, value: Float) = property.set(component, value)
         override fun getValue(component: T): Float = property.get(component)
-        override fun default(): Float = 0f
+        override fun default(): Float = default
         override fun readJson(component: T, json: IJsonObject) = property.set(component, json.float(name, default()))
         override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
@@ -225,6 +225,24 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
+    fun vec4(property: KMutableProperty1<T, IVec4>) = property(object : IPropertyDescriptor<T, IVec4> {
+        override val name: String = property.name
+        override val type = PropertyType.Vec4
+        override fun setValue(component: T, value: IVec4) = property.set(component, value)
+        override fun getValue(component: T): IVec4 = property.get(component)
+        override fun default(): IVec4 = MATH.Zero3One1
+        override fun readJson(component: T, json: IJsonObject) {
+            json.array(name) { property.set(component, Vec4(float(0, 0f), float(1, 0f), float(2, 0f), float(3, 1f))) }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            property.get(component).also {
+                if (it.x != 0f || it.y != 0f || it.z != 0f || it.w != 1f) {
+                    json.setArray(name) { add(it.x, it.y, it.z, it.w) }
+                }
+            }
+        }
+    })
+
     /** Define 4x4 matrix property */
     fun mat4(name: String, get: T.() -> IMat4, set: T.(value: IMat4) -> Unit) = property(object : IPropertyDescriptor<T, IMat4> {
         override val name: String = name
@@ -260,6 +278,18 @@ class ComponentDescriptor<T: IEntityComponent>(
 
     fun stringEnum(name: String, values: List<String>, get: T.() -> String, set: T.(value: String) -> Unit) =
         property(StringEnumPropertyDesc(name, values, get, set))
+
+    fun stringEnum(property: KMutableProperty1<T, String>, values: List<String>) =
+        property(StringEnumPropertyDesc2(property, values))
+
+    fun intEnum(property: KMutableProperty1<T, Int>, values: Map<Int, String>, defaultValue: String) =
+        property(IntEnumPropertyDesc2(property, values, defaultValue))
+
+    fun intEnum(property: KMutableProperty1<T, Int>, defaultValue: String, vararg values: Pair<Int, String>) =
+        property(IntEnumPropertyDesc2(property, linkedMapOf(*values), defaultValue))
+
+    fun intEnum(property: KMutableProperty1<T, Int>, vararg values: Pair<Int, String>) =
+        property(IntEnumPropertyDesc2(property, linkedMapOf(*values), "???"))
 
     /** Define File-property (string) */
     fun file(name: String, get: T.() -> IFile?, set: T.(value: IFile?) -> Unit) = property(object : IPropertyDescriptor<T, IFile?> {

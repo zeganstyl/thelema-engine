@@ -9,8 +9,8 @@ class ParticleUVFrameNode: ShaderNode() {
 
     var instanceUvStartName = "INSTANCE_UV_START"
 
-    var inputUv by shaderInput()
-    val resultUv = defOut(GLSLVec2("resultUv"))
+    var inputUv by input()
+    val resultUv = output(GLSLVec2("resultUv"))
 
     override fun declarationVert(out: StringBuilder) {
         if (resultUv.isUsed) {

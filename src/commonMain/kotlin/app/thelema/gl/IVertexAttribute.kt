@@ -112,6 +112,12 @@ interface IVertexAttribute {
     /** Move cursor to the begin */
     fun rewind()
 
+    fun rewind(block: IVertexAttribute.() -> Unit) {
+        rewind()
+        block(this)
+        rewind()
+    }
+
     /** Rewind buffer, and after [block], request buffer upload to GPU, and rewind again */
     fun prepare(block: IVertexAttribute.() -> Unit)
 

@@ -50,14 +50,14 @@ class VelocityNodeTest: Test {
                 component<BoxMesh> { setSize(2f) }
                 component<Material> {
                     shader = Shader {
-                        val vertexNode = addNode(VertexNode())
-                        val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                        val velocityNode = addNode(VelocityNode {
+                        val vertexNode = VertexNode()
+                        val cameraDataNode = CameraDataNode(vertexNode.position)
+                        val velocityNode = VelocityNode {
                             worldSpacePosition = vertexNode.position
                             clipSpacePosition = cameraDataNode.clipSpacePosition
                             previousViewProjectionMatrix = cameraDataNode.previousViewProjectionMatrix
                             normal = vertexNode.normal
-                        })
+                        }
 
                         addNode(OutputNode(velocityNode.stretchedClipSpacePosition, velocityNode.velocity))
 

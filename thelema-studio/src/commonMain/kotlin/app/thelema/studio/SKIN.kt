@@ -1,7 +1,14 @@
 package app.thelema.studio
 
+import app.thelema.g2d.Batch
+import app.thelema.g2d.NinePatch
 import app.thelema.g2d.Sprite
+import app.thelema.gl.GL_NEAREST
+import app.thelema.img.Image
+import app.thelema.img.Texture2D
+import app.thelema.ui.CheckBoxStyle
 import app.thelema.ui.DSKIN
+import app.thelema.ui.Drawable
 import app.thelema.ui.ScrollPaneStyle
 import app.thelema.utils.Color
 
@@ -32,4 +39,25 @@ object SKIN {
     val scroll = ScrollPaneStyle().apply {
         background = this@SKIN.background
     }
+
+    val solidFrameTextureSelected by lazy {
+        Texture2D {
+            minFilter = GL_NEAREST
+            magFilter = GL_NEAREST
+            image = Image(4, 4) {
+                val b = 0xFF8000FF.toInt()
+                val f = 0x000000EE
+                putRGBAs(
+                    b, b, b, b,
+                    b, f, f, b,
+                    b, f, f, b,
+                    b, b, b, b
+                )
+            }
+        }
+    }
+
+    val solidFrameSelected = NinePatch(solidFrameTextureSelected, 1, 1, 1, 1)
+
+    val checkBox = CheckBoxStyle(null, null)
 }

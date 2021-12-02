@@ -51,11 +51,6 @@ class TrimeshShapeTest: Test {
                 mesh.isVisible = false
             }
 
-            // material will be set to box mesh automatically
-            val material = material {
-                shader = SimpleShader3D()
-            }
-
             entity("dynamic") {
                 mesh { inheritedMesh = sphere.mesh }
                 sphereShape { setSize(sphere.radius) }
@@ -66,11 +61,11 @@ class TrimeshShapeTest: Test {
 
             entity("trimesh") {
                 planeMesh {
+                    builder.calculateNormals = true
                     setSize(20f)
                     setDivisions(5)
                     heightProvider = { _, _ -> Random.nextFloat() * 5f }
                 }
-                mesh { this.material = material }
                 trimeshShape() // will automatically take sibling mesh component
                 rigidBody {
                     node.position.set(0f, 0f, 0f)
@@ -79,7 +74,6 @@ class TrimeshShapeTest: Test {
             }
 
             rigidBodyPhysicsWorld {
-                setGravity(0f, -2f, 0f)
                 startSimulation()
 
                 addPhysicsWorldListener(object: IPhysicsWorldListener {

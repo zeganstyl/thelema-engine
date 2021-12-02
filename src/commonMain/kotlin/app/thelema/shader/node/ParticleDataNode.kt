@@ -12,10 +12,10 @@ class ParticleDataNode: ShaderNode() {
 
     var maxLifeTime = 1f
 
-    var inputUv by shaderInput()
+    var inputUv by input()
     //val resultUv = defOut(GLSLVec2("resultUv"))
-    val lifeTime = defOut(GLSLFloat("lifeTime"))
-    val lifeTimePercent = defOut(GLSLFloat("lifeTimePercent"))
+    val lifeTime = output(GLSLFloat("lifeTime"))
+    val lifeTimePercent = output(GLSLFloat("lifeTimePercent"))
 
     override fun declarationVert(out: StringBuilder) {
 //        if (resultUv.isUsed) {

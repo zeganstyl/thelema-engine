@@ -1085,4 +1085,6 @@ fun glClearColor(red: Float, green: Float, blue: Float, alpha: Float) =
 
 fun glClearColor(vec: IVec4) = GL.glClearColor(vec.x, vec.y, vec.z, vec.w)
 
+fun glClearColor(color: Int) = GL.glClearColor(color)
+
 fun glClear(mask: Int) = GL.glClear(mask)

@@ -24,6 +24,7 @@ import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.shader.Shader
 import app.thelema.shader.node.CameraDataNode
+import app.thelema.shader.node.GLSLNode
 import app.thelema.shader.node.OutputNode
 import app.thelema.shader.node.VertexNode
 import app.thelema.test.Test
@@ -45,9 +46,11 @@ class VertexNodeTest: Test {
             }
             component<IMaterial> {
                 shader = Shader().apply {
-                    val vertexNode = addNode(VertexNode())
-                    val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                    addNode(OutputNode(cameraDataNode.clipSpacePosition, vertexNode.position))
+                    val vertexNode = VertexNode()
+                    val cameraDataNode = CameraDataNode(vertexNode.position)
+
+                    //addNode(OutputNode(cameraDataNode.clipSpacePosition, vertexNode.position))
+                    addNode(OutputNode(fragColor = GLSLNode.vertex.position))
 
                     build()
                     LOG.info(printCode())

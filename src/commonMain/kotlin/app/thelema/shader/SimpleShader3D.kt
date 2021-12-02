@@ -31,7 +31,7 @@ class SimpleShader3D(compile: Boolean): Shader(compile = compile) {
     }
 
     var positionsName: String = "POSITION"
-    var uvsName: String = "UV"
+    var uvsName: String = "TEXCOORD_0"
     var normalsName: String = "NORMAL"
 
     /** Set to empty string if you don't want render any attribute */

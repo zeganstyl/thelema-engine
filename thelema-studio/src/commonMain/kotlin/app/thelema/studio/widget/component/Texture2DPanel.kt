@@ -4,6 +4,7 @@ import app.thelema.g2d.Sprite
 import app.thelema.img.ITexture2D
 import app.thelema.ui.DSKIN
 import app.thelema.ui.Scaling
+import app.thelema.ui.TextButton
 import app.thelema.ui.UIImage
 
 class Texture2DPanel: ComponentPanel<ITexture2D>(ITexture2D::class) {
@@ -20,5 +21,14 @@ class Texture2DPanel: ComponentPanel<ITexture2D>(ITexture2D::class) {
         content.add(UIImage(sprite).apply {
             this.scaling = Scaling.fit
         }).growX().height(150f).newRow()
+
+        content.add(TextButton("Gen Mipmaps") {
+            onClick {
+                component?.also {
+                    it.bind()
+                    it.generateMipmapsGPU()
+                }
+            }
+        }).newRow()
     }
 }

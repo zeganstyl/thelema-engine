@@ -22,7 +22,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /** @author zeganstyl */
-class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer() {
+class JvmByteBuffer(var byteBuffer: ByteBuffer): IByteData, JvmBuffer() {
     //val bytes4 = ByteBuffer.allocate(4)
 
     override val buffer: Buffer
@@ -116,4 +116,12 @@ class JvmByteBuffer(val byteBuffer: ByteBuffer): IByteData, JvmBuffer() {
     }
 
     override fun toStringUTF8(): String = Charsets.UTF_8.decode(byteBuffer).toString()
+
+    override fun destroy() {
+        if (this != DATA.nullBuffer) {
+            super.destroy()
+            isAlive = false
+            byteBuffer = DATA.nullBuffer.sourceObject as ByteBuffer
+        }
+    }
 }

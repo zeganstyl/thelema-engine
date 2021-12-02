@@ -18,26 +18,23 @@ package app.thelema.shader.node
 
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.IScene
-import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
+import app.thelema.utils.iterate
 
 /** @author zeganstyl */
 abstract class ShaderNode: IShaderNode {
-    protected val inputInternal = LinkedHashMap<String, IShaderData>()
-    protected val outputInternal = LinkedHashMap<String, IShaderData>()
-
     override var shaderOrNull: IShader? = null
 
     override var entityOrNull: IEntity? = null
 
-    override val input: Map<String, IShaderData>
-        get() = inputInternal
+    protected val _inputs = ArrayList<IShaderNodeInput<IShaderData?>>(0)
+    override val inputs: List<IShaderNodeInput<IShaderData?>>
+        get() = _inputs
 
-    override val output: Map<String, IShaderData>
-        get() = outputInternal
+    protected val _output = ArrayList<IShaderData>(0)
+    override val outputs: List<IShaderData>
+        get() = _output
 
     val attribute: String
         get() = if (shader.version >= 130) "in" else "attribute"
@@ -48,34 +45,14 @@ abstract class ShaderNode: IShaderNode {
     val varIn: String
         get() = if (shader.version >= 130) "in" else "varying"
 
-    protected fun defOut(initial: IShaderData): IShaderData {
-        outputInternal[initial.name] = initial
+    protected fun output(initial: IShaderData): IShaderData {
+        _output.add(initial)
+        initial.container = this
         return initial
     }
 
-    override fun setInput(name: String, value: IShaderData?) {
-        val input = inputInternal[name]
-        if (input != null) {
-            val toRemove = input.connectedTo.filter {
-                it.node == this && it.inputName == name
-            }
-            for (i in toRemove.indices) {
-                input.connectedTo.remove(toRemove[i])
-            }
-        }
-
-        if (value != null) {
-            if (value.connectedTo.firstOrNull { it.node == this && it.inputName == name } == null) {
-                inputInternal[name] = value
-                value.connectedTo.add(ShaderNodeLink(this, name))
-            }
-        } else {
-            inputInternal.remove(name)
-        }
-    }
-
     override fun prepareToBuild() {
-        output.values.forEach { it.container = this }
+        outputs.iterate { it.container = this }
     }
 
     override fun shaderCompiled() {}
@@ -87,38 +64,10 @@ abstract class ShaderNode: IShaderNode {
     override fun declarationVert(out: StringBuilder) = Unit
     override fun declarationFrag(out: StringBuilder) = Unit
 
-    override fun set(other: IShaderNode): IShaderNode {
-        return this
-    }
-
-    override fun readJson(json: IJsonObject) {}
-
-    override fun writeJson(json: IJsonObject) {}
-
-    /** Create shader input with specified name */
-    fun shaderInput(name: String): ReadWriteProperty<IShaderNode, IShaderData> =
-        object : ReadWriteProperty<IShaderNode, IShaderData> {
-            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData = thisRef.input[name] ?: GLSL.zeroFloat
-            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData) {
-                thisRef.setInput(name, value)
-            }
-        }
+    /** Create shader input named as property */
+    @Suppress("UNCHECKED_CAST")
+    fun input(default: IShaderData = GLSL.zeroFloat) = ShaderNodeInput(this, default).also { _inputs.add(it as IShaderNodeInput<IShaderData?>) }
 
     /** Create shader input named as property */
-    fun shaderInput(default: IShaderData = GLSL.zeroFloat): ReadWriteProperty<IShaderNode, IShaderData> =
-        object : ReadWriteProperty<IShaderNode, IShaderData> {
-            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData = thisRef.input[property.name] ?: default
-            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData) {
-                thisRef.setInput(property.name, value)
-            }
-        }
-
-    /** Create shader input named as property */
-    fun shaderInputOrNull(): ReadWriteProperty<IShaderNode, IShaderData?> =
-        object : ReadWriteProperty<IShaderNode, IShaderData?> {
-            override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData? = thisRef.input[property.name]
-            override fun setValue(thisRef: IShaderNode, property: KProperty<*>, value: IShaderData?) {
-                thisRef.setInput(property.name, value)
-            }
-        }
+    fun inputOrNull() = ShaderNodeInputOrNull(this).also { _inputs.add(it) }
 }

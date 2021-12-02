@@ -16,12 +16,28 @@
 
 package app.thelema.ecs
 
-open class ComponentDescriptorList(val componentName: String): IComponentDescriptorList {
+import app.thelema.utils.iterate
+
+open class ComponentDescriptorList(override val componentName: String): IComponentDescriptorList {
     override val descriptors = ArrayList<ComponentDescriptor<IEntityComponent>>()
+
+    private var _listeners: ArrayList<ComponentDescriptorListListener>? = null
+    override val listeners: List<ComponentDescriptorListListener>
+        get() = _listeners ?: emptyList()
+
+    override fun addListListener(listener: ComponentDescriptorListListener) {
+        if (_listeners == null) _listeners = ArrayList(0)
+        _listeners?.add(listener)
+    }
+
+    override fun removeListListener(listener: ComponentDescriptorListListener) {
+        _listeners?.remove(listener)
+    }
 
     override fun addDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {
         descriptors.add(descriptor)
         ECS.allDescriptors[descriptor.componentName] = descriptor
+        _listeners?.iterate { it.addedDescriptor(descriptor) }
     }
 
     inline fun <reified T: IEntityComponent> descriptor(noinline create: () -> T, noinline block: ComponentDescriptor<T>.() -> Unit) {
@@ -35,5 +51,6 @@ open class ComponentDescriptorList(val componentName: String): IComponentDescrip
     override fun removeDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {
         descriptors.remove(descriptor)
         ECS.allDescriptors.remove(descriptor.componentName)
+        _listeners?.iterate { it.removedDescriptor(descriptor) }
     }
 }

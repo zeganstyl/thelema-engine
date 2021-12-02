@@ -6,6 +6,8 @@ import app.thelema.studio.widget.component.*
 object ComponentPanelProvider {
     val providers = HashMap<String, () -> ComponentPanel<IEntityComponent>>()
 
+    val componentPanelsCache = HashMap<String, ComponentPanel<IEntityComponent>>()
+
     fun init() {
         addProvider { TransformNodePanel() }
         addProvider { ProjectPanel() }
@@ -15,8 +17,21 @@ object ComponentPanelProvider {
         addProvider { ShaderPanel() }
         addProvider { Texture2DPanel() }
         addProvider { MaterialPanel() }
+        addProvider { MeshPanel() }
         addProvider("KotlinScript") { KotlinScriptPanel() }
     }
+
+    fun getOrCreatePanel(componentName: String): ComponentPanel<IEntityComponent> {
+        var panel = componentPanelsCache[componentName]
+        if (panel == null) {
+            panel = providers[componentName]?.invoke() ?: ComponentPanel(componentName)
+            componentPanelsCache[componentName] = panel
+        }
+        return panel
+    }
+
+    fun getOrCreatePanel(component: IEntityComponent): ComponentPanel<IEntityComponent> =
+        getOrCreatePanel(component.componentName).also { it.component = component }
 
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T: IEntityComponent> addProvider(noinline create: () -> ComponentPanel<T>) {
@@ -26,18 +41,4 @@ object ComponentPanelProvider {
     fun <T: IEntityComponent> addProvider(componentName: String, create: () -> ComponentPanel<T>) {
         providers[componentName] = create as () -> ComponentPanel<IEntityComponent>
     }
-}
-
-class Person {
-    var name: String = "Hello"
-    var surname: String = "world"
-
-    var fullName: String
-        get() = "$name $surname"
-        set(value) {
-            value.split(' ').also {
-                name = it[0]
-                surname = it[1]
-            }
-        }
 }

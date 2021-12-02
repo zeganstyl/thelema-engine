@@ -22,6 +22,7 @@ class JsLog: ILog {
     override var infoEnabled: Boolean = true
     override var debugEnabled: Boolean = true
     override var errorEnabled: Boolean = true
+    override var throwExceptionOnError: Boolean = false
 
     override fun info(message: String, exception: Throwable?, tag: String) {
         console.log(message)
@@ -33,5 +34,6 @@ class JsLog: ILog {
 
     override fun error(message: String, exception: Throwable?, tag: String) {
         console.error(message)
+        if (throwExceptionOnError) throw RuntimeException(message)
     }
 }

@@ -30,30 +30,27 @@ class GBufferOutputNode(): ShaderNode() {
     constructor(block: GBufferOutputNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "G-Buffer Output"
+        get() = "GBufferOutputNode"
 
     /** Clip space vertex position */
-    var vertPosition
-        get() = input[VertPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(VertPosition, value)
+    var vertPosition by input(GLSL.zeroFloat)
 
-    var fragColor
-        get() = input[FragColor] ?: GLSL.oneFloat
-        set(value) = setInput(FragColor, value)
+    var fragColor by input(GLSL.oneFloat)
 
-    var fragNormal
-        get() = input[FragNormal] ?: GLSL.defaultNormal
-        set(value) = setInput(FragNormal, value)
+    var fragNormal by input(GLSL.defaultNormal)
 
-    var fragPosition
-        get() = input[FragPosition] ?: GLSL.zeroFloat
-        set(value) = setInput(FragPosition, value)
-
-    override val output: Map<String, IShaderData> = HashMap()
+    var fragPosition by input(GLSL.zeroFloat)
 
     var alphaMode: String = Blending.OPAQUE
     var alphaCutoff: Float = 0.5f
     var cullFaceMode: Int = GL_BACK
+
+    init {
+        fragPosition = GLSLNode.camera.viewSpacePosition
+        vertPosition = GLSLNode.camera.clipSpacePosition
+        fragColor = GLSL.oneFloat
+        fragNormal = GLSLNode.vertex.normal
+    }
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
@@ -99,12 +96,5 @@ class GBufferOutputNode(): ShaderNode() {
             out.append("if (gColor.a < $alphaCutoff) { discard; }\n")
             out.append("gColor.a = 1.0;\n")
         }
-    }
-
-    companion object {
-        const val VertPosition = "vertPosition"
-        const val FragColor = "fragColor"
-        const val FragNormal = "fragNormal"
-        const val FragPosition = "fragPosition"
     }
 }

@@ -18,12 +18,16 @@ package app.thelema.studio.widget.component
 
 import app.thelema.ecs.*
 import app.thelema.studio.ScriptFile
+import app.thelema.studio.componentNameView
 import app.thelema.studio.widget.*
 import app.thelema.ui.*
 import kotlin.reflect.KClass
 
-open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaultSetup: Boolean = true): Section(componentName) {
-    constructor(c: KClass<T>, defaultSetup: Boolean = true): this(c.simpleName!!, defaultSetup)
+open class ComponentPanel<T: IEntityComponent>(
+    componentName: String,
+    defaultSetup: Boolean = true
+): Section(componentNameView(componentName)) {
+    constructor(c: KClass<T>, defaultSetup: Boolean = true): this(ECS.getDescriptor(c.simpleName!!)!!.componentName, defaultSetup)
 
     open var component: T? = null
 
@@ -50,6 +54,15 @@ open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaul
                     PropertyType.Vec4 -> { size = 2; Vec4Widget() }
                     PropertyType.File -> ProjectFileField()
                     PropertyType.String -> StringField()
+                    PropertyType.Bool -> { size = 3; BoolField() }
+                    PropertyType.IntEnum -> {
+                        size = 1
+                        IntEnumField().apply {
+                            value as IntEnumPropertyDesc2<IEntityComponent>
+                            default = value.defaultValue
+                            map = value.values
+                        }
+                    }
                     ScriptFile -> ScriptFileField()
                     is ComponentRefType -> ComponentReferenceField(type.componentName)
                     else -> null
@@ -62,6 +75,7 @@ open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaul
                         0 -> addField(key, field)
                         1 -> addField2Rows(key, field)
                         2 -> addSectioned(key, field)
+                        3 -> addCheckBox(key, field)
                     }
                 }
             }
@@ -72,8 +86,16 @@ open class ComponentPanel<T: IEntityComponent>(val componentName: String, defaul
         fieldWidgets[name] = widget
         content.add(HBox {
             add(Label(name, alignment = Align.topLeft)).padRight(5f)
-            add(widget).growX().padBottom(10f)
-        }).growX().newRow()
+            add(widget).growX()
+        }).padBottom(10f).growX().newRow()
+    }
+
+    fun addCheckBox(name: String, widget: Actor) {
+        fieldWidgets[name] = widget
+        content.add(HBox {
+            add(widget).padRight(10f)
+            add(Label(name, alignment = Align.topLeft)).growX()
+        }).padBottom(10f).growX().newRow()
     }
 
     fun addField2Rows(name: String, widget: Actor) {

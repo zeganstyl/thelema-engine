@@ -22,6 +22,7 @@ class JvmLog: ILog {
     override var infoEnabled: Boolean = true
     override var debugEnabled: Boolean = true
     override var errorEnabled: Boolean = true
+    override var throwExceptionOnError: Boolean = false
 
     override fun info(message: Any?) {
         println(message)
@@ -33,5 +34,6 @@ class JvmLog: ILog {
 
     override fun error(message: String, exception: Throwable?, tag: String) {
         System.err.println(message)
+        if (throwExceptionOnError) throw RuntimeException(message)
     }
 }

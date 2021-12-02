@@ -19,19 +19,17 @@ package app.thelema.shader.node
 /** @author zeganstyl */
 class SplitVec4Node(vector: IShaderData = GLSL.zeroFloat): ShaderNode() {
     override val componentName: String
-        get() = "Split Vec4"
+        get() = "SplitVec4Node"
 
-    var vector
-        get() = input[Vector] ?: GLSL.zeroFloat
-        set(value) = setInput(Vector, value)
+    var vector by input(GLSL.zeroFloat)
 
-    val x = defOut(GLSLFloat("x").apply { scope = GLSLScope.Inline })
-    val y = defOut(GLSLFloat("y").apply { scope = GLSLScope.Inline })
-    val z = defOut(GLSLFloat("z").apply { scope = GLSLScope.Inline })
-    val w = defOut(GLSLFloat("w").apply { scope = GLSLScope.Inline })
+    val x = output(GLSLFloat("x").apply { scope = GLSLScope.Inline })
+    val y = output(GLSLFloat("y").apply { scope = GLSLScope.Inline })
+    val z = output(GLSLFloat("z").apply { scope = GLSLScope.Inline })
+    val w = output(GLSLFloat("w").apply { scope = GLSLScope.Inline })
 
     init {
-        setInput(Vector, vector)
+        this.vector = vector
     }
 
     override fun prepareToBuild() {

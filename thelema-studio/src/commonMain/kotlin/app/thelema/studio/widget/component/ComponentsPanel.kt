@@ -16,8 +16,10 @@
 
 package app.thelema.studio.widget.component
 
+import app.thelema.ecs.EntityListener
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.g2d.Batch
 import app.thelema.studio.ComponentPanelProvider
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
@@ -28,17 +30,28 @@ class ComponentsPanel: Table() {
     val componentsListPanel = VBox { align = Align.topLeft }
     val componentsListScroll = ScrollPane(componentsListPanel, style = SKIN.scroll)
 
-    val componentPanelsCache = HashMap<String, ComponentPanel<IEntityComponent>>()
-
     var entity: IEntity? = null
         set(value) {
             val oldValue = field
             if (oldValue != value) {
+                field?.removeEntityListener(entityListener)
                 field = value
-                clearComponents()
-                value?.forEachComponent { setComponent(it) }
+                value?.addEntityListener(entityListener)
+                updateComponentsListRequest = true
             }
         }
+
+    val entityListener = object : EntityListener {
+        override fun addedComponent(component: IEntityComponent) {
+            updateComponentsListRequest = true
+        }
+
+        override fun removedComponent(component: IEntityComponent) {
+            updateComponentsListRequest = true
+        }
+    }
+
+    var updateComponentsListRequest = false
 
     init {
         add(HBox {
@@ -53,22 +66,21 @@ class ComponentsPanel: Table() {
         componentsListScroll.fadeScrollBars = false
     }
 
+    override fun draw(batch: Batch, parentAlpha: Float) {
+        if (updateComponentsListRequest) {
+            updateComponentsListRequest = false
+            clearComponents()
+            entity?.forEachComponent { setComponent(it) }
+        }
+
+        super.draw(batch, parentAlpha)
+    }
+
     fun clearComponents() {
         componentsListPanel.clearChildren()
     }
 
-    fun getOrCreatePanel(componentName: String): ComponentPanel<IEntityComponent> {
-        var panel = componentPanelsCache[componentName]
-        if (panel == null) {
-            panel = ComponentPanelProvider.providers[componentName]?.invoke() ?: ComponentPanel(componentName)
-            componentPanelsCache[componentName] = panel
-        }
-        return panel
-    }
-
     fun setComponent(component: IEntityComponent) {
-        val panel = getOrCreatePanel(component.componentName)
-        panel.component = component
-        componentsListPanel.add(panel).setFillX()
+        componentsListPanel.add(ComponentPanelProvider.getOrCreatePanel(component)).setFillX()
     }
 }

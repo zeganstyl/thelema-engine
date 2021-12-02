@@ -1,12 +1,12 @@
 package app.thelema.studio.shader
 
 import app.thelema.g2d.Batch
+import app.thelema.input.BUTTON
 import app.thelema.math.IVec2
 import app.thelema.shader.IShader
-import app.thelema.ui.DSKIN
-import app.thelema.ui.Group
-import app.thelema.ui.InputEvent
-import app.thelema.ui.InputListener
+import app.thelema.studio.SKIN
+import app.thelema.ui.*
+import app.thelema.utils.iterate
 import kotlin.math.max
 import kotlin.math.min
 
@@ -15,10 +15,32 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
     val boxes: List<ShaderNodeBox>
         get() = _boxes
 
-    val links = ArrayList<ShaderLink>()
+    val links = ArrayList<ShaderLinkView>()
 
     init {
         rebuildDiagram()
+
+        addListener(object : InputListener {
+            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (button == BUTTON.LEFT && event.target == this@ShaderFlowDiagram) {
+                    ShaderComponentScene.boxesSelection.choose(null)
+                }
+            }
+        })
+    }
+
+    fun removeBox(box: ShaderNodeBox) {
+        shader.nodes.remove(box.node)
+        box.inputs.iterate { input ->
+            input.link?.also { removeLink(it) }
+        }
+        box.outputs.iterate { output ->
+            val tmp = output.links.toTypedArray()
+            tmp.iterate { removeLink(it) }
+        }
+
+        _boxes.remove(box)
+        removeActor(box)
     }
 
     fun rebuildDiagram() {
@@ -135,16 +157,30 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
     }
 
     fun addLink(
-        source: ShaderOutput,
-        dest: ShaderInput? = null,
+        source: ShaderOutputView,
+        dest: ShaderInputView? = null,
         overDestination: IVec2? = null
-    ): ShaderLink {
-        val link = ShaderLink(source, dest, overDestination)
+    ): ShaderLinkView {
+        val link = ShaderLinkView(source, dest, overDestination)
         links.add(link)
         return link
     }
 
+    fun removeLink(link: ShaderLinkView) {
+        link.destination?.also { dst ->
+            dst.input.value = null
+            link.source.links.remove(link)
+            dst.link = null
+        }
+        link.destination = null
+
+        links.remove(link)
+    }
+
     override fun draw(batch: Batch, parentAlpha: Float) {
+        width = ShaderComponentScene.rootSceneStack.width
+        height = ShaderComponentScene.rootSceneStack.height
+
         val worldTransform = worldTransform
         worldTransform.translate(-globalPosition.x, -globalPosition.y)
         computedTransform.set(worldTransform)

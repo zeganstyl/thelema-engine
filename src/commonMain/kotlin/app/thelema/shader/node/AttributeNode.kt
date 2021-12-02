@@ -16,8 +16,6 @@
 
 package app.thelema.shader.node
 
-import app.thelema.json.IJsonObject
-
 /**
  * @param type use [GLSLType]
  * @author zeganstyl */
@@ -26,7 +24,7 @@ class AttributeNode(
     type: String = GLSLType.Float
 ): ShaderNode() {
     override val componentName: String
-        get() = "Attribute"
+        get() = "AttributeNode"
 
     var type: String
         get() = this.value.type
@@ -40,21 +38,7 @@ class AttributeNode(
             this.value.name = "v$value"
         }
 
-    val value = GLSLValue("aValue", type).apply { defOut(this) }
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        attributeName = json.string("attributeName", "")
-        type = json.string("type")
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        json["attributeName"] = attributeName
-        json["type"] = type
-    }
+    val value = GLSLValue("aValue", type).apply { output(this) }
 
     override fun declarationVert(out: StringBuilder) {
         super.declarationVert(out)

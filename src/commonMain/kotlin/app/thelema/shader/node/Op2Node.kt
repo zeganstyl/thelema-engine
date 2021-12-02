@@ -36,21 +36,17 @@ class Op2Node(
     constructor(): this(GLSL.oneFloat, GLSL.oneFloat)
 
     override val componentName: String
-        get() = "Op2"
+        get() = "Op2Node"
 
-    var in1: IShaderData
-        get() = input["in1"] ?: GLSL.oneFloat
-        set(value) = setInput("in1", value)
+    var in1 by input(GLSL.oneFloat)
 
-    var in2: IShaderData
-        get() = input["in2"] ?: GLSL.oneFloat
-        set(value) = setInput("in2", value)
+    var in2 by input(GLSL.oneFloat)
 
     var resultType: String
         get() = result.type
         set(value) { result.type = value }
 
-    val result = GLSLValue("op", resultType).apply { defOut(this) }
+    val result = GLSLValue("op", resultType).apply { output(this) }
 
     var isFragment = true
     var isVarying = true
@@ -90,8 +86,8 @@ class Op2Node(
     override fun executionFrag(out: StringBuilder) {
         if (isFragment) {
             var f = function
-            input.forEach {
-                f = f.replace(it.key, it.value.ref)
+            inputs.forEach {
+                f = f.replace(it.name, it.value!!.ref)
             }
             out.append("${result.typedRef} = $f;\n")
         }

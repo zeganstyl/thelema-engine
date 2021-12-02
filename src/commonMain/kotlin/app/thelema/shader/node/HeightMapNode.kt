@@ -28,7 +28,7 @@ class HeightMapNode(
     var texture: ITexture? = null
 ): ShaderNode() {
     override val componentName: String
-        get() = "Height Map"
+        get() = "HeightMapNode"
 
     /** Component from [vertexPosition] will be used as U texture coordinate */
     var u = "x"
@@ -37,20 +37,18 @@ class HeightMapNode(
 
     var uvScale: Float = 1f
 
-    var vertexPosition: IShaderData
-        get() = input["vertexPosition"] ?: GLSL.zeroFloat
-        set(value) = setInput("vertexPosition", value)
+    var vertexPosition by input(GLSL.zeroFloat)
 
     var mapWorldSize: IVec3 = Vec3(1f, 1f, 1f)
 
-    val sampler = defOut(GLSLFloat("tex"))
-    val textureValue = defOut(GLSLVec4("texValue"))
-    val height = defOut(GLSLFloat("height"))
+    val sampler = output(GLSLFloat("tex"))
+    val textureValue = output(GLSLVec4("texValue"))
+    val height = output(GLSLFloat("height"))
 
     var unit: Int = -1
 
     init {
-        setInput("vertexPosition", vertexPosition)
+        this.vertexPosition = vertexPosition
     }
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {

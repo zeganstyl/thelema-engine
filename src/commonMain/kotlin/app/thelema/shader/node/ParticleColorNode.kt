@@ -4,11 +4,11 @@ class ParticleColorNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleColorNode"
 
-    var lifeTimePercent by shaderInput(GLSL.oneFloat)
-    var inputColor by shaderInput(GLSL.oneFloat)
-    var color0 by shaderInput(GLSL.oneFloat)
-    var color1 by shaderInput(GLSL.zeroFloat)
-    val result = defOut(GLSLVec4("result"))
+    var lifeTimePercent by input(GLSL.oneFloat)
+    var inputColor by input(GLSL.oneFloat)
+    var color0 by input(GLSL.oneFloat)
+    var color1 by input(GLSL.zeroFloat)
+    val result = output(GLSLVec4("result"))
 
     override fun declarationFrag(out: StringBuilder) {
         if (result.isUsed) {

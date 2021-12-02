@@ -90,7 +90,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
     var keyListener: InputListener? = null
     var typeToSelect = false
 
-    var itemToString: (item: T) -> String = { "" }
+    var itemToString: (item: T) -> CharSequence = { it?.toString() ?: "" }
 
     fun forEachSelectedItem(block: (node: T) -> Unit) {
         for (i in selection.selected.indices) {
@@ -203,7 +203,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
             if (index == -1) {
                 selection.clear()
             } else {
-                selection.setSelected(items[index])
+                selection.choose(items[index])
             }
             fireChanged()
         }
@@ -300,7 +300,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
                 val items2 = this@UIList.items
                 val n = items2.size
                 while (i < n) {
-                    if (this@UIList.itemToString(items2[i]).lowercase().startsWith(prefix!!)) {
+                    if (this@UIList.itemToString(items2[i]).toString().lowercase().startsWith(prefix!!)) {
                         selectedIndex = i
                         break
                     }

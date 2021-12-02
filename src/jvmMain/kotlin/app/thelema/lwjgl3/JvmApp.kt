@@ -435,6 +435,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
             loop()
             cleanupWindows()
         } catch (t: Throwable) {
+            t.printStackTrace()
             if (t is RuntimeException) throw t else throw RuntimeException(t)
         } finally {
             destroy()

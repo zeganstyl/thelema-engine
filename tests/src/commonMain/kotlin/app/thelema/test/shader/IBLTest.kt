@@ -74,7 +74,7 @@ class IBLTest: Test {
             entity("light") {
                 directionalLight {
                     setDirectionFromPosition(0f, 1f, 0f)
-                    color.set(Color.SKY)
+                    color.setColor(Color.SKY)
                     intensity = 5f
                 }
             }

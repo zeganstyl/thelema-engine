@@ -18,13 +18,17 @@ package app.thelema.shader.node
 
 import app.thelema.utils.LOG
 
-/** @author zeganstyl */
+/** Variable, constant value, uniform, attribute or something else that represents data in GLSL
+ *
+ * @author zeganstyl */
 interface IShaderData {
     var name: String
 
     /** Use this for referencing to this variable. Reference will be an unique name in shader program. */
     val ref: String
-        get() = if (scope == GLSLScope.Inline) inlineCode else "$name${container?.shader?.getUID(this) ?: ""}"
+        get() = if (scope == GLSLScope.Inline) inlineCode else "$name$id"
+
+    val id: Long
 
     /** Float number representation of ref */
     val fRef: String
@@ -42,10 +46,10 @@ interface IShaderData {
     var container: IShaderNode?
 
     /** Connections to other nodes inputs. Do not change it manually. */
-    val connectedTo: MutableList<ShaderNodeLink>
+    val links: MutableSet<IShaderNodeInput<IShaderData?>>
 
     val isUsed: Boolean
-        get() = connectedTo.isNotEmpty()
+        get() = links.isNotEmpty()
 
     val typeStr: String
         get() = when (type) {

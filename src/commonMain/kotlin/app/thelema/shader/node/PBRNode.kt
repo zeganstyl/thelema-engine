@@ -28,20 +28,20 @@ class PBRNode(): ShaderNode() {
     constructor(block: PBRNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "PBR"
+        get() = "PBRNode"
 
-    var worldPosition by shaderInput()
-    var normalizedViewVector by shaderInput()
-    var baseColor by shaderInputOrNull()
-    var alpha by shaderInputOrNull()
-    var normal by shaderInputOrNull()
-    var occlusion by shaderInputOrNull()
-    var roughness by shaderInputOrNull()
-    var metallic by shaderInputOrNull()
-    var emissive by shaderInputOrNull()
-    var clipSpacePosition by shaderInputOrNull()
+    var worldPosition by input()
+    var normalizedViewVector by input()
+    var baseColor by input(GLSL.oneFloat)
+    var alpha by inputOrNull()
+    var normal by inputOrNull()
+    var occlusion by inputOrNull()
+    var roughness by inputOrNull()
+    var metallic by inputOrNull()
+    var emissive by inputOrNull()
+    var clipSpacePosition by inputOrNull()
 
-    val result: IShaderData = defOut(GLSLVec4("result"))
+    val result: IShaderData = output(GLSLVec4("result"))
 
     var maxNumDirectionLights: Int = 1
     var shadowCascadesNum = 3
@@ -64,6 +64,12 @@ class PBRNode(): ShaderNode() {
 
     private val prefilterMapName: String
         get() = "u_GGXEnvSampler"
+
+    init {
+        worldPosition = GLSLNode.vertex.position
+        normalizedViewVector = GLSLNode.camera.normalizedViewVector
+        clipSpacePosition = GLSLNode.camera.clipSpacePosition
+    }
 
     override fun prepareToBuild() {
         super.prepareToBuild()
@@ -140,7 +146,7 @@ class PBRNode(): ShaderNode() {
     override fun executionFrag(out: StringBuilder) {
         if (result.isUsed) {
             val alpha = alpha
-            val baseColor = baseColor ?: GLSL.oneFloat
+            val baseColor = baseColor
             val color = if (alpha != null) {
                 "vec4(${baseColor.asVec3()}, ${alpha.asFloat()})"
             } else {

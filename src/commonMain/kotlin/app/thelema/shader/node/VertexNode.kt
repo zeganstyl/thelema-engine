@@ -35,7 +35,7 @@ class VertexNode(
     constructor(block: VertexNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "Vertex"
+        get() = "VertexNode"
 
     var positionName = "POSITION"
     var normalName = "NORMAL"
@@ -43,11 +43,11 @@ class VertexNode(
     var bonesName = "JOINTS_"
     var boneWeightsName = "WEIGHTS_"
 
-    val position = defOut(GLSLVec3("position"))
-    val normal = defOut(GLSLVec3("normal"))
+    val position = output(GLSLVec3("position"))
+    val normal = output(GLSLVec3("normal"))
 
     /** Tangent, bitangent, normal matrix */
-    val tbn = defOut(GLSLMat3("tbn"))
+    val tbn = output(GLSLMat3("tbn"))
 
     private val uBoneMatricesName: String
         get() = "uBoneMatrices$uid"

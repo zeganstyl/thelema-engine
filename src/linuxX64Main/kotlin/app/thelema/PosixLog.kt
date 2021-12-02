@@ -23,6 +23,7 @@ class PosixLog: ILog {
     override var infoEnabled: Boolean = true
     override var debugEnabled: Boolean = true
     override var errorEnabled: Boolean = true
+    override var throwExceptionOnError: Boolean = false
 
     override fun info(message: String, exception: Throwable?, tag: String) {
         if (infoEnabled) {
@@ -34,6 +35,7 @@ class PosixLog: ILog {
         if (errorEnabled) {
             fprintf(stderr, message)
             fprintf(stderr, "\n")
+            if (throwExceptionOnError) throw RuntimeException(message)
         }
     }
 }

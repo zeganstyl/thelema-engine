@@ -35,16 +35,4 @@ class SelectBoxStyle(
     var backgroundOver: Drawable? = null
     var backgroundOpen: Drawable? = null
     var backgroundDisabled: Drawable? = null
-
-    companion object {
-        var Default: SelectBoxStyle? = null
-        fun default(): SelectBoxStyle {
-            var style = Default
-            if (style == null) {
-                style = SelectBoxStyle()
-                Default = style
-            }
-            return style
-        }
-    }
 }

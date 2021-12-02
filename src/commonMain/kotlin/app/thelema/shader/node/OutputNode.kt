@@ -28,22 +28,18 @@ import app.thelema.json.IJsonObject
  * */
 class OutputNode(
     /** Clip space vertex position */
-    vertPosition: IShaderData = GLSL.zeroFloat,
+    vertPosition: IShaderData = GLSLNode.camera.clipSpacePosition,
     fragColor: IShaderData = GLSL.oneFloat
 ): ShaderNode() {
     constructor(block: OutputNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
-        get() = "Output"
+        get() = "OutputNode"
 
     /** Clip space vertex position */
-    var vertPosition
-        get() = input["vertPosition"] ?: GLSL.zeroFloat
-        set(value) = setInput("vertPosition", value)
+    var vertPosition by input(GLSL.zeroFloat)
 
-    var fragColor
-        get() = input["fragColor"] ?: GLSL.oneFloat
-        set(value) = setInput("fragColor", value)
+    var fragColor by input(GLSL.oneFloat)
 
     var alphaMode: String = Blending.OPAQUE
     var alphaCutoff: Float = 0.5f
@@ -57,8 +53,8 @@ class OutputNode(
     private var cameraFarCached = -1f
 
     init {
-        setInput("vertPosition", vertPosition)
-        setInput("fragColor", fragColor)
+        this.vertPosition = vertPosition
+        this.fragColor = fragColor
     }
 
     override fun writeJson(json: IJsonObject) {

@@ -22,32 +22,30 @@ import app.thelema.gl.IMesh
 import app.thelema.math.Mat3
 
 /** @author zeganstyl */
-class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode() {
+class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): ShaderNode() {
     override val componentName: String
-        get() = "Camera Data"
+        get() = "CameraDataNode"
 
     /** World space vertex position */
-    var vertexPosition
-        get() = input["vertexPosition"] ?: GLSL.zeroFloat
-        set(value) = setInput("vertexPosition", value)
+    var vertexPosition by input()
 
-    val cameraPosition = defOut(GLSLVec3("cameraPosition"))
-    val viewProjectionMatrix = defOut(GLSLMat4("viewProjectionMatrix"))
-    val rotateToCameraMatrix = defOut(GLSLMat3("rotateToCameraMatrix"))
-    val previousViewProjectionMatrix = defOut(GLSLMat4("prevViewProjectionMatrix"))
-    val viewMatrix = defOut(GLSLMat4("viewMatrix"))
-    val projectionMatrix = defOut(GLSLMat4("projectionMatrix"))
-    val inverseViewProjectionMatrix = defOut(GLSLMat4("inverseViewProjectionMatrix"))
-    val normalizedViewVector = defOut(GLSLVec3("normalizedViewVector"))
+    val cameraPosition = output(GLSLVec3("cameraPosition"))
+    val viewProjectionMatrix = output(GLSLMat4("viewProjectionMatrix"))
+    val rotateToCameraMatrix = output(GLSLMat3("rotateToCameraMatrix"))
+    val previousViewProjectionMatrix = output(GLSLMat4("prevViewProjectionMatrix"))
+    val viewMatrix = output(GLSLMat4("viewMatrix"))
+    val projectionMatrix = output(GLSLMat4("projectionMatrix"))
+    val inverseViewProjectionMatrix = output(GLSLMat4("inverseViewProjectionMatrix"))
+    val normalizedViewVector = output(GLSLVec3("normalizedViewVector"))
 
     /** Non-normalized depth */
-    val viewZDepth = defOut(GLSLFloat("viewZDepth"))
+    val viewZDepth = output(GLSLFloat("viewZDepth"))
 
     /** Position after multiply Projection * View * vertex */
-    val clipSpacePosition = defOut(GLSLVec4("clipSpacePosition"))
+    val clipSpacePosition = output(GLSLVec4("clipSpacePosition"))
 
     /** Position after multiply View * vertex */
-    val viewSpacePosition = defOut(GLSLVec4("viewSpacePosition"))
+    val viewSpacePosition = output(GLSLVec4("viewSpacePosition"))
 
     var instancePositionName = "INSTANCE_POSITION"
     var useInstancePosition = false
@@ -56,7 +54,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSL.zeroFloat): ShaderNode()
     private val mat3Tmp by lazy { Mat3() }
 
     init {
-        setInput("vertexPosition", vertexPosition)
+        this.vertexPosition = vertexPosition
     }
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {

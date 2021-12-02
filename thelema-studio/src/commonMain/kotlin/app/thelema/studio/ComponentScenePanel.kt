@@ -1,7 +1,6 @@
 package app.thelema.studio
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.studio.shader.ShaderComponentScene
 import app.thelema.ui.*
 
 abstract class ComponentScenePanel<C: IEntityComponent, T>: IComponentScenePanel<C> {
@@ -12,7 +11,8 @@ abstract class ComponentScenePanel<C: IEntityComponent, T>: IComponentScenePanel
 
     val listPanel = UIList<T>()
 
-    val itemPanel = UIList<T>()
+    val itemPanelTable = Table()
+    val itemPanelScroll = ScrollPane(style = SKIN.scroll)
 
     val split = MultiSplitPane(false)
 
@@ -22,6 +22,7 @@ abstract class ComponentScenePanel<C: IEntityComponent, T>: IComponentScenePanel
     }
 
     init {
+        itemPanelScroll.actor = itemPanelTable
         //sceneOverlay.touchable = Touchable.ChildrenOnly
     }
 
@@ -31,7 +32,7 @@ abstract class ComponentScenePanel<C: IEntityComponent, T>: IComponentScenePanel
         rootSceneStack.add(split)
 
         split.apply {
-            setWidgets(listPanel, overlay, itemPanel)
+            setWidgets(listPanel, overlay, itemPanelScroll)
             setSplit(0, 0.2f)
             setSplit(1, 0.8f)
         }

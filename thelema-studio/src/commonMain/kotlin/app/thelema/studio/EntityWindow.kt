@@ -10,7 +10,10 @@ class EntityWindow: Window("Entity") {
     val tree = Tree()
     val treeScroll = ScrollPane(tree)
 
-    val addedComponentsList = UIList<IEntityComponent> { itemToString = { it.componentName } }
+    val addedComponentsList = UIList<IEntityComponent> {
+        selection.isMultiple = true
+        itemToString = { it.componentName }
+    }
     val addedComponentsListScroll = ScrollPane(addedComponentsList)
 
     val entityName = TextField()
@@ -70,7 +73,7 @@ class EntityWindow: Window("Entity") {
             }
         })
 
-        ECS.descriptors.forEach { tree.add(ComponentTreeNode(it)) }
+        tree.add(ComponentTreeNode(ECS).also { it.isExpanded = true })
 
         pack()
         width = 640f
