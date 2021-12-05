@@ -19,8 +19,6 @@ package app.thelema.img
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.ecs.ECS
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
 import app.thelema.ecs.createComponent
 import app.thelema.fs.IFile
 import app.thelema.gl.*

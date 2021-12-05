@@ -353,4 +353,12 @@ class AndroidGL(val app: AndroidApp): AbstractGL() {
     override fun glDrawBuffers(n: Int, bufs: IntArray) {
         GLES30.glDrawBuffers(n, bufs, 0)
     }
+
+    override fun glTexParameterf(target: Int, pname: Int, param: Float) {
+        GLES30.glTexParameterf(target, pname, param)
+    }
+
+    override fun glReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: IByteData) {
+        GLES30.glReadPixels(x, y, width, height, format, type, pixels.sourceObject as Buffer)
+    }
 }

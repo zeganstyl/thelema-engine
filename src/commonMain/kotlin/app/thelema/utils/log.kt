@@ -29,15 +29,15 @@ interface ILog {
 
     fun info(message: Any?) = info(message?.toString() ?: "null")
 
-    fun info(message: String, exception: Throwable?, tag: String = "")
-    fun debug(message: String, exception: Throwable?, tag: String = "") {
+    fun info(message: String, exception: Throwable?, tag: String = "Thelema")
+    fun debug(message: String, exception: Throwable?, tag: String = "Thelema") {
         if (debugEnabled) info(message, exception, tag)
     }
-    fun error(message: String, exception: Throwable?, tag: String = "")
+    fun error(message: String, exception: Throwable?, tag: String = "Thelema")
 
-    fun info(message: String, tag: String = "") = info(message, null, tag)
-    fun debug(message: String, tag: String = "") = debug(message, null, tag)
-    fun error(message: String, tag: String = "") = error(message, null, tag)
+    fun info(message: String, tag: String = "Thelema") = info(message, null, tag)
+    fun debug(message: String, tag: String = "Thelema") = debug(message, null, tag)
+    fun error(message: String, tag: String = "Thelema") = error(message, null, tag)
 }
 
 lateinit var LOG: ILog

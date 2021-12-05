@@ -118,6 +118,7 @@ kotlin {
 android {
     compileSdkVersion(31)
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    sourceSets["main"].assets.srcDir("src/commonMain/resources")
     defaultConfig {
         applicationId = "app.thelema.test.android.AndroidMain"
         minSdkVersion(21)

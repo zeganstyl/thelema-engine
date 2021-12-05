@@ -25,9 +25,7 @@ import app.thelema.gl.GL
 import app.thelema.img.IImage
 import app.thelema.img.IMG
 import app.thelema.img.Image
-import app.thelema.input.KEY
 import app.thelema.input.MOUSE
-import app.thelema.input.BUTTON
 import app.thelema.input.KB
 import kotlin.system.getTimeNanos
 

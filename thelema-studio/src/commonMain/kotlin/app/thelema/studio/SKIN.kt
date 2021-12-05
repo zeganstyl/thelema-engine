@@ -1,6 +1,5 @@
 package app.thelema.studio
 
-import app.thelema.g2d.Batch
 import app.thelema.g2d.NinePatch
 import app.thelema.g2d.Sprite
 import app.thelema.gl.GL_NEAREST
@@ -8,7 +7,6 @@ import app.thelema.img.Image
 import app.thelema.img.Texture2D
 import app.thelema.ui.CheckBoxStyle
 import app.thelema.ui.DSKIN
-import app.thelema.ui.Drawable
 import app.thelema.ui.ScrollPaneStyle
 import app.thelema.utils.Color
 

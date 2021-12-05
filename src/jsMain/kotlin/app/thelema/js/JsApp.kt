@@ -24,7 +24,6 @@ import app.thelema.ecs.ECS
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
 import app.thelema.gl.GL
-import app.thelema.input.KEY
 import app.thelema.json.JSON
 import app.thelema.js.audio.JsAL
 import app.thelema.js.audio.JsMouse
@@ -38,9 +37,7 @@ import org.w3c.dom.DragEvent
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.get
 import app.thelema.app.*
-import app.thelema.ecs.replaceDescriptor
 import app.thelema.img.IImage
-import app.thelema.img.IImageLoader
 import app.thelema.img.Image
 import app.thelema.input.KB
 import app.thelema.input.MOUSE

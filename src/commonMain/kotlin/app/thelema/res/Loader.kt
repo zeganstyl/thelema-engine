@@ -23,6 +23,7 @@ import app.thelema.ecs.componentOrNull
 import app.thelema.fs.IFile
 import app.thelema.json.IJsonObject
 import app.thelema.net.httpIsSuccess
+import app.thelema.utils.LOG
 
 class Loader: ILoader {
     override val componentName: String
@@ -84,7 +85,13 @@ class Loader: ILoader {
             entity.getRootEntity().componentOrNull<IProject>()?.monitorLoading(this)
 
             file?.also { file ->
-                if (file.path.isNotEmpty() && file.exists()) {
+                if (file.path.isEmpty()) {
+                    LOG.error("$path: file path is empty")
+                    stop(404)
+                } else if (!file.exists()) {
+                    LOG.error("$path: file is not exists")
+                    stop(404)
+                } else {
                     if (separateThread ?: RES.loadOnSeparateThreadByDefault) {
                         APP.thread {
                             loadBase(file)
@@ -92,8 +99,6 @@ class Loader: ILoader {
                     } else {
                         loadBase(file)
                     }
-                } else {
-                    stop(404)
                 }
             }
         }

@@ -20,7 +20,6 @@ import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.gl.GL_RGBA
 import app.thelema.gl.GL_UNSIGNED_BYTE
-import app.thelema.img.IImage
 import app.thelema.img.Image
 import kotlinx.browser.document
 import org.w3c.dom.HTMLImageElement

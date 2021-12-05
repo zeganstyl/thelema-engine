@@ -47,8 +47,9 @@ class JvmData: IData {
         return Base64.getEncoder().encodeToString(array)
     }
 
+    // order(ByteOrder.nativeOrder()) must be for Android
     override fun bytes(capacity: Int): IByteData =
-        JvmByteBuffer(ByteBuffer.allocateDirect(capacity))
+        JvmByteBuffer(ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder()))
 
     override fun bytes(text: String): IByteData = JvmByteBuffer(Charsets.UTF_8.encode(text))
 

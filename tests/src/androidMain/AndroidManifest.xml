@@ -13,6 +13,7 @@
         <activity
                 android:name="app.thelema.test.android.AndroidMain"
                 android:screenOrientation="landscape"
+                android:exported="true"
                 android:theme="@android:style/Theme.Black.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

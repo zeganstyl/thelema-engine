@@ -297,6 +297,67 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
     }
 
+    override fun startLoop() {
+        try {
+            loop()
+            cleanupWindows()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            if (t is RuntimeException) throw t else throw RuntimeException(t)
+        } finally {
+            destroy()
+        }
+    }
+
+    override fun destroy() {
+        super.destroy()
+
+        if (destroyBuffersOnExit) {
+            val buffers = ArrayList(data.allocatedBuffers.keys)
+            buffers.forEach { it.destroy() }
+        }
+
+        running = false
+
+        destroySystemCursor(cursorMapping[Cursor.Arrow])
+        destroySystemCursor(cursorMapping[Cursor.Crosshair])
+        destroySystemCursor(cursorMapping[Cursor.Hand])
+        destroySystemCursor(cursorMapping[Cursor.HorizontalResize])
+        destroySystemCursor(cursorMapping[Cursor.VerticalResize])
+        destroySystemCursor(cursorMapping[Cursor.IBeam])
+
+        mainWindow.graphics.lwjglGL.destroy()
+
+        AL.destroy()
+        errorCallback!!.free()
+        errorCallback = null
+        if (glDebugCallback != null) {
+            glDebugCallback!!.free()
+            glDebugCallback = null
+        }
+        GLFW.glfwTerminate()
+    }
+
+    override fun loadPreferences(name: String): String {
+        var cacheText = ""
+        val file = fs.file(conf.cacheDirectory + name, conf.cacheFileLocation)
+        if (file.exists()) {
+            file.readText(
+                ready = { cacheText = it },
+                error = { throw IllegalStateException("Preferences are not available, status: $it") }
+            )
+        }
+        return cacheText
+    }
+
+    override fun savePreferences(name: String, text: String) {
+        fs.file(conf.cacheDirectory + name, conf.cacheFileLocation).writeText(text, false, "UTF8")
+    }
+
+    override fun messageBox(title: String, message: String) {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE)
+    }
+
     companion object {
         private var errorCallback: GLFWErrorCallback? = null
         private var glDebugCallback: Callback? = null
@@ -428,70 +489,5 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
             }
             return false
         }
-    }
-
-    override fun startLoop() {
-        try {
-            loop()
-            cleanupWindows()
-        } catch (t: Throwable) {
-            t.printStackTrace()
-            if (t is RuntimeException) throw t else throw RuntimeException(t)
-        } finally {
-            destroy()
-        }
-    }
-
-    override fun destroy() {
-        for (i in listeners.indices) {
-            listeners[i].destroy()
-        }
-
-        RES.entity.destroy()
-
-        if (destroyBuffersOnExit) {
-            val buffers = ArrayList(data.allocatedBuffers.keys)
-            buffers.forEach { it.destroy() }
-        }
-
-        running = false
-
-        destroySystemCursor(cursorMapping[Cursor.Arrow])
-        destroySystemCursor(cursorMapping[Cursor.Crosshair])
-        destroySystemCursor(cursorMapping[Cursor.Hand])
-        destroySystemCursor(cursorMapping[Cursor.HorizontalResize])
-        destroySystemCursor(cursorMapping[Cursor.VerticalResize])
-        destroySystemCursor(cursorMapping[Cursor.IBeam])
-
-        mainWindow.graphics.lwjglGL.destroy()
-
-        AL.destroy()
-        errorCallback!!.free()
-        errorCallback = null
-        if (glDebugCallback != null) {
-            glDebugCallback!!.free()
-            glDebugCallback = null
-        }
-        GLFW.glfwTerminate()
-    }
-
-    override fun loadPreferences(name: String): String {
-        var cacheText = ""
-        val file = fs.file(conf.cacheDirectory + name, conf.cacheFileLocation)
-        if (file.exists()) {
-            file.readText(
-                ready = { cacheText = it },
-                error = { throw IllegalStateException("Preferences are not available, status: $it") }
-            )
-        }
-        return cacheText
-    }
-
-    override fun savePreferences(name: String, text: String) {
-        fs.file(conf.cacheDirectory + name, conf.cacheFileLocation).writeText(text, false, "UTF8")
-    }
-
-    override fun messageBox(title: String, message: String) {
-        JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE)
     }
 }

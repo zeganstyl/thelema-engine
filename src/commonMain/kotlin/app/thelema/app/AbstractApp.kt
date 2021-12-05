@@ -108,6 +108,7 @@ abstract class AbstractApp: IApp {
         GL.runSingleCalls()
 
         if (clearOnRender) GL.glClear()
+
         onRender()
 
         for (i in listeners.indices) {
@@ -115,5 +116,13 @@ abstract class AbstractApp: IApp {
         }
 
         GL.runRenderCalls()
+    }
+
+    override fun destroy() {
+        for (i in listeners.indices) {
+            listeners[i].destroy()
+        }
+
+        RES.entity.destroy()
     }
 }

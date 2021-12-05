@@ -20,12 +20,13 @@ import app.thelema.img.ITexture
 import app.thelema.img.Texture2D
 import app.thelema.math.TransformDataType
 import app.thelema.shader.node.*
+import app.thelema.utils.LOG
 
 class PBRShader(deferredRendering: Boolean = false): Shader() {
     constructor(deferredRendering: Boolean = false, block: PBRShader.() -> Unit): this(deferredRendering) {
         block(this)
         build()
-        println(printCode())
+        LOG.info(printCode())
     }
 
     val baseColorNode: TextureNode by lazy {

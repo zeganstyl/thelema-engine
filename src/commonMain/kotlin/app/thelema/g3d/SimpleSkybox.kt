@@ -32,7 +32,7 @@ import app.thelema.shader.Shader
 /** Simple skybox */
 class SimpleSkybox(
     fragCode: String? = null,
-    shaderFloatPrecision: String = if (GL.isGLES) "precision mediump float;\n" else "",
+    shaderFloatPrecision: String = "mediump",
     shaderVersion: Int = 110,
     shaderProfile: String = "",
     var texture: TextureCube = TextureCube()

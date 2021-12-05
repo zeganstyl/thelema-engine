@@ -4,6 +4,7 @@ import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
+import app.thelema.utils.LOG
 import java.io.*
 import java.lang.StringBuilder
 import java.nio.ByteBuffer
@@ -58,12 +59,14 @@ class AndroidFile(
     fun inputStream(): InputStream {
         return when (location) {
             FileLocation.Classpath -> AndroidFile::class.java.getResourceAsStream("/" + file.path.replace('\\', '/')) ?: throw RuntimeException("File not found: ${file.path} ($location)")
-            FileLocation.Internal -> fs.app.context.assets.open(path)
+            FileLocation.Project, FileLocation.Internal -> fs.app.context.assets.open(path)
             else -> try {
                 FileInputStream(file)
             } catch (ex: Exception) {
-                if (file.isDirectory) throw RuntimeException("Cannot open a stream to a directory: $file ($location)", ex)
-                throw RuntimeException("Error reading file: $file ($location)", ex)
+                if (file.isDirectory) LOG.error("Cannot open a stream to a directory: $file ($location)", ex)
+                LOG.error("Error reading file: $file ($location)", ex)
+                ex.printStackTrace()
+                throw ex
             }
         }
     }
@@ -115,8 +118,11 @@ class AndroidFile(
     }
 
     fun write(append: Boolean): OutputStream {
-        if (location == FileLocation.Classpath) throw RuntimeException("Cannot write to a classpath file: $file")
-        if (location == FileLocation.Internal) throw RuntimeException("Cannot write to an internal file: $file")
+        when (location) {
+            FileLocation.Project,
+            FileLocation.Classpath,
+            FileLocation.Internal -> throw RuntimeException("Cannot write to a classpath file: $file")
+        }
         parent().mkdirs()
         return try {
             FileOutputStream(file, append)
@@ -192,7 +198,8 @@ class AndroidFile(
     }
 
     override fun exists(): Boolean = when (location) {
-        FileLocation.Internal -> if (file.exists()) true else AndroidFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
+        FileLocation.Project,
+        FileLocation.Internal -> true
         FileLocation.Classpath -> AndroidFile::class.java.getResource("/" + file.path.replace('\\', '/')) != null
         else -> file.exists()
     }
@@ -248,7 +255,7 @@ class AndroidFile(
     }
 
     override fun length(): Long {
-        if (location == FileLocation.Classpath || location == FileLocation.Internal && !file.exists()) {
+        if (location == FileLocation.Classpath || location == FileLocation.Internal || location == FileLocation.Project && !file.exists()) {
             val input = inputStream()
             try {
                 return input.available().toLong()

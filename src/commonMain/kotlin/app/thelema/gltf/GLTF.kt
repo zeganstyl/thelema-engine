@@ -125,6 +125,7 @@ class GLTF: IGLTF, LoaderAdapter() {
     }
 
     override fun updateProgress() {
+        //println("GLTF ")
         var prog = glProgress.value
 
         if (progressInitiated && isLoading) {

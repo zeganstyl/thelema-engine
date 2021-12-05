@@ -19,10 +19,8 @@ import app.thelema.fs.FS
 import app.thelema.gl.GL
 import app.thelema.img.IMG
 import app.thelema.input.KB
-import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.json.JSON
-import app.thelema.jvm.JvmLog
 import app.thelema.jvm.concurrency.AtomicProviderJvm
 import app.thelema.jvm.data.JvmData
 import app.thelema.jvm.json.JsonSimpleJson
@@ -31,8 +29,14 @@ import app.thelema.net.WS
 import app.thelema.utils.LOG
 import javax.microedition.khronos.opengles.GL10
 
-
-class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GLSurfaceView? = null): AbstractApp() {
+/** @param surfaceView custom view
+ * @author zeganstyl */
+class AndroidApp(
+    val context: Context,
+    val glesVersion: Int = 3,
+    surfaceView: GLSurfaceView? = null,
+    var initOnGLThread: ((app: AndroidApp) -> Unit)? = null
+): AbstractApp() {
     override var clipboardString: String
         get() = (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip?.getItemAt(0)?.text?.toString() ?: ""
         set(value) {
@@ -63,6 +67,8 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
             GL.initGL()
 
             performDefaultSetup()
+
+            initOnGLThread?.invoke(this@AndroidApp)
         }
 
         override fun onDrawFrame(unused: GL10) {
@@ -81,7 +87,7 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
     val mouse = AndroidMouse(this)
     val kb = AndroidKB()
 
-    val view = surfaceView ?: object: GLSurfaceView(context) {
+    val view: GLSurfaceView = surfaceView ?: object: GLSurfaceView(context) {
         override fun onTouchEvent(e: MotionEvent): Boolean = mouse.onTouchEvent(e)
 
         override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -97,16 +103,28 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
 
     val fs = AndroidFS(this)
 
+    var maxAdditionalThreads = 1
+        set(value) {
+            if (field != value) {
+                field = value
+                threads = Array(value) { Thread() }
+                threadStopped = Array(value) { ATOM.bool(true) }
+            }
+        }
+    var threads = Array(maxAdditionalThreads) { Thread() }
+    var threadStopped = Array(maxAdditionalThreads) { ATOM.bool(true) }
+    val threadBlocks = ArrayList<() -> Unit>()
+
     init {
         ECS.setupDefaultComponents()
 
         ATOM = AtomicProviderJvm()
         APP = this
-        LOG = JvmLog()
+        LOG = AndroidLog()
         FS = fs
         JSON = JsonSimpleJson()
         DATA = JvmData()
-        IMG = AndroidImg(this)
+        IMG = AndroidImageLoader(this)
         GL = AndroidGL(this)
         MOUSE = mouse
         KB = kb
@@ -122,13 +140,23 @@ class AndroidApp(val context: Context, val glesVersion: Int = 3, surfaceView: GL
     }
 
     override fun thread(block: () -> Unit) {
-        Thread { block() }.start()
-    }
-
-    override fun destroy() {
-//        for (i in listeners.indices) {
-//            listeners[i].destroy()
-//        }
+        var index: Int = -1
+        for (i in threads.indices) {
+            if (!threads[i].isAlive) {
+                index = i
+                break
+            }
+        }
+        if (index == -1) {
+            threadBlocks.add(block)
+        } else {
+            val stopped = threadStopped[index]
+            stopped.value = false
+            threads[index] = Thread {
+                block()
+                stopped.value = true
+            }.apply { start() }
+        }
     }
 
     override fun loadPreferences(name: String): String {

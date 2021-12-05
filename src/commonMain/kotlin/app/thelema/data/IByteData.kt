@@ -60,6 +60,27 @@ interface IByteData: IDataArray {
         return view
     }
 
+    fun toByteArray(): ByteArray {
+        val array = ByteArray(remaining)
+        val l = limit
+        if (position == 0) {
+            var i = position
+            while (i < l) {
+                array[i] = get(i)
+                i++
+            }
+        } else {
+            var j = 0
+            var i = position
+            while (i < l) {
+                array[j] = get(i)
+                j++
+                i++
+            }
+        }
+        return array
+    }
+
     fun shortView(): IShortData
     fun intView(): IIntData
     fun floatView(): IFloatData
@@ -246,6 +267,12 @@ interface IByteData: IDataArray {
     override fun toUFloat(index: Int): Float = (get(index).toInt() and 0xFF).toFloat()
 
     fun toStringUTF8(): String
+
+    fun forEachByte(block: (byte: Byte) -> Unit) {
+        for (i in 0 until limit) {
+            block(get(i))
+        }
+    }
 
     fun destroy() {
         if (this != DATA.nullBuffer) {

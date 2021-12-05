@@ -4,13 +4,26 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.math.min
 
-class ByteBufferBackedInputStream(var buf: ByteBuffer): InputStream() {
-    override fun read(): Int = if (!buf.hasRemaining()) -1 else buf.get().toInt()
+class ByteBufferBackedInputStream(val buf: ByteBuffer): InputStream() {
+    override fun read(): Int = if (buf.hasRemaining()) buf.get().toInt() else -1
+
+    override fun reset() {
+        buf.reset()
+    }
+
+    override fun available(): Int {
+        return buf.remaining()
+    }
+
+    override fun skip(n: Long): Long {
+        val num = min(n.toInt(), buf.remaining())
+        buf.position(buf.position() + num)
+        return num.toLong()
+    }
 
     override fun read(bytes: ByteArray, off: Int, len: Int): Int {
-        var len2 = len
-        len2 = min(len2, buf.remaining())
-        buf.get(bytes, off, len2)
-        return len2
+        val num = min(len, buf.remaining())
+        buf.get(bytes, off, num)
+        return num
     }
 }

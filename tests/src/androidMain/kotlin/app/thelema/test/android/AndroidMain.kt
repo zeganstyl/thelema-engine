@@ -20,22 +20,18 @@ import android.app.Activity
 import android.os.Bundle
 import app.thelema.android.AndroidApp
 import app.thelema.test.MainTest
-import app.thelema.gl.GL
 
 class AndroidMain : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val app = AndroidApp(this)
-        setContentView(app.view)
+        setContentView(
+            AndroidApp(this) { MainTest() }.view.also {
+                val metrics = resources.displayMetrics
 
-        val metrics = resources.displayMetrics
-
-        val scale = 200
-        app.view.holder.setFixedSize((metrics.widthPixels * scale / metrics.xdpi).toInt(), (metrics.heightPixels * scale / metrics.ydpi).toInt())
-
-        GL.call {
-            MainTest()
-        }
+                val scale = 200
+                it.holder.setFixedSize((metrics.widthPixels * scale / metrics.xdpi).toInt(), (metrics.heightPixels * scale / metrics.ydpi).toInt())
+            }
+        )
     }
 }
