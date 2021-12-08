@@ -209,12 +209,12 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
         return over
     }
 
-    override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-        if (!isInsideViewport(screenX, screenY)) return
+    override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
+        if (!isInsideViewport(x, y)) return
         pointerTouched[pointer] = true
-        pointerScreenX[pointer] = screenX
-        pointerScreenY[pointer] = screenY
-        screenToStageCoordinates(tempCoords.set(screenX.toFloat(), screenY.toFloat()))
+        pointerScreenX[pointer] = x
+        pointerScreenY[pointer] = y
+        screenToStageCoordinates(tempCoords.set(x.toFloat(), y.toFloat()))
         val event = inputEventPool.get()
         event.type = InputEventType.touchDown
         event.headUpDisplay = this

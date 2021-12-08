@@ -105,8 +105,8 @@ class OrbitCameraControl(): IEntityComponent {
         }
 
     val mouseListener = object : IMouseListener {
-        override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-            buttonDown(screenX.toFloat(), screenY.toFloat(), button)
+        override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
+            buttonDown(x.toFloat(), y.toFloat(), button)
         }
 
         override fun dragged(screenX: Int, screenY: Int, pointer: Int) {
@@ -115,6 +115,26 @@ class OrbitCameraControl(): IEntityComponent {
 
         override fun scrolled(amount: Int) {
             scrolled(MOUSE.x.toFloat(), MOUSE.y.toFloat(), amount)
+        }
+    }
+
+    val touchListener = object : ITouchListener {
+        override fun touchDown(x: Float, y: Float, pointer: Int, button: Int) {
+            buttonDown(x, y, button)
+        }
+
+        override fun dragged(x: Float, y: Float, pointer: Int) {
+            dragged(x, y)
+        }
+
+        override fun moved(x: Float, y: Float, pointer: Int) {
+            dragged(x, y)
+        }
+
+        override fun scale(factor: Float, focusX: Float, focusY: Float) {
+            if (isEnabled && mouseEnabled) {
+                targetDistance *= scrollFactor * 10f / factor
+            }
         }
     }
 
@@ -130,11 +150,16 @@ class OrbitCameraControl(): IEntityComponent {
 
     /** Will create mouse listener and will listen to mouse */
     fun listenToMouse(): IMouseListener {
-        MOUSE.addListener(mouseListener)
+        if (APP.isMobile) {
+            TOUCH.addListener(touchListener)
+        } else {
+            MOUSE.addListener(mouseListener)
+        }
         return mouseListener
     }
 
     fun stopListenMouse() {
+        TOUCH.removeListener(touchListener)
         MOUSE.removeListener(mouseListener)
     }
 
@@ -226,19 +251,25 @@ class OrbitCameraControl(): IEntityComponent {
 
     fun dragged(x: Float, y: Float) {
         if (isEnabled && mouseEnabled) {
-            if ((pressedButton == rotateButton || rotateButton == -1) && (translateButton != rotateButton || !KEY.shiftPressed)) {
-                // rotate
+            if (APP.isDesktop) {
+                if ((pressedButton == rotateButton || rotateButton == -1) && (translateButton != rotateButton || !KEY.shiftPressed)) {
+                    // rotate
+                    val dAzimuth = rotationSpeed * (x - startX) / APP.width
+                    val dZenith = -rotationSpeed * (y - startY) / APP.height
+                    updateAzimuthZenith(azimuth + dAzimuth, zenith + dZenith)
+
+                } else if (pressedButton == translateButton && isTranslationEnabled && (translateButton != rotateButton || KEY.shiftPressed)) {
+                    // translate
+                    val deltaX = -translationSpeed * currentTargetDistance * (x - startX) / APP.width
+                    val deltaY = translationSpeed * currentTargetDistance * (y - startY) / APP.height
+
+                    target.add(up.x * deltaY, up.y * deltaY, up.z * deltaY)
+                    target.add(right.x * deltaX, right.y * deltaX, right.z * deltaX)
+                }
+            } else {
                 val dAzimuth = rotationSpeed * (x - startX) / APP.width
                 val dZenith = -rotationSpeed * (y - startY) / APP.height
                 updateAzimuthZenith(azimuth + dAzimuth, zenith + dZenith)
-
-            } else if (pressedButton == translateButton && isTranslationEnabled && (translateButton != rotateButton || KEY.shiftPressed)) {
-                // translate
-                val deltaX = -translationSpeed * currentTargetDistance * (x - startX) / APP.width
-                val deltaY = translationSpeed * currentTargetDistance * (y - startY) / APP.height
-
-                target.add(up.x * deltaY, up.y * deltaY, up.z * deltaY)
-                target.add(right.x * deltaX, right.y * deltaX, right.z * deltaX)
             }
 
             startX = x

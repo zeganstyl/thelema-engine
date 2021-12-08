@@ -124,8 +124,8 @@ class Scene: IScene {
     private val simulationNodes = ArrayList<SimulationNode>()
 
     private val mouseListener = object : IMouseListener {
-        override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
-            mouseHandler?.buttonDown(button, screenX, screenY, pointer)
+        override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
+            mouseHandler?.buttonDown(button, x, y, pointer)
         }
 
         override fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {

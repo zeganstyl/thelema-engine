@@ -119,38 +119,30 @@ object BUTTON {
 
 /** @author zeganstyl */
 interface IMouseListener {
-    /** Called when the screen was touched or a mouse button was pressed. The button parameter will be [BUTTON.LEFT] on iOS.
-     * @param screenX The x coordinate, origin is in the upper left corner
-     * @param screenY The y coordinate, origin is in the upper left corner
-     * @param pointer the pointer for the event.
-     * @param button the button
-     * @return whether the input was processed
+    /** Called when the screen was touched or a mouse button was pressed.
+     * @param x current cursor x
+     * @param y current cursor y
+     * @param button see [BUTTON]
      */
-    fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) = Unit
+    fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {}
 
-    /** Called when a finger was lifted or a mouse button was released. The button parameter will be [BUTTON.LEFT] on iOS.
-     * @param pointer the pointer for the event.
-     * @param button the button
-     * @return whether the input was processed
+    /** Called when a finger was lifted or a mouse button was released.
+     * @param button see [BUTTON]
      */
-    fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) = Unit
+    fun buttonUp(button: Int, screenX: Int, screenY: Int, pointer: Int) {}
 
     /** Called when a finger or the mouse was dragged.
      * @param pointer the pointer for the event.
-     * @return whether the input was processed
      */
-    fun dragged(screenX: Int, screenY: Int, pointer: Int) = Unit
+    fun dragged(screenX: Int, screenY: Int, pointer: Int) {}
 
-    /** Called when the mouse was moved without any buttons being pressed. Will not be called on iOS.
-     * @return whether the input was processed
-     */
-    fun moved(screenX: Int, screenY: Int) = Unit
+    /** Called when the mouse was moved without any buttons being pressed. */
+    fun moved(screenX: Int, screenY: Int) {}
 
-    /** Called when the mouse wheel was scrolled. Will not be called on iOS.
+    /** Called when the mouse wheel was scrolled.
      * @param amount the scroll amount, -1 or 1 depending on the direction the wheel was scrolled.
-     * @return whether the input was processed.
      */
-    fun scrolled(amount: Int) = Unit
+    fun scrolled(amount: Int) {}
 
-    fun cursorEnabledChanged(oldValue: Boolean, newValue: Boolean) = Unit
+    fun cursorEnabledChanged(oldValue: Boolean, newValue: Boolean) {}
 }

@@ -43,6 +43,6 @@ import app.thelema.test.ui.UITest
 
 class MainTest {
     init {
-        GLTFDamagedHelmetTest().testMain()
+        InstancedParticlesBaseTest().testMain()
     }
 }

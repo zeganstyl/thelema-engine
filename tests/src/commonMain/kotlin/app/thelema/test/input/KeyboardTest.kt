@@ -18,7 +18,6 @@ package app.thelema.test.input
 
 import app.thelema.input.IKeyListener
 import app.thelema.input.KB
-import app.thelema.input.KEY
 import app.thelema.test.Test
 import app.thelema.utils.LOG
 

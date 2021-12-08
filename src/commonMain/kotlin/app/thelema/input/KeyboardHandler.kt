@@ -3,7 +3,6 @@ package app.thelema.input
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.g3d.IScene
 import app.thelema.g3d.scene
 import app.thelema.utils.iterate
 

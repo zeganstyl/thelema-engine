@@ -28,9 +28,9 @@ class MouseHandler: IEntityComponent, IMouseListener {
         listeners.remove(listener)
     }
 
-    override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
+    override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
         for (i in listeners.indices) {
-            listeners[i].buttonDown(button, screenX, screenY, pointer)
+            listeners[i].buttonDown(button, x, y, pointer)
         }
     }
 

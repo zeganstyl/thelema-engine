@@ -30,7 +30,7 @@ class MouseTest: Test {
         LOG.info("Press some button on mouse or move mouse over window")
 
         MOUSE.addListener(object: IMouseListener {
-            override fun buttonDown(button: Int, screenX: Int, screenY: Int, pointer: Int) {
+            override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
                 LOG.info("buttonDown: $button")
             }
 

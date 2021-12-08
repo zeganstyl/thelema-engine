@@ -27,8 +27,7 @@ class Texture2DTest: Test {
         get() = "Texture 2D"
 
     override fun testMain() {
-        //val texture = Texture2D("thelema-logo-alpha.png")
-        val texture = Texture2D("2x2.png")
+        val texture = Texture2D("thelema-logo-alpha.png")
 
         APP.onRender = { ScreenQuad.render(texture) }
     }

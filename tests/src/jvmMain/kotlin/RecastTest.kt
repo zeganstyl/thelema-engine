@@ -9,7 +9,6 @@ import app.thelema.g3d.material
 import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
 import app.thelema.gl.*
-import app.thelema.gltf.GLTF
 import app.thelema.gltf.gltf
 import app.thelema.input.IKeyListener
 import app.thelema.input.KB
@@ -17,7 +16,6 @@ import app.thelema.input.KEY
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.math.Vec4
 import app.thelema.res.RES
-import app.thelema.res.load
 import app.thelema.shader.SimpleShader3D
 import app.thelema.utils.Color
 import org.recast4j.detour.*

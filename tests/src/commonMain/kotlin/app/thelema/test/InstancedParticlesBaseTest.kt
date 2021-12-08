@@ -1,5 +1,6 @@
 package app.thelema.test
 
+import app.thelema.app.APP
 import app.thelema.ecs.Entity
 import app.thelema.ecs.mainLoop
 import app.thelema.g3d.cam.ActiveCamera
@@ -7,6 +8,7 @@ import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.scene
+import app.thelema.gl.ScreenQuad
 import app.thelema.gl.mesh
 import app.thelema.img.Texture2D
 import app.thelema.math.*
@@ -18,7 +20,7 @@ class InstancedParticlesBaseTest: Test {
         val particlesShader = Shader(
             vertCode = """
 attribute vec3 POSITION;
-attribute vec2 UV;
+attribute vec2 TEXCOORD_0;
 attribute vec3 INSTANCE_POSITION;
 attribute vec2 INSTANCE_UV_START;
 attribute float INSTANCE_LIFE_TIME;
@@ -30,8 +32,7 @@ varying vec2 uv;
 varying float life;
 
 void main() {
-    uv = UV;
-    uv = UV * texSize + INSTANCE_UV_START;
+    uv = TEXCOORD_0 * texSize + INSTANCE_UV_START;
     life = INSTANCE_LIFE_TIME;
     gl_Position = viewProj * vec4(view * (1.0 + INSTANCE_LIFE_TIME) * POSITION + INSTANCE_POSITION, 1.0);
 }""",

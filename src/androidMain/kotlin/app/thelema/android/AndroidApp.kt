@@ -8,6 +8,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import app.thelema.app.APP
 import app.thelema.app.AbstractApp
 import app.thelema.app.AndroidApp
@@ -20,6 +21,7 @@ import app.thelema.gl.GL
 import app.thelema.img.IMG
 import app.thelema.input.KB
 import app.thelema.input.MOUSE
+import app.thelema.input.TOUCH
 import app.thelema.json.JSON
 import app.thelema.jvm.concurrency.AtomicProviderJvm
 import app.thelema.jvm.data.JvmData
@@ -86,9 +88,14 @@ class AndroidApp(
 
     val mouse = AndroidMouse(this)
     val kb = AndroidKB()
+    val touch = AndroidTouch(this)
 
     val view: GLSurfaceView = surfaceView ?: object: GLSurfaceView(context) {
-        override fun onTouchEvent(e: MotionEvent): Boolean = mouse.onTouchEvent(e)
+        override fun onTouchEvent(e: MotionEvent): Boolean {
+            touch.onTouchEvent(e)
+            mouse.onTouchEvent(e)
+            return true
+        }
 
         override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
             kb.keyDown(keyCode)
@@ -130,6 +137,7 @@ class AndroidApp(
         KB = kb
         AL = AndroidAL(context)
         WS = KtorWebSocket()
+        TOUCH = touch
 
         view.setEGLContextClientVersion(glesVersion)
         view.setRenderer(renderer)
