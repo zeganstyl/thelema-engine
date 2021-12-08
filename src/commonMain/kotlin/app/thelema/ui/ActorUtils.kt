@@ -28,9 +28,9 @@ object ActorUtils {
      * @throws IllegalStateException if actor does not belong to any stage.
      */
     fun keepWithinStage(actor: Actor) {
-        val stage = actor.headUpDisplay
+        val stage = actor.hud
                 ?: throw IllegalStateException("keepWithinStage cannot be used on Actor that doesn't belong to any stage. ")
-        keepWithinStage(actor.headUpDisplay!!, actor)
+        keepWithinStage(actor.hud!!, actor)
     }
 
     /**

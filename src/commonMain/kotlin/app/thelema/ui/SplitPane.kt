@@ -222,7 +222,7 @@ class SplitPane(
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        val stage = headUpDisplay ?: return
+        val stage = hud ?: return
         validate()
         val color = color
         val alpha = Color.getAlpha(color) * parentAlpha

@@ -387,14 +387,16 @@ open class Tree(style: TreeStyle = DSKIN.tree) : WidgetGroup() {
 
     /** Returns the first selected node, or null.  */
     val selectedNode: ITreeNode?
-        get() = selection.first()
+        get() = selection.firstOrNull()
 
     /** Returns the first selected value, or null.  */
     val selectedValue: Any?
         get() {
-            val node = selection.first()
+            val node = selection.firstOrNull()
             return node?.userObject
         }
+
+    fun <T> selectedNodeTyped(): T? = selectedNode as T?
 
     /** Removes the root node actors from the tree and adds them again. This is useful after changing the order of
      * [getRootNodes].

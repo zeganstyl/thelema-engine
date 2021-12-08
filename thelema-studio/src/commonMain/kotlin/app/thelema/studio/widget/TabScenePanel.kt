@@ -2,15 +2,11 @@ package app.thelema.studio.widget
 
 import app.thelema.app.APP
 import app.thelema.ecs.IEntity
-import app.thelema.g2d.Sprite
-import app.thelema.img.texture2D
 import app.thelema.input.BUTTON
 import app.thelema.input.MOUSE
-import app.thelema.res.AID
 import app.thelema.studio.*
 import app.thelema.studio.widget.component.ComponentsPanel
 import app.thelema.ui.*
-import app.thelema.utils.Color
 
 class TabScenePanel: Table() {
     var entity: IEntity
@@ -30,7 +26,7 @@ class TabScenePanel: Table() {
         addListener(object : InputListener {
             override fun mouseMoved(event: InputEvent, x: Float, y: Float): Boolean {
                 CameraControl.control.isEnabled = true
-                headUpDisplay?.scrollFocus = this@Stack
+                hud?.scrollFocus = this@Stack
                 return super.mouseMoved(event, x, y)
             }
 
@@ -40,21 +36,21 @@ class TabScenePanel: Table() {
 
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 CameraControl.control.isEnabled = true
-                headUpDisplay?.scrollFocus = this@Stack
+                hud?.scrollFocus = this@Stack
                 return super.touchDown(event, x, y, pointer, button)
             }
 
             override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
                 CameraControl.control.isEnabled = true
-                headUpDisplay?.scrollFocus = this@Stack
+                hud?.scrollFocus = this@Stack
             }
 
             override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
                 if (button == BUTTON.LEFT) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
 
                 CameraControl.control.isEnabled = true
-                headUpDisplay?.scrollFocus = this@Stack
-                headUpDisplay?.setKeyboardFocus(this@Stack)
+                hud?.scrollFocus = this@Stack
+                hud?.setKeyboardFocus(this@Stack)
             }
 
             override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {

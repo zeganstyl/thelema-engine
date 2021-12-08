@@ -163,8 +163,6 @@ class MeshBuilder: IMeshBuilder {
             }
         } else {
             vertexBuffer?.apply {
-                if (!mesh.vertexBuffers.contains(this)) mesh.vertexBuffers.add(this)
-
                 val positions = !containsInput(positionName)
                 if (positions) addAttribute(3, positionName)
 
@@ -180,6 +178,8 @@ class MeshBuilder: IMeshBuilder {
                 if (positions || uvs || normals || tangents || verticesNum != verticesCount) {
                     initVertexBuffer(verticesNum)
                 }
+
+                if (!mesh.vertexBuffers.contains(this)) mesh.addVertexBuffer(this)
             }
         }
         applyVertices()

@@ -44,7 +44,7 @@ open class EntityTab(entity: IEntity, tabCloseButton: TextButton? = TextButton("
 
             override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
                 if (event.target == tabCloseButton) {
-                    event.target?.also { it.headUpDisplay?.unfocus(it) }
+                    event.target?.also { it.hud?.unfocus(it) }
                     removeTab()
                 } else {
                     makeTabActive()

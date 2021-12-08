@@ -161,7 +161,7 @@ open class ScrollPane (
      * @see .setCancelTouchFocus
      */
     fun cancelTouchFocus() {
-        val stage = headUpDisplay
+        val stage = hud
         stage?.cancelTouchFocusExcept(flickScrollListener, this)
     }
 
@@ -804,7 +804,7 @@ open class ScrollPane (
         if (focusOnMouseEnter) {
             addListener(object : InputListener {
                 override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                    headUpDisplay?.scrollFocus = this@ScrollPane
+                    hud?.scrollFocus = this@ScrollPane
                 }
             })
         }
@@ -814,7 +814,7 @@ open class ScrollPane (
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 if (draggingPointer != -1) return false
                 if (pointer == 0 && button != 0) return false
-                if (headUpDisplay != null) headUpDisplay!!.scrollFocus = this@ScrollPane
+                if (hud != null) hud!!.scrollFocus = this@ScrollPane
                 if (!flickScroll) setScrollbarsVisible(true)
                 if (fadeAlpha == 0f) return false
                 if (scrollBarTouch && scrollX && hScrollBounds.contains(x, y)) {

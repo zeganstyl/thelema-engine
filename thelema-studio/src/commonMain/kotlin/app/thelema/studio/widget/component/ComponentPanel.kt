@@ -63,6 +63,13 @@ open class ComponentPanel<T: IEntityComponent>(
                             map = value.values
                         }
                     }
+                    PropertyType.StringEnum -> {
+                        size = 1
+                        StringEnumField().apply {
+                            value as StringEnumPropertyDesc2<IEntityComponent>
+                            items = value.values
+                        }
+                    }
                     ScriptFile -> ScriptFileField()
                     is ComponentRefType -> ComponentReferenceField(type.componentName)
                     else -> null

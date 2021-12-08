@@ -111,10 +111,10 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         Mesh.setupMeshComponents()
         Shader.setupShaderComponents()
 
-        descriptor({ app.thelema.g3d.Material() }) {
+        descriptor({ Material() }) {
             setAliases(app.thelema.g3d.IMaterial::class)
-            stringEnum("alphaMode", Blending.items, { alphaMode }) { alphaMode = it }
-            int("translucentPriority", { translucentPriority }) { translucentPriority = it }
+            stringEnum(Material::alphaMode, Blending.items)
+            int(Material::translucentPriority)
             refAbs(Material::shader)
         }
         descriptor({ app.thelema.g3d.Armature() }) {

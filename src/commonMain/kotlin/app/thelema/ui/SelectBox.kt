@@ -99,11 +99,11 @@ open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
     /** Alignment of the selected item in the select box */
     var alignment = -1
 
-    override var headUpDisplay: HeadUpDisplay?
-        get() = super.headUpDisplay
+    override var hud: HeadUpDisplay?
+        get() = super.hud
         set(value) {
             if (value == null) selectBoxList.hide()
-            super.headUpDisplay = value
+            super.hud = value
         }
 
     var itemToString
@@ -195,7 +195,7 @@ open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
 
     fun showList() {
         if (items.isEmpty()) return
-        if (headUpDisplay != null) selectBoxList.show(headUpDisplay!!)
+        if (hud != null) selectBoxList.show(hud!!)
     }
 
     fun hideList() {

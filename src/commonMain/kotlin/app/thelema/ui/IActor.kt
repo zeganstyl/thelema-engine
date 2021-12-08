@@ -21,7 +21,7 @@ import app.thelema.math.IVec2
 
 interface IActor {
     /** Stage that this actor is currently in, or null if not in a stage. */
-    var headUpDisplay: HeadUpDisplay?
+    var hud: HeadUpDisplay?
 
     /** Parent actor, or null if not in a group.  */
     var parent: Group?

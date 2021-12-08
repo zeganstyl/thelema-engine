@@ -180,6 +180,7 @@ open class PopupMenu() : Table() {
 
     fun item(name: String, style: TextButtonStyle = TextButtonStyle(), block: MenuItem.() -> Unit): MenuItem {
         val item = MenuItem(name, style)
+        item.label.alignH = -1
         block(item)
         addItem(item)
         return item
@@ -246,6 +247,10 @@ open class PopupMenu() : Table() {
         toFront()
     }
 
+    fun showMenu(event: InputEvent, contextObject: Any? = null) {
+        showMenu(event.headUpDisplay!!, event.stageX, event.stageY, contextObject)
+    }
+
     /**
      * Shows menu below (or above if not enough space) given actor.
      * @param headUpDisplay stage instance that this menu is being added to
@@ -273,10 +278,10 @@ open class PopupMenu() : Table() {
         newSubMenu?.parentSubMenu = this
     }
 
-    override var headUpDisplay: HeadUpDisplay?
-        get() = super.headUpDisplay
+    override var hud: HeadUpDisplay?
+        get() = super.hud
         set(value) {
-            super.headUpDisplay = value
+            super.hud = value
             value?.addListener(stageListener!!)
         }
 
@@ -288,7 +293,7 @@ open class PopupMenu() : Table() {
     }
 
     override fun remove(): Boolean {
-        headUpDisplay?.removeListener(stageListener!!)
+        hud?.removeListener(stageListener!!)
         if (activeSubMenu != null) activeSubMenu!!.remove()
         setActiveItem(null, false)
         parentSubMenu = null

@@ -73,7 +73,6 @@ object Studio: AppListener, IJsonObjectIO {
 
     val popupMenu = PopupMenu {
         item("Add Entity") {
-            label.alignH = -1
             onClickWithContextTyped<EntityTreeNode> {
                 it.entity.addEntity(Entity("New Entity"))
                 it.isExpanded = true
@@ -81,15 +80,10 @@ object Studio: AppListener, IJsonObjectIO {
         }
         separator()
         item("Edit") {
-            label.alignH = -1
-            onClickWithContextTyped<EntityTreeNode> {
-                entityWindow.entity = it.entity
-                entityWindow.show(hud)
-            }
+            onClickWithContextTyped<EntityTreeNode> { it.showEditWindow() }
         }
         separator()
         item("Remove") {
-            label.alignH = -1
             onClickWithContextTyped<EntityTreeNode> {
                 it.entity.parentEntity?.removeEntity(it.entity)
             }

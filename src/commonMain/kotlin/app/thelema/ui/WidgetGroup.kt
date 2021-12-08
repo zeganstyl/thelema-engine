@@ -83,7 +83,7 @@ open class WidgetGroup (vararg actors: Actor) : Group(), Layout {
         if (fillParent && parent != null) {
             val parentWidth: Float
             val parentHeight: Float
-            val stage = headUpDisplay
+            val stage = hud
             if (stage != null && parent == stage.root) {
                 parentWidth = stage.width
                 parentHeight = stage.height

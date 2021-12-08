@@ -151,6 +151,24 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
+    fun vec2(property: KMutableProperty1<T, IVec2>) = property(object : IPropertyDescriptor<T, IVec2> {
+        override val name: String = property.name
+        override val type = PropertyType.Vec2
+        override fun setValue(component: T, value: IVec2) = property.set(component, value)
+        override fun getValue(component: T): IVec2 = property.get(component)
+        override fun default(): IVec2 = MATH.Zero2
+        override fun readJson(component: T, json: IJsonObject) {
+            json.array(name) { property.set(component, Vec2(float(0, 0f), float(1, 0f))) }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            property.get(component).also {
+                if (it.x != 0f || it.y != 0f) {
+                    json.setArray(name) { add(it.x, it.y) }
+                }
+            }
+        }
+    })
+
     /** Define 3-dimensional float vector property */
     fun vec3(name: String, get: T.() -> IVec3, set: T.(value: IVec3) -> Unit) = property(object : IPropertyDescriptor<T, IVec3> {
         override val name: String = name

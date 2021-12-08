@@ -410,6 +410,27 @@ open class Shader(
                     )
                 }
 
+                descriptor({ UniformFloatNode() }) {
+                    string(UniformFloatNode::uniformName)
+                    float(UniformFloatNode::defaultValue)
+                }
+                descriptor({ UniformVec2Node() }) {
+                    string(UniformVec2Node::uniformName)
+                    vec2(UniformVec2Node::defaultValue)
+                }
+                descriptor({ UniformVec3Node() }) {
+                    string(UniformVec3Node::uniformName)
+                    vec3(UniformVec3Node::defaultValue)
+                }
+                descriptor({ UniformVec4Node() }) {
+                    string(UniformVec4Node::uniformName)
+                    vec4(UniformVec4Node::defaultValue)
+                }
+                descriptor({ UniformIntNode() }) {
+                    string(UniformIntNode::uniformName)
+                    int(UniformIntNode::defaultValue)
+                }
+
                 descriptor({ NormalMapNode() }) {
 
                 }

@@ -517,7 +517,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
      * @param up If true, the TextField with the same or next smallest y coordinate is found, else the next highest.
      */
     fun next(up: Boolean) {
-        val stage = headUpDisplay ?: return
+        val stage = hud ?: return
         var current = this
         val currentCoords = current.parent!!.localToStageCoordinates(tmp2.set(current.x, current.y))
         val bestCoords = tmp1
@@ -544,7 +544,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
     /** Focuses this field, field must be added to stage before this method can be called  */
     fun focusField() {
         if (isDisabled) return
-        val stage = headUpDisplay
+        val stage = hud
         FocusManager.switchFocus(stage, this@TextField)
         cursorPosition = 0
         selectionStart = 0
@@ -773,7 +773,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             if (isDisabled) return true
             setCursorPosition(x, y)
             selectionStart = cursor
-            val stage = headUpDisplay
+            val stage = hud
             if (stage != null) stage.keyboardFocus = this@TextField
             onscreenKeyboard.show(true)
             hasSelection = true

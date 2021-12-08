@@ -4,7 +4,7 @@ import app.thelema.studio.EntityTreeNode
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
 import app.thelema.input.BUTTON
-import app.thelema.input.MOUSE
+import app.thelema.input.KEY
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
 import app.thelema.ui.*
@@ -48,9 +48,19 @@ class EntityTreePanel: Table() {
 
         tree.addListener(object : ClickListener(BUTTON.RIGHT) {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
+                tree.requestKeyboardFocus()
                 (tree.overNode as EntityTreeNode?)?.also { node ->
-                    Studio.popupMenu.showMenu(event.headUpDisplay!!, event.stageX, event.stageY, node)
+                    Studio.popupMenu.showMenu(event, node)
                 }
+            }
+
+            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+                when (keycode) {
+                    KEY.F2 -> {
+                        tree.selectedNodeTyped<EntityTreeNode>()?.showEditWindow()
+                    }
+                }
+                return super.keyDown(event, keycode)
             }
         })
     }

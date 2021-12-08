@@ -10,7 +10,6 @@ import app.thelema.studio.ComponentPanelProvider
 import app.thelema.studio.ComponentScenePanel
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
-import app.thelema.studio.widget.component.ComponentPanel
 import app.thelema.ui.*
 
 object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
@@ -222,12 +221,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         rootSceneStack.addListener(object : InputListener {
             override fun keyDown(event: InputEvent, keycode: Int): Boolean {
                 when (keycode) {
-                    KEY.DEL, KEY.FORWARD_DEL -> {
-                        boxesSelection.selected.forEach {
-                            diagram?.removeBox(it)
-                        }
-                        boxesSelection.selected.clear()
-                    }
+                    KEY.DEL, KEY.FORWARD_DEL -> removeSelectedBoxes()
                     else -> {
                         if (keycode == KEY.A && KEY.shiftPressed) {
 
@@ -239,14 +233,14 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
             }
 
             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                rootSceneStack.headUpDisplay?.scrollFocus = diagram
+                rootSceneStack.hud?.scrollFocus = diagram
             }
 
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 startDragX = x
                 startDragY = y
                 pressedButton = button
-                rootSceneStack.headUpDisplay?.setKeyboardFocus(rootSceneStack)
+                rootSceneStack.hud?.setKeyboardFocus(rootSceneStack)
                 return super.touchDown(event, x, y, pointer, button)
             }
 
@@ -300,7 +294,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
 //            }
 
             override fun clicked(event: InputEvent, x: Float, y: Float) {
-                if (event.target == rootSceneStack) rootSceneStack.headUpDisplay?.keyboardFocus = rootSceneStack
+                if (event.target == rootSceneStack) rootSceneStack.hud?.keyboardFocus = rootSceneStack
 
                 val diagram = diagram
                 val tempLink = tempLink
@@ -328,5 +322,12 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
                 this@ShaderComponentScene.tempLink = null
             }
         })
+    }
+
+    fun removeSelectedBoxes() {
+        boxesSelection.selected.forEach {
+            diagram?.removeBox(it)
+        }
+        boxesSelection.selected.clear()
     }
 }

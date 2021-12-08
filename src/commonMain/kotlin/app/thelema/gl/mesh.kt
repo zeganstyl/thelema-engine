@@ -49,7 +49,10 @@ interface IMesh: IEntityComponent {
 
     var verticesCount: Int
 
-    val vertexBuffers: MutableList<IVertexBuffer>
+    val vertexBuffers: List<IVertexBuffer>
+
+    /** Uniform data for shaders */
+    val materialData: Map<String, Any>
 
     var vaoHandle: Int
 
@@ -68,6 +71,13 @@ interface IMesh: IEntityComponent {
     var boneWeightsName: String
     var boneIndicesName: String
     var instancesPositionsName: String
+
+    fun setMaterialValue(name: String, value: Any)
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getMaterialValue(name: String): T? = materialData[name] as T?
+
+    fun removeMaterialValue(name: String)
 
     fun addMeshListener(listener: MeshListener)
 
@@ -212,6 +222,10 @@ class Mesh(): IMesh {
             }
         }
 
+    private val _materialData = HashMap<String, Any>(0)
+    override val materialData: MutableMap<String, Any>
+        get() = _materialData
+
     override var boundings: IBoundings? = null
         get() = field ?: inheritedMesh?.boundings
 
@@ -317,6 +331,14 @@ class Mesh(): IMesh {
         override fun bufferUploadedToGPU(buffer: IGLBuffer) {
             listeners?.forEach { it.bufferUploadedToGPU(buffer) }
         }
+    }
+
+    override fun setMaterialValue(name: String, value: Any) {
+        _materialData[name] = value
+    }
+
+    override fun removeMaterialValue(name: String) {
+        _materialData.remove(name)
     }
 
     override fun addMeshListener(listener: MeshListener) {

@@ -53,18 +53,22 @@ open class Group : Actor(), Cullable {
      */
     override var cullingArea: Rectangle? = null
 
-    override var headUpDisplay: HeadUpDisplay?
-        get() = super.headUpDisplay
+    override var hud: HeadUpDisplay?
+        get() = super.hud
         set(value) {
-            super.headUpDisplay = value
+            super.hud = value
             val childrenArray = children
             var i = 0
             val n = children.size
             while (i < n) {
-                childrenArray[i].headUpDisplay = headUpDisplay // StackOverflowError here means the group is its own ancestor.
+                childrenArray[i].hud = hud // StackOverflowError here means the group is its own ancestor.
                 i++
             }
         }
+
+    fun requestKeyboardFocus() {
+        hud?.setKeyboardFocus(this)
+    }
 
     override fun act(delta: Float) {
         super.act(delta)
@@ -250,7 +254,7 @@ open class Group : Actor(), Cullable {
         }
         children.add(actor)
         actor.parent = this
-        actor.headUpDisplay = headUpDisplay
+        actor.hud = hud
         childrenChanged()
     }
 
@@ -265,7 +269,7 @@ open class Group : Actor(), Cullable {
         }
         if (index >= children.size) children.add(actor) else children.add(index, actor)
         actor.parent = this
-        actor.headUpDisplay = headUpDisplay
+        actor.hud = hud
         childrenChanged()
     }
 
@@ -279,7 +283,7 @@ open class Group : Actor(), Cullable {
         val index = children.indexOf(actorBefore)
         children.add(index, actor)
         actor.parent = this
-        actor.headUpDisplay = headUpDisplay
+        actor.hud = hud
         childrenChanged()
     }
 
@@ -294,7 +298,7 @@ open class Group : Actor(), Cullable {
         val index = children.indexOf(actorAfter)
         if (index == children.size || index == -1) children.add(actor) else children.add(index + 1, actor)
         actor.parent = this
-        actor.headUpDisplay = headUpDisplay
+        actor.hud = hud
         childrenChanged()
     }
 
@@ -319,11 +323,11 @@ open class Group : Actor(), Cullable {
         return if (index < children.size) {
             val actor = children.removeAt(index)
             if (unfocus) {
-                val stage = headUpDisplay
+                val stage = hud
                 stage?.unfocus(actor)
             }
             actor.parent = null
-            actor.headUpDisplay = null
+            actor.hud = null
             childrenChanged()
             actor
         } else {
@@ -338,7 +342,7 @@ open class Group : Actor(), Cullable {
         val n = children.size
         while (i < n) {
             val child = actors[i]
-            child.headUpDisplay = null
+            child.hud = null
             child.parent = null
             i++
         }

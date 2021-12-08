@@ -41,6 +41,13 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
         entity.addEntityListener(entityListener)
     }
 
+    fun showEditWindow() {
+        actor.hud?.also {
+            Studio.entityWindow.entity = entity
+            Studio.entityWindow.show(it)
+        }
+    }
+
     private fun sortNodes() {
         children.sortBy {
             val entityNode = (it as EntityTreeNode)

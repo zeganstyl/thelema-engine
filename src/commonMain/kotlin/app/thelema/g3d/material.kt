@@ -50,6 +50,7 @@ class Material: IMaterial {
         set(value) {
             field = value
             value?.componentOrNull<IMesh>()?.material = this@Material
+            if (shader == null || shader == DEFAULT_SHADER) value?.componentOrNull<IShader>()?.also { shader = it }
         }
 
     override val shaderChannels: MutableMap<String, IShader> = HashMap()
@@ -73,6 +74,10 @@ class Material: IMaterial {
 
     init {
         shader = DEFAULT_SHADER
+    }
+
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        if ((shader == null || shader == DEFAULT_SHADER) && component is IShader) shader = component
     }
 }
 

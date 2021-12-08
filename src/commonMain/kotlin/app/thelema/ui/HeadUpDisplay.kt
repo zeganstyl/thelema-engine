@@ -63,7 +63,7 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
             if (field.parent != null) field.parent!!.removeActor(value, false)
             field = value
             field.parent = null
-            field.headUpDisplay = this
+            field.hud = this
         }
 
     private val tempCoords = Vec2()
@@ -107,7 +107,7 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
     private val tmp = Vec3()
 
     init {
-        root.headUpDisplay = this
+        root.hud = this
     }
 
     private inline fun forEachTouchFocus(pointer: Int, block: (focus: TouchFocus) -> Unit) {

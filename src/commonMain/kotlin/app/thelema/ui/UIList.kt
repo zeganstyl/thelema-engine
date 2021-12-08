@@ -220,7 +220,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
 
     protected fun fireChanged() {
         val event = Event(EventType.Change)
-        event.headUpDisplay = headUpDisplay
+        event.headUpDisplay = hud
         event.target = this
         fire(event)
     }
@@ -283,7 +283,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
                         return true
                     }
                     KEY.ESCAPE -> {
-                        headUpDisplay?.keyboardFocus = null
+                        hud?.keyboardFocus = null
                         return true
                     }
                 }
@@ -314,7 +314,7 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
                 if (pointer != 0 || button != 0) return true
                 if (selection.isDisabled) return true
-                headUpDisplay?.keyboardFocus = this@UIList
+                hud?.keyboardFocus = this@UIList
                 if (this@UIList.items.isEmpty()) return true
                 val index = getItemIndexAt(y)
                 if (index == -1) return true

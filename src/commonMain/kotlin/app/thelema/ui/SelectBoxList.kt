@@ -80,11 +80,11 @@ class SelectBoxList<T>(private val selectBox: SelectBox<T>) : ScrollPane(null, s
     fun hide() {
         if (parent == null) return
         list.touchable = Touchable.Disabled
-        val stage = headUpDisplay
+        val stage = hud
         if (stage != null) {
             stage.removeCaptureListener(hideListener)
             stage.removeListener(list.keyListener!!)
-            if (previousScrollFocus != null && previousScrollFocus!!.headUpDisplay == null) previousScrollFocus = null
+            if (previousScrollFocus != null && previousScrollFocus!!.hud == null) previousScrollFocus = null
             val actor = stage.scrollFocus
             if (actor == null || isAscendantOf(actor)) stage.scrollFocus = previousScrollFocus
         }
@@ -104,14 +104,14 @@ class SelectBoxList<T>(private val selectBox: SelectBox<T>) : ScrollPane(null, s
         toFront()
     }
 
-    override var headUpDisplay: HeadUpDisplay?
-        get() = super.headUpDisplay
+    override var hud: HeadUpDisplay?
+        get() = super.hud
         set(value) {
             if (value != null) {
                 value.removeCaptureListener(hideListener)
                 value.removeListener(list.keyListener!!)
             }
-            super.headUpDisplay = value
+            super.hud = value
         }
 
     init {

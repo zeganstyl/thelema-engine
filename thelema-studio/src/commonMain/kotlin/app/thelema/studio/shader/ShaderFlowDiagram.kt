@@ -4,7 +4,6 @@ import app.thelema.g2d.Batch
 import app.thelema.input.BUTTON
 import app.thelema.math.IVec2
 import app.thelema.shader.IShader
-import app.thelema.studio.SKIN
 import app.thelema.ui.*
 import app.thelema.utils.iterate
 import kotlin.math.max
@@ -22,8 +21,15 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
 
         addListener(object : InputListener {
             override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                if (button == BUTTON.LEFT && event.target == this@ShaderFlowDiagram) {
-                    ShaderComponentScene.boxesSelection.choose(null)
+                when (button) {
+                    BUTTON.LEFT -> {
+                        if (event.target == this@ShaderFlowDiagram) {
+                            ShaderComponentScene.boxesSelection.choose(null)
+                        }
+                    }
+                    BUTTON.RIGHT -> {
+                        popupMenu.showMenu(event, null)
+                    }
                 }
             }
         })
@@ -199,5 +205,19 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
     companion object {
         var BoxSpaceX = 40f
         var BoxSpaceY = 20f
+
+        val popupMenu = PopupMenu {
+            item("Add node") {
+                onClickWithContextTyped<ShaderFlowDiagram> {
+
+                }
+            }
+            separator()
+            item("Remove") {
+                onClickWithContextTyped<ShaderFlowDiagram> {
+                    ShaderComponentScene.removeSelectedBoxes()
+                }
+            }
+        }
     }
 }

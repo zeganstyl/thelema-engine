@@ -94,7 +94,7 @@ class MultiSplitPane(
                 val containingHandle = getHandleContaining(x, y)
                 if (containingHandle != null) {
                     handleOverIndex = handleBounds.indexOf(containingHandle)
-                    FocusManager.resetFocus(headUpDisplay)
+                    FocusManager.resetFocus(hud)
 
                     draggingPointer = pointer
                     lastPoint.set(x, y)
@@ -249,7 +249,7 @@ class MultiSplitPane(
             val actor = actors[i]
             val bounds = widgetBounds[i]
             val scissor = scissors[i]
-            headUpDisplay?.calculateScissors(bounds.x, bounds.y, bounds.width, bounds.height, scissor)
+            hud?.calculateScissors(bounds.x, bounds.y, bounds.width, bounds.height, scissor)
             if (ScissorStack.pushScissors(scissor)) {
                 if (actor.isVisible) actor.draw(batch, parentAlpha * Color.getAlpha(color))
                 batch.flush()

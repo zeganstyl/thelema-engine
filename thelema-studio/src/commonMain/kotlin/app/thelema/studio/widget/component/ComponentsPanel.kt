@@ -58,7 +58,7 @@ class ComponentsPanel: Table() {
             add(TextButton("Add/Remove") {
                 onClick {
                     Studio.entityWindow.entity = entity
-                    headUpDisplay?.also { Studio.entityWindow.show(it) }
+                    hud?.also { Studio.entityWindow.show(it) }
                 }
             })
         }).newRow()

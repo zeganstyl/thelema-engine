@@ -103,7 +103,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         val mesh = mesh
 
         val vertices = VertexBuffer()
-        mesh.vertexBuffers.add(vertices)
+        mesh.addVertexBuffer(vertices)
 
         var hasNormals = false
         var hasTangents = false

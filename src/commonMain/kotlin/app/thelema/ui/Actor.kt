@@ -39,7 +39,7 @@ import kotlin.math.sin
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 open class Actor: IActor {
-    override var headUpDisplay: HeadUpDisplay? = null
+    override var hud: HeadUpDisplay? = null
     override var parent: Group? = null
     val listeners: ArrayList<EventListener> = ArrayList(0)
     val captureListeners: ArrayList<EventListener> = ArrayList(0)
@@ -129,7 +129,7 @@ open class Actor: IActor {
      * @return true if the event was [cancelled][Event.cancel].
      */
     fun fire(event: Event): Boolean {
-        if (event.headUpDisplay == null) event.headUpDisplay = headUpDisplay
+        if (event.headUpDisplay == null) event.headUpDisplay = hud
         event.target = this
         // Collect ancestors so event propagation is unaffected by hierarchy changes.
         val ancestors: ArrayList<Group> = groupsArrayPool.get()
@@ -178,7 +178,7 @@ open class Actor: IActor {
         if (listeners.size == 0) return event.isCancelled
         event.listenerActor = this
         event.isCapture = capture
-        if (event.headUpDisplay == null) event.headUpDisplay = headUpDisplay
+        if (event.headUpDisplay == null) event.headUpDisplay = hud
         try {
             var i = 0
             while (i < listeners.size) {
@@ -300,13 +300,13 @@ open class Actor: IActor {
 
     /** Returns true if this actor is the [keyboard focus][HeadUpDisplay.getKeyboardFocus] actor.  */
     fun hasKeyboardFocus(): Boolean {
-        val stage = headUpDisplay
+        val stage = hud
         return stage != null && stage.keyboardFocus === this
     }
 
     /** Returns true if this actor is the [scroll focus][HeadUpDisplay.getScrollFocus] actor.  */
     fun hasScrollFocus(): Boolean {
-        val stage = headUpDisplay
+        val stage = hud
         return stage != null && stage.scrollFocus === this
     }
 
@@ -315,7 +315,7 @@ open class Actor: IActor {
      */
     val isTouchFocusTarget: Boolean
         get() {
-            val stage = headUpDisplay ?: return false
+            val stage = hud ?: return false
             var i = 0
             val n = stage.touchFocuses.size
             while (i < n) {
@@ -330,7 +330,7 @@ open class Actor: IActor {
      */
     val isTouchFocusListener: Boolean
         get() {
-            val stage = headUpDisplay ?: return false
+            val stage = hud ?: return false
             var i = 0
             val n = stage.touchFocuses.size
             while (i < n) {
@@ -563,7 +563,7 @@ open class Actor: IActor {
      */
     inline fun clipArea(x: Float, y: Float, width: Float, height: Float, block: () -> Unit) {
         if (width <= 0 || height <= 0) return
-        val stage = headUpDisplay ?: return
+        val stage = hud ?: return
         val scissorBounds = rectanglePool.get()
         stage.calculateScissors(x, y, width, height, scissorBounds)
         if (ScissorStack.pushScissors(scissorBounds)) {
@@ -578,7 +578,7 @@ open class Actor: IActor {
      * @see HeadUpDisplay.screenToStageCoordinates
      */
     fun screenToLocalCoordinates(screenCoords: IVec2): IVec2 {
-        val stage = headUpDisplay ?: return screenCoords
+        val stage = hud ?: return screenCoords
         return stageToLocalCoordinates(stage.screenToStageCoordinates(screenCoords))
     }
 
@@ -623,7 +623,7 @@ open class Actor: IActor {
      * @see HeadUpDisplay.stageToScreenCoordinates
      */
     fun localToScreenCoordinates(localCoords: IVec2): IVec2 {
-        val stage = headUpDisplay ?: return localCoords
+        val stage = hud ?: return localCoords
         return stage.stageToScreenCoordinates(localToAscendantCoordinates(null, localCoords))
     }
 

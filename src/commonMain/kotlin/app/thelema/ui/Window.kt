@@ -174,7 +174,7 @@ open class Window(
                 val maxWidth = maxWidth
                 val minHeight = minHeight
                 val maxHeight = maxHeight
-                val stage = headUpDisplay
+                val stage = hud
                 val clampPosition = keepWithinStage && stage != null && parent === stage.root
                 if (edge and MOVE != 0) {
                     val amountX = x - startX
@@ -254,7 +254,7 @@ open class Window(
 
     protected fun setKeepWithinStage() {
         if (!keepWithinStage) return
-        val stage = headUpDisplay ?: return
+        val stage = hud ?: return
         val camera = stage.camera
         val parentWidth = stage.width
         val parentHeight = stage.height
@@ -273,7 +273,7 @@ open class Window(
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        val stage = headUpDisplay
+        val stage = hud
         if (stage != null && stage.keyboardFocus == null) stage.keyboardFocus = this
         setKeepWithinStage()
         if (style.stageBackground != null) {
@@ -300,8 +300,8 @@ open class Window(
     }
 
     fun reCenter() {
-        val stageWidth = headUpDisplay?.width ?: 0f
-        val stageHeight = headUpDisplay?.height ?: 0f
+        val stageWidth = hud?.width ?: 0f
+        val stageHeight = hud?.height ?: 0f
         x = (stageWidth - width) * 0.5f
         y = (stageHeight - height) * 0.5f
     }
