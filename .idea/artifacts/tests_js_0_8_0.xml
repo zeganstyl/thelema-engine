@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="tests-js-0.8.0">
+    <output-path>$PROJECT_DIR$/tests/build/libs</output-path>
+    <root id="archive" name="tests-js-0.8.0.jar">
+      <element id="module-output" name="thelema.tests.jsMain" />
+    </root>
+  </artifact>
+</component>

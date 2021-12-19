@@ -62,6 +62,9 @@ interface IFileSystem {
     /** Returns true if the local storage is ready for file IO.  */
     val isLocalStorageAvailable: Boolean
 
+    val writeAccess: Boolean
+        get() = true
+
     /** Returns a handle representing a file or directory.
      * @param location Determines how the path is resolved. Use [FileLocation]
      * @throws RuntimeException if the type is classpath or internal and the file does not exist.

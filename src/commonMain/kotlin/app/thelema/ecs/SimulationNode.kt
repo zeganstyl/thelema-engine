@@ -23,7 +23,7 @@ class SimulationNode: IEntityComponent {
     }
 
     fun addSimulationListener(listener: SimulationListener) {
-        listeners.add(listener)
+        if (!listeners.contains(listener)) listeners.add(listener)
     }
 
     fun removeSimulationListener(listener: SimulationListener) {

@@ -17,15 +17,15 @@
 package app.thelema.shader
 
 import app.thelema.data.IFloatData
+import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
 import app.thelema.gl.GL
 import app.thelema.gl.IVertexAttribute
 import app.thelema.math.*
 import app.thelema.gl.IMesh
-import app.thelema.shader.node.IShaderData
+import app.thelema.shader.node.IRootShaderNode
 import app.thelema.shader.node.IShaderNode
-import app.thelema.utils.Color
 
 /** @author zeganstyl */
 interface IShader: IEntityComponent {
@@ -63,13 +63,18 @@ interface IShader: IEntityComponent {
 
     val enabledAttributes: List<IVertexAttribute>
 
-    /** From nodes can be generated source code */
-    val nodes: MutableList<IShaderNode>
+    val nodes: Array<IShaderNode>
 
     /** Sometimes may be useful for custom shaders. For example, to bind textures before render mesh */
     var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit
 
     var depthMask: Boolean
+
+    var rootNode: IRootShaderNode?
+
+    var buildRequested: Boolean
+
+    fun findShaderNode(componentName: String): IShaderNode?
 
     fun load(vertCode: String, fragCode: String)
 
@@ -199,6 +204,15 @@ interface IShader: IEntityComponent {
         return location
     }
 
+    fun hasUniform(name: String): Boolean {
+        var location = uniforms[name]
+        if (location == null) {
+            location = GL.glGetUniformLocation(this.programHandle, name)
+            uniforms[name] = location
+        }
+        return location >= 0
+    }
+
     /** Sets the uniform with the given name. Shader must be bound. */
     fun setUniformi(name: String, value: Int) {
         GL.glUniform1i(getUniformLocation(name), value)
@@ -314,15 +328,13 @@ interface IShader: IEntityComponent {
     fun getAttributeLocation(name: String) = attributes[name] ?: -1
 
 
-    /** Generate source code from nodes */
-    fun buildByNodes()
-
     /** Generate source code from nodes and compile shader */
     fun build()
 
+    fun requestBuild()
+
     fun <T: IShaderNode> addNode(node: T): T {
-        node.shaderOrNull = this
-        nodes.add(node)
+        entityOrNull?.addEntity(Entity(node.componentName) { addComponent(node) })
         return node
     }
 
@@ -342,4 +354,19 @@ interface IShader: IEntityComponent {
     companion object {
         private const val inv255 = 1f / 255f
     }
+}
+
+inline fun <reified T> IShader.findShaderNode(): T? = findShaderNode(T::class.simpleName!!) as T?
+
+inline fun <reified T> IShader.findShaderNode(block: T.() -> Unit): T? =
+    (findShaderNode(T::class.simpleName!!) as T?)?.apply(block)
+
+/** Create shader node and add it to entity */
+inline fun <reified T: IShaderNode> IShader.node(block: T.() -> Unit): T {
+    val componentName = T::class.simpleName!!
+    val entity = Entity(componentName)
+    getOrCreateEntity().addEntity(entity)
+    val component = entity.addComponent(componentName) as T
+    block(component)
+    return component
 }

@@ -17,29 +17,45 @@
 package app.thelema.studio.widget.component
 
 import app.thelema.res.ILoader
+import app.thelema.studio.Studio
+import app.thelema.ui.Align
+import app.thelema.ui.Table
 import app.thelema.ui.TextButton
 
 class LoaderPanel: ComponentPanel<ILoader>(ILoader::class) {
     init {
-        content.add(TextButton("Load") {
-            onClick {
-                component?.load()
-            }
-        }).newRow()
-        content.add(TextButton("Reload") {
-            onClick {
-                component?.reload()
-            }
-        }).newRow()
-        content.add(TextButton("Stop") {
-            onClick {
-                component?.stop(503)
-            }
-        }).newRow()
-        content.add(TextButton("Destroy") {
-            onClick {
-                component?.destroy()
-            }
-        }).newRow()
+        content.add(Table {
+            align = Align.topLeft
+            add(TextButton("Load") {
+                onClick {
+                    component?.load()
+                }
+            })
+            add(TextButton("Reload") {
+                onClick {
+                    component?.reload()
+                }
+            }).padLeft(10f).newRow()
+            add(TextButton("Stop") {
+                onClick {
+                    component?.stop(503)
+                }
+            })
+            add(TextButton("Destroy") {
+                onClick {
+                    component?.destroy()
+                }
+            }).padLeft(10f).newRow()
+            add(TextButton("Open") {
+                onClick {
+                    component?.file?.also { Studio.fileChooser.openInFileManager(it.platformPath) }
+                }
+            })
+            add(TextButton("Open dir") {
+                onClick {
+                    component?.file?.also { Studio.fileChooser.openInFileManager(it.parent().platformPath) }
+                }
+            }).padLeft(10f).newRow()
+        })
     }
 }

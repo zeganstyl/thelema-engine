@@ -2,7 +2,9 @@ package app.thelema.studio.widget
 
 import app.thelema.app.APP
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.componentOrNull
 import app.thelema.input.BUTTON
+import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.studio.*
 import app.thelema.studio.widget.component.ComponentsPanel
@@ -17,46 +19,32 @@ class TabScenePanel: Table() {
 
     val componentsPanel = ComponentsPanel()
 
+    var selectedTransform = "None"
+        set(value) {
+            field = value
+            when (value) {
+                "None" -> translationGizmo.isEnabled = false
+                "Move" -> translationGizmo.isEnabled = true
+            }
+        }
+
+    val transformTool = SelectBox<String> {
+        items = listOf("None", "Move", "Rotate", "Scale")
+        selectedItem = "None"
+        getSelected = { selectedTransform }
+        setSelected = { selectedTransform = it ?: "None" }
+    }
+
+    val sceneOverlayInput = Actor()
+
     val sceneOverlay = Stack {
         add(VBox {
-            add(Actor()).grow()
-        })
-
-        touchable = Touchable.Enabled
-        addListener(object : InputListener {
-            override fun mouseMoved(event: InputEvent, x: Float, y: Float): Boolean {
-                CameraControl.control.isEnabled = true
-                hud?.scrollFocus = this@Stack
-                return super.mouseMoved(event, x, y)
-            }
-
-            override fun exit(event: InputEvent, x: Float, y: Float, pointer: Int, toActor: Actor?) {
-                CameraControl.control.isEnabled = false
-            }
-
-            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                CameraControl.control.isEnabled = true
-                hud?.scrollFocus = this@Stack
-                return super.touchDown(event, x, y, pointer, button)
-            }
-
-            override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
-                CameraControl.control.isEnabled = true
-                hud?.scrollFocus = this@Stack
-            }
-
-            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                if (button == BUTTON.LEFT) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
-
-                CameraControl.control.isEnabled = true
-                hud?.scrollFocus = this@Stack
-                hud?.setKeyboardFocus(this@Stack)
-            }
-
-            override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
-                CameraControl.control.mouseListener.scrolled(amount)
-                return super.scrolled(event, x, y, amount)
-            }
+            add(HBox {
+                add(Label("Transform:")).padLeft(10f)
+                add(transformTool).padLeft(10f)
+                align = Align.left
+            }).growX()
+            add(sceneOverlayInput).grow()
         })
     }
 
@@ -67,6 +55,8 @@ class TabScenePanel: Table() {
     }
 
     val selection = Selection<IEntity>()
+
+    val translationGizmo = TranslationGizmo()
 
     init {
         fillParent = true
@@ -80,6 +70,9 @@ class TabScenePanel: Table() {
                 }
 
                 componentsPanel.entity = newValue
+
+                translationGizmo.node = newValue?.componentOrNull()
+                translationGizmo.node?.also { translationGizmo.worldMatrix.setToTranslation(it.worldPosition) }
 
                 return super.lastSelectedChanged(newValue)
             }
@@ -100,5 +93,55 @@ class TabScenePanel: Table() {
         })
 
         add(split).grow()
+
+        sceneOverlayInput.touchable = Touchable.Enabled
+        sceneOverlayInput.addListener(object : InputListener {
+            override fun mouseMoved(event: InputEvent, x: Float, y: Float): Boolean {
+                CameraControl.control.isEnabled = true
+                CameraControl.control.mouseListener.moved(MOUSE.x, MOUSE.y)
+                hud?.scrollFocus = sceneOverlayInput
+                translationGizmo.onMouseMove(MOUSE.x.toFloat(), MOUSE.y.toFloat())
+                return super.mouseMoved(event, x, y)
+            }
+
+            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+                CameraControl.control.mouseListener.buttonDown(button, MOUSE.x, MOUSE.y, pointer)
+                hud?.scrollFocus = sceneOverlayInput
+                if (button == BUTTON.LEFT) translationGizmo.onMouseDown(MOUSE.x.toFloat(), MOUSE.y.toFloat())
+                return super.touchDown(event, x, y, pointer, button)
+            }
+
+            override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
+                CameraControl.control.mouseListener.dragged(MOUSE.x, MOUSE.y, pointer)
+                hud?.scrollFocus = sceneOverlayInput
+                if (BUTTON.isPressed(BUTTON.LEFT)) translationGizmo.onMouseMove(MOUSE.x.toFloat(), MOUSE.y.toFloat())
+            }
+
+            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+                if (button == BUTTON.LEFT) {
+                    if (!translationGizmo.isVisible || selection.isEmpty()) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
+                    translationGizmo.onMouseUp(MOUSE.x.toFloat(), MOUSE.y.toFloat())
+                }
+
+                CameraControl.control.mouseListener.buttonUp(button, x.toInt(), y.toInt(), pointer)
+
+                hud?.scrollFocus = sceneOverlayInput
+                hud?.setKeyboardFocus(sceneOverlayInput)
+            }
+
+            override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
+                CameraControl.control.mouseListener.scrolled(amount)
+                return super.scrolled(event, x, y, amount)
+            }
+
+            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+                when (keycode) {
+                    KEY.G -> {
+                        translationGizmo.isEnabled = !translationGizmo.isEnabled
+                    }
+                }
+                return super.keyDown(event, keycode)
+            }
+        })
     }
 }

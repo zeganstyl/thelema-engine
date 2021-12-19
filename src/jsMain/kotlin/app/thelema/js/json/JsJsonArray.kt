@@ -37,7 +37,7 @@ class JsJsonArray(val source: ArrayList<Any> = ArrayList()): IJsonArray {
     override val sourceObject: Any
         get() = source
 
-    fun toJSON() = source.toJSON()
+    fun toJSON() = source
 
     override fun printJson(): String = JSON.stringify(source)
 

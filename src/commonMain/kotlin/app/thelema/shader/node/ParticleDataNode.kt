@@ -12,17 +12,13 @@ class ParticleDataNode: ShaderNode() {
 
     var maxLifeTime = 1f
 
+    @Deprecated("")
     var inputUv by input()
-    //val resultUv = defOut(GLSLVec2("resultUv"))
+
     val lifeTime = output(GLSLFloat("lifeTime"))
     val lifeTimePercent = output(GLSLFloat("lifeTimePercent"))
 
     override fun declarationVert(out: StringBuilder) {
-//        if (resultUv.isUsed) {
-//            out.append("$attribute vec2 $instanceUvStartName;\n")
-//            out.append("$varOut ${resultUv.typedRef};\n")
-//        }
-
         if (lifeTime.isUsed || lifeTimePercent.isUsed) {
             out.append("$attribute float $instanceLifeTimeName;\n")
             out.append("$varOut ${lifeTime.typedRef};\n")
@@ -31,10 +27,6 @@ class ParticleDataNode: ShaderNode() {
     }
 
     override fun declarationFrag(out: StringBuilder) {
-//        if (resultUv.isUsed) {
-//            out.append("$varIn ${resultUv.typedRef};\n")
-//        }
-
         if (lifeTime.isUsed || lifeTimePercent.isUsed) {
             out.append("$varIn ${lifeTime.typedRef};\n")
             if (lifeTimePercent.isUsed) out.append("$varIn ${lifeTimePercent.typedRef};\n")
@@ -42,10 +34,6 @@ class ParticleDataNode: ShaderNode() {
     }
 
     override fun executionVert(out: StringBuilder) {
-//        if (resultUv.isUsed) {
-//            out.append("${resultUv.ref} = ${inputUv.ref} * vec2($frameSizeU, $frameSizeV) + $instanceUvStartName;\n")
-//        }
-
         if (lifeTime.isUsed) {
             out.append("${lifeTime.ref} = $instanceLifeTimeName;\n")
         }

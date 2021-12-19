@@ -17,6 +17,7 @@
 package app.thelema.gltf
 
 import app.thelema.ecs.component
+import app.thelema.ecs.sibling
 import app.thelema.g3d.Blending
 import app.thelema.g3d.IMaterial
 import app.thelema.g3d.ShaderChannel
@@ -24,6 +25,7 @@ import app.thelema.gl.GL_BACK
 import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
+import app.thelema.shader.node
 import app.thelema.shader.node.*
 
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-material)
@@ -70,7 +72,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     }
 
     fun buildShaders() {
-        material.shaderChannels.values.forEach { it.build() }
+        material.shaderChannels.values.forEach { it.requestBuild() }
     }
 
     override fun readJson() {
@@ -125,15 +127,19 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             val uvNode = getOrCreateUVNode(shader, "TEXCOORD_$normalTextureUV", uvNodes)
 
             normalTexture = int("index")
-            val textureNode = shader.addNode(TextureNode(uvNode.uv, (gltf.textures[normalTexture] as GLTFTexture).texture, false))
+            val textureNode = shader.addNode(Texture2DNode {
+                uv = uvNode.uv
+                texture = (gltf.textures[normalTexture] as GLTFTexture).texture
+                sRGB = false
+            })
 
             shader.addNode(NormalMapNode(vertexNode.position).apply {
                 uv = textureNode.uv
                 tbn = vertexNode.tbn
                 normalizedViewVector = cameraDataNode.normalizedViewVector
-                normalColor = textureNode.color
+                normalColor = textureNode.texColor
 
-                normalValue = normalResult
+                normalValue = normal
             })
         }
 
@@ -153,9 +159,12 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 alphaNodes.add(uvNode)
 
                 baseColorTexture = int("index")
-                val textureNode = shader.addNode(TextureNode(uvNode.uv, (gltf.textures[baseColorTexture] as GLTFTexture).texture))
+                val textureNode = shader.addNode(Texture2DNode {
+                    uv = uvNode.uv
+                    texture = (gltf.textures[baseColorTexture] as GLTFTexture).texture
+                })
                 alphaNodes.add(textureNode)
-                baseColorValue = textureNode.color
+                baseColorValue = textureNode.texColor
             }
 
             array("baseColorFactor") {
@@ -183,8 +192,12 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 val uvNode = getOrCreateUVNode(shader, "TEXCOORD_$metallicRoughnessTextureUV", uvNodes)
 
                 metallicRoughnessTexture = int("index")
-                val textureNode = shader.addNode(TextureNode(uvNode.uv, (gltf.textures[metallicRoughnessTexture] as GLTFTexture).texture, false))
-                val splitNode = shader.addNode(SplitVec4Node(textureNode.color))
+                val textureNode = shader.addNode(Texture2DNode {
+                    uv = uvNode.uv
+                    texture = (gltf.textures[metallicRoughnessTexture] as GLTFTexture).texture
+                    sRGB = false
+                })
+                val splitNode = shader.addNode(SplitVec4Node(textureNode.texColor))
 
                 occlusionValue = splitNode.x
                 roughnessValue = splitNode.y
@@ -229,21 +242,26 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         val toneMapNode = shader.addNode(ToneMapNode(pbrNode.result))
 
         if (gltf.conf.setupGBufferShader) {
-            val outputNode = shader.addNode(GBufferOutputNode().apply {
+            val outputNode = shader.sibling<GBufferOutputNode>().apply {
                 vertPosition = cameraDataNode.clipSpacePosition
                 fragColor = toneMapNode.result
                 fragNormal = normalValue
                 fragPosition = cameraDataNode.viewSpacePosition
-            })
+            }
 
             outputNode.alphaCutoff = alphaCutoff
             outputNode.alphaMode = material.alphaMode
             outputNode.cullFaceMode = cullFaceMode
+            shader.rootNode = outputNode.sibling()
         } else {
-            val outputNode = shader.addNode(OutputNode(cameraDataNode.clipSpacePosition, toneMapNode.result))
+            val outputNode = shader.sibling<OutputNode>().apply {
+                vertPosition = cameraDataNode.clipSpacePosition
+                fragColor = toneMapNode.result
+            }
             outputNode.alphaCutoff = alphaCutoff
             outputNode.alphaMode = material.alphaMode
             outputNode.cullFaceMode = cullFaceMode
+            shader.rootNode = outputNode.sibling()
         }
 
         if (gltf.conf.setupVelocityShader) {
@@ -271,7 +289,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 alphaOp.isVarying = false
                 alphaOp.isFragment = true
 
-                nodes.addAll(alphaNodes)
+                //nodes.addAll(alphaNodes)
 
                 val outputNode = addNode(OutputNode(velocityNode.stretchedClipSpacePosition, alphaOp.result))
                 outputNode.alphaCutoff = alphaCutoff
@@ -286,7 +304,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
-                nodes.addAll(alphaNodes)
+                //nodes.addAll(alphaNodes)
 
                 val outputNode = addNode(OutputNode(depthCameraDataNode.clipSpacePosition, baseColorValue))
                 outputNode.alphaCutoff = alphaCutoff
@@ -302,7 +320,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
-                nodes.addAll(alphaNodes)
+                //nodes.addAll(alphaNodes)
 
                 val color = GLSLVec3Inline(solidColor.x, solidColor.y, solidColor.z)
                 val alphaCombineOp = addNode(Op2Node(color, baseColorValue, "vec4(in1, in2.a)", GLSLType.Vec4))
@@ -323,8 +341,12 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             val uvNode = getOrCreateUVNode(shader, "TEXCOORD_$occlusionTextureUV", uvNodes)
 
             occlusionTexture = int("index")
-            val textureNode = shader.addNode(TextureNode(uvNode.uv, (gltf.textures[occlusionTexture] as GLTFTexture).texture, false))
-            pbrNode.occlusion = textureNode.color
+            val textureNode = shader.node<Texture2DNode> {
+                uv = uvNode.uv
+                texture = (gltf.textures[occlusionTexture] as GLTFTexture).texture
+                sRGB = false
+            }
+            pbrNode.occlusion = textureNode.texColor
             //float("strength", 1f)
         }
 
@@ -336,8 +358,11 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 val uvNode = getOrCreateUVNode(shader, "TEXCOORD_$emissiveTextureUV", uvNodes)
 
                 emissiveTexture = int("index")
-                val textureNode = shader.addNode(TextureNode(uvNode.uv, (gltf.textures[emissiveTexture] as GLTFTexture).texture))
-                emissiveValue = textureNode.color
+                val textureNode = shader.node<Texture2DNode> {
+                    uv = uvNode.uv
+                    texture = (gltf.textures[emissiveTexture] as GLTFTexture).texture
+                }
+                emissiveValue = textureNode.texColor
             }
 
             json.array("emissiveFactor") {

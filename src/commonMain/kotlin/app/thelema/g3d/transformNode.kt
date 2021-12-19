@@ -28,7 +28,7 @@ import app.thelema.math.*
 import app.thelema.utils.iterate
 
 /** Spatial transform node. Node may contain children and forms a tree of nodes.
- * Nodes with less data, may be more optimal in calculations and memory consumption.
+ *
  * @author zeganstyl */
 interface ITransformNode: IEntityComponent {
     /** Local translation, relative to the parent. */
@@ -53,6 +53,70 @@ interface ITransformNode: IEntityComponent {
 
     var isTransformUpdateRequested: Boolean
 
+    fun getDirection(out: IVec3): IVec3 = worldMatrix.getWorldForward(out).nor()
+
+    fun getUpVector(out: IVec3): IVec3 = worldMatrix.getWorldUp(out).nor()
+
+    fun rotateAroundAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float) {
+        if (MATH.isNotZero(radians)) {
+            if (MATH.isZero(axisX) && MATH.isZero(axisZ) && MATH.isEqual(axisY, 1f)) {
+                rotation.rotateQuaternionByY(radians)
+            } else {
+                rotation.rotateQuaternionByAxis(axisX, axisY, axisZ, radians)
+            }
+            requestTransformUpdate()
+        }
+    }
+
+    /** Rotate around Up vector */
+    fun rotateAroundUp(radians: Float) {
+        val x = worldMatrix.m01
+        val y = worldMatrix.m11
+        val z = worldMatrix.m21
+        val len2 = x * x + y * y + z * z
+        if (len2 == 0f || len2 == 1f) {
+            rotateAroundAxis(x, y, z, radians)
+        } else {
+            val inv = MATH.invSqrt(len2)
+            rotateAroundAxis(x * inv, y * inv, z * inv, radians)
+        }
+    }
+
+    fun translate(x: Float, y: Float, z: Float) {
+        position.add(x, y, z)
+        requestTransformUpdate()
+    }
+
+    fun translateForward(distance: Float) {
+        // vector normalization
+        val x = worldMatrix.m02
+        val y = worldMatrix.m12
+        val z = worldMatrix.m22
+        val len2 = x * x + y * y + z * z
+        if (len2 == 0f || len2 == 1f) {
+            position.add(x * distance, y * distance, z * distance)
+        } else {
+            val inv = MATH.invSqrt(len2)
+            position.add(x * inv * distance, y * inv * distance, z * inv * distance)
+        }
+        requestTransformUpdate()
+    }
+
+    fun setPosition(x: Float, y: Float, z: Float) {
+        position.set(x, y, z)
+        requestTransformUpdate()
+    }
+
+    fun scale(x: Float, y: Float, z: Float) {
+        scale.add(x, y, z)
+        requestTransformUpdate()
+    }
+
+    fun setScale(x: Float, y: Float, z: Float) {
+        scale.set(x, y, z)
+        requestTransformUpdate()
+    }
+
     fun addListener(listener: TransformNodeListener)
 
     fun removeListener(listener: TransformNodeListener)
@@ -74,7 +138,7 @@ interface ITransformNode: IEntityComponent {
 fun IEntity.transformNode(block: ITransformNode.() -> Unit) = component(block)
 fun IEntity.transformNode() = component<ITransformNode>()
 
-/** Translation (position), rotation, scale node (TRS). It is default node.
+/** Translation (position), rotation, scale node (TRS). This is default transform node.
  *
  * @author zeganstyl */
 class TransformNode: ITransformNode {
@@ -195,6 +259,15 @@ class TransformNode: ITransformNode {
 
                 descriptor({ Scene() }) {
                     setAliases(IScene::class)
+
+                    descriptor({ SceneInstance() }) {
+                        setAliases(ISceneInstance::class)
+                        refAbs(SceneInstance::provider)
+                    }
+
+                    descriptor({ SceneProvider() }) {
+                        setAliases(ISceneProvider::class)
+                    }
                 }
                 descriptor { SimpleSkybox() }
                 descriptor { Skybox() }

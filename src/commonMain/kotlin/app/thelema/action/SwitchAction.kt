@@ -35,7 +35,7 @@ class SwitchAction: ActionAdapter() {
         currentCondition = null
         currentAction = null
         currentIndex = 0
-        entity.children.forEach { it.componentOrNull<IAction>()?.restart() }
+        entity.forEachChildEntity { it.componentOrNull<IAction>()?.restart() }
     }
 
     inline fun <reified C: IAction, reified B: IAction> addBranch(condition: C.() -> Unit, body: B.() -> Unit) {

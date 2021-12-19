@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package app.thelema.shader.node
+package app.thelema.ui
 
-/** @author zeganstyl */
-class ShaderNodeLink(
-    val dst: IShaderNodeInput<IShaderData?>,
-    val dstNode: IShaderNode,
-    val src: IShaderData,
-)
+import app.thelema.font.BitmapFont
+import app.thelema.utils.Color
+
+/** @author mzechner, Nathan Sweet, zeganstyl */
+class UIListStyle(
+    var font: BitmapFont = DSKIN.font(),
+    var fontColorSelected: Int = Color.GREEN,
+    var fontColorUnselected: Int = -1,
+    var selection: Drawable? = null
+) {
+    var down: Drawable? = null
+    var over: Drawable? = null
+    var background: Drawable? = DSKIN.whiteFrameDarkBackground
+}

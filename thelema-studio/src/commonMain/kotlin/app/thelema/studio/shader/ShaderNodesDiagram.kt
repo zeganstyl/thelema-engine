@@ -1,15 +1,20 @@
 package app.thelema.studio.shader
 
+import app.thelema.ecs.Entity
+import app.thelema.ecs.component
 import app.thelema.g2d.Batch
-import app.thelema.input.BUTTON
 import app.thelema.math.IVec2
+import app.thelema.math.Vec2
 import app.thelema.shader.IShader
+import app.thelema.shader.Shader
+import app.thelema.shader.node.IShaderNode
+import app.thelema.studio.Studio
 import app.thelema.ui.*
 import app.thelema.utils.iterate
 import kotlin.math.max
 import kotlin.math.min
 
-class ShaderFlowDiagram(val shader: IShader): Group() {
+class ShaderNodesDiagram(val shader: IShader): WidgetGroup() {
     private val _boxes = ArrayList<ShaderNodeBox>()
     val boxes: List<ShaderNodeBox>
         get() = _boxes
@@ -18,31 +23,31 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
 
     init {
         rebuildDiagram()
+    }
 
-        addListener(object : InputListener {
-            override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
-                when (button) {
-                    BUTTON.LEFT -> {
-                        if (event.target == this@ShaderFlowDiagram) {
-                            ShaderComponentScene.boxesSelection.choose(null)
-                        }
-                    }
-                    BUTTON.RIGHT -> {
-                        popupMenu.showMenu(event, null)
-                    }
-                }
-            }
-        })
+    fun addBox(node: IShaderNode): ShaderNodeBox {
+        val box = ShaderNodeBox(this, node)
+        _boxes.add(box)
+        addActor(box)
+        return box
     }
 
     fun removeBox(box: ShaderNodeBox) {
-        shader.nodes.remove(box.node)
         box.inputs.iterate { input ->
             input.link?.also { removeLink(it) }
         }
         box.outputs.iterate { output ->
             val tmp = output.links.toTypedArray()
             tmp.iterate { removeLink(it) }
+        }
+
+        val entity = box.node.entityOrNull
+        if (entity != null) {
+            if (entity.getComponentsCount() == 1) {
+                entity.parentEntity?.removeEntity(entity)
+            } else {
+                entity.removeComponent(box.node)
+            }
         }
 
         _boxes.remove(box)
@@ -58,14 +63,23 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
 
         val outputBoxes = ArrayList<ShaderNodeBox>()
 
-        for (i in shader.nodes.indices) {
-            val node = shader.nodes[i]
-            val box = ShaderNodeBox(this, node)
-            _boxes.add(box)
-            addActor(box)
+        shader.entityOrNull?.forEachChildEntity { entity ->
+            entity.forEachComponent {
+                if (it is IShaderNode) {
+                    val box = ShaderNodeBox(this, it)
+                    _boxes.add(box)
+                    addActor(box)
+                }
+            }
 
-            if (box.outputs.isEmpty()) {
-                outputBoxes.add(box)
+            val countMap = HashMap<IShaderNode, Int>()
+            _boxes.iterate { countMap[it.node] = Shader.findMaxChildrenTreeDepth(it.node) }
+            _boxes.sortBy { countMap[it.node] }
+
+            _boxes.iterate {
+                if (it.outputs.isEmpty()) {
+                    outputBoxes.add(it)
+                }
             }
         }
 
@@ -184,8 +198,8 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        width = ShaderComponentScene.rootSceneStack.width
-        height = ShaderComponentScene.rootSceneStack.height
+//        width = ShaderComponentScene.rootSceneStack.width
+//        height = ShaderComponentScene.rootSceneStack.height
 
         val worldTransform = worldTransform
         worldTransform.translate(-globalPosition.x, -globalPosition.y)
@@ -207,14 +221,33 @@ class ShaderFlowDiagram(val shader: IShader): Group() {
         var BoxSpaceY = 20f
 
         val popupMenu = PopupMenu {
+            val menu = this
             item("Add node") {
-                onClickWithContextTyped<ShaderFlowDiagram> {
-
+                onClickWithContextTyped<ShaderNodesDiagram> { diagram ->
+                    Studio.chooseComponentWindow {
+                        show(Studio.hud)
+                        val coords = Vec2(menu.globalPosition)
+                        diagram.stageToLocalCoordinates(coords)
+                        onAccept = {
+                            forEachSelected { componentName ->
+                                diagram.shader.getOrCreateEntity().addEntity(
+                                    Entity(componentName) {
+                                        val component = component(componentName) as IShaderNode
+                                        if (diagram.shader.rootNode == null) diagram.shader.rootNode = component()
+                                        diagram.addBox(component).also { box ->
+                                            box.x = coords.x
+                                            box.y = coords.y
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
             separator()
             item("Remove") {
-                onClickWithContextTyped<ShaderFlowDiagram> {
+                onClickWithContextTyped<ShaderNodesDiagram> {
                     ShaderComponentScene.removeSelectedBoxes()
                 }
             }

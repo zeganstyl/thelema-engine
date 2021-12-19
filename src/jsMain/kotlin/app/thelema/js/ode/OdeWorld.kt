@@ -18,25 +18,21 @@ package app.thelema.js.ode
 
 import app.thelema.ecs.IEntity
 import app.thelema.math.IVec3
+import app.thelema.math.Vec3
 import app.thelema.phys.*
 
 class OdeWorld: IRigidBodyPhysicsWorld {
     override var entityOrNull: IEntity? = null
 
-    override val fixedDelta: Float = 0.02f
+    override var fixedDelta: Float = 0.02f
 
     override val componentName: String
         get() = super.componentName
 
     override var isSimulationRunning: Boolean = false
 
-    override fun setGravity(x: Float, y: Float, z: Float) {
-        TODO("Not yet implemented")
-    }
-
-    override fun getGravity(out: IVec3): IVec3 {
-        TODO("Not yet implemented")
-    }
+    override var maxContacts: Int = 40
+    override var gravity: IVec3 = Vec3(0f, -3f, 0f)
 
     override fun step(delta: Float) {
         TODO("Not yet implemented")

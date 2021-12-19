@@ -20,7 +20,7 @@ import org.khronos.webgl.*
 import app.thelema.data.*
 
 /** @author zeganstyl */
-class JsUInt8Array(val byteArray: Uint8Array): IByteData, JsArrayBufferView<Byte>() {
+class JsUInt8Array(val byteArray: Uint8Array): IByteData, JsArrayBufferView() {
     override var order: DataByteOrder
         get() = DataByteOrder.Native
         set(_) {}

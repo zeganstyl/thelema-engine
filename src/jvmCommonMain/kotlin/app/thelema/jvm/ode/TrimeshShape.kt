@@ -18,7 +18,7 @@ package app.thelema.jvm.ode
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.getSiblingOrNull
+import app.thelema.ecs.siblingOrNull
 import app.thelema.gl.*
 import app.thelema.phys.ITrimeshShape
 import app.thelema.utils.LOG
@@ -33,7 +33,6 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
 
     override var mesh: IMesh? = null
         set(value) {
-            println(value?.path)
             if (field != value) {
                 field?.removeMeshListener(meshListener)
                 field = value
@@ -45,7 +44,7 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
         get() = super.entityOrNull
         set(value) {
             super.entityOrNull = value
-            if (mesh == null) mesh = getSiblingOrNull()
+            if (mesh == null) mesh = siblingOrNull()
         }
 
     private val meshListener = object : MeshListener {
@@ -65,7 +64,7 @@ class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
-        if (mesh == null) mesh = getSiblingOrNull()
+        if (mesh == null) mesh = siblingOrNull()
     }
 
     override fun setupMass(density: Double, mass: DMass) {

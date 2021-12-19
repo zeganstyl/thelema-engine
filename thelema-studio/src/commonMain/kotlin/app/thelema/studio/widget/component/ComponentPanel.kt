@@ -18,7 +18,7 @@ package app.thelema.studio.widget.component
 
 import app.thelema.ecs.*
 import app.thelema.studio.ScriptFile
-import app.thelema.studio.componentNameView
+import app.thelema.studio.camelCaseToSpaces
 import app.thelema.studio.widget.*
 import app.thelema.ui.*
 import kotlin.reflect.KClass
@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
 open class ComponentPanel<T: IEntityComponent>(
     componentName: String,
     defaultSetup: Boolean = true
-): Section(componentNameView(componentName)) {
+): Section(camelCaseToSpaces(componentName)) {
     constructor(c: KClass<T>, defaultSetup: Boolean = true): this(ECS.getDescriptor(c.simpleName!!)!!.componentName, defaultSetup)
 
     open var component: T? = null
@@ -78,11 +78,12 @@ open class ComponentPanel<T: IEntityComponent>(
                     val provider = field as PropertyProvider<Any?>
                     provider.get = { component?.getPropertyTyped(key) }
                     provider.set = { component?.setProperty(key, it) }
+                    val name = camelCaseToSpaces(key).lowercase()
                     when (size) {
-                        0 -> addField(key, field)
-                        1 -> addField2Rows(key, field)
-                        2 -> addSectioned(key, field)
-                        3 -> addCheckBox(key, field)
+                        0 -> addField(name, field)
+                        1 -> addField2Rows(name, field)
+                        2 -> addSectioned(name, field)
+                        3 -> addCheckBox(name, field)
                     }
                 }
             }

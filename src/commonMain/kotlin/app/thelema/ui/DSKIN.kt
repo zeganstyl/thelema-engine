@@ -40,13 +40,29 @@ object DSKIN {
             }
         }
     }
-    val solidFrameTexture by lazy {
+    val solidFrameSemiTransparentContentTexture by lazy {
         Texture2D {
             minFilter = GL_NEAREST
             magFilter = GL_NEAREST
             image = Image(4, 4) {
                 val b = 0xFFFFFFFF.toInt()
                 val f = 0x000000EE
+                putRGBAs(
+                    b, b, b, b,
+                    b, f, f, b,
+                    b, f, f, b,
+                    b, b, b, b
+                )
+            }
+        }
+    }
+    val solidFrameTransparentContentTexture by lazy {
+        Texture2D {
+            minFilter = GL_NEAREST
+            magFilter = GL_NEAREST
+            image = Image(4, 4) {
+                val b = -1
+                val f = 0
                 putRGBAs(
                     b, b, b, b,
                     b, f, f, b,
@@ -73,7 +89,25 @@ object DSKIN {
         }
     }
 
-    val solidFrame by lazy { NinePatch(solidFrameTexture, 1, 1, 1, 1) }
+    val whiteFrameDarkBackground by lazy { NinePatch(solidFrameSemiTransparentContentTexture, 1, 1, 1, 1) }
+    val whiteFrame by lazy {
+        NinePatch(solidFrameTransparentContentTexture, 1, 1, 1, 1)
+    }
+    val redFrame by lazy {
+        NinePatch(solidFrameTransparentContentTexture, 1, 1, 1, 1).apply {
+            color = Color.RED
+        }
+    }
+    val grayFrameDarkBackground by lazy {
+        NinePatch(solidFrameSemiTransparentContentTexture, 1, 1, 1, 1).apply {
+            color = Color.GRAY
+        }
+    }
+    val lightGrayFrame by lazy {
+        NinePatch(solidFrameTransparentContentTexture, 1, 1, 1, 1).apply {
+            color = Color.LIGHT_GRAY
+        }
+    }
     val transparentFrame by lazy { NinePatch(transparentFrameTexture, 1, 1, 1, 1) }
 
     val black5x5 by lazy {

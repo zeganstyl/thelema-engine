@@ -66,8 +66,7 @@ void main() {
     float mask = texture2D(mask_tex, uv).x;
 
     float f = noise_sample * noise_sample2 * mask;
-    //gl_FragColor = vec4(4.0, 2.0, 1.0, clamp(f, 0.0, 1.0));
-    gl_FragColor = vec4(noise_sample2, noise_sample2, noise_sample2, 1.0);
+    gl_FragColor = vec4(4.0, 2.0, 1.0, clamp(f, 0.0, 1.0));
 }
 """
         }

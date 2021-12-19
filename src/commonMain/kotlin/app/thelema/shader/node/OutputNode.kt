@@ -16,6 +16,8 @@
 
 package app.thelema.shader.node
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
 import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
@@ -37,7 +39,7 @@ class OutputNode(
         get() = "OutputNode"
 
     /** Clip space vertex position */
-    var vertPosition by input(GLSL.zeroFloat)
+    var vertPosition by input(GLSLNode.vertex.position)
 
     var fragColor by input(GLSL.oneFloat)
 
@@ -52,17 +54,16 @@ class OutputNode(
     var fadeStart = 0.8f
     private var cameraFarCached = -1f
 
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            value?.component<IRootShaderNode>()?.proxy = this
+        }
+
     init {
         this.vertPosition = vertPosition
         this.fragColor = fragColor
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        json["alphaMode"] = alphaMode
-        if (alphaCutoff != 0.5f) json["alphaCutoff"] = alphaCutoff
-        json["cullFaceMode"] = cullFaceMode
     }
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
@@ -76,6 +77,7 @@ class OutputNode(
             }
         }
 
+        val alphaMode = mesh.material?.alphaMode ?: alphaMode
         GL.isBlendingEnabled = alphaMode == Blending.BLEND || fadeStart in 0f..1f
         if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
 

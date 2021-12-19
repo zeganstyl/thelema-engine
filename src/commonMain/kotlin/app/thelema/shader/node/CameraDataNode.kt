@@ -27,7 +27,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         get() = "CameraDataNode"
 
     /** World space vertex position */
-    var vertexPosition by input()
+    var vertexPosition: IShaderData by input()
 
     val cameraPosition = output(GLSLVec3("cameraPosition"))
     val viewProjectionMatrix = output(GLSLMat4("viewProjectionMatrix"))
@@ -63,10 +63,10 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         val cam = ActiveCamera
         shader[cameraPosition.ref] = cam.position
         shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
-        shader[previousViewProjectionMatrix.ref] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix
-        shader[viewMatrix.ref] = cam.viewMatrix
-        shader[projectionMatrix.ref] = cam.projectionMatrix
-        shader[inverseViewProjectionMatrix.ref] = cam.inverseViewProjectionMatrix
+        previousViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix }
+        viewMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.viewMatrix }
+        projectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.projectionMatrix }
+        inverseViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.inverseViewProjectionMatrix }
 
         if (alwaysRotateObjectToCamera) {
             mat3Tmp.set(ActiveCamera.viewMatrix)

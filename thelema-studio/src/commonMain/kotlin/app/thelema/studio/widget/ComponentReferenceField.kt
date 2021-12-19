@@ -34,7 +34,7 @@ class ComponentReferenceField(
     }
 
     init {
-        pathField.messageText = requiredComponent
+        pathField.hintText = requiredComponent
         add(pathField).growX()
         add(chooseButton).width(20f)
 

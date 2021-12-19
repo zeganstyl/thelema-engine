@@ -1,5 +1,5 @@
 const val thelema_group = "app.thelema"
-const val thelema_version = "0.7.0"
+const val thelema_version = "0.8.0"
 
 const val kotlin_version = "1.6.0"
 const val ktor_version = "1.6.5"

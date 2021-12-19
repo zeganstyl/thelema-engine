@@ -33,6 +33,8 @@ interface IProject: IEntityComponent {
 
     var mainScene: EntityLoader?
 
+    fun runMainScene()
+
     fun addProjectListener(listener: ProjectListener)
 
     fun removeLoadersListener(listener: ProjectListener)

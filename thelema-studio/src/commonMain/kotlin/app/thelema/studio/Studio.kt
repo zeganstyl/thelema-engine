@@ -15,13 +15,14 @@ import app.thelema.input.KB
 import app.thelema.json.IJsonObject
 import app.thelema.json.IJsonObjectIO
 import app.thelema.json.JSON
-import app.thelema.phys.rigidBody
 import app.thelema.res.*
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
 import app.thelema.studio.widget.SimulationEntityTab
+import app.thelema.studio.widget.component.ProjectPanel
 import app.thelema.ui.*
 import app.thelema.utils.Color
+import app.thelema.utils.iterate
 
 object Studio: AppListener, IJsonObjectIO {
     lateinit var fileChooser: IFileChooser
@@ -69,6 +70,10 @@ object Studio: AppListener, IJsonObjectIO {
 
     val entityTreeWindow = EntityTreeWindow()
 
+    val createProjectWindow = CreateProjectWindow()
+
+    val chooseComponentWindow = ChooseComponentWindow()
+
     private val prefsName = "thelema-studio"
 
     val popupMenu = PopupMenu {
@@ -101,6 +106,8 @@ object Studio: AppListener, IJsonObjectIO {
                 scenesSplit.setWidgets(tabsPane.tabContent)
             }
         }
+
+    var appProjectDirectory: IFile? = null
 
     init {
         APP.setupPhysicsComponents()
@@ -144,13 +151,18 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     fun openProject(file: IFile) {
-        openThelemaProject(file)
+        openThelemaApp(file)
 
+        // src
+        //  - kotlin
+        //  - resources/app.thelema
         val kotlinSiblingDir = if (file.isDirectory) file.parent().child("kotlin") else file.parent().parent().child("kotlin")
         KotlinScripting.kotlinDirectory = if (kotlinSiblingDir.exists()) kotlinSiblingDir else file("")
 
+        // project/src/main/kotlin
+        appProjectDirectory = kotlinSiblingDir.parent().parent().parent()
+
         projectTab = EntityTab(RES.entity, null)
-        menuBar.projectPath.text = RES.file.path
 
         ECS.removeAllEntities()
         tabsPane.clearTabs()
@@ -171,25 +183,38 @@ object Studio: AppListener, IJsonObjectIO {
         }
     }
 
-    fun createNewProject() {
+    fun createNewApp(script: IFile? = null) {
+        tabsPane.clearTabs()
+        tabsPane.addTab(projectTab)
         RES.destroy()
         RES.file = DefaultProjectFile
-        createNewScene()
+        createNewScene(script)
     }
 
-    fun createNewScene() {
+    fun createNewProject() {
+        createProjectWindow.show(hud)
+    }
+
+    fun createNewScene(script: IFile? = null) {
         val sceneName = RES.entity.makeChildName("NewScene")
         val entity = Entity(sceneName)
         RES.entity.addEntity(entity)
         entity.apply {
-            entityLoader {
+            RES.mainScene = entityLoader {
                 targetEntity.apply {
                     this.name = sceneName
                     scene()
 
+                    if (script != null) {
+                        component<IKotlinScript> {
+                            this as KotlinScriptStudio
+                            this.file = script
+                        }
+                    }
+
                     entity("Light") {
                         directionalLight {
-                            setDirectionFromPosition(1f, 0f, 1f)
+                            setDirectionFromPosition(1f, 1f, 1f)
                             intensity = 5f
                         }
                     }
@@ -238,31 +263,29 @@ object Studio: AppListener, IJsonObjectIO {
         APP.savePreferences(prefsName, JSON.printObject(this))
     }
 
-    fun saveProject() {
+    fun saveApp(file: IFile) {
+        RES.file = if (file.isDirectory) file.child(APP_ROOT_FILENAME) else file
+        RES.file.writeText(JSON.printObject(RES.entity))
+        savePreferences()
+    }
+
+    fun saveApp() {
         if (RES.file == DefaultProjectFile) {
             fileChooser.saveProject {
                 val file = FS.absolute(it)
-                RES.file = if (file.isDirectory) file.child(PROJECT_FILENAME) else file
-                RES.file.writeText(JSON.printObject(RES.entity))
-                savePreferences()
-                showStatus("Project saved")
+                saveApp(file)
+                showStatus("App saved")
             }
         } else {
             RES.file.writeText(JSON.printObject(RES.entity))
             savePreferences()
-            showStatus("Project saved")
+            showStatus("App saved")
         }
     }
 
     override fun update(delta: Float) {
         hud.update(delta)
         CameraControl.control.update(delta)
-    }
-
-    override fun render() {
-        Selection3D.prepareSelection()
-        Selection3D.render()
-        hud.render()
     }
 
     override fun resized(width: Int, height: Int) {
@@ -273,6 +296,28 @@ object Studio: AppListener, IJsonObjectIO {
         ActiveCamera.viewportHeight = height.toFloat()
         ActiveCamera.aspectRatio = width.toFloat() / height.toFloat()
         ActiveCamera.updateCamera()
+    }
+
+    override fun filesDropped(files: List<IFile>) {
+        if (RES.file != DefaultProjectFile) {
+            val dialog = MoveOrCopyDialog()
+            dialog.onMove = {
+                files.iterate {
+                    it.moveTo(RES.absoluteDirectory.child(it.name))
+                }
+                ProjectPanel.findResources()
+            }
+            dialog.onCopy = {
+                files.iterate {
+                    if (it.isDirectory)
+                        it.copyTo(RES.absoluteDirectory)
+                    else
+                        it.copyTo(RES.absoluteDirectory.child(it.name))
+                }
+                ProjectPanel.findResources()
+            }
+            dialog.show(hud)
+        }
     }
 
     override fun destroy() {

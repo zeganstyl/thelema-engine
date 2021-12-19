@@ -23,6 +23,8 @@ interface IParticleEmitter: IEntityComponent {
 
     var particleEmissionSpeed: Float
 
+    var isPlaying: Boolean
+
     fun updateParticles(delta: Float)
 }
 

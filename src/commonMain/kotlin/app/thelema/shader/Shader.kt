@@ -18,6 +18,7 @@ package app.thelema.shader
 
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
+import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
 import app.thelema.gl.*
 import app.thelema.shader.node.*
@@ -62,9 +63,7 @@ open class Shader(
     override var fragmentShaderHandle: Int = 0
     override var programHandle: Int = 0
 
-    override val nodes: MutableList<IShaderNode> = ArrayList(1)
-
-    var actualNodes: Array<IShaderNode> = emptyArray()
+    override var nodes: Array<IShaderNode> = emptyArray()
 
     override var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit = { _, _ -> }
 
@@ -74,6 +73,16 @@ open class Shader(
         get() = "Shader"
 
     override var entityOrNull: IEntity? = null
+
+    override var rootNode: IRootShaderNode? = null
+        set(value) {
+            if (field != value) {
+                field = value
+                buildRequested = true
+            }
+        }
+
+    override var buildRequested: Boolean = false
 
     init {
         if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
@@ -157,6 +166,7 @@ open class Shader(
      * @param fragmentShader
      */
     private fun compileShaders(vertexShader: String, fragmentShader: String) {
+        logInternal = ""
         vertexShaderHandle = loadShader(GL_VERTEX_SHADER, vertexShader)
         fragmentShaderHandle = loadShader(GL_FRAGMENT_SHADER, fragmentShader)
 
@@ -220,7 +230,7 @@ open class Shader(
             // GL.glGetProgramiv(program, GL_INFO_LOG_LENGTH, intbuf);
             // int infoLogLength = intbuf.get(0);
             // if (infoLogLength > 1) {
-            logInternal = GL.glGetProgramInfoLog(program)
+            logInternal += GL.glGetProgramInfoLog(program)
             // }
             return -1
         }
@@ -234,8 +244,8 @@ open class Shader(
 
         onPrepareShader(mesh, scene)
 
-        for (i in actualNodes.indices) {
-            val node = actualNodes[i]
+        for (i in nodes.indices) {
+            val node = nodes[i]
             node.shaderOrNull = this
             node.prepareShaderNode(mesh, scene)
         }
@@ -278,57 +288,58 @@ open class Shader(
         }
     }
 
-    private fun findMaxChildrenTreeDepth(root: IShaderNode, count: Int = 0): Int {
-        if (root.inputs.isNotEmpty()) {
-            val incCount = count + 1
-            var maxCount = incCount
-            root.inputs.iterate {
-                val container = it.value?.container
-                if (container != root && container != null) {
-                    val childCount = findMaxChildrenTreeDepth(container, incCount)
-                    if (childCount > maxCount) {
-                        maxCount = childCount
-                    }
-                }
-            }
-            return maxCount
-        }
-        return count
-    }
-
     private fun collectNodes(root: IShaderNode, out: MutableSet<IShaderNode>) {
         if (out.add(root)) {
             root.inputs.iterate { input ->
-                input.value?.container?.also {
+                input.valueOrDefault()?.container?.also {
                     collectNodes(it, out)
                 }
             }
         }
     }
 
-    override fun buildByNodes() {
+
+    private fun findNodeRecursive(root: IShaderNode, componentName: String): IShaderNode? {
+        if (root.componentName == componentName) return root
+        root.inputs.iterate { input ->
+            input.value?.container?.also {
+                findNodeRecursive(it, componentName)?.also { return it }
+            }
+        }
+        return null
+    }
+
+    override fun findShaderNode(componentName: String): IShaderNode? {
+        val rootNode = rootNode?.proxy ?: return null
+        return findNodeRecursive(rootNode, componentName)
+    }
+
+    protected open fun buildByNodes() {
+        val rootNode = rootNode?.proxy ?: return
+
         // collect all connected nodes to know about full tree
         val nodeSet = HashSet<IShaderNode>()
-        nodes.iterate { collectNodes(it, nodeSet) }
-        actualNodes = nodeSet.toTypedArray()
-        actualNodes.iterate { node ->
+        collectNodes(rootNode, nodeSet)
+        nodes = nodeSet.toTypedArray()
+        nodes.iterate { node ->
             node.shaderOrNull = this
+            node.outputs.iterate { it.isUsed = false }
         }
 
-        actualNodes.forEach { it.prepareToBuild() }
+        nodes.iterate { node ->
+            node.inputs.iterate { it.valueOrDefault()?.isUsed = true }
+        }
 
-        // Sort nodes with order: less dependencies depth - first, more dependencies depth - last
-        val countMap = HashMap<IShaderNode, Int>()
-        actualNodes.forEach { countMap[it] = findMaxChildrenTreeDepth(it) }
-        actualNodes.sortBy { countMap[it] }
-        nodes.sortBy { countMap[it] }
+        nodes.iterate { it.prepareToBuild() }
+
+        sortNodes(nodes)
 
         val vertDecl = StringBuilder()
         val vertExe = StringBuilder()
         val fragDecl = StringBuilder()
         val fragExe = StringBuilder()
 
-        actualNodes.forEach {
+        nodes.iterate {
             it.declarationVert(vertDecl)
             it.executionVert(vertExe)
             it.declarationFrag(fragDecl)
@@ -351,14 +362,20 @@ open class Shader(
     }
 
     override fun build() {
-        buildByNodes()
+        buildRequested = false
+        if (rootNode != null) buildByNodes()
+
         if (isCompiled) destroy()
         load(vertCode, fragCode)
         if (!isCompiled) {
             LOG.error("Errors in generated shader")
         }
         bind()
-        actualNodes.forEach { it.shaderCompiled() }
+        nodes.iterate { it.shaderCompiled() }
+    }
+
+    override fun requestBuild() {
+        buildRequested = true
     }
 
     override fun destroy() {
@@ -371,10 +388,38 @@ open class Shader(
     }
 
     companion object {
+        /** Sort nodes with order:
+         * less depth - node will be first,
+         * more depth - node will be last */
+        fun sortNodes(out: Array<IShaderNode>) {
+            val countMap = HashMap<IShaderNode, Int>()
+            out.iterate { countMap[it] = findMaxChildrenTreeDepth(it) }
+            out.sortBy { countMap[it] }
+        }
+
+        fun findMaxChildrenTreeDepth(root: IShaderNode, count: Int = 0): Int {
+            if (root.inputs.isNotEmpty()) {
+                val incCount = count + 1
+                var maxCount = incCount
+                root.inputs.iterate {
+                    val container = it.value?.container
+                    if (container != root && container != null) {
+                        val childCount = findMaxChildrenTreeDepth(container, incCount)
+                        if (childCount > maxCount) {
+                            maxCount = childCount
+                        }
+                    }
+                }
+                return maxCount
+            }
+            return count
+        }
+
         fun setupShaderComponents() {
             ECS.descriptor({ Shader() }) {
                 setAliases(IShader::class)
 
+                ref(Shader::rootNode)
                 int(Shader::version)
                 string(Shader::profile)
                 string(Shader::floatPrecision)
@@ -389,59 +434,114 @@ open class Shader(
                     string(VertexNode::worldTransformType)
                     string(VertexNode::bonesName)
                     string(VertexNode::boneWeightsName)
+                    shaderNodeOutput(VertexNode::position)
+                    shaderNodeOutput(VertexNode::normal)
+                    shaderNodeOutput(VertexNode::tbn)
                 }
 
                 descriptor({ CameraDataNode() }) {
                     string(CameraDataNode::instancePositionName)
                     bool(CameraDataNode::alwaysRotateObjectToCamera)
                     bool(CameraDataNode::useInstancePosition)
+                    shaderNodeInput(CameraDataNode::vertexPosition)
+                    shaderNodeOutput(CameraDataNode::clipSpacePosition)
+                    shaderNodeOutput(CameraDataNode::cameraPosition)
+                    shaderNodeOutput(CameraDataNode::normalizedViewVector)
+                    shaderNodeOutput(CameraDataNode::viewZDepth)
+                    shaderNodeOutput(CameraDataNode::inverseViewProjectionMatrix)
                 }
 
                 descriptor({ UVNode() }) {
                     string(UVNode::uvName)
+                    shaderNodeOutput(UVNode::uv)
                 }
 
-                descriptor({ TextureNode() }) {
-                    refAbs(TextureNode::texture)
-                    bool(TextureNode::sRGB)
-                    stringEnum(
-                        TextureNode::textureType,
-                        listOf(GLSLType.Sampler1D, GLSLType.Sampler2D, GLSLType.Sampler2DArray, GLSLType.SamplerCube, GLSLType.Sampler3D)
-                    )
+                descriptor({ Texture2DNode() }) {
+                    refAbs(Texture2DNode::texture)
+                    bool(Texture2DNode::sRGB)
+                    shaderNodeInput(Texture2DNode::uv)
+                    shaderNodeOutput(Texture2DNode::texColor)
+                    shaderNodeOutput(Texture2DNode::texAlpha)
+                }
+
+                descriptor({ TextureCubeNode() }) {
+                    refAbs(TextureCubeNode::texture)
+                    bool(TextureCubeNode::sRGB)
+                    shaderNodeInput(TextureCubeNode::uv)
+                    shaderNodeOutput(TextureCubeNode::texColor)
+                    shaderNodeOutput(TextureCubeNode::texAlpha)
+                }
+
+                descriptor({ Texture3DNode() }) {
+                    refAbs(Texture3DNode::texture)
+                    bool(Texture3DNode::sRGB)
+                    shaderNodeInput(Texture3DNode::uv)
+                    shaderNodeOutput(Texture3DNode::texColor)
+                    shaderNodeOutput(Texture3DNode::texAlpha)
                 }
 
                 descriptor({ UniformFloatNode() }) {
                     string(UniformFloatNode::uniformName)
                     float(UniformFloatNode::defaultValue)
+                    shaderNodeOutput(UniformFloatNode::uniform)
                 }
                 descriptor({ UniformVec2Node() }) {
                     string(UniformVec2Node::uniformName)
                     vec2(UniformVec2Node::defaultValue)
+                    shaderNodeOutput(UniformVec2Node::uniform)
                 }
                 descriptor({ UniformVec3Node() }) {
                     string(UniformVec3Node::uniformName)
                     vec3(UniformVec3Node::defaultValue)
+                    shaderNodeOutput(UniformVec3Node::uniform)
                 }
                 descriptor({ UniformVec4Node() }) {
                     string(UniformVec4Node::uniformName)
                     vec4(UniformVec4Node::defaultValue)
+                    shaderNodeOutput(UniformVec4Node::uniform)
                 }
                 descriptor({ UniformIntNode() }) {
                     string(UniformIntNode::uniformName)
                     int(UniformIntNode::defaultValue)
+                    shaderNodeOutput(UniformIntNode::uniform)
                 }
 
                 descriptor({ NormalMapNode() }) {
-
+                    shaderNodeInput(NormalMapNode::vertexPosition)
+                    shaderNodeInput(NormalMapNode::normalizedViewVector)
+                    shaderNodeInput(NormalMapNode::tbn)
+                    shaderNodeInput(NormalMapNode::uv)
+                    shaderNodeInput(NormalMapNode::normalColor)
+                    shaderNodeInput(NormalMapNode::normalScale)
+                    shaderNodeOutput(NormalMapNode::tangent)
+                    shaderNodeOutput(NormalMapNode::biNormal)
+                    shaderNodeOutput(NormalMapNode::normal)
                 }
 
                 descriptor({ PBRNode() }) {
                     bool(PBRNode::iblEnabled)
                     bool(PBRNode::receiveShadows)
                     int(PBRNode::shadowCascadesNum)
+                    shaderNodeInput(PBRNode::baseColor)
+                    shaderNodeInputOrNull(PBRNode::alpha)
+                    shaderNodeInput(PBRNode::normal)
+                    shaderNodeInputOrNull(PBRNode::occlusion)
+                    shaderNodeInputOrNull(PBRNode::metallic)
+                    shaderNodeInputOrNull(PBRNode::roughness)
+                    shaderNodeInputOrNull(PBRNode::emissive)
+                    shaderNodeInput(PBRNode::normalizedViewVector)
+                    shaderNodeInput(PBRNode::worldPosition)
+                    shaderNodeInputOrNull(PBRNode::clipSpacePosition)
+                    shaderNodeOutput(PBRNode::result)
                 }
 
                 descriptor({ OutputNode() }) {
+                    shaderNodeInput(OutputNode::vertPosition)
+                    shaderNodeInput(OutputNode::fragColor)
+
+                    stringEnum(OutputNode::alphaMode, Blending.items)
+                    float(OutputNode::alphaCutoff)
+
                     intEnum(
                         OutputNode::cullFaceMode,
                         mapOf(
@@ -454,21 +554,89 @@ open class Shader(
                     )
                 }
 
-                descriptor({ ParticleDataNode() }) {
+                descriptor({ RootShaderNode() }) {
+                    setAliases(IRootShaderNode::class)
+                }
 
+                descriptor({ ParticleDataNode() }) {
+                    string(ParticleDataNode::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
+                    float(ParticleDataNode::maxLifeTime, 1f)
+                    shaderNodeInput(ParticleDataNode::inputUv)
+                    shaderNodeOutput(ParticleDataNode::lifeTime)
+                    shaderNodeOutput(ParticleDataNode::lifeTimePercent)
                 }
 
                 descriptor({ ParticleScaleNode() }) {
                     float(ParticleScaleNode::scaling)
+                    shaderNodeInput(ParticleScaleNode::lifeTimePercent)
+                    shaderNodeInput(ParticleScaleNode::inputPosition)
+                    shaderNodeOutput(ParticleScaleNode::scaledPosition)
                 }
 
                 descriptor({ ParticleUVFrameNode() }) {
-                    float(ParticleUVFrameNode::frameSizeU)
-                    float(ParticleUVFrameNode::frameSizeV)
-                    string(ParticleUVFrameNode::instanceUvStartName)
+                    int(ParticleUVFrameNode::framesU, 1)
+                    int(ParticleUVFrameNode::framesV, 1)
+                    string(ParticleUVFrameNode::instanceUvStartName, "INSTANCE_UV_START")
+                    shaderNodeInput(ParticleUVFrameNode::inputUv)
+                    shaderNodeOutput(ParticleUVFrameNode::resultUv)
                 }
 
                 descriptor({ ParticleColorNode() }) {
+                    shaderNodeInput(ParticleColorNode::color0)
+                    shaderNodeInput(ParticleColorNode::color1)
+                    shaderNodeInput(ParticleColorNode::inputColor)
+                    shaderNodeInput(ParticleColorNode::lifeTimePercent)
+                    shaderNodeOutput(ParticleColorNode::result)
+                }
+
+                descriptor({ SplitVec4Node() }) {
+
+                }
+
+                descriptor({ MergeVec4() }) {
+
+                }
+
+                descriptor({ AttributeNode() }) {
+
+                }
+
+                descriptor({ GBufferOutputNode() }) {
+
+                }
+
+                descriptor({ GBufferOutputNode() }) {
+
+                }
+
+                descriptor({ Op2Node() }) {
+                    string(Op2Node::function)
+                    string(Op2Node::resultType)
+                    bool(Op2Node::isFragment)
+                    bool(Op2Node::isVarying)
+                    shaderNodeInput(Op2Node::in1)
+                    shaderNodeInput(Op2Node::in2)
+                    shaderNodeOutput(Op2Node::result)
+                }
+
+                descriptor({ TerrainVertexNode() }) {
+
+                }
+
+                descriptor({ HeightMapNode() }) {
+
+                }
+
+                descriptor({ SkyboxVertexNode() }) {
+
+                }
+
+                descriptor({ ToneMapNode() }) {
+                    shaderNodeInput(ToneMapNode::inputColor)
+                    shaderNodeOutput(ToneMapNode::result)
+                }
+
+                descriptor({ VelocityNode() }) {
 
                 }
             }

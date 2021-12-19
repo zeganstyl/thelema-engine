@@ -18,7 +18,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
     val errorsButton = TextButton("")
     val resetViewButton = TextButton("Reset view")
 
-    val wrapper = Group()
+    val wrapper = WidgetGroup()
 
     val allChannels = listOf("All channels")
     var channels: List<String> = allChannels
@@ -32,18 +32,18 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         selectedItem = allChannels[0]
     }
 
-    var diagram: ShaderFlowDiagram? = null
+    var diagram: ShaderNodesDiagram? = null
         set(value) {
             val oldValue = field
             if (oldValue != null) {
                 wrapper.removeActor(oldValue)
-                oldValue.removeListener(flowDiagramListener)
+                oldValue.removeListener(sceneListener)
             }
             field = value
             listPanel.items = value?.boxes ?: emptyList()
             if (value != null) {
                 wrapper.addActor(value)
-                value.addListener(flowDiagramListener)
+                value.addListener(sceneListener)
             }
         }
 
@@ -87,6 +87,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
     }
 
     val dragVec = Vec2()
+    val tempVec = Vec2()
     var startDragX: Float = 0f
     var startDragY: Float = 0f
     var pressedButton: Int = -1
@@ -96,36 +97,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
     var scaleMul = 0.05f
 
     val flowDiagramListener = object : InputListener {
-        override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-            startDragX = x
-            startDragY = y
-            pressedButton = button
-            return super.touchDown(event, x, y, pointer, button)
-        }
 
-        override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
-            val diagram = diagram
-            if (diagram != null) {
-                if ((diagram.scaleX < maxScale || amount > 0) && (diagram.scaleX > minScale || amount < 0)) {
-                    val scaleChange = -amount * scaleMul
-                    diagram.scaleX += scaleChange
-                    diagram.scaleY += scaleChange
-                    // https://stackoverflow.com/questions/2916081/zoom-in-on-a-point-using-scale-and-translate
-                    diagram.x += -(x) * scaleChange
-                    diagram.y += -(y) * scaleChange
-                }
-                if (diagram.scaleX < minScale) {
-                    diagram.scaleX = minScale
-                    diagram.scaleY = minScale
-                }
-                if (diagram.scaleX > maxScale) {
-                    diagram.scaleX = maxScale
-                    diagram.scaleY = maxScale
-                }
-            }
-
-            return super.scrolled(event, x, y, amount)
-        }
     }
 
     val headTable = HBox {
@@ -139,6 +111,8 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
         add(resetViewButton).padRight(10f).padLeft(10f)
     }
 
+    val sceneEmptyActor = Actor()
+
     val sceneOverlay = VBox {
         touchable = Touchable.ChildrenOnly
         align = Align.top
@@ -147,6 +121,129 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
 
     val boxesSelection
         get() = listPanel.selection
+
+    val sceneUnderlay = Actor()
+
+    val sceneListener = object : InputListener {
+        override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
+            when (button) {
+                BUTTON.LEFT -> {
+                    if (event.target == sceneUnderlay) {
+                        boxesSelection.choose(null)
+                    }
+                }
+                BUTTON.RIGHT -> {
+                    ShaderNodesDiagram.popupMenu.showMenu(event, diagram)
+                }
+            }
+
+
+
+            if (event.target == sceneUnderlay) sceneUnderlay.hud?.keyboardFocus = sceneUnderlay
+
+            val diagram = diagram
+            val tempLink = tempLink
+            if (diagram != null && tempLink != null) {
+                val source = tempLink.source
+                val overInput = overInput
+
+                val oldLink = diagram.links.firstOrNull { it.destination == overInput }
+                if (oldLink != null) {
+                    oldLink.destination?.input?.value = null
+                    diagram.links.remove(oldLink)
+                }
+
+                tempLink.destination?.input?.value = null
+
+                if (overInput != null) {
+                    overInput.input.value = source.shaderData
+                    tempLink.destination = overInput
+                    tempLink.overDestination = null
+                } else {
+                    diagram.links.remove(tempLink)
+                }
+            }
+
+            this@ShaderComponentScene.tempLink = null
+        }
+
+        override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+            startDragX = event.stageX
+            startDragY = event.stageY
+            pressedButton = button
+            sceneUnderlay.hud?.setKeyboardFocus(sceneUnderlay)
+
+            return super.touchDown(event, x, y, pointer, button)
+        }
+
+        override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+            when (keycode) {
+                KEY.DEL, KEY.FORWARD_DEL -> removeSelectedBoxes()
+                else -> {
+                    if (keycode == KEY.A && KEY.shiftPressed) {
+
+                    }
+                }
+            }
+
+            return super.keyDown(event, keycode)
+        }
+
+        override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+            sceneUnderlay.hud?.scrollFocus = sceneUnderlay
+        }
+
+        override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
+            val diagram = diagram
+            if (diagram != null) {
+                if ((diagram.scaleX < maxScale || amount > 0) && (diagram.scaleX > minScale || amount < 0)) {
+                    val scaleChange = -amount * scaleMul
+                    diagram.scaleX += scaleChange
+                    diagram.scaleY += scaleChange
+                    // https://stackoverflow.com/questions/2916081/zoom-in-on-a-point-using-scale-and-translate
+
+                    tempVec.set(event.stageX, event.stageY)
+                    diagram.stageToLocalCoordinates(tempVec)
+
+                    diagram.x += -(tempVec.x) * scaleChange
+                    diagram.y += -(tempVec.y) * scaleChange
+                }
+                if (diagram.scaleX < minScale) {
+                    diagram.scaleX = minScale
+                    diagram.scaleY = minScale
+                }
+                if (diagram.scaleX > maxScale) {
+                    diagram.scaleX = maxScale
+                    diagram.scaleY = maxScale
+                }
+            }
+
+            return super.scrolled(event, x, y, amount)
+        }
+
+        override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
+            when (pressedButton) {
+                BUTTON.LEFT -> {
+                    val diagram = diagram
+                    if (diagram != null) {
+                        dragVec.set(event.stageX, event.stageY)
+                        diagram.stageToLocalCoordinates(dragVec)
+                        dragVec.add(diagram.globalPosition)
+                        //dragVec.set(x, y)
+                    }
+                }
+                BUTTON.MIDDLE -> {
+                    val diagram = diagram
+                    if (diagram != null) {
+                        diagram.x += event.stageX - startDragX
+                        diagram.y += event.stageY - startDragY
+                        startDragX = event.stageX
+                        startDragY = event.stageY
+                    }
+                }
+            }
+        }
+    }
 
     init {
         listPanel.selection.isMultiple = true
@@ -169,7 +266,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
 
         listPanel.itemToString = { it.titleLabel.text }
 
-        setupScene(wrapper, sceneOverlay)
+        setupScene(wrapper, sceneOverlay, sceneUnderlay)
 
         buildButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
@@ -218,57 +315,61 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
             }
         })
 
-        rootSceneStack.addListener(object : InputListener {
-            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
-                when (keycode) {
-                    KEY.DEL, KEY.FORWARD_DEL -> removeSelectedBoxes()
-                    else -> {
-                        if (keycode == KEY.A && KEY.shiftPressed) {
+//        rootSceneStack.addListener(object : InputListener {
+//            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+//                when (keycode) {
+//                    KEY.DEL, KEY.FORWARD_DEL -> removeSelectedBoxes()
+//                    else -> {
+//                        if (keycode == KEY.A && KEY.shiftPressed) {
+//
+//                        }
+//                    }
+//                }
+//
+//                return super.keyDown(event, keycode)
+//            }
+//
+//            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
+//                rootSceneStack.hud?.scrollFocus = diagram
+//            }
+//
+//            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
+//                startDragX = x
+//                startDragY = y
+//                pressedButton = button
+//                rootSceneStack.hud?.setKeyboardFocus(rootSceneStack)
+//                return super.touchDown(event, x, y, pointer, button)
+//            }
+//
+//            override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
+//                when (pressedButton) {
+//                    BUTTON.LEFT -> {
+//                        val diagram = diagram
+//                        if (diagram != null) {
+//                            dragVec.set(event.stageX, event.stageY)
+//                            diagram.stageToLocalCoordinates(dragVec)
+//                            dragVec.add(diagram.globalPosition)
+//                            //dragVec.set(x, y)
+//                        }
+//                    }
+//                    BUTTON.MIDDLE -> {
+//                        val diagram = diagram
+//                        if (diagram != null) {
+//                            diagram.x += x - startDragX
+//                            diagram.y += y - startDragY
+//                            startDragX = x
+//                            startDragY = y
+//                        }
+//                    }
+//                }
+//            }
+//        })
 
-                        }
-                    }
-                }
+        wrapper.touchable = Touchable.ChildrenOnly
 
-                return super.keyDown(event, keycode)
-            }
+        sceneUnderlay.addListener(sceneListener)
 
-            override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {
-                rootSceneStack.hud?.scrollFocus = diagram
-            }
-
-            override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                startDragX = x
-                startDragY = y
-                pressedButton = button
-                rootSceneStack.hud?.setKeyboardFocus(rootSceneStack)
-                return super.touchDown(event, x, y, pointer, button)
-            }
-
-            override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
-                when (pressedButton) {
-                    BUTTON.LEFT -> {
-                        val diagram = diagram
-                        if (diagram != null) {
-                            dragVec.set(event.stageX, event.stageY)
-                            diagram.stageToLocalCoordinates(dragVec)
-                            dragVec.add(diagram.globalPosition)
-                            //dragVec.set(x, y)
-                        }
-                    }
-                    BUTTON.MIDDLE -> {
-                        val diagram = diagram
-                        if (diagram != null) {
-                            diagram.x += x - startDragX
-                            diagram.y += y - startDragY
-                            startDragX = x
-                            startDragY = y
-                        }
-                    }
-                }
-            }
-        })
-
-        rootSceneStack.addListener(object : ClickListener() {
+        sceneEmptyActor.addListener(object : ClickListener() {
 //            override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
 //                val flowDiagram = flowDiagram
 //                if (flowDiagram != null) {
@@ -294,32 +395,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
 //            }
 
             override fun clicked(event: InputEvent, x: Float, y: Float) {
-                if (event.target == rootSceneStack) rootSceneStack.hud?.keyboardFocus = rootSceneStack
 
-                val diagram = diagram
-                val tempLink = tempLink
-                if (diagram != null && tempLink != null) {
-                    val source = tempLink.source
-                    val overInput = overInput
-
-                    val oldLink = diagram.links.firstOrNull { it.destination == overInput }
-                    if (oldLink != null) {
-                        oldLink.destination?.input?.value = null
-                        diagram.links.remove(oldLink)
-                    }
-
-                    tempLink.destination?.input?.value = null
-
-                    if (overInput != null) {
-                        overInput.input.value = source.shaderData
-                        tempLink.destination = overInput
-                        tempLink.overDestination = null
-                    } else {
-                        diagram.links.remove(tempLink)
-                    }
-                }
-
-                this@ShaderComponentScene.tempLink = null
             }
         })
     }

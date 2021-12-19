@@ -1,0 +1,9 @@
+package app.thelema.g3d
+
+import app.thelema.ecs.IEntityComponent
+
+interface ISceneProvider: IEntityComponent {
+    fun cancelProviding(instance: ISceneInstance)
+
+    fun provideScene(instance: ISceneInstance)
+}

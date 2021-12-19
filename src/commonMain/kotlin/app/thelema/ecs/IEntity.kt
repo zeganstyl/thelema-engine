@@ -19,6 +19,8 @@ package app.thelema.ecs
 import app.thelema.json.IJsonObjectIO
 import app.thelema.res.RES
 
+// TODO add entity descriptors and add "type" to entity, so entity can be implemented in different class
+
 interface IEntity: IJsonObjectIO {
     val children: List<IEntity>
 
@@ -221,7 +223,13 @@ interface IEntity: IJsonObjectIO {
     /** Get or create entities with structure by given path. It is analog of mkdir. */
     fun makePath(path: String): IEntity
 
-    /** @param correctName If there is already entity with the same name, [entity] will get a new free name */
+    fun makePathToComponent(path: String): IEntityComponent
+
+    fun makePathToProperty(path: String): Any?
+
+    fun <T> makePathToPropertyTyped(path: String): T = makePathToProperty(path) as T
+
+    /** @param correctName If there is already entity with the same name, [entity] will set a new free name. For example "Entity" will be "Entity_0" */
     fun addEntity(entity: IEntity, correctName: Boolean = true)
 
     fun removeEntity(entity: IEntity)
@@ -242,16 +250,12 @@ interface IEntity: IJsonObjectIO {
 
     fun forEachEntityInBranch(block: (entity: IEntity) -> Unit) {
         block(this)
-        for (i in children.indices) {
-            children[i].forEachEntityInBranch(block)
-        }
+        forEachChildEntity { it.forEachEntityInBranch(block) }
     }
 
     fun forEachComponentInBranch(block: (component: IEntityComponent) -> Unit) {
         forEachComponent(block)
-        for (i in children.indices) {
-            children[i].forEachComponentInBranch(block)
-        }
+        forEachChildEntity { it.forEachComponentInBranch(block) }
     }
 
     fun addedEntityNotifyAscending(entity: IEntity)

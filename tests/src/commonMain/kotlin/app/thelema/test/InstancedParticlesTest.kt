@@ -2,12 +2,17 @@ package app.thelema.test
 
 import app.thelema.ecs.Entity
 import app.thelema.ecs.component
+import app.thelema.ecs.sibling
 import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.particles.*
 import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
+import app.thelema.img.Texture2D
 import app.thelema.math.MATH
+import app.thelema.shader.Shader
+import app.thelema.shader.node.*
 
 class InstancedParticlesTest: Test {
     override fun testMain() {
@@ -28,89 +33,65 @@ class InstancedParticlesTest: Test {
                 component<IParticleSystem> {
                     lifeTimesAsAttribute = true
 
-//                    shader.apply {
-//                        load(
-//                            vertCode = """
-//attribute vec3 POSITION;
-//attribute vec2 UV;
-//attribute vec3 INSTANCE_POSITION;
-//attribute vec2 INSTANCE_UV_START;
-//attribute float INSTANCE_LIFE_TIME;
-//uniform mat4 viewProj;
-//uniform mat3 view;
-//uniform vec2 texSize;
-//
-//varying vec2 uv;
-//varying float life;
-//
-//void main() {
-//    uv = UV;
-//    uv = UV * texSize + INSTANCE_UV_START;
-//    life = INSTANCE_LIFE_TIME;
-//    gl_Position = viewProj * vec4(view * (1.0 + INSTANCE_LIFE_TIME) * POSITION + INSTANCE_POSITION, 1.0);
-//}""",
-//                            fragCode = """
-//varying vec2 uv;
-//varying float life;
-//uniform sampler2D tex;
-//uniform float maxLife;
-//
-//void main() {
-//    gl_FragColor = texture2D(tex, uv);
-//    gl_FragColor.a *= 1.0 - life / maxLife;
-//}"""
-//                        )
-//                    }
+                    component<MoveParticleEffect>()
+                    val frame = component<ParticleTextureFrameEffect> { setupFrames(6, 5) }
+                    val shader = Shader()
+                    val material = material()
+                    material.shader = shader
 
-//                    shader.apply {
-//                        val vertex = addNode(VertexNode())
-//
-//                        val particleData = addNode(ParticleDataNode())
-//                        particleData.maxLifeTime = 5f
-//                        particleData.instanceLifeTimeName = instanceLifeTimeName
-//
-//                        val scaling = addNode(ParticleScaleNode().apply {
-//                            scaling = 5f
-//                            lifeTimePercent = particleData.lifeTimePercent
-//                            inputPosition = vertex.position
-//                        })
-//
-//                        val camera = addNode(CameraDataNode(scaling.scaledPosition))
-//                        camera.useInstancePosition = true
-//                        camera.alwaysRotateObjectToCamera = true
-//
-//                        val uvNode = addNode(UVNode().apply {
-//                            uvName = "UV"
-//                        })
-//
-//                        val textureFrame = addNode(ParticleUVFrameNode().apply {
-//                            inputUv = uvNode.uv
-//                            instanceUvStartName = frameNode.instanceUvStartName
-//                            frameSizeU = frameNode.sizeU
-//                            frameSizeV = frameNode.sizeV
-//                        })
-//
-//                        val texture = addNode(TextureNode(texture = Texture2D("Smoke30Frames.png")))
-//                        texture.uv = textureFrame.resultUv
-//
-//                        val particleColor = addNode(ParticleColorNode().apply {
-//                            lifeTimePercent = particleData.lifeTimePercent
-//                            inputColor = texture.color
-//                            color1 = GLSLVec4Inline(1f, 1f, 1f, 0f)
-//                        })
-//
-//                        addNode(OutputNode(camera.clipSpacePosition, particleColor.result))
-//
-//                        depthMask = false
-//
-//                        build()
-//
-//                        println(printCode())
-//                    }
-                }
-                component<MoveParticleEffect>()
-                component<ParticleTextureFrameEffect> {
-                    setupFrames(6, 5)
+                    shader.apply {
+                        val vertex = VertexNode()
+
+                        val particleData = ParticleDataNode()
+                        particleData.maxLifeTime = 5f
+                        particleData.instanceLifeTimeName = instanceLifeTimeName
+
+                        val scaling = ParticleScaleNode().apply {
+                            scaling = 5f
+                            lifeTimePercent = particleData.lifeTimePercent
+                            inputPosition = vertex.position
+                        }
+
+                        val camera = CameraDataNode().apply {
+                            vertexPosition = scaling.scaledPosition
+                            useInstancePosition = true
+                            alwaysRotateObjectToCamera = true
+                        }
+
+                        val uvNode = UVNode {
+                            uvName = "TEXCOORD_0"
+                        }
+
+                        val textureFrame = ParticleUVFrameNode().apply {
+                            inputUv = uvNode.uv
+                            instanceUvStartName = frame.instanceUvStartName
+                            framesU = frame.framesU
+                            framesV = frame.framesV
+                        }
+
+                        val texture = Texture2DNode {
+                            texture = Texture2D("Smoke30Frames.png")
+                        }
+                        texture.uv = textureFrame.resultUv
+
+                        val particleColor = ParticleColorNode().apply {
+                            lifeTimePercent = particleData.lifeTimePercent
+                            inputColor = texture.texColor
+                            color1 = GLSLVec4Inline(1f, 1f, 1f, 0f)
+                        }
+
+                        val output = component<OutputNode> {
+                            vertPosition = camera.clipSpacePosition
+                            fragColor = particleColor.result
+                        }
+                        rootNode = output.sibling()
+
+                        depthMask = false
+
+                        build()
+
+                        println(printCode())
+                    }
                 }
             }
 

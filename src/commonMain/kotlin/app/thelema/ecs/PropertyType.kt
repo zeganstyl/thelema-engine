@@ -34,6 +34,8 @@ class PropertyType(override val propertyTypeName: String): IPropertyType {
         val Mat3 = PropertyType("thelema/Mat3")
         val Mat4 = PropertyType("thelema/Mat4")
         val File = PropertyType("thelema/File")
+        val ShaderNodeInput = PropertyType("Thelema/ShaderNodeInput")
+        val ShaderNodeOutput = PropertyType("Thelema/ShaderNodeOutput")
     }
 }
 

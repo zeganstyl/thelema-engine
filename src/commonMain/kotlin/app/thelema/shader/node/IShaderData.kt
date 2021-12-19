@@ -28,7 +28,7 @@ interface IShaderData {
     val ref: String
         get() = if (scope == GLSLScope.Inline) inlineCode else "$name$id"
 
-    val id: Long
+    val id: Int
 
     /** Float number representation of ref */
     val fRef: String
@@ -42,14 +42,13 @@ interface IShaderData {
     /** Use [GLSLType] */
     val type: String
 
-    /** Reserved. Do not set it manually */
+    /** Do not set it manually */
     var container: IShaderNode?
 
-    /** Connections to other nodes inputs. Do not change it manually. */
-    val links: MutableSet<IShaderNodeInput<IShaderData?>>
-
-    val isUsed: Boolean
-        get() = links.isNotEmpty()
+    /** If this shader data is used, it's GLSL-code must be added to shader.
+     * Used only on building shader.
+     * Do not use it on rendering. */
+    var isUsed: Boolean
 
     val typeStr: String
         get() = when (type) {

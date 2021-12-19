@@ -18,104 +18,92 @@ package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
 import app.thelema.img.ITexture
-import app.thelema.json.IJsonObject
 import app.thelema.gl.IMesh
+import app.thelema.img.ITexture2D
+import app.thelema.img.TextureCube
 
 /** @author zeganstyl */
-class TextureNode(): ShaderNode() {
-    constructor(block: TextureNode.() -> Unit): this() { block(this) }
-
-    constructor(
-        uv: IShaderData = GLSLNode.uv.uv,
-        texture: ITexture? = null,
-
-        /** If you use JPEG images, better to set it false */
-        sRGB: Boolean = true,
-
-        /** Use [GLSLType] */
-        textureType: String = GLSLType.Sampler2D
-    ): this() {
-        this.uv = uv
-        this.texture = texture
-        this.sRGB = sRGB
-        this.textureType = textureType
-    }
-
-    override val componentName: String
-        get() = "TextureNode"
-
+abstract class TextureNode(textureType: String): ShaderNode() {
     var uv by input(GLSLNode.uv.uv)
 
-    val sampler = output(GLSLFloat("tex"))
-    val color = output(GLSLVec4("texColor"))
-    val alpha = output(GLSLFloat("texAlpha").apply { scope = GLSLScope.Inline })
+    val sampler = GLSLValue("tex", textureType)
+    val texColor = output(GLSLVec4("texColor"))
+    val texAlpha = output(GLSLFloat("texAlpha").apply { scope = GLSLScope.Inline })
 
-    var texture: ITexture? = null
+    protected abstract val tex: ITexture?
 
     /** If you use JPEG images, better to set it false */
     var sRGB: Boolean = true
 
-    /** Use [GLSLType] */
-    var textureType: String = GLSLType.Sampler2D
-
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        sRGB = json.bool("sRGB", true)
-        textureType = json.string("textureType", GLSLType.Sampler2D)
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        json["sRGB"] = sRGB
-        json["textureType"] = textureType
-    }
-
     override fun prepareToBuild() {
         super.prepareToBuild()
-        alpha.inlineCode = "${color.ref}.a"
+        texAlpha.inlineCode = "${texColor.ref}.a"
     }
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
         super.prepareShaderNode(mesh, scene)
 
-        if (color.isUsed || alpha.isUsed) {
-            val unit = shader.getNextTextureUnit()
-            shader[sampler.ref] = unit
-            texture?.bind(unit)
-        }
+        val unit = shader.getNextTextureUnit()
+        shader[sampler.ref] = unit
+        tex?.bind(unit)
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        out.append("uniform $textureType ${sampler.ref};\n")
-        out.append("${color.typedRef} = vec4(0.0);\n")
+        out.append("uniform ${sampler.typedRef};\n")
+        out.append("${texColor.typedRef} = vec4(0.0);\n")
     }
 
-    private fun getSamplerAccessCode(type: String): String {
-        return if (shader.version >= 130) "texture" else when (type) {
-            GLSLType.Sampler2D -> "texture2D"
-            GLSLType.Sampler3D -> "texture3D"
-            GLSLType.SamplerCube -> "textureCube"
-            else -> "texture"
-        }
-    }
+    protected abstract fun getSamplerAccessCode(): String
 
-    private fun getCoordinates(type: String): String = when (type) {
-        GLSLType.Sampler2D -> uv.asVec2()
-        GLSLType.SamplerCube -> uv.asVec3()
-        else -> uv.ref
-    }
+    protected abstract fun getCoordinates(): String
 
     override fun executionFrag(out: StringBuilder) {
-        out.append("${color.ref} = ${getSamplerAccessCode(textureType)}(${sampler.ref}, ${getCoordinates(textureType)});\n")
-        if (sRGB) out.append("${color.ref}.xyz = pow(${color.ref}.xyz, vec3(2.2));\n")
+        out.append("${texColor.ref} = ${if (shader.version >= 130) "texture" else getSamplerAccessCode()}(${sampler.ref}, ${getCoordinates()});\n")
+        if (sRGB) out.append("${texColor.ref}.xyz = pow(${texColor.ref}.xyz, vec3(2.2));\n")
     }
+}
 
-    fun set(other: TextureNode): TextureNode {
-        texture = other.texture
-        textureType = other.textureType
-        sRGB = other.sRGB
-        return this
-    }
+/** @author zeganstyl */
+class Texture2DNode(): TextureNode(GLSLType.Sampler2D) {
+    constructor(block: Texture2DNode.() -> Unit): this() { block(this) }
+
+    override val componentName: String
+        get() = "Texture2DNode"
+
+    var texture: ITexture2D? = null
+    override val tex: ITexture?
+        get() = texture
+
+    override fun getSamplerAccessCode(): String = "texture2D"
+    override fun getCoordinates(): String = uv.asVec2()
+}
+
+/** @author zeganstyl */
+class TextureCubeNode(): TextureNode(GLSLType.SamplerCube) {
+    constructor(block: TextureCubeNode.() -> Unit): this() { block(this) }
+
+    override val componentName: String
+        get() = "TextureCubeNode"
+
+    var texture: TextureCube? = null
+    override val tex: TextureCube?
+        get() = texture
+
+    override fun getSamplerAccessCode(): String = "textureCube"
+    override fun getCoordinates(): String = uv.asVec3()
+}
+
+/** @author zeganstyl */
+class Texture3DNode(): TextureNode(GLSLType.Sampler3D) {
+    constructor(block: Texture3DNode.() -> Unit): this() { block(this) }
+
+    override val componentName: String
+        get() = "Texture3DNode"
+
+    var texture: ITexture? = null
+    override val tex: ITexture?
+        get() = texture
+
+    override fun getSamplerAccessCode(): String = "texture3D"
+    override fun getCoordinates(): String = uv.asVec3()
 }

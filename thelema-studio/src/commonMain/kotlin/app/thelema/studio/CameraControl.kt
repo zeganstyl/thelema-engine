@@ -8,9 +8,7 @@ object CameraControl {
         rotateButton = BUTTON.MIDDLE
         keyboardEnabled = false
         scrollFactor = 0.05f
-    }
-
-    init {
-        control.listenToMouse()
+        isEnabled = true
+        stopListenMouse()
     }
 }

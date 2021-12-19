@@ -249,7 +249,8 @@ class JvmFile(
         when (location) {
             FileLocation.Classpath -> return
             FileLocation.Internal -> return
-            FileLocation.Absolute, FileLocation.External ->  // Try rename for efficiency and to change case on case-insensitive file systems.
+            FileLocation.Absolute,
+            FileLocation.External ->  // Try rename for efficiency and to change case on case-insensitive file systems.
                 if (file.renameTo(dest.sourceObject as File)) return
             else -> {
                 copyTo(dest)

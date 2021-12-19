@@ -1,20 +1,19 @@
 package app.thelema.studio
 
-import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.input.KEY
 import app.thelema.ui.*
 
 class EntityWindow: Window("Entity") {
-    val tree = Tree()
-    val treeScroll = ScrollPane(tree)
+    val availableComponents = ComponentsTreePanel()
 
     val addedComponentsList = UIList<IEntityComponent> {
+        style = SKIN.list
         selection.isMultiple = true
         itemToString = { it.componentName }
     }
-    val addedComponentsListScroll = ScrollPane(addedComponentsList)
+    val addedComponentsListScroll = ScrollPane(addedComponentsList, style = SKIN.scroll)
 
     val entityName = TextField()
 
@@ -22,7 +21,7 @@ class EntityWindow: Window("Entity") {
         onClick {
             val entity = entity
             if (entity != null) {
-                tree.forEachSelectedNodeTyped<ComponentTreeNode> {
+                availableComponents.tree.forEachSelectedNodeTyped<ComponentTreeNode> {
                     entity.component(it.descriptor.componentName)
                 }
             }
@@ -46,20 +45,21 @@ class EntityWindow: Window("Entity") {
         }
 
     val split = SplitPane(
-        firstWidget = treeScroll,
-        secondWidget = VBox {
-            add(HBox {
-                add(addButton).growX().padLeft(5f).padRight(5f)
-                add(removeButton).growX().padLeft(5f).padRight(5f)
-            }).growX()
-            add(addedComponentsListScroll).grow()
-        }
+        firstWidget = availableComponents,
+        secondWidget = addedComponentsListScroll
     )
 
+    val componentSearchString = TextField()
+
     init {
-        tree.setPadding(5f, 5f)
+        componentSearchString.hintText = "Component..."
 
         content.add(entityName).growX().newRow()
+        content.add(HBox {
+            add(componentSearchString).growX()
+            add(addButton).padLeft(5f).padRight(5f)
+            add(removeButton).padLeft(5f).padRight(5f)
+        }).growX().padTop(10f).newRow()
         content.add(split).grow().padTop(10f).newRow()
 
         isResizable = true
@@ -72,8 +72,6 @@ class EntityWindow: Window("Entity") {
                 return super.keyDown(event, keycode)
             }
         })
-
-        tree.add(ComponentTreeNode(ECS).also { it.isExpanded = true })
 
         pack()
         width = 640f

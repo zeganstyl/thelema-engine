@@ -4,7 +4,7 @@ class ParticleColorNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleColorNode"
 
-    var lifeTimePercent by input(GLSL.oneFloat)
+    var lifeTimePercent by input(GLSLNode.particleData.lifeTimePercent)
     var inputColor by input(GLSL.oneFloat)
     var color0 by input(GLSL.oneFloat)
     var color1 by input(GLSL.zeroFloat)

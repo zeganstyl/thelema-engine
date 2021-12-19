@@ -22,7 +22,7 @@ import org.khronos.webgl.get
 import org.khronos.webgl.set
 import app.thelema.data.IIntData
 
-class JsInt32Array(val intArray: Int32Array): IIntData, JsArrayBufferView<Int>() {
+class JsInt32Array(val intArray: Int32Array): IIntData, JsArrayBufferView() {
     override val array: ArrayBufferView
         get() = intArray
 

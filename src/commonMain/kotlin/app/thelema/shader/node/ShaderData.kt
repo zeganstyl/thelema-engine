@@ -24,10 +24,7 @@ abstract class ShaderData: IShaderData {
 
     override var container: IShaderNode? = null
 
-    protected val _links = HashSet<IShaderNodeInput<IShaderData?>>(0)
+    override val id: Int = GLSL.id()
 
-    override val links
-        get() = _links
-
-    override val id: Long = GLSL.id()
+    override var isUsed: Boolean = false
 }

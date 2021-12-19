@@ -352,13 +352,38 @@ interface IVec4: IVec {
      * @return This quaternion for chaining.
      */
     fun setQuaternionByAxis(x: Float, y: Float, z: Float, radians: Float): IVec4 {
-        var d = MATH.len(x, y, z)
+        var d = MATH.len2(x, y, z)
         if (d == 0f) return idtQuaternion()
-        d = 1f / d
+        d = 1f / MATH.sqrt(d)
         val ang = if (radians < 0) MATH.PI2 - -radians % MATH.PI2 else radians % MATH.PI2
-        val sin = MATH.sin(ang / 2f)
-        val cos = MATH.cos(ang / 2f)
+        val sin = MATH.sin(ang * 0.5f)
+        val cos = MATH.cos(ang * 0.5f)
         return set(d * x * sin, d * y * sin, d * z * sin, cos).nor()
+    }
+
+    /** Rotate quaternion by angle value in radians around the given axis.
+     * ([axisX], [axisY], [axisZ]) must be normalized */
+    fun rotateQuaternionByAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float): IVec4 {
+        if (radians == 0f) return this
+
+        val radians2 = getQuaternionAngleAround(axisX, axisY, axisZ) + radians
+        val ang = if (radians2 < 0) MATH.PI2 - -radians2 % MATH.PI2 else radians2 % MATH.PI2
+
+        val sin = MATH.sin(ang * 0.5f)
+        val cos = MATH.cos(ang * 0.5f)
+
+        return set(axisX * sin, axisY * sin, axisZ * sin, cos)
+    }
+
+    fun rotateQuaternionByY(radians: Float): IVec4 {
+        if (radians == 0f) return this
+
+        val l2 = y * y + w * w
+
+        val radians2 = (if (MATH.isZero(l2)) 0f else (2f * MATH.acos(MATH.clamp(((if (y < 0f) -w else w) / MATH.sqrt(l2)), -1f, 1f)))) + radians
+        val ang = if (radians2 < 0) MATH.PI2 - -radians2 % MATH.PI2 else radians2 % MATH.PI2
+
+        return set(0f, MATH.sin(ang * 0.5f), 0f, MATH.cos(ang * 0.5f))
     }
 
     /** Sets the Quaternion from the given matrix, optionally removing any scaling.  */
@@ -386,16 +411,10 @@ interface IVec4: IVec {
     }
 
     /**
-     *
-     *
      * Sets the Quaternion from the given x-, y- and z-axis which have to be orthonormal.
-     *
-     *
-     *
      *
      * Taken from Bones framework for JPCT, see http://www.aptalkarga.com/bones/ which in turn took it from Graphics Gem code at
      * ftp://ftp.cis.upenn.edu/pub/graphics/shoemake/quatut.ps.Z.
-     *
      *
      * @param xx x-axis x-coordinate
      * @param xy x-axis y-coordinate

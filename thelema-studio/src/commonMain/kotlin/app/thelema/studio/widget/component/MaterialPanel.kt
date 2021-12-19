@@ -12,15 +12,9 @@ import app.thelema.g3d.scene
 import app.thelema.g3d.simpleSkybox
 import app.thelema.gl.GL
 import app.thelema.img.*
-import app.thelema.math.Rectangle
 import app.thelema.math.Vec3
-import app.thelema.res.AID
-import app.thelema.res.RES
-import app.thelema.res.load
-import app.thelema.ui.DSKIN
 import app.thelema.ui.Scaling
 import app.thelema.ui.UIImage
-import app.thelema.utils.Color
 
 class MaterialPanel: ComponentPanel<IMaterial>(IMaterial::class) {
     val sprite = Sprite()
@@ -84,6 +78,9 @@ object MaterialPreview {
         }
     }
     val sphere = previewScene.entity("sphere").sphereMesh {
+        builder.normals = true
+        builder.uvs = true
+        builder.tangents = true
         builder.uvName = "TEXCOORD_0"
         setSize(1f)
     }

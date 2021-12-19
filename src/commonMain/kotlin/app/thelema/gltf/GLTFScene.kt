@@ -22,6 +22,7 @@ import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
+import app.thelema.shader.findShaderNode
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
 import kotlin.math.max
@@ -89,29 +90,29 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                             meshPrepared = true
                             instance.inheritedMesh?.apply {
                                 armature = skin
-                                material?.shader?.apply {
-                                    val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                                    vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                                    vertexNode.worldTransformType = TransformDataType.None
+                                material?.shader?.findShaderNode<VertexNode> {
+                                    maxBones = max(skin.bones.size, maxBones)
+                                    worldTransformType = TransformDataType.None
                                 }
 
                                 if (gltf.conf.setupVelocityShader) {
                                     material?.shaderChannels?.get(ShaderChannel.Velocity)?.apply {
-                                        val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                                        vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                                        vertexNode.worldTransformType = TransformDataType.None
+                                        findShaderNode<VertexNode> {
+                                            maxBones = max(skin.bones.size, maxBones)
+                                            worldTransformType = TransformDataType.None
+                                        }
 
-                                        val velocityNode = nodes.first { it is VelocityNode } as VelocityNode
-                                        velocityNode.maxBones = max(skin.bones.size, velocityNode.maxBones)
-                                        velocityNode.worldTransformType = TransformDataType.None
+                                        findShaderNode<VelocityNode> {
+                                            maxBones = max(skin.bones.size, maxBones)
+                                            worldTransformType = TransformDataType.None
+                                        }
                                     }
                                 }
 
                                 if (gltf.conf.setupDepthRendering) {
-                                    material?.shaderChannels?.get(ShaderChannel.Depth)?.apply {
-                                        val vertexNode = nodes.first { it is VertexNode } as VertexNode
-                                        vertexNode.maxBones = max(skin.bones.size, vertexNode.maxBones)
-                                        vertexNode.worldTransformType = TransformDataType.None
+                                    material?.shaderChannels?.get(ShaderChannel.Depth)?.findShaderNode<VertexNode> {
+                                        maxBones = max(skin.bones.size, maxBones)
+                                        worldTransformType = TransformDataType.None
                                     }
                                 }
                             }

@@ -112,6 +112,9 @@ open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
             selectBoxList.list.itemToString = value
         }
 
+    /** When selected is null */
+    var defaultText: String = "[No item]"
+
     var getSelected: () -> T? = { selectedItem }
     var setSelected: (item: T?) -> Unit = { selectedItem = it }
 
@@ -174,22 +177,20 @@ open class SelectBox<T>(style: SelectBoxStyle = SelectBoxStyle()) : Widget() {
         batch.setMulAlpha(color, parentAlpha)
         background?.draw(batch, x, y, width, height)
         val selected = getSelected()
-        if (selected != null) {
-            if (background != null) {
-                width -= background.leftWidth + background.rightWidth
-                height -= background.bottomHeight + background.topHeight
-                x += background.leftWidth
-                y += (height / 2f + background.bottomHeight + font.capHeight / 2f).toInt().toFloat()
-            } else {
-                y += (height / 2f + font.capHeight / 2f).toInt().toFloat()
-            }
-            font.color = Color.mulAlpha(fontColor, parentAlpha)
-            drawItem(batch, font, selected, x, y, width)
+        if (background != null) {
+            width -= background.leftWidth + background.rightWidth
+            height -= background.bottomHeight + background.topHeight
+            x += background.leftWidth
+            y += (height / 2f + background.bottomHeight + font.capHeight / 2f).toInt().toFloat()
+        } else {
+            y += (height / 2f + font.capHeight / 2f).toInt().toFloat()
         }
+        font.color = Color.mulAlpha(fontColor, parentAlpha)
+        drawItem(batch, font, selected, x, y, width)
     }
 
-    protected fun drawItem(batch: Batch, font: BitmapFont, item: T, x: Float, y: Float, width: Float): GlyphLayout {
-        val text = itemToString(item)
+    protected fun drawItem(batch: Batch, font: BitmapFont, item: T?, x: Float, y: Float, width: Float): GlyphLayout {
+        val text = if (item != null) itemToString(item) else defaultText
         return font.draw(batch, text, x, y, 0, text.length, width, alignment, false, "...")
     }
 

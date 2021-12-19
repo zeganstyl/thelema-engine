@@ -97,15 +97,12 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             }
         }
 
-    private var drawBorder = false
     override var isFocusBorderEnabled = true
 
-    /** @return May be null.
-     */
     /** Sets the text that will be drawn in the text field if no text has been entered.
      * @param messageText may be null.
      */
-    var messageText: String? = null
+    var hintText: String? = null
     protected var displayText: CharSequence = ""
     var defaultInputListener: InputListener? = null
     var listener: TextFieldListener? = null
@@ -177,6 +174,15 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
     fun addValidator(validator: InputValidator) {
         validators.add(validator)
         validateInput()
+    }
+
+    /** [block] must return true if text is valid */
+    fun validate(block: (text: CharSequence) -> Boolean): InputValidator {
+        val validator = object : InputValidator {
+            override fun validateInput(input: CharSequence): Boolean = block(text)
+        }
+        addValidator(validator)
+        return validator
     }
 
     fun validateInput(text: String = this.text) {
@@ -322,7 +328,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
         }
         val yOffset: Float = if (font.isFlipped) -textHeight else 0f
         if (displayText.isEmpty()) {
-            if (!focused && messageText != null) {
+            if (!focused && hintText != null) {
                 val messageFont = if (style.messageFont != null) style.messageFont else font
                 if (style.messageFontColor != null) {
                     messageFont!!.color = Color.mulAlpha(style.messageFontColor!!, Color.getAlpha(color) * parentAlpha)
@@ -359,8 +365,8 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
 
         if (!isDisabled && !isInputValid && style.errorBorder != null) {
             style.errorBorder!!.draw(batch, this.x, this.y, width, height)
-        } else if (isFocusBorderEnabled && drawBorder && style.focusBorder != null) {
-            style.focusBorder!!.draw(batch, this.x, this.y, width, height)
+        } else if (isFocusBorderEnabled && focused) {
+            style.focusBorder?.draw(batch, this.x, this.y, width, height)
         }
     }
 
@@ -388,7 +394,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
     }
 
     protected fun drawMessageText(batch: Batch, font: BitmapFont, x: Float, y: Float, maxWidth: Float) {
-        font.draw(batch, messageText!!, x, y, 0, messageText!!.length, maxWidth, alignment, false, "...")
+        font.draw(batch, hintText!!, x, y, 0, hintText!!.length, maxWidth, alignment, false, "...")
     }
 
     protected open fun drawCursor(cursorPatch: Drawable, batch: Batch, font: BitmapFont, x: Float, y: Float) {
@@ -555,13 +561,9 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
         onscreenKeyboard.show(true)
     }
 
-    override fun focusLost() {
-        drawBorder = false
-    }
+    override fun focusLost() {}
 
-    override fun focusGained() {
-        drawBorder = true
-    }
+    override fun focusGained() {}
 
     /** @return May be null.
      */
@@ -598,12 +600,6 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
             i++
         }
         return best
-    }
-
-    /** @param listener May be null.
-     */
-    fun setTextFieldListener(listener: TextFieldListener?) {
-        this.listener = listener
     }
 
     /** @param str If null, "" is used.
@@ -966,7 +962,7 @@ open class TextField(style: TextFieldStyle = DSKIN.textField) : Widget(), Focusa
                     updateDisplayText()
                 }
             }
-            if (listener != null) listener!!.keyTyped(this@TextField, character)
+            listener?.keyTyped(this@TextField, character)
             return true
         }
     }

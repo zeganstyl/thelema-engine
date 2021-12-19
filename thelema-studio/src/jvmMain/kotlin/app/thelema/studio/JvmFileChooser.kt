@@ -3,19 +3,22 @@ package app.thelema.studio
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import app.thelema.jvm.JvmFile
-import app.thelema.res.PROJECT_FILENAME
+import app.thelema.res.APP_ROOT_FILENAME
 import app.thelema.res.RES
+import app.thelema.utils.iterate
 import java.awt.Component
-import java.awt.Dialog
-import java.awt.FileDialog
-import java.awt.Frame
+import java.awt.Desktop
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import javax.swing.JDialog
 import javax.swing.JFileChooser
-import javax.swing.JFrame
 import javax.swing.filechooser.FileFilter
 
 class JvmFileChooser: IFileChooser {
+    override val userHomeDirectory: String
+        get() = System.getProperty("user.home") ?: ""
+
     private val chooser: JFileChooser by lazy {
         object : JFileChooser() {
             override fun createDialog(parent: Component?): JDialog {
@@ -28,10 +31,45 @@ class JvmFileChooser: IFileChooser {
 
     private val projectFilter = object : FileFilter() {
         override fun accept(f: File): Boolean {
-            return File(f.absolutePath + PROJECT_FILENAME).exists()
+            if (f.isDirectory) return true
+            if (f.name.lowercase() == APP_ROOT_FILENAME) return true
+            return false
         }
 
-        override fun getDescription(): String = "Thelema Engine project ($PROJECT_FILENAME)"
+        override fun getDescription(): String = "Thelema Engine project ($APP_ROOT_FILENAME)"
+    }
+
+    override fun executeCommandInTerminal(directory: IFile, command: List<String>): (out: StringBuilder) -> Boolean {
+        val args = ArrayList<String>()
+        args.add("sh")
+        args.addAll(command)
+        val builder = ProcessBuilder(args)
+        builder.directory(File(directory.platformPath))
+
+        val process = builder.start()
+
+        val input = process.inputStream
+        val errors = process.errorStream
+
+        return { out ->
+            val available1 = process.inputStream.available()
+            val available2 = process.errorStream.available()
+            if (available1 > 0) {
+                val array = ByteArray(available1)
+                input.read(array)
+                String(array).also { out.append(it) }
+            }
+            if (available2 > 0) {
+                val array = ByteArray(available2)
+                errors.read(array)
+                String(array).also { out.append(it) }
+            }
+            available1 > 0 || available2 > 0
+        }
+    }
+
+    override fun openInFileManager(path: String) {
+        Desktop.getDesktop().open(File(path))
     }
 
     override fun openScriptFile(selectedFile: IFile?, ready: (file: IFile?) -> Unit) {
@@ -72,10 +110,11 @@ class JvmFileChooser: IFileChooser {
 
     override fun openProject(ready: (uri: String) -> Unit) {
         chooser.isMultiSelectionEnabled = false
-        chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+        chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
         chooser.dialogType = JFileChooser.OPEN_DIALOG
         chooser.selectedFile = null
         chooser.fileFilter = projectFilter
+        chooser.currentDirectory = File("$userHomeDirectory/IdeaProjects")
         if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
         val file = chooser.selectedFile
         if (file != null) ready(file.absolutePath)

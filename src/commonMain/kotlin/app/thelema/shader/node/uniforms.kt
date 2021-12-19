@@ -8,7 +8,7 @@ import app.thelema.math.*
 abstract class UniformNodeBase<T>(type: String): ShaderNode() {
     abstract var defaultValue: T
 
-    val uniform = GLSLValue("my_uniform", type).also { output(it) }
+    val uniform: IShaderData = GLSLValue("my_uniform", type).also { output(it) }
 
     var uniformName: String
         get() = uniform.name

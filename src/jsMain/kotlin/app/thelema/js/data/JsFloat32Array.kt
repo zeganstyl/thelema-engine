@@ -23,7 +23,7 @@ import org.khronos.webgl.set
 import app.thelema.data.IFloatData
 
 /** @author zeganstyl */
-class JsFloat32Array(val floatArray: Float32Array): IFloatData, JsArrayBufferView<Float>() {
+class JsFloat32Array(val floatArray: Float32Array): IFloatData, JsArrayBufferView() {
     override val array: ArrayBufferView
         get() = floatArray
 

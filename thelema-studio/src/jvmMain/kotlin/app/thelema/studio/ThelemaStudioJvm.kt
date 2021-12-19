@@ -39,6 +39,8 @@ object ThelemaStudioJvm {
             }
         )
 
+        app.isEditorMode = true
+
         val host = BasicJvmScriptingHost()
 
         KotlinScripting.init(host, JvmDependencyFromClassLoader { app::class.java.classLoader!! })

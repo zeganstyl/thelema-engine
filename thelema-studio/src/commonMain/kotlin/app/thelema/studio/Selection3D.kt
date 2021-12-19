@@ -5,6 +5,7 @@ import app.thelema.data.IByteData
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
 import app.thelema.g3d.IScene
+import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.*
 import app.thelema.img.*
@@ -56,7 +57,7 @@ void main() {
     }
 
     val meshes = ArrayList<IMesh>()
-    val scenes = ArrayList<IScene>()
+    val scenes = ArrayList<ISceneInstance>()
 
     var selectRequest = false
     var pixelStart = 0
@@ -67,7 +68,7 @@ void main() {
     }
 
     private fun traverseSelection(entity: IEntity) {
-        val scene = entity.componentOrNull<IScene>()?.also { scenes.add(it) }
+        val scene = entity.componentOrNull<ISceneInstance>()?.also { scenes.add(it) }
         if (scene == null) entity.forEachChildEntity { traverseSelection(it) }
         entity.componentOrNull<IMesh>()?.also { meshes.add(it) }
     }
@@ -106,8 +107,10 @@ void main() {
                 scenes.iterate { scene ->
                     colorMap[colorId] = scene.entity
                     selectionRenderShader.color?.also { Color.rgba8888ToColor(it, color.toInt()) }
-                    for (j in scene.meshes.indices) {
-                        scene.meshes[j].render(selectionRenderShader)
+                    scene.sceneInstance?.componentOrNull<IScene>()?.also { instance ->
+                        for (j in instance.meshes.indices) {
+                            instance.meshes[j].render(selectionRenderShader)
+                        }
                     }
                     color += 256
                     colorId++
@@ -138,11 +141,11 @@ void main() {
                             it.render(selectionRenderShader)
                             selection = true
                         }
-                        selected.componentOrNull<IScene>()?.apply {
-                            for (i in meshes.indices) {
-                                meshes[i].render(selectionRenderShader)
+                        selected.componentOrNull<ISceneInstance>()?.also { instance ->
+                            instance.sceneInstance?.componentOrNull<IScene>()?.also { scene ->
+                                scene.meshes.iterate { it.render(selectionRenderShader) }
+                                if (scene.meshes.isNotEmpty()) selection = true
                             }
-                            if (meshes.isNotEmpty()) selection = true
                         }
                         if (worldMatrix == null) worldMatrix = selected.componentOrNull<ITransformNode>()?.worldMatrix
                     }

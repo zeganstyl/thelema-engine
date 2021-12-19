@@ -2,6 +2,9 @@ package app.thelema.shader.node
 
 import kotlin.reflect.KProperty
 
+/** See [IShaderNodeInput].
+ *
+ * @author zeganstyl */
 class ShaderNodeInput(
     override val container: IShaderNode,
     var defaultValue: IShaderData = GLSL.zeroFloat,
@@ -9,15 +12,10 @@ class ShaderNodeInput(
 ): IShaderNodeInput<IShaderData> {
 
     override var value: IShaderData? = null
-        set(value) {
-            (field ?: defaultValue).links.remove(this as IShaderNodeInput<IShaderData?>)
-            field = value
-            (value ?: defaultValue).links.add(this as IShaderNodeInput<IShaderData?>)
-        }
 
     override fun getValue(thisRef: IShaderNode, property: KProperty<*>): IShaderData {
         if (name.isEmpty()) name = property.name
-        return value ?: defaultValue
+        return valueOrDefault()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -25,4 +23,6 @@ class ShaderNodeInput(
         if (name.isEmpty()) name = property.name
         this.value = value
     }
+
+    override fun valueOrDefault(): IShaderData = value ?: defaultValue
 }

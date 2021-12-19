@@ -2,21 +2,14 @@ package app.thelema.g3d.particles
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.component
+import app.thelema.ecs.siblingOrNull
 import app.thelema.ecs.sibling
 import app.thelema.g3d.IMaterial
-import app.thelema.g3d.mesh.planeMesh
-import app.thelema.gl.GL
 import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexBuffer
 import app.thelema.gl.VertexBuffer
-import app.thelema.img.texture2D
 import app.thelema.math.IVec3
-import app.thelema.math.MATH
-import app.thelema.res.RES
 import app.thelema.shader.IShader
-import app.thelema.shader.Shader
-import app.thelema.shader.node.*
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
@@ -27,12 +20,12 @@ class ParticleSystem: IParticleSystem {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            if (mesh == null) mesh = value?.component()
-            value?.component<IMaterial>()?.shader = shader
+            sibling<IMaterial>()
+            sibling<IShader>()
+            if (mesh == null) mesh = siblingOrNull()
             value?.forEachComponent { if (it is IParticleEffect) addParticleEffect(it) }
-            value?.planeMesh {
-                normal = MATH.Z
-                setSize(1f)
+            value?.forEachChildEntity { child ->
+                child.forEachComponent { if (it is IParticleEffect) addParticleEffect(it) }
             }
         }
 
@@ -66,9 +59,9 @@ class ParticleSystem: IParticleSystem {
     override val lifeTimes: List<Float>
         get() = _lifeTimes
 
-    override val particleEffects = ArrayList<IParticleEffect>()
+    // TODO add max life times array
 
-    override val shader: IShader = Shader()
+    override val particleEffects = ArrayList<IParticleEffect>()
 
     override val vertexBuffer: IVertexBuffer = VertexBuffer()
 
@@ -136,7 +129,9 @@ class ParticleSystem: IParticleSystem {
         updateParticleSystemRequested = false
 
         mesh?.also { mesh ->
-            val visibleParticles = _aliveParticles.size
+            var visibleParticles = 0
+
+            emitters.iterate { visibleParticles += it.visibleParticles.size }
 
             particleEffects.iterate { node ->
                 node.beginProcessParticleSystem(this, visibleParticles, delta)
@@ -162,9 +157,12 @@ class ParticleSystem: IParticleSystem {
                 attribute.rewind()
 
                 val channelData = channel.data
-                _aliveParticles.iterate {
-                    channel.setToAttribute(channelData[it])
-                    attribute.nextVertex()
+
+                emitters.iterate { emitter ->
+                    emitter.visibleParticles.iterate { particle ->
+                        channel.setToAttribute(channelData[particle])
+                        attribute.nextVertex()
+                    }
                 }
 
                 attribute.buffer.requestBufferUploading()
@@ -176,68 +174,17 @@ class ParticleSystem: IParticleSystem {
 
 
 
-    init {
-        // FIXME
-
-        GL.call {
-            shader.apply {
-                val vertex = addNode(VertexNode())
-
-                val particleData = addNode(ParticleDataNode())
-                particleData.maxLifeTime = 5f
-                particleData.instanceLifeTimeName = instanceLifeTimeName
-
-                val scaling = addNode(ParticleScaleNode().apply {
-                    scaling = 5f
-                    lifeTimePercent = particleData.lifeTimePercent
-                    inputPosition = vertex.position
-                })
-
-                val camera = addNode(CameraDataNode(scaling.scaledPosition))
-                camera.useInstancePosition = true
-                camera.alwaysRotateObjectToCamera = true
-
-                val uvNode = addNode(UVNode().apply {
-                    uvName = "UV"
-                })
-
-                val textureFrame = addNode(ParticleUVFrameNode().apply {
-                    inputUv = uvNode.uv
-                    frameSizeU = 1f / 6f
-                    frameSizeV = 1f / 5f
-                })
-
-                val texture = addNode(TextureNode(texture = RES.texture2D("Smoke30Frames.png")))
-                texture.uv = textureFrame.resultUv
-
-                val particleColor = addNode(ParticleColorNode().apply {
-                    lifeTimePercent = particleData.lifeTimePercent
-                    inputColor = texture.color
-                    color1 = GLSLVec4Inline(1f, 1f, 1f, 0f)
-                })
-
-                addNode(OutputNode(camera.clipSpacePosition, particleColor.result))
-
-                depthMask = false
-
-                build()
-
-                println(printCode())
-            }
-        }
-    }
-
-
     override fun addedChildComponent(component: IEntityComponent) {
         if (component is IParticleEffect) addParticleEffect(component)
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
+        if (mesh == null && component is IMesh) mesh = component
         if (component is IParticleEffect) addParticleEffect(component)
     }
 
     override fun removedChildComponent(component: IEntityComponent) {
-        if (component is IParticleEffect) addParticleEffect(component)
+        if (component is IParticleEffect) removeParticleEffect(component)
     }
 
     override fun removedSiblingComponent(component: IEntityComponent) {

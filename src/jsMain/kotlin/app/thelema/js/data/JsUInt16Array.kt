@@ -23,7 +23,7 @@ import org.khronos.webgl.set
 import app.thelema.data.IShortData
 
 /** @author zeganstyl */
-class JsUInt16Array(val shortArray: Uint16Array): IShortData, JsArrayBufferView<Short>() {
+class JsUInt16Array(val shortArray: Uint16Array): IShortData, JsArrayBufferView() {
     override val array: ArrayBufferView
         get() = shortArray
 

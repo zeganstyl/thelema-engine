@@ -20,7 +20,7 @@ package app.thelema.ui
  * @author Nathan Sweet
  */
 open class WindowStyle(
-    var background: Drawable? = DSKIN.solidFrame
+    var background: Drawable? = DSKIN.whiteFrameDarkBackground
 ) {
     var titleLabel: LabelStyle = DSKIN.label
 

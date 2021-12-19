@@ -4,8 +4,8 @@ class ParticleScaleNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleScaleNode"
 
-    var lifeTimePercent by input(GLSL.oneFloat)
-    var inputPosition by input(GLSL.oneFloat)
+    var lifeTimePercent by input(GLSLNode.particleData.lifeTimePercent)
+    var inputPosition by input(GLSLNode.vertex.position)
     val scaledPosition = output(GLSLVec3("scaledPosition"))
     var scaling = 1f
 

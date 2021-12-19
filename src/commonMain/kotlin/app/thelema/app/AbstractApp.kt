@@ -49,6 +49,8 @@ abstract class AbstractApp: IApp {
     /** Call [GL.glClear] before render */
     var clearOnRender = false
 
+    override var isEditorMode: Boolean = false
+
     protected fun performDefaultSetup() {
         if (defaultSetup) {
             GL.isDepthTestEnabled = true

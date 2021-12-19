@@ -42,6 +42,12 @@ kotlin {
     sourceSets {
         val commonMain by getting
 
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
         val jvmCommonMain by creating {
             dependsOn(commonMain)
 
@@ -73,11 +79,19 @@ kotlin {
                 api("$lwjglPrefix-stb:$lwjglVersion")
             }
 
-//            val jvmJar by tasks.getting(Jar::class) {
+            val jvmJar by tasks.getting(Jar::class) {
+                duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+                manifest {
+                    attributes(
+                        "Main-Class" to "app.thelema.studio.ThelemaStudioJvm"
+                    )
+                }
+
 //                doFirst {
 //                    from(configurations.getByName("jvmRuntimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
 //                }
-//            }
+            }
         }
 
         val jsMain by getting

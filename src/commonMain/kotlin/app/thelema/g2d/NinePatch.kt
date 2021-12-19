@@ -19,6 +19,7 @@ package app.thelema.g2d
 import app.thelema.gl.GL_LINEAR
 import app.thelema.img.ITexture2D
 import app.thelema.ui.Drawable
+import app.thelema.utils.iterate
 import kotlin.math.max
 
 
@@ -66,7 +67,11 @@ class NinePatch(): Drawable {
     override var minHeight: Float = 0f
     override var minWidth: Float = 0f
 
-    var color: Int = 0xFFFFFFFF.toInt()
+    var color: Int = -1
+        set(value) {
+            field = value
+            patches.iterate { it?.color = value }
+        }
 
     /** Returns the left padding if set, else returns [leftWidth].  */
     var padLeft = -1f
@@ -81,6 +86,10 @@ class NinePatch(): Drawable {
         get() = if (field == -1f) bottomHeight else field
 
     var patches: Array<Sprite?> = emptyArray()
+        set(value) {
+            field = value
+            value.iterate { it?.color = color }
+        }
 
     /** Create a ninepatch by cutting up the given texture into nine patches. The subsequent parameters define the 4 lines that
      * will cut the texture region into 9 pieces.

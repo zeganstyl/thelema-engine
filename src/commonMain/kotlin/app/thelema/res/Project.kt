@@ -20,6 +20,7 @@ import app.thelema.ecs.EntityLoader
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.fs.*
+import app.thelema.g3d.scene
 import app.thelema.json.JSON
 import app.thelema.utils.LOG
 
@@ -51,10 +52,23 @@ class Project: IProject {
         }
 
     override var mainScene: EntityLoader? = null
+        set(value) {
+            if (field != value) {
+                field = value
+                mainScene?.load()
+            }
+        }
 
     private var absoluteDirectoryInternal: IFile = DefaultProjectDirectory
     override val absoluteDirectory: IFile
         get() = absoluteDirectoryInternal
+
+    private var runMainSceneRequest = false
+
+    override fun runMainScene() {
+        runMainSceneRequest = true
+        mainScene?.load()
+    }
 
     override fun addProjectListener(listener: ProjectListener) {
         loaderListeners.add(listener)
@@ -95,6 +109,14 @@ class Project: IProject {
             }
             loadingResourcesToRemove.clear()
             loadingResourcesToRemove.trimToSize()
+        } else {
+            if (runMainSceneRequest) {
+                runMainSceneRequest = false
+                mainScene?.also {
+                    it.targetEntity.makeCurrent()
+                    it.targetEntity.scene().startSimulation()
+                }
+            }
         }
     }
 
@@ -157,7 +179,7 @@ class Project: IProject {
     override fun destroy() {
         super.destroy()
         entityOrNull?.also { entity ->
-            entity.children.forEach { it.destroy() }
+            entity.forEachChildEntity { it.destroy() }
             entity.clearChildren()
         }
         mainScene = null
@@ -169,11 +191,11 @@ class Project: IProject {
         loadingResourcesToRemove.trimToSize()
         loadingLoaders.trimToSize()
         loadersInternal.trimToSize()
-        entity.children.forEach { it.destroy() }
+        entity.forEachChildEntity { it.destroy() }
     }
 }
 
-val RES: IProject = Project().apply { getOrCreateEntity().name = "Project" }
+val RES: IProject = Project().apply { getOrCreateEntity().name = "App" }
 
 /** AID can be used for storing auxiliary resources */
 val AID: IProject = Project().apply { getOrCreateEntity().name = "Aid" }
@@ -182,15 +204,15 @@ val AID: IProject = Project().apply { getOrCreateEntity().name = "Aid" }
 inline fun <reified T : ILoader> IProject.load(uri: String, noinline block: T.() -> Unit = {}): T =
     load(uri, T::class.simpleName!!, block as ILoader.() -> Unit) as T
 
-fun openThelemaProject(file: IFile) {
-    val file2 = if (file.isDirectory) file.child(PROJECT_FILENAME) else file
+fun openThelemaApp(file: IFile) {
+    val file2 = if (file.isDirectory) file.child(APP_ROOT_FILENAME) else file
     file2.readText {
         try {
             val json = JSON.parseObject(it)
             RES.file = file2
             RES.destroy()
             RES.getOrCreateEntity().readJson(json)
-            RES.entity.name = "Project"
+            RES.entity.name = "App"
         } catch (ex: Exception) {
             LOG.error("Error while loading project ${file.path}")
             ex.printStackTrace()
@@ -198,4 +220,13 @@ fun openThelemaProject(file: IFile) {
     }
 }
 
-const val PROJECT_FILENAME = "project.thelema"
+/** Open root app.thelema in resources */
+fun openThelemaApp() = openThelemaApp(FS.internal(APP_ROOT_FILENAME))
+
+/** Open root app.thelema in resources and run main scene */
+fun runMainScene() {
+    openThelemaApp()
+    RES.runMainScene()
+}
+
+const val APP_ROOT_FILENAME = "app.thelema"

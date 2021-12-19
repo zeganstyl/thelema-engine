@@ -5,12 +5,15 @@ import app.thelema.g2d.Sprite
 import app.thelema.gl.GL_NEAREST
 import app.thelema.img.Image
 import app.thelema.img.Texture2D
-import app.thelema.ui.CheckBoxStyle
-import app.thelema.ui.DSKIN
-import app.thelema.ui.ScrollPaneStyle
+import app.thelema.ui.*
 import app.thelema.utils.Color
 
 object SKIN {
+    val X = 0xFF8080FF.toInt()
+    val Y = 0x80FF80FF.toInt()
+    val Z = 0x8080FFFF.toInt()
+    val W = Color.LIGHT_GRAY
+
     var overColor = Color.rgba8888(0f, 0.5f, 0.25f, 1f)
     var lineColor = Color.rgba8888(0.3f, 0.3f, 0.3f, 1f)
 
@@ -38,6 +41,10 @@ object SKIN {
         background = this@SKIN.background
     }
 
+    val list = UIListStyle().apply {
+        background = this@SKIN.background
+    }
+
     val solidFrameTextureSelected by lazy {
         Texture2D {
             minFilter = GL_NEAREST
@@ -57,5 +64,9 @@ object SKIN {
 
     val solidFrameSelected = NinePatch(solidFrameTextureSelected, 1, 1, 1, 1)
 
-    val checkBox = CheckBoxStyle(null, null)
+    val checkBox = CheckBoxStyle(null, null).apply {
+        checkedFontColor = -1
+        checkedOverFontColor = Color.GREEN
+        fontColor = Color.GRAY
+    }
 }

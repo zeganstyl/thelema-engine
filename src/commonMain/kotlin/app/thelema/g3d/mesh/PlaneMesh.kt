@@ -67,6 +67,10 @@ class PlaneMesh(): MeshBuilderAdapter() {
     var heightProvider: (hIndex: Int, vIndex: Int) -> Float = { _, _ -> 0f }
 
     var normal: IVec3 = Vec3(0f, 1f, 0f)
+        set(value) {
+            field.set(value)
+            requestMeshUpdate()
+        }
 
     override fun getVerticesCount(): Int = (hDivisions + 1) * (vDivisions + 1)
 

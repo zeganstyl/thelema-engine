@@ -22,7 +22,7 @@ package app.thelema.ui
 open class ProgressBarStyle {
     /** The progress bar background, stretched only in one direction. Optional.  */
 
-    var background: Drawable? = DSKIN.solidFrame
+    var background: Drawable? = DSKIN.whiteFrameDarkBackground
     var knob: Drawable = DSKIN.white5x5
 
     /** Optional.  */

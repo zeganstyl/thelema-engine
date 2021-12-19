@@ -28,6 +28,7 @@ class EntityTreePanel: Table() {
         set(value) {
             if (field != value) {
                 field = value
+                value.isExpanded = true
                 tree.clearChildren()
                 tree.add(value)
                 if (rootEntity != value.entity) {

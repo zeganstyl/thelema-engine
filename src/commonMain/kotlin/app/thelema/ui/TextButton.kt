@@ -40,8 +40,9 @@ open class TextButton(text: String, style: TextButtonStyle = DSKIN.textButton) :
         label.touchable = Touchable.Disabled
         label.alignH = 0
         label.alignV = 0
-        add(label).expand().fill()
-        setSize(prefWidth, prefHeight)
+        label.lineAlign = 0
+        add(label).grow()
+        //setSize(prefWidth, prefHeight)
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {

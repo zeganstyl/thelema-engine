@@ -1,6 +1,6 @@
 package app.thelema.studio
 
-fun componentNameView(name: String): String {
+fun camelCaseToSpaces(name: String): String {
     var str = ""
     var prevChar = 'A'
     for (i in name.indices) {

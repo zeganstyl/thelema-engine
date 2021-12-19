@@ -20,12 +20,13 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.fs.IFile
 import app.thelema.g3d.IScene
+import app.thelema.g3d.ISceneProvider
 import app.thelema.math.IVec4
 import app.thelema.res.ILoader
 import app.thelema.shader.node.PBRNode
 
 /** @author zeganstyl */
-interface IGLTF: ILoader {
+interface IGLTF: ILoader, ISceneProvider {
     var generator: String
     var version: String
     var copyright: String

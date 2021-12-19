@@ -79,9 +79,15 @@ class DefaultComponentSystem: IComponentSystem {
         entity.forEachComponent { entityListener.addedComponent(it) }
         entity.forEachComponentInBranch { entityListener.addedComponentToBranch(it) }
         entity.addEntityListener(entityListener)
+        particleEmitters.iterate {
+            if (it.entityOrNull?.getRootEntity() == entity) it.isPlaying = true
+        }
     }
 
     override fun removedScene(entity: IEntity) {
+        particleEmitters.iterate {
+            if (it.entityOrNull?.getRootEntity() == entity) it.isPlaying = false
+        }
         entity.forEachComponent { entityListener.removedComponent(it) }
         entity.forEachComponentInBranch { entityListener.removedComponentFromBranch(it) }
         entity.removeEntityListener(entityListener)

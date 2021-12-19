@@ -173,14 +173,10 @@ open class PopupMenu() : Table() {
         return false
     }
 
-    override fun add(actor: Actor): Cell {
-        require(actor !is MenuItem) { "MenuItems can be only added to PopupMenu by using addItem(MenuItem) method" }
-        return super.add(actor)
-    }
-
     fun item(name: String, style: TextButtonStyle = TextButtonStyle(), block: MenuItem.() -> Unit): MenuItem {
         val item = MenuItem(name, style)
         item.label.alignH = -1
+        item.label.lineAlign = -1
         block(item)
         addItem(item)
         return item
@@ -194,7 +190,7 @@ open class PopupMenu() : Table() {
     }
 
     open fun addItem(item: MenuItem) {
-        super.add(item).setFillX().setExpandX().newRow()
+        add(item).growX().newRow()
         pack()
         item.addListener(sharedMenuItemInputListener!!)
     }
@@ -310,7 +306,7 @@ open class PopupMenu() : Table() {
     private val tmpVector = Vec2()
 
     init {
-        background = DSKIN.solidFrame
+        background = DSKIN.whiteFrameDarkBackground
         touchable = Touchable.Enabled
         pad(0f)
         createListeners()

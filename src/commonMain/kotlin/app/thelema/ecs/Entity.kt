@@ -19,6 +19,7 @@ package app.thelema.ecs
 import app.thelema.concurrency.ATOM
 import app.thelema.json.IJsonObject
 import app.thelema.res.RES
+import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
 class Entity() : IEntity {
@@ -84,7 +85,11 @@ class Entity() : IEntity {
         }
         json.obj("components") {
             forEachObject {
-                component(it).readJson(this)
+                try {
+                    component(it).readJson(this)
+                } catch (e: ComponentNotFoundException) {
+                    LOG.error("Can't find component type: $it", e)
+                }
             }
         }
     }
@@ -302,8 +307,8 @@ class Entity() : IEntity {
     override fun copyDeep(to: IEntity?, setupComponents: Boolean): IEntity {
         val newEntity = to ?: Entity(name)
 
-        for (i in children.indices) {
-            newEntity.addEntity(children[i].copyDeep(null, false))
+        forEachChildEntity {
+            newEntity.addEntity(it.copyDeep(null, false))
         }
 
         for (i in componentsInternal.indices) {
@@ -329,6 +334,34 @@ class Entity() : IEntity {
             path.contains(IEntity.delimiter) -> makePath(path.split(IEntity.delimiter), this)
             else -> entity(path)
         }
+    }
+
+    override fun makePathToComponent(path: String): IEntityComponent {
+        val colon = path.lastIndexOf(':')
+        if (colon < 0) throw IllegalStateException("Not correct component path")
+        val entity = makePath(path.substring(0, colon))
+        val propertyDot = path.indexOf('.', colon)
+        return if (propertyDot < 0) {
+            entity.component(path.substring(colon + 1))
+        } else {
+            entity.component(path.substring(colon + 1, propertyDot))
+        }
+    }
+
+    override fun makePathToProperty(path: String): Any? {
+        val colon = path.lastIndexOf(':')
+        if (colon < 0) {
+            LOG.error("${this.path}: Not correct component path: $path")
+            return null
+        }
+        val entity = makePath(path.substring(0, colon))
+        val propertyDot = path.indexOf('.', colon)
+        if (propertyDot < 0) {
+            LOG.error("${this.path}: Not correct property path: $path")
+            return null
+        }
+        val component = entity.component(path.substring(colon + 1, propertyDot))
+        return component.getComponentPropertyValue(path.substring(propertyDot + 1))
     }
 
     private fun makePath(path: List<String>, start: IEntity): IEntity {

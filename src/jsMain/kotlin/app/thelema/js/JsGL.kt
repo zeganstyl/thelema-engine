@@ -66,6 +66,8 @@ class JsGL(
     override val maxAnisotropicFilterLevel: Float
         get() = 1f
 
+    override fun initVersions() {}
+
     override fun enableRequiredByDefaultExtensions() {
         super.enableRequiredByDefaultExtensions()
 
@@ -520,6 +522,8 @@ class JsGL(
     }
 
     override fun glGetError(): Int = gl.getError()
+
+    override fun glGetString(name: Int): String? = gl.getParameter(name) as String?
 
 
     class ProgramWrap(

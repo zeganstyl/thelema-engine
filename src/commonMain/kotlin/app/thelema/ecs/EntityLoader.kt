@@ -26,7 +26,10 @@ import app.thelema.res.LoaderAdapter
 import app.thelema.res.RES
 import app.thelema.utils.LOG
 
+/** Loads entity from file.
+ * Loaded entity will be [targetEntity]. */
 class EntityLoader: LoaderAdapter() {
+    /** Root scene entity. You can load it with [load] */
     val targetEntity: IEntity = Entity()
 
     override val componentName: String

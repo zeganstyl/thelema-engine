@@ -48,7 +48,7 @@ interface IEntityComponentSystem: IComponentDescriptorList {
 
     fun createComponent(typeName: String): IEntityComponent {
         val desc = getDescriptorTyped<IEntityComponent>(typeName)
-        return (desc ?: throw IllegalArgumentException("Can't find component type: $typeName")).create()
+        return (desc ?: throw ComponentNotFoundException(typeName)).create()
     }
 
     @Suppress("UNCHECKED_CAST")

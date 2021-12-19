@@ -35,7 +35,7 @@ class MeshBuilder: IMeshBuilder {
 
     var uvs = true
     var normals = true
-    var tangents = false
+    var tangents = true
 
     var positionName: String = "POSITION"
     var uvName: String = "TEXCOORD_0"

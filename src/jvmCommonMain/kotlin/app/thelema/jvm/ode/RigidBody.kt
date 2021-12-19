@@ -288,7 +288,7 @@ class RigidBody: IRigidBody {
             node.position.set(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
 
             val q = body.quaternion
-            node.rotation.set(q.get2().toFloat(), q.get1().toFloat(), -q.get0().toFloat(), q.get3().toFloat())
+            node.rotation.set(q.get1().toFloat(), q.get2().toFloat(), q.get3().toFloat(), q.get0().toFloat())
 
             if (node.position.isNotEqual(tmpV3) || node.rotation.isNotEqual(tmpV4)) node.requestTransformUpdate()
         }

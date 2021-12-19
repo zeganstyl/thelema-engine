@@ -19,8 +19,11 @@ package app.thelema.gltf
 import app.thelema.concurrency.ATOM
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
+import app.thelema.g3d.ISceneInstance
+import app.thelema.g3d.SceneProvider
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.IProject
@@ -91,6 +94,28 @@ class GLTF: IGLTF, LoaderAdapter() {
 
     private val glProgress = ATOM.int(0)
 
+    val instances = HashSet<ISceneInstance>(0)
+
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            value?.component<SceneProvider>()?.proxy = this
+        }
+
+    override fun cancelProviding(instance: ISceneInstance) {
+        instances.remove(instance)
+    }
+
+    override fun provideScene(instance: ISceneInstance) {
+        load()
+        if (isLoaded) {
+            instance.sceneClassEntity = scene
+        } else {
+            instances.add(instance)
+        }
+    }
+
     fun iterateArrays(block: (array: IGLTFArray) -> Unit) {
         block(buffers)
         block(bufferViews)
@@ -142,6 +167,8 @@ class GLTF: IGLTF, LoaderAdapter() {
                     buffers.forEach { (it as GLTFBuffer).bytes.destroy() }
                 }
                 stop()
+                instances.forEach { it.sceneClassEntity = scene }
+                instances.clear()
             }
         }
     }

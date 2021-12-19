@@ -33,10 +33,10 @@ class EntityTreeWindow: Window("Entity tree") {
     }
 
     val entityNameSearchField = TextField {
-        messageText = "Entity name..."
+        hintText = "Entity name..."
     }
     val componentNameSearchField = TextField {
-        messageText = "Component1, Component2, ..."
+        hintText = "Component1, Component2, ..."
     }
     val searchButton = TextButton("OK") {
         onClick {

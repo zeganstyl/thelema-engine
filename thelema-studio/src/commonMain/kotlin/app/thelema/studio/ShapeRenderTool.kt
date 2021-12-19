@@ -2,7 +2,7 @@ package app.thelema.studio
 
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.componentOrNull
-import app.thelema.ecs.getSiblingOrNull
+import app.thelema.ecs.siblingOrNull
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.SphereMesh
@@ -91,7 +91,7 @@ void main() {
     }
 
     private fun render(offset: IMat4?, component: IEntityComponent, xSize: Float, ySize: Float, zSize: Float) {
-        val node = component.getSiblingOrNull() ?: component.entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()
+        val node = component.siblingOrNull() ?: component.entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()
         render(offset, node, xSize, ySize, zSize)
     }
 

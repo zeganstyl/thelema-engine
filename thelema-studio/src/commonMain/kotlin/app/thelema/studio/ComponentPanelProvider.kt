@@ -18,6 +18,8 @@ object ComponentPanelProvider {
         addProvider { Texture2DPanel() }
         addProvider { MaterialPanel() }
         addProvider { MeshPanel() }
+        addProvider { AnimationPlayerPanel() }
+        addProvider { ArmaturePanel() }
         addProvider("KotlinScript") { KotlinScriptPanel() }
     }
 

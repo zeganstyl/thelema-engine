@@ -21,12 +21,10 @@ import app.thelema.img.ITexture
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 import app.thelema.gl.IMesh
+import app.thelema.img.ITexture2D
 
 /** @author zeganstyl */
-class HeightMapNode(
-    vertexPosition: IShaderData,
-    var texture: ITexture? = null
-): ShaderNode() {
+class HeightMapNode(): ShaderNode() {
     override val componentName: String
         get() = "HeightMapNode"
 
@@ -35,9 +33,11 @@ class HeightMapNode(
     /** Component from [vertexPosition] will be used as V texture coordinate */
     var v = "z"
 
+    var texture: ITexture2D? = null
+
     var uvScale: Float = 1f
 
-    var vertexPosition by input(GLSL.zeroFloat)
+    var vertexPosition by input(GLSLNode.vertex.position)
 
     var mapWorldSize: IVec3 = Vec3(1f, 1f, 1f)
 
@@ -46,10 +46,6 @@ class HeightMapNode(
     val height = output(GLSLFloat("height"))
 
     var unit: Int = -1
-
-    init {
-        this.vertexPosition = vertexPosition
-    }
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
         super.prepareShaderNode(mesh, scene)

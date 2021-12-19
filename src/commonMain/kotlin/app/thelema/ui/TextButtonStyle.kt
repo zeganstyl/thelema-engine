@@ -34,6 +34,6 @@ open class TextButtonStyle(
     var overFontColor: Int? = Color.GREEN
     var checkedFontColor: Int? = null
     var checkedOverFontColor: Int? = null
-    var disabledFontColor: Int? = null
+    var disabledFontColor: Int? = Color.GRAY
     var focusBorder: Drawable? = null
 }

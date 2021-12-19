@@ -23,11 +23,11 @@ import app.thelema.g3d.TransformNode
 import app.thelema.g3d.particles.*
 import app.thelema.gl.*
 import app.thelema.gltf.GLTF
-import app.thelema.gltf.GLTFSceneInstance
 import app.thelema.gltf.IGLTF
 import app.thelema.img.*
 import app.thelema.input.KeyboardHandler
 import app.thelema.input.MouseHandler
+import app.thelema.res.Project
 import app.thelema.script.BakedKotlinScripts
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
@@ -147,15 +147,11 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 bool(GLTF::receiveShadows)
                 bool(GLTF::ibl)
                 int(GLTF::iblMaxMipLevels)
-
-                descriptor({ GLTFSceneInstance() }) {
-                    refAbs("model", { model }) { model = it }
-                }
             }
             descriptor { app.thelema.font.BitmapFont() }
-            descriptor({ app.thelema.res.Project() }) {
+            descriptor({ Project() }) {
                 setAliases(app.thelema.res.IProject::class)
-                refAbs("mainScene", { mainScene }) { mainScene = it }
+                refAbs(Project::mainScene)
             }
             descriptor { app.thelema.res.ResourceHolder() }
         }
@@ -209,8 +205,9 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             setAliases(IParticleSystem::class)
 
             ref(ParticleSystem::mesh)
-            string(ParticleSystem::instancePositionName)
-            string(ParticleSystem::instanceLifeTimeName)
+            string(ParticleSystem::instancePositionName, "INSTANCE_POSITION")
+            string(ParticleSystem::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
+            bool(ParticleSystem::lifeTimesAsAttribute, false)
 
             descriptor({ ParticleEmitter() }) {
                 setAliases(IParticleEmitter::class)

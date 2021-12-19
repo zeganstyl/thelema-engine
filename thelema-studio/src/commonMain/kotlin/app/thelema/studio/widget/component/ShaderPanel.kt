@@ -5,7 +5,7 @@ import app.thelema.shader.IShader
 import app.thelema.studio.IComponentScenePanel
 import app.thelema.studio.Studio
 import app.thelema.studio.shader.ShaderComponentScene
-import app.thelema.studio.shader.ShaderFlowDiagram
+import app.thelema.studio.shader.ShaderNodesDiagram
 import app.thelema.ui.TextButton
 
 class ShaderPanel: ComponentPanel<IShader>(IShader::class) {
@@ -16,7 +16,7 @@ class ShaderPanel: ComponentPanel<IShader>(IShader::class) {
                     Studio.componentScenePanel = ShaderComponentScene as IComponentScenePanel<IEntityComponent>
                     if (Studio.scenesSplit.splits[0] > 0.95f) Studio.scenesSplit.setSplit(0, 0.5f)
                     if (ShaderComponentScene.diagram?.shader != it) {
-                        ShaderComponentScene.diagram = ShaderFlowDiagram(it)
+                        ShaderComponentScene.diagram = ShaderNodesDiagram(it)
                     }
                 }
             }

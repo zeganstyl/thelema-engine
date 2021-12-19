@@ -16,78 +16,40 @@
 
 package app.thelema.gltf
 
-import app.thelema.ecs.ComponentAdapter
-import app.thelema.ecs.EntityListener
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.*
+import app.thelema.g3d.SceneInstance
 
-class GLTFSceneInstance: ComponentAdapter() {
+class GLTFSceneInstance: IEntityComponent {
     override val componentName: String
         get() = "GLTFSceneInstance"
 
-    var enabled = true
-        set(value) {
-            if (field != value) {
-                field = value
-                if (value) {
-                    model?.scene?.addEntityListener(entityListener)
-                } else {
-                    model?.scene?.removeEntityListener(entityListener)
-                }
-            }
-        }
+    var provider: SceneInstance = SceneInstance()
 
-    override var entityOrNull: IEntity?
-        get() = super.entityOrNull
+    override var entityOrNull: IEntity? = null
         set(value) {
-            super.entityOrNull = value
-            model?.also { value?.setDeep(it.scene) }
+            field = value
+            provider = value?.component() ?: SceneInstance()
+            model?.also { provider.sceneClassEntity = it.scene }
         }
 
     var model: GLTF? = null
         set(value) {
             if (field != value) {
-                field?.scene?.removeEntityListener(entityListener)
                 field = value
-                if (enabled && value != null) {
-                    value.onLoaded {
-                        val scene = (value.scenes[value.mainSceneIndex] as GLTFScene)
-                        scene.loader.load()
-                        scene.scene.addEntityListener(entityListener)
-                        val entity = entity.entity("Scene")
-                        scene.scene.copyDeep(to = entity)
-                        entity.name = "Scene"
-                        entity.serializeEntity = false
+                if (value != null) {
+                    if (provider.enabled) {
+                        value.onLoaded {
+                            val scene = (value.scenes[value.mainSceneIndex] as GLTFScene)
+                            scene.loader.load()
+                            provider.sceneClassEntity = scene.scene
+                        }
                     }
                     value.load()
                 }
             }
         }
 
-    private val entityListener = object : EntityListener {
-        override fun addedComponentToBranch(component: IEntityComponent) {
-            if (enabled) {
-                model?.scene?.also {
-                    val path = it.getRelativePathTo(component.entity)
-                    entity.entity("Scene").makePath(path).component(component.componentName).setComponent(component)
-                }
-            }
-        }
+    fun require() {
 
-        override fun removedComponentFromBranch(component: IEntityComponent) {
-            if (enabled) {
-                model?.scene?.also {
-                    val path = it.getRelativePathTo(component.entity)
-                    entity.entity("Scene").getEntityByPath(path)?.removeComponent(component.componentName)
-                }
-            }
-        }
-    }
-
-    override fun addedComponentToBranch(component: IEntityComponent) {
-        super.addedComponentToBranch(component)
-        if (component is GLTFSceneInstance && component != this) {
-            component.enabled = false
-        }
     }
 }

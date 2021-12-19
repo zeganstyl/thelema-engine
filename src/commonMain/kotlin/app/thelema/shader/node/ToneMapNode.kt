@@ -34,7 +34,7 @@ class ToneMapNode(
 
     var inputColor by input(GLSL.oneFloat)
 
-    val result = output(GLSLVec4("toneMappedColor"))
+    val result = output(GLSLVec4("result"))
 
     init {
         this.inputColor = inputColor

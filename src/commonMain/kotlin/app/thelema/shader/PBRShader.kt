@@ -16,9 +16,8 @@
 
 package app.thelema.shader
 
-import app.thelema.img.ITexture
+import app.thelema.img.ITexture2D
 import app.thelema.img.Texture2D
-import app.thelema.math.TransformDataType
 import app.thelema.shader.node.*
 import app.thelema.utils.LOG
 
@@ -29,10 +28,11 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
         LOG.info(printCode())
     }
 
-    val baseColorNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
+    val baseColorNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
             if (pbrNode.baseColor == null) {
-                pbrNode.baseColor = color
+                pbrNode.baseColor = texColor
             } else {
                 pbrNode.baseColor
             }
@@ -40,52 +40,59 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
         // TODO
     }
 
-    val baseColorTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            pbrNode.baseColor = color
+    val baseColorTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            pbrNode.baseColor = texColor
         }
     }
 
-    val alphaTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            pbrNode.alpha = color
+    val alphaTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            pbrNode.alpha = texColor
         }
     }
 
-    val normalTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = true).apply {
-            normalMapNode.normalColor = color
+    val normalTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = true
+            normalMapNode.normalColor = texColor
             normalMapNode.uv = uv
         }
     }
 
     val normalMapNode: NormalMapNode by lazy {
         NormalMapNode {
-            pbrNode.normal = normalResult
+            pbrNode.normal = normal
         }
     }
 
-    val metallicTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            pbrNode.metallic = color
+    val metallicTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            pbrNode.metallic = texColor
         }
     }
 
-    val roughnessTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            pbrNode.roughness = color
+    val roughnessTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            pbrNode.roughness = texColor
         }
     }
 
-    val occlusionTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            pbrNode.occlusion = color
+    val occlusionTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            pbrNode.occlusion = texColor
         }
     }
 
-    val metallicRoughnessTextureNode: TextureNode by lazy {
-        TextureNode(sRGB = false).apply {
-            val splitNode = SplitVec4Node(color)
+    val metallicRoughnessTextureNode: Texture2DNode by lazy {
+        Texture2DNode {
+            sRGB = false
+            val splitNode = SplitVec4Node(texColor)
             pbrNode.occlusion = splitNode.x
             pbrNode.roughness = splitNode.y
             pbrNode.metallic = splitNode.z
@@ -114,30 +121,30 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
         (if (deferredRendering) gBufferOutputNode else outputNode).apply {  }
     }
 
-    private inline fun setTex(uri: String, block: ITexture.() -> Unit): ITexture =
+    private inline fun setTex(uri: String, block: ITexture2D.() -> Unit): ITexture2D =
         Texture2D(uri).apply(block)
     
-    fun setBaseColorTexture(texture: ITexture) { baseColorTextureNode.texture = texture }
-    fun setBaseColorTexture(uri: String): ITexture = setTex(uri) { setBaseColorTexture(this) }
+    fun setBaseColorTexture(texture: ITexture2D) { baseColorTextureNode.texture = texture }
+    fun setBaseColorTexture(uri: String): ITexture2D = setTex(uri) { setBaseColorTexture(this) }
 
-    fun setAlphaTexture(texture: ITexture) { alphaTextureNode.texture = texture }
-    fun setAlphaTexture(uri: String): ITexture = setTex(uri) { setAlphaTexture(this) }
+    fun setAlphaTexture(texture: ITexture2D) { alphaTextureNode.texture = texture }
+    fun setAlphaTexture(uri: String): ITexture2D = setTex(uri) { setAlphaTexture(this) }
 
-    fun setNormalTexture(texture: ITexture) { normalTextureNode.texture = texture }
-    fun setNormalTexture(uri: String): ITexture = setTex(uri) { setNormalTexture(this) }
+    fun setNormalTexture(texture: ITexture2D) { normalTextureNode.texture = texture }
+    fun setNormalTexture(uri: String): ITexture2D = setTex(uri) { setNormalTexture(this) }
 
     /** Image channels must be: R - occlusion, G - roughness, B - metallic. */
-    fun setOcclusionRoughnessMetallicTexture(texture: ITexture) { metallicRoughnessTextureNode.texture = texture }
-    fun setOcclusionRoughnessMetallicTexture(uri: String): ITexture = setTex(uri) { setOcclusionRoughnessMetallicTexture(this) }
+    fun setOcclusionRoughnessMetallicTexture(texture: ITexture2D) { metallicRoughnessTextureNode.texture = texture }
+    fun setOcclusionRoughnessMetallicTexture(uri: String): ITexture2D = setTex(uri) { setOcclusionRoughnessMetallicTexture(this) }
 
-    fun setMetallicTexture(texture: ITexture) { metallicTextureNode.texture = texture }
-    fun setMetallicTexture(uri: String): ITexture = setTex(uri) { setMetallicTexture(this) }
+    fun setMetallicTexture(texture: ITexture2D) { metallicTextureNode.texture = texture }
+    fun setMetallicTexture(uri: String): ITexture2D = setTex(uri) { setMetallicTexture(this) }
 
-    fun setRoughnessTexture(texture: ITexture) { roughnessTextureNode.texture = texture }
-    fun setRoughnessTexture(uri: String): ITexture = setTex(uri) { setRoughnessTexture(this) }
+    fun setRoughnessTexture(texture: ITexture2D) { roughnessTextureNode.texture = texture }
+    fun setRoughnessTexture(uri: String): ITexture2D = setTex(uri) { setRoughnessTexture(this) }
 
-    fun setOcclusionTexture(texture: ITexture) { occlusionTextureNode.texture = texture }
-    fun setOcclusionTexture(uri: String): ITexture = setTex(uri) { setOcclusionTexture(this) }
+    fun setOcclusionTexture(texture: ITexture2D) { occlusionTextureNode.texture = texture }
+    fun setOcclusionTexture(uri: String): ITexture2D = setTex(uri) { setOcclusionTexture(this) }
 
     fun enableShadows(enable: Boolean = true) { pbrNode.receiveShadows = enable }
 }

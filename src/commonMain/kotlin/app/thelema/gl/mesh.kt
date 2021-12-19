@@ -420,6 +420,8 @@ class Mesh(): IMesh {
 
     override fun render(shader: IShader, scene: IScene?, offset: Int, count: Int) {
         if (count == 0 || !isVisible) return
+        if (shader.buildRequested) shader.build()
+        if (!shader.isCompiled) return
 
         bind(shader)
 
@@ -499,12 +501,13 @@ class Mesh(): IMesh {
                         GL_UNSIGNED_SHORT to "Short",
                         GL_UNSIGNED_INT to "Int"
                     )
-                    bool(MeshBuilder::uvs)
-                    bool(MeshBuilder::normals)
-                    string(MeshBuilder::positionName)
-                    string(MeshBuilder::uvName)
-                    string(MeshBuilder::normalName)
-                    string(MeshBuilder::tangentName)
+                    bool(MeshBuilder::uvs, true)
+                    bool(MeshBuilder::normals, true)
+                    bool(MeshBuilder::tangents, true)
+                    string(MeshBuilder::positionName, "POSITION")
+                    string(MeshBuilder::uvName, "TEXCOORD_0")
+                    string(MeshBuilder::normalName, "NORMAL")
+                    string(MeshBuilder::tangentName, "TANGENT")
                     bool(MeshBuilder::calculateNormals)
                     vec3(MeshBuilder::position)
                     vec4(MeshBuilder::rotation)

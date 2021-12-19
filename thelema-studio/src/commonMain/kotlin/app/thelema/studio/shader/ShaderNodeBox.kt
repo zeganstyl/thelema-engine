@@ -4,14 +4,14 @@ import app.thelema.math.Vec4
 import app.thelema.shader.node.GLSLType
 import app.thelema.shader.node.IShaderNode
 import app.thelema.studio.SKIN
-import app.thelema.studio.componentNameView
+import app.thelema.studio.camelCaseToSpaces
 import app.thelema.ui.*
 import app.thelema.utils.Color
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
-class ShaderNodeBox(val diagram: ShaderFlowDiagram, val node: IShaderNode): Window(
-    title = componentNameView(node.componentName).let { if (it.endsWith("Node")) it.substringBeforeLast("Node") else it },
+class ShaderNodeBox(val diagram: ShaderNodesDiagram, val node: IShaderNode): Window(
+    title = camelCaseToSpaces(node.componentName).let { if (it.endsWith("Node")) it.substringBeforeLast("Node") else it },
     addCloseButton = false
 ) {
     val inputs = ArrayList<ShaderInputView>()
@@ -20,7 +20,7 @@ class ShaderNodeBox(val diagram: ShaderFlowDiagram, val node: IShaderNode): Wind
     var selected: Boolean = false
         set(value) {
             field = value
-            background = if (value) SKIN.solidFrameSelected else DSKIN.solidFrame
+            background = if (value) SKIN.solidFrameSelected else DSKIN.whiteFrameDarkBackground
         }
 
     init {
@@ -30,10 +30,30 @@ class ShaderNodeBox(val diagram: ShaderFlowDiagram, val node: IShaderNode): Wind
 
         node.outputs.iterate {
             val label = ShaderOutputView(this, it)
-            content.add(Actor())
-            content.add(Label(it.name)).align(Align.right).padRight(5f)
+            content.add(Actor().also { it.touchable = Touchable.Disabled })
+
+            content.add(Label(camelCaseToSpaces(it.name).lowercase()).also {
+                it.touchable = Touchable.Disabled
+                it.lineAlign = 1
+            }).padRight(5f).growX()
             content.add(label).newRow()
             outputs.add(label)
+        }
+
+        // init shader input names
+        node.componentDescriptor.properties.values.forEach {
+            it.getValue(node)
+        }
+
+        node.inputs.iterate { input ->
+            val inputLabel = ShaderInputView(this, input)
+            content.add(inputLabel)
+            content.add(Label(camelCaseToSpaces(input.name).lowercase()).also {
+                it.touchable = Touchable.Disabled
+                it.lineAlign = -1
+            }).padLeft(5f).growX()
+            content.add(Actor().also { it.touchable = Touchable.Disabled }).newRow()
+            inputs.add(inputLabel)
         }
 
         addListener(object : ClickListener() {
@@ -42,33 +62,18 @@ class ShaderNodeBox(val diagram: ShaderFlowDiagram, val node: IShaderNode): Wind
             }
         })
 
-        // TODO
-//        if (node is Op2Node) {
-//            node.input.forEach {
-//                val label = ShaderInput(this, it.key)
-//                content.add(label)
-//                content.add(Label(it.key).apply { lineAlign = -1 }).growX().padLeft(5f)
-//                content.add(Actor()).newRow()
-//                inputs.add(label)
-//            }
-//        }
+        pack()
     }
 
     fun setupLinks() {
-        node.inputs.iterate { input ->
-            val inputLabel = ShaderInputView(this, input)
-            content.add(inputLabel)
-            content.add(Label(input.name)).align(Align.left).padLeft(5f)
-            content.add(Actor()).newRow()
-            inputs.add(inputLabel)
-
-            input.value?.also { value ->
+        inputs.iterate { input ->
+            input.input.valueOrDefault()?.also { value ->
                 diagram.boxes.firstOrNull { it.node == value.container }?.also { box ->
                     val outputLabel = box.outputs.firstOrNull { it.shaderData == value }
                     if (outputLabel != null)  {
-                        diagram.addLink(outputLabel, inputLabel)
+                        diagram.addLink(outputLabel, input)
                     } else {
-                        LOG.error("${box.name}: can't link \"${inputLabel.name}\" to \"${input.name}\"")
+                        LOG.error("${box.name}: can't link \"${input.name}\" to \"${value.name}\"")
                     }
                 }
             }

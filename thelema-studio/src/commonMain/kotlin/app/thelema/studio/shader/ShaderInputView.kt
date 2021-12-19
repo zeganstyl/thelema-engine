@@ -12,7 +12,7 @@ class ShaderInputView(val box: ShaderNodeBox, val input: IShaderNodeInput<IShade
     var link: ShaderLinkView? = null
 
     init {
-        color = ShaderNodeBox.getTypeColor(input.value?.type ?: "")
+        color = ShaderNodeBox.getTypeColor(input.valueOrDefault()?.type ?: "")
         addListener(ShaderComponentScene.shaderInputListener)
     }
 

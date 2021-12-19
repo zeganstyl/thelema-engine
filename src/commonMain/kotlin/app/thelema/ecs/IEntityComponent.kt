@@ -18,6 +18,7 @@ package app.thelema.ecs
 
 import app.thelema.json.IJsonObject
 import app.thelema.json.IJsonObjectIO
+import app.thelema.utils.LOG
 
 interface IEntityComponent: IJsonObjectIO {
     val entity: IEntity
@@ -28,10 +29,26 @@ interface IEntityComponent: IJsonObjectIO {
     val componentName: String
 
     val componentDescriptor: ComponentDescriptor<IEntityComponent>
-        get() = ECS.getDescriptorTyped(componentName)!!
+        get() = ECS.getDescriptor(componentName) ?: throw IllegalStateException("$path: descriptor is not found")
 
+    /** Component full path, for example "entity/entity:Component" */
     val path: String
         get() = if (entityOrNull != null) "${entity.path}:$componentName" else ""
+
+    fun getPropertyPath(name: String): String =
+        if (entityOrNull != null) "${entity.path}:$componentName.$name" else name
+
+    fun getComponentPropertyValue(name: String): Any? {
+        val prop = componentDescriptor.getPropertyOrNull(name)
+        if (prop == null) LOG.error("$path: property not exists: $name")
+        return prop?.getValue(this)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> propOrNull(name: String): T? = getComponentPropertyValue(name) as T?
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> prop(name: String): T = getComponentPropertyValue(name) as T
 
     fun isComponentNameAlias(name: String): Boolean = ECS.getDescriptor(name)?.componentName == componentName
 
@@ -59,10 +76,10 @@ interface IEntityComponent: IJsonObjectIO {
     }
 
     /** Get property */
-    fun getProperty(name: String): Any? = componentDescriptor.getProperty(name).getValue(this)
+    fun getProperty(name: String): Any? = componentDescriptor.getPropertyOrNull(name)?.getValue(this)
 
     @Suppress("UNCHECKED_CAST")
-    fun <T: Any> getPropertyTyped(name: String): T? = componentDescriptor.getProperty(name).getValue(this) as T?
+    fun <T: Any> getPropertyTyped(name: String): T? = componentDescriptor.getPropertyOrNull(name)?.getValue(this) as T?
 
     fun containsProperty(name: String): Boolean = false
 
@@ -109,4 +126,4 @@ interface IEntityComponent: IJsonObjectIO {
 
 inline fun <reified T: IEntityComponent> IEntityComponent.sibling(): T = entity.component()
 
-inline fun <reified T: IEntityComponent> IEntityComponent.getSiblingOrNull(): T? = entity.componentOrNull()
+inline fun <reified T: IEntityComponent> IEntityComponent.siblingOrNull(): T? = entity.componentOrNull()

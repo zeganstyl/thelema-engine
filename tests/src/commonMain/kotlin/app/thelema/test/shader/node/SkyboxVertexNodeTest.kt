@@ -45,10 +45,9 @@ class SkyboxVertexNodeTest: Test {
                         val vertexNode = addNode(SkyboxVertexNode(cameraDataNode.viewProjectionMatrix))
                         vertexNode.positionsName = "POSITION"
 
-                        val textureNode = addNode(TextureNode {
+                        val textureNode = addNode(TextureCubeNode {
                             uv = vertexNode.textureCoordinates
                             sRGB = false
-                            textureType = GLSLType.SamplerCube
                             texture = TextureCube(
                                 px = "clouds1/clouds1_px.jpg",
                                 nx = "clouds1/clouds1_nx.jpg",
@@ -61,7 +60,7 @@ class SkyboxVertexNodeTest: Test {
 
                         addNode(OutputNode {
                             vertPosition = vertexNode.clipSpacePosition
-                            fragColor = textureNode.color
+                            fragColor = textureNode.texColor
                             fadeStart = -1f
                             alphaMode = Blending.OPAQUE
                             cullFaceMode = 0

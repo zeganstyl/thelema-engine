@@ -21,7 +21,7 @@ fun main() {
         window.onload = {
             val app = JsApp(document.getElementById("canvas") as HTMLCanvasElement)
             GL.enableRequiredByDefaultExtensions()
-            IBLTest().testMain()
+            MainTest()
             app.startLoop()
         }
     } else {

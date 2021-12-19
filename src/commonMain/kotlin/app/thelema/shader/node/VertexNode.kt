@@ -138,7 +138,9 @@ class VertexNode(
         val armature = mesh.armature
         if (armature != null) {
             val matrices = armature.boneMatrices
-            if (matrices.isNotEmpty()) shader.setMatrix4(uBoneMatricesName, matrices, length = matrices.size)
+            if (matrices.isNotEmpty()) {
+                shader.setMatrix4(uBoneMatricesName, matrices, length = matrices.size)
+            }
         }
     }
 

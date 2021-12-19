@@ -28,19 +28,26 @@ object GLSL {
 
     val defaultNormal = GLSLVec3Inline(0.5f, 0.5f, 1f)
 
-    private var idCounter = 0L
+    private var idCounter = 0
 
-    fun id() = idCounter++
+    fun id(): Int {
+        val id = idCounter
+        idCounter += 1
+        return idCounter
+    }
 
     fun resetIdCounter() {
         idCounter = 0
     }
 }
 
+@ThreadLocal
 object GLSLNode {
     val vertex = VertexNode()
 
     val camera = CameraDataNode(vertex.position)
 
     val uv = UVNode()
+
+    val particleData = ParticleDataNode()
 }

@@ -3,6 +3,7 @@ package app.thelema.studio.widget
 import app.thelema.studio.*
 import app.thelema.studio.SKIN
 import app.thelema.app.APP
+import app.thelema.g2d.Batch
 import app.thelema.res.RES
 import app.thelema.ui.*
 
@@ -15,9 +16,14 @@ class StudioMenuBar: Table() {
         defaults().padLeft(5f).padRight(5f)
 
         menu("File") {
-            item("New project") {
+            item("New Project") {
                 onClick {
                     Studio.createNewProject()
+                }
+            }
+            item("New App") {
+                onClick {
+                    Studio.createNewApp()
                 }
             }
             item("New scene") {
@@ -26,18 +32,33 @@ class StudioMenuBar: Table() {
                 }
             }
             separator()
-            item("Open project") {
+            item("Open App") {
                 onClick {
                     Studio.openProjectDialog()
                 }
             }
             separator()
-            item("Save project") {
-                onClick { studio.saveProject() }
+            item("Save App") {
+                onClick { studio.saveApp() }
             }
             separator()
             item("Exit") {
                 onClick { APP.destroy() }
+            }
+        }
+        menu("Build") {
+            item("JVM App") {
+                onClick {
+                    studio.appProjectDirectory?.also {
+                        val dialog = TerminalDialog()
+                        dialog.textContent.text = "Starting build..."
+                        dialog.output = studio.fileChooser.executeCommandInTerminal(it, listOf("gradlew", "jar"))
+                        dialog.openBuildDir = {
+                            studio.fileChooser.openInFileManager(it.child("build/libs").platformPath)
+                        }
+                        dialog.show(hud!!)
+                    }
+                }
             }
         }
     }
@@ -50,8 +71,14 @@ class StudioMenuBar: Table() {
         background = SKIN.background
         pad(5f)
 
+        projectPath.lineAlign = 0
         projectPath.setEllipsis("...")
         projectPath.setEllipsis(true)
         add(projectPath).growX()
+    }
+
+    override fun draw(batch: Batch, parentAlpha: Float) {
+        super.draw(batch, parentAlpha)
+        Studio.menuBar.projectPath.text = RES.file.path
     }
 }

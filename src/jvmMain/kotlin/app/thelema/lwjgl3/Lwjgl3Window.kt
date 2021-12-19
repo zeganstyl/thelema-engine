@@ -252,9 +252,7 @@ class Lwjgl3Window(val config: Lwjgl3WindowConf) {
             executedRunnables.addAll(runnables)
             runnables.clear()
         }
-        for (runnable in executedRunnables) {
-            runnable.run()
-        }
+        executedRunnables.iterate { it.run() }
         val shouldRender = !iconified
         executedRunnables.clear()
         if (shouldRender) {

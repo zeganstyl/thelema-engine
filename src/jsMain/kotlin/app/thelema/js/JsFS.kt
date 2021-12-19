@@ -36,6 +36,9 @@ class JsFS: IFileSystem {
 
     val blobs = HashMap<String, JsBlobFile>()
 
+    override val writeAccess: Boolean
+        get() = false
+
     override fun file(path: String, location: String): IFile {
         return if (location == FileLocation.External) {
             blobs[path] ?: JsBlobFile(null, path, this)

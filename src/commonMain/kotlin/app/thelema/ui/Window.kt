@@ -83,6 +83,7 @@ open class Window(
 
         titleLabel.alignH = 0
         titleLabel.alignV = 0
+        titleLabel.lineAlign = 0
         titleLabel.setEllipsis(true)
 
         titleTable.align = Align.center

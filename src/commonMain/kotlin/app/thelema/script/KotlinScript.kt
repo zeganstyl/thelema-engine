@@ -7,9 +7,15 @@ import app.thelema.ecs.component
 import app.thelema.res.RES
 
 class KotlinScript: KotlinScriptAdapter() {
+    val scripts = RES.entity.component<BakedKotlinScripts>()
+
     override fun execute() {
         if (customMainFunctionName.isNotEmpty()) {
-            RES.entity.component<BakedKotlinScripts>().functionsMap[customMainFunctionName]?.invoke(entity)
+            scripts.functionsMap[customMainFunctionName]?.invoke(entity)
+        } else {
+            entityOrNull?.also { entity ->
+                scripts.functionsMap[entity.name]?.invoke(entity)
+            }
         }
     }
 }

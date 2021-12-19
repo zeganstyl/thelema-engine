@@ -16,6 +16,8 @@
 
 package app.thelema.shader.node
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
 import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
 import app.thelema.gl.GL
@@ -44,6 +46,13 @@ class GBufferOutputNode(): ShaderNode() {
     var alphaMode: String = Blending.OPAQUE
     var alphaCutoff: Float = 0.5f
     var cullFaceMode: Int = GL_BACK
+
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            value?.component<IRootShaderNode>()?.proxy = this
+        }
 
     init {
         fragPosition = GLSLNode.camera.viewSpacePosition

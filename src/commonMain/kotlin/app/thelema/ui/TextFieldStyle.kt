@@ -28,7 +28,7 @@ open class TextFieldStyle(
     var fontColor: Int = -1,
     var cursor: Drawable? = DSKIN.green1x1,
     var selection: Drawable? = DSKIN.white5x5SemiTransparent,
-    var background: Drawable? = DSKIN.solidFrame
+    var background: Drawable? = DSKIN.grayFrameDarkBackground
 ) {
     /** Optional.  */
     var focusedFontColor: Int? = null
@@ -40,8 +40,8 @@ open class TextFieldStyle(
     var messageFont: BitmapFont? = null
     /** Optional.  */
     var messageFontColor: Int? = Color.GRAY
-    var errorBorder: Drawable? = null
+    var errorBorder: Drawable? = DSKIN.redFrame
 
-    var focusBorder: Drawable? = null
+    var focusBorder: Drawable? = DSKIN.lightGrayFrame
     var backgroundOver: Drawable? = null
 }

@@ -20,7 +20,7 @@ package app.thelema.ui
  * @author mzechner, Nathan Sweet, zeganstyl
  */
 class ScrollPaneStyle {
-    var background: Drawable? = DSKIN.solidFrame
+    var background: Drawable? = DSKIN.whiteFrameDarkBackground
     var corner: Drawable? = null
     var hScroll: Drawable? = null
     var hScrollKnob: Drawable? = DSKIN.white5x5SemiTransparent

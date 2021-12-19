@@ -36,7 +36,6 @@ class DirectionalLight: ILight {
         set(value) {
             field = value
             node = value?.componentTyped("TransformNode") ?: TransformNode()
-            updateDirection()
         }
 
     private val nodeListener = TransformNodeListener {
@@ -101,8 +100,8 @@ class DirectionalLight: ILight {
 
     fun updateDirection() {
         if (lookAtZero) {
-            val pos = node.position
-            setDirectionFromPosition(pos.x, pos.y, pos.z)
+            val pos = node.worldPosition
+            direction.set(-pos.x, -pos.y, -pos.z).nor()
         } else {
             node.worldMatrix.getCol2Vec3(direction)
             direction.nor()

@@ -18,6 +18,7 @@ package app.thelema.anim
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
 import app.thelema.ecs.mainLoopOnUpdate
 import app.thelema.g3d.ITransformNode
 import app.thelema.math.*
@@ -171,7 +172,7 @@ class AnimationPlayer: IEntityComponent {
      */
     fun setAnimation(
         animation: IAnimation,
-        loopCount: Int = 1,
+        loopCount: Int = -1,
         speed: Float = 1f,
         duration: Float = -1f,
         offset: Float = 0f
@@ -500,3 +501,6 @@ class AnimationPlayer: IEntityComponent {
     private val tmpRotation = Vec4()
     private val tmpScale = Vec3()
 }
+
+fun IEntity.animationPlayer(block: AnimationPlayer.() -> Unit) = component(block)
+fun IEntity.animationPlayer() = component<AnimationPlayer>()

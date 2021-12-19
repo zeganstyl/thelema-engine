@@ -59,43 +59,45 @@ class FSTest: Test {
             }
         )
 
-        val local = FS.local("local-file-test.txt")
-        local.writeText("qwerty123")
-        local.readBytes(
-            ready = { bytes ->
-                if (!check("local readBytes",
-                        bytes[0].toInt() == 113,
-                        bytes[1].toInt() == 119,
-                        bytes[2].toInt() == 101,
-                        bytes[3].toInt() == 114,
-                        bytes[4].toInt() == 116,
-                        bytes[5].toInt() == 121,
-                        bytes[6].toInt() == 49,
-                        bytes[7].toInt() == 50,
-                        bytes[8].toInt() == 51
-                    )) {
-                    println("Expected: 113 119 101 114 116 121 49 50 51")
-                    print("Actual: ")
-                    //bytes.forEach { print(it.toInt()); print(" ") }
-                    println()
+        if (FS.writeAccess) {
+            val local = FS.local("local-file-test.txt")
+            local.writeText("qwerty123")
+            local.readBytes(
+                ready = { bytes ->
+                    if (!check("local readBytes",
+                            bytes[0].toInt() == 113,
+                            bytes[1].toInt() == 119,
+                            bytes[2].toInt() == 101,
+                            bytes[3].toInt() == 114,
+                            bytes[4].toInt() == 116,
+                            bytes[5].toInt() == 121,
+                            bytes[6].toInt() == 49,
+                            bytes[7].toInt() == 50,
+                            bytes[8].toInt() == 51
+                        )) {
+                        println("Expected: 113 119 101 114 116 121 49 50 51")
+                        print("Actual: ")
+                        //bytes.forEach { print(it.toInt()); print(" ") }
+                        println()
+                    }
+                },
+                error = { status ->
+                    println("local readBytes: FAILED")
+                    println("status: $status")
                 }
-            },
-            error = { status ->
-                println("local readBytes: FAILED")
-                println("status: $status")
-            }
-        )
-        local.readText(
-            ready = { text ->
-                if (!check("local readText", text == "qwerty123")) {
-                    println("Expected: qwerty123")
-                    println("Actual: $text")
+            )
+            local.readText(
+                ready = { text ->
+                    if (!check("local readText", text == "qwerty123")) {
+                        println("Expected: qwerty123")
+                        println("Actual: $text")
+                    }
+                },
+                error = { status ->
+                    println("local readText: FAILED")
+                    println("status: $status")
                 }
-            },
-            error = { status ->
-                println("local readText: FAILED")
-                println("status: $status")
-            }
-        )
+            )
+        }
     }
 }

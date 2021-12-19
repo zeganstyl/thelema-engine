@@ -5,6 +5,7 @@ import app.thelema.ecs.component
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.math.IVec3
+import app.thelema.utils.iterate
 
 class ParticleEmitter: IParticleEmitter {
     override var entityOrNull: IEntity? = null
@@ -17,8 +18,10 @@ class ParticleEmitter: IParticleEmitter {
         set(value) {
             field?.removeEmitter(this)
             field = value
-            value?.also { 
-                if (!it.emitters.contains(this)) it.addEmitter(this)
+            if (isPlaying) {
+                value?.also {
+                    if (!it.emitters.contains(this)) it.addEmitter(this)
+                }
             }
         }
 
@@ -49,6 +52,18 @@ class ParticleEmitter: IParticleEmitter {
     private val _visibleParticles = ArrayList<Int>()
     override val visibleParticles: List<Int>
         get() = _visibleParticles
+
+    override var isPlaying = true
+        set(value) {
+            field = value
+            particleSystem?.also {
+                if (value) {
+                    if (!it.emitters.contains(this)) it.addEmitter(this)
+                } else {
+                    it.removeEmitter(this)
+                }
+            }
+        }
 
     override fun updateParticles(delta: Float) {
         particleSystem?.also { particleSystem ->
@@ -91,5 +106,14 @@ class ParticleEmitter: IParticleEmitter {
 
             if (_visibleParticles.isNotEmpty()) particleSystem.requestUpdateParticleSystem()
         }
+    }
+
+    override fun destroy() {
+        particleSystem?.also { particleSystem ->
+            _visibleParticles.iterate {
+                particleSystem.shutdownParticle(it)
+            }
+        }
+        particleSystem = null
     }
 }

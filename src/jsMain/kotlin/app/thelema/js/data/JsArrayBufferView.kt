@@ -20,7 +20,7 @@ import org.khronos.webgl.ArrayBufferView
 import app.thelema.data.IDataArray
 
 /** @author zeganstyl */
-abstract class JsArrayBufferView<T>: IDataArray<T> {
+abstract class JsArrayBufferView: IDataArray {
     abstract val array: ArrayBufferView
 
     override val sourceObject: Any

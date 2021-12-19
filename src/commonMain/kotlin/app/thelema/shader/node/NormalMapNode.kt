@@ -24,10 +24,10 @@ class NormalMapNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sha
         get() = "NormalMapNode"
 
     /** normalize(cameraPosition - worldPosition), for back-facing surface */
-    var normalizedViewVector by input(GLSL.zeroFloat)
+    var normalizedViewVector by input(GLSLNode.camera.normalizedViewVector)
 
     /** World space vertex position */
-    var vertexPosition by input(GLSL.zeroFloat)
+    var vertexPosition by input(GLSLNode.vertex.position)
 
     /** Texture coordinates */
     var uv by input(GLSLNode.uv.uv)
@@ -39,28 +39,25 @@ class NormalMapNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sha
     var normalColor by input(GLSL.defaultNormal)
 
     /** Matrix 3x3 with tangent, binormal, normal vectors */
-    var tbn by input(GLSL.zeroFloat)
+    var tbn by input(GLSLNode.vertex.tbn)
 
-    val tangentResult = output(GLSLVec3("tangent"))
-    val biNormalResult = output(GLSLVec3("biNormal"))
-    val normalResult = output(GLSLVec3("normal"))
+    val tangent = output(GLSLVec3("tangent"))
+    val biNormal = output(GLSLVec3("biNormal"))
+    val normal = output(GLSLVec3("normal"))
 
     init {
-        uv = GLSLNode.uv.uv
         this.vertexPosition = vertexPosition
-        tbn = GLSLNode.vertex.tbn
-        normalizedViewVector = GLSLNode.camera.normalizedViewVector
     }
 
     override fun executionFrag(out: StringBuilder) {
-        if (normalResult.isUsed || tangentResult.isUsed || biNormalResult.isUsed) {
+        if (normal.isUsed || tangent.isUsed || biNormal.isUsed) {
             out.append("normalMapMain(${normalizedViewVector.asVec3()}, ${tbn.ref}, ${vertexPosition.asVec3()}, ${uv.asVec2()}, ${normalScale.asFloat()}, ${normalColor.asVec3()});\n")
         }
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (normalResult.isUsed || tangentResult.isUsed || biNormalResult.isUsed) {
-            out.append(normalCode(tangentResult.ref, biNormalResult.ref, normalResult.ref))
+        if (normal.isUsed || tangent.isUsed || biNormal.isUsed) {
+            out.append(normalCode(tangent.ref, biNormal.ref, normal.ref))
             out.append('\n')
         }
     }

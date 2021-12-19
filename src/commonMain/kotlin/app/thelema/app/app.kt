@@ -58,6 +58,8 @@ interface IApp {
     val isWeb
         get() = platformType == WebGLApp
 
+    var isEditorMode: Boolean
+
     fun thread(block: () -> Unit) {
         block()
     }
@@ -77,6 +79,7 @@ interface IApp {
     fun startLoop()
 }
 
+// TODO rename APP to WINDOW
 var APP: IApp = object : AbstractApp() {
     override val platformType: String
         get() = ""
@@ -93,6 +96,10 @@ var APP: IApp = object : AbstractApp() {
 
     override val time: Long
         get() = 0
+
+    override var isEditorMode: Boolean
+        get() = false
+        set(_) {}
 
     override fun messageBox(title: String, message: String) {}
     override fun loadPreferences(name: String): String = ""

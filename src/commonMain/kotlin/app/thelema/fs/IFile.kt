@@ -18,7 +18,7 @@ package app.thelema.fs
 
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
-import app.thelema.res.PROJECT_FILENAME
+import app.thelema.res.APP_ROOT_FILENAME
 
 
 /** Represents a file or directory on the filesystem, classpath, Android SD card, or Android assets directory.
@@ -98,6 +98,8 @@ interface IFile {
         }
     }
 
+    fun child(name: String, block: IFile.() -> Unit): IFile = child(name).apply(block)
+
     /** Returns a handle to the sibling with the specified name.
      * @throws RuntimeException if this file is the root.
      */
@@ -176,7 +178,7 @@ val DefaultProjectFile = object : IFile {
     override val extension: String
         get() = "thelema"
     override val name: String
-        get() = PROJECT_FILENAME
+        get() = APP_ROOT_FILENAME
     override val nameWithoutExtension: String
         get() = "project"
     override val location: String

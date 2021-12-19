@@ -27,7 +27,7 @@ class SelectBoxStyle(
     var fontColor: Int = -1,
     var background: Drawable? = null,
     var scrollStyle: ScrollPaneStyle = ScrollPaneStyle(),
-    var listStyle: ListStyle = ListStyle()
+    var listStyle: UIListStyle = UIListStyle()
 ) {
     /** Optional.  */
     var disabledFontColor: Int? = null

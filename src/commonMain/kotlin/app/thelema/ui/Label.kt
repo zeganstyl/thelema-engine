@@ -34,11 +34,11 @@ import kotlin.math.max
  */
 open class Label constructor(
     var text: CharSequence = "",
-    alignment: Int = Align.center,
+    alignment: Int = Align.left,
     color: Int = -1,
     style: LabelStyle = DSKIN.label
 ) : Widget() {
-    constructor(text: String, style: LabelStyle): this(text, Align.center, style = style)
+    constructor(text: String, style: LabelStyle): this(text, Align.left, style = style)
     constructor(style: LabelStyle): this("", style = style)
 
     var style = style

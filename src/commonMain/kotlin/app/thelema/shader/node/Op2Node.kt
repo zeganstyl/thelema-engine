@@ -87,7 +87,7 @@ class Op2Node(
         if (isFragment) {
             var f = function
             inputs.forEach {
-                f = f.replace(it.name, it.value!!.ref)
+                f = f.replace(it.name, it.valueOrDefault()!!.ref)
             }
             out.append("${result.typedRef} = $f;\n")
         }

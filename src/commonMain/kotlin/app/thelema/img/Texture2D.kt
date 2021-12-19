@@ -50,7 +50,12 @@ class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
         get() = 0
 
     private val imageListener = object : LoaderListener {
+        override fun error(resource: ILoader, status: Int) {
+            loadImage = false
+        }
+
         override fun loaded(loader: ILoader) {
+            loadImage = false
             val image = loader.sibling<IImage>()
             width = image.width
             height = image.height
@@ -70,8 +75,11 @@ class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
                     gpuUploadRequested = true
                 }
                 value?.addLoaderListener(imageListener)
+                loadImage = !(value?.isLoaded ?: true)
             }
         }
+
+    private var loadImage: Boolean = false
 
     override var pixelFormat: Int = 0
     override var internalFormat: Int = 0
@@ -85,10 +93,15 @@ class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
 
     override fun bind(unit: Int) {
         super<ITexture2D>.bind(unit)
-        if (gpuUploadRequested) {
-            gpuUploadRequested = false
+        if (loadImage) {
             image?.also { image ->
-                load(image) {  }
+                if (!(image.isLoaded || image.isLoading)) image.load()
+            }
+        }
+        if (gpuUploadRequested) {
+            image?.also { image ->
+                gpuUploadRequested = false
+                load(image)
             }
         }
     }

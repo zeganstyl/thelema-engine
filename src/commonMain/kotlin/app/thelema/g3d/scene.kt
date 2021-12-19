@@ -121,7 +121,7 @@ class Scene: IScene {
 
     private val renderBlock: (channel: String?) -> Unit = { render(it) }
 
-    private val simulationNodes = ArrayList<SimulationNode>()
+    private val simulationNodes = HashSet<SimulationNode>()
 
     private val mouseListener = object : IMouseListener {
         override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
@@ -188,10 +188,10 @@ class Scene: IScene {
     }
 
     override fun addedComponentToBranch(component: IEntityComponent) {
-        if (component is IMesh) meshes.add(component)
-        if (component is ILight) lights.add(component)
+        if (component is IMesh) if (!meshes.contains(component)) meshes.add(component)
+        if (component is ILight) if (!lights.contains(component)) lights.add(component)
         if (component is SimulationNode) simulationNodes.add(component)
-        if (component is IParticleEmitter) particleEmitters.add(component)
+        if (component is IParticleEmitter) if (!particleEmitters.contains(component)) particleEmitters.add(component)
     }
 
     override fun removedComponentFromBranch(component: IEntityComponent) {

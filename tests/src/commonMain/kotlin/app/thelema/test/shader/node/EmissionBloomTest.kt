@@ -26,7 +26,7 @@ import app.thelema.test.g3d.gltf.GLTFTestBase
 import app.thelema.utils.Color
 
 /** @author zeganstyl */
-class EmissionBloomTest: GLTFTestBase("atrocita/atrocita.gltf") {
+class EmissionBloomTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override val name: String
         get() = "Emission Bloom"
 

@@ -30,11 +30,11 @@ class PBRNode(): ShaderNode() {
     override val componentName: String
         get() = "PBRNode"
 
-    var worldPosition by input()
-    var normalizedViewVector by input()
+    var worldPosition by input(GLSLNode.vertex.position)
+    var normalizedViewVector by input(GLSLNode.camera.normalizedViewVector)
     var baseColor by input(GLSL.oneFloat)
     var alpha by inputOrNull()
-    var normal by inputOrNull()
+    var normal by input(GLSLNode.vertex.normal)
     var occlusion by inputOrNull()
     var roughness by inputOrNull()
     var metallic by inputOrNull()
@@ -152,7 +152,7 @@ class PBRNode(): ShaderNode() {
             } else {
                 baseColor.asVec4()
             }
-            out.append("${result.ref} = pbrMain(${worldPosition.asVec3()}, ${normalizedViewVector.asVec3()}, $color, ${(normal ?: GLSL.defaultNormal).asVec3()}, ${(occlusion ?: GLSL.oneFloat).asFloat()}, ${(roughness ?: GLSL.oneFloat).asFloat()}, ${(metallic ?: GLSL.zeroFloat).asFloat()}, ${(emissive ?: GLSL.zeroFloat).asVec3()});\n")
+            out.append("${result.ref} = pbrMain(${worldPosition.asVec3()}, ${normalizedViewVector.asVec3()}, $color, ${normal.asVec3()}, ${(occlusion ?: GLSL.oneFloat).asFloat()}, ${(roughness ?: GLSL.oneFloat).asFloat()}, ${(metallic ?: GLSL.zeroFloat).asFloat()}, ${(emissive ?: GLSL.zeroFloat).asVec3()});\n")
         }
     }
 
@@ -172,7 +172,11 @@ class PBRNode(): ShaderNode() {
             }
 
             out.append("${result.typedRef} = ${result.typeStr}(0.0);\n")
-            out.append(pbrCode((clipSpacePosition ?: throw IllegalStateException("PBRNode: clipSpacePosition must be set")).ref))
+            if (receiveShadows) {
+                out.append(pbrCode((clipSpacePosition ?: throw IllegalStateException("PBRNode: clipSpacePosition must be set")).ref))
+            } else {
+                out.append(pbrCode(""))
+            }
         }
     }
 

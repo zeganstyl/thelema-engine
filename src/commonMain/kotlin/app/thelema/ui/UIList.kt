@@ -30,15 +30,15 @@ import kotlin.math.max
  *
  * [Event] is fired when the list selection changes.
  *
- * The preferred size of the list is determined by the text bounds of the items and the size of the [ListStyle.selection].
+ * The preferred size of the list is determined by the text bounds of the items and the size of the [UIListStyle.selection].
  * @author mzechner, Nathan Sweet, zeganstyl
  */
-open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
+open class UIList<T>(style: UIListStyle = UIListStyle()) : Widget(), Cullable {
     constructor(block: UIList<T>.() -> Unit): this() {
         block(this)
     }
 
-    var style: ListStyle = style
+    var style: UIListStyle = style
         set(value) {
             field = value
             invalidateHierarchy()
@@ -247,7 +247,6 @@ open class UIList<T>(style: ListStyle = ListStyle()) : Widget(), Cullable {
 
     init {
         this.items = items
-        this.style = style
         setSize(prefWidth2, prefHeight2)
         addListener(object : InputListener {
             var typeTimeout: Long = 0

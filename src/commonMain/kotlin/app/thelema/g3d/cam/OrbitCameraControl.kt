@@ -66,7 +66,7 @@ class OrbitCameraControl(): IEntityComponent {
 
     var camera: ICamera = ActiveCamera
 
-    var isEnabled: Boolean = true
+    var isEnabled: Boolean = !APP.isEditorMode
 
     var target: IVec3 = Vec3()
 
@@ -155,6 +155,7 @@ class OrbitCameraControl(): IEntityComponent {
         } else {
             MOUSE.addListener(mouseListener)
         }
+
         return mouseListener
     }
 

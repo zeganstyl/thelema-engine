@@ -49,7 +49,6 @@ class Material: IMaterial {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            value?.componentOrNull<IMesh>()?.material = this@Material
             if (shader == null || shader == DEFAULT_SHADER) value?.componentOrNull<IShader>()?.also { shader = it }
         }
 

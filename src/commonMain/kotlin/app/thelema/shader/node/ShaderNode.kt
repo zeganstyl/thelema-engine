@@ -51,9 +51,7 @@ abstract class ShaderNode: IShaderNode {
         return initial
     }
 
-    override fun prepareToBuild() {
-        outputs.iterate { it.container = this }
-    }
+    override fun prepareToBuild() {}
 
     override fun shaderCompiled() {}
 
@@ -66,8 +64,12 @@ abstract class ShaderNode: IShaderNode {
 
     /** Create shader input named as property */
     @Suppress("UNCHECKED_CAST")
-    fun input(default: IShaderData = GLSL.zeroFloat) = ShaderNodeInput(this, default).also { _inputs.add(it as IShaderNodeInput<IShaderData?>) }
+    fun input(default: IShaderData = GLSL.zeroFloat) = ShaderNodeInput(this, default).also {
+        _inputs.add(it as IShaderNodeInput<IShaderData?>)
+    }
 
     /** Create shader input named as property */
-    fun inputOrNull() = ShaderNodeInputOrNull(this).also { _inputs.add(it) }
+    fun inputOrNull() = ShaderNodeInputOrNull(this).also {
+        _inputs.add(it)
+    }
 }

@@ -72,14 +72,11 @@ class Skybox: IEntityComponent {
 
     val cameraDataNode = shader.addNode(CameraDataNode(vertexNode.worldSpacePosition))
 
-    val textureNode: TextureNode by lazy {
-        shader.addNode(TextureNode {
-            sRGB = false
-            uv = vertexNode.textureCoordinates
-            textureType = GLSLType.SamplerCube
+    val textureNode = TextureCubeNode {
+        sRGB = false
+        uv = vertexNode.textureCoordinates
 
-            outputNode.fragColor = color
-        })
+        outputNode.fragColor = texColor
     }
 
     val outputNode = shader.addNode(OutputNode {

@@ -22,9 +22,14 @@ import app.thelema.fs.IFile
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
 import app.thelema.res.RES
+import app.thelema.shader.node.GLSL
+import app.thelema.shader.node.IShaderData
+import app.thelema.shader.node.IShaderNodeInput
 import app.thelema.utils.LOG
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 class ComponentDescriptor<T: IEntityComponent>(
     typeName: String,
@@ -59,7 +64,10 @@ class ComponentDescriptor<T: IEntityComponent>(
         if (properties.containsKey(name)) throw IllegalStateException("Property descriptor \"$name\" already exists")
     }
 
-    fun getProperty(name: String): IPropertyDescriptor<T, Any?> = properties[name]!!
+    fun getProperty(name: String): IPropertyDescriptor<T, Any?> = properties[name] ?:
+    throw IllegalArgumentException("ComponentDescriptor ($componentName): property \"$name\" not found")
+
+    fun getPropertyOrNull(name: String): IPropertyDescriptor<T, Any?>? = properties[name]
 
     /** Define property */
     @Suppress("UNCHECKED_CAST")
@@ -284,18 +292,15 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
     })
 
-    fun string(property: KMutableProperty1<T, String>) = property(object : IPropertyDescriptor<T, String> {
+    fun string(property: KMutableProperty1<T, String>, default: String = "") = property(object : IPropertyDescriptor<T, String> {
         override val name: String = property.name
         override val type = PropertyType.String
         override fun setValue(component: T, value: String) = property.set(component, value)
         override fun getValue(component: T): String = property.get(component)
-        override fun default(): String = ""
+        override fun default(): String = default
         override fun readJson(component: T, json: IJsonObject) = property.set(component, json.string(name, default()))
         override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
-
-    fun stringEnum(name: String, values: List<String>, get: T.() -> String, set: T.(value: String) -> Unit) =
-        property(StringEnumPropertyDesc(name, values, get, set))
 
     fun stringEnum(property: KMutableProperty1<T, String>, values: List<String>) =
         property(StringEnumPropertyDesc2(property, values))
@@ -465,4 +470,55 @@ class ComponentDescriptor<T: IEntityComponent>(
     inline fun <reified V: IEntityComponent> refAbs(property: KMutableProperty1<T, V?>) {
         refAbs(property, V::class.simpleName!!)
     }
+
+    fun shaderNodeInput(property: KMutableProperty1<T, IShaderData>) = property(object : IPropertyDescriptor<T, IShaderData> {
+        override val name: String = property.name
+        override val type = PropertyType.ShaderNodeInput
+        override fun setValue(component: T, value: IShaderData) = property.set(component, value)
+        override fun getValue(component: T): IShaderData = property.get(component)
+        override fun default(): IShaderData = GLSL.zeroFloat
+        override fun readJson(component: T, json: IJsonObject) {
+            val path = json.string(name, "")
+            val entity = component.entityOrNull
+            if (path.isNotEmpty() && entity != null) {
+                val value = RES.entity.makePathToProperty(path)
+                if (value != null) property.set(component, value as IShaderData)
+            }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            val data = property.get(component)
+            val node = data.container ?: return
+            if (node.entityOrNull != null) json[name] = node.getPropertyPath(data.name)
+        }
+    })
+
+    fun shaderNodeInputOrNull(property: KMutableProperty1<T, IShaderData?>) = property(object : IPropertyDescriptor<T, IShaderData?> {
+        override val name: String = property.name
+        override val type = PropertyType.ShaderNodeInput
+        override fun setValue(component: T, value: IShaderData?) = property.set(component, value)
+        override fun getValue(component: T): IShaderData? = property.get(component)
+        override fun default(): IShaderData? = null
+        override fun readJson(component: T, json: IJsonObject) {
+            val path = json.string(name, "")
+            val entity = component.entityOrNull
+            if (path.isNotEmpty() && entity != null) {
+                property.set(component, RES.entity.makePathToPropertyTyped(path))
+            }
+        }
+        override fun writeJson(component: T, json: IJsonObject) {
+            val data = property.get(component)
+            val node = data?.container ?: return
+            json[name] = node.getPropertyPath(data.name)
+        }
+    })
+
+    fun shaderNodeOutput(property: KProperty1<T, IShaderData>) = property(object : IPropertyDescriptor<T, IShaderData> {
+        override val name: String = property.name
+        override val type = PropertyType.ShaderNodeOutput
+        override fun setValue(component: T, value: IShaderData) {}
+        override fun getValue(component: T): IShaderData = property.get(component)
+        override fun default(): IShaderData = GLSL.zeroFloat
+        override fun readJson(component: T, json: IJsonObject) {}
+        override fun writeJson(component: T, json: IJsonObject) {}
+    })
 }

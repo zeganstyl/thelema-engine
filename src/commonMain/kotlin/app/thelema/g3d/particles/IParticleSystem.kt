@@ -19,8 +19,6 @@ interface IParticleSystem: IEntityComponent {
 
     val particleEffects: List<IParticleEffect>
 
-    val shader: IShader
-
     val particlesData: MutableMap<String, MutableList<Any>>
 
     var bufferReserve: Float
