@@ -22,7 +22,6 @@ import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.terrain.Terrain
 import app.thelema.g3d.terrain.TerrainLevel
 import app.thelema.g3d.terrain.TerrainListener
-import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
@@ -87,11 +86,11 @@ uniform sampler2D gChannelDisp;
 uniform sampler2D rock;
 uniform sampler2D rockDisp;
 
-const float colorMapScale = 100.0;
-const float colorMapScaleLarge = colorMapScale * 0.25;
+const float colorMapScale = 50.0;
+const float colorMapScaleLarge = colorMapScale * 1.0;
 
 vec4 getTextureValue(sampler2D tex, vec2 uv) {
-    return (texture2D(tex, uv * colorMapScale) + texture2D(tex, uv * 0.25)) * 0.5;
+    return vec4((texture2D(tex, uv * colorMapScale).rgb * 0.5 + texture2D(tex, uv * 1.0).rgb * 0.5), 1.0);
 }
 
 vec4 blend(vec4 tex1, float a1, float d1, vec4 tex2, float a2, float d2) {
@@ -101,7 +100,7 @@ vec4 blend(vec4 tex1, float a1, float d1, vec4 tex2, float a2, float d2) {
     float b1 = max(d1 + a1 - ma, 0.0);
     float b2 = max(d2 + a2 - ma, 0.0);
 
-    return (tex1 * b1 + tex2 * b2) / (b1 + b2);
+    return vec4((tex1.rgb * b1 + tex2.rgb * b2) / (b1 + b2), 1.0);
 }
 
 void main() {
@@ -193,7 +192,7 @@ void main() {
         APP.onRender = {
             control.updateNow()
 
-            terrain.update(ActiveCamera.position)
+            terrain.update(ActiveCamera.eye)
 
             terrainShader.bind()
             terrainShader["viewProj"] = ActiveCamera.viewProjectionMatrix

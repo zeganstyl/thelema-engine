@@ -24,11 +24,9 @@ import app.thelema.math.*
 import app.thelema.res.RES
 import app.thelema.shader.node.GLSL
 import app.thelema.shader.node.IShaderData
-import app.thelema.shader.node.IShaderNodeInput
 import app.thelema.utils.LOG
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 class ComponentDescriptor<T: IEntityComponent>(
@@ -76,17 +74,6 @@ class ComponentDescriptor<T: IEntityComponent>(
         properties[descriptor.name] = descriptor as IPropertyDescriptor<T, Any?>
         return descriptor
     }
-
-    /** Define boolean property */
-    fun bool(name: String, get: T.() -> Boolean, set: T.(value: Boolean) -> Unit) = property(object : IPropertyDescriptor<T, Boolean> {
-        override val name: String = name
-        override val type = PropertyType.Bool
-        override fun setValue(component: T, value: Boolean) = set(component, value)
-        override fun getValue(component: T): Boolean = get(component)
-        override fun default(): Boolean = false
-        override fun readJson(component: T, json: IJsonObject) = set(component, json.bool(name, default()))
-        override fun writeJson(component: T, json: IJsonObject) { json[name] = component.get() }
-    })
 
     fun bool(property: KMutableProperty1<T, Boolean>, default: Boolean = false) = property(object : IPropertyDescriptor<T, Boolean> {
         override val name: String = property.name
@@ -140,25 +127,6 @@ class ComponentDescriptor<T: IEntityComponent>(
         override fun writeJson(component: T, json: IJsonObject) { json[name] = property.get(component) }
     })
 
-    /** Define 2-dimensional float vector property */
-    fun vec2(name: String, get: T.() -> IVec2, set: T.(value: IVec2) -> Unit) = property(object : IPropertyDescriptor<T, IVec2> {
-        override val name: String = name
-        override val type = PropertyType.Vec2
-        override fun setValue(component: T, value: IVec2) = set(component, value)
-        override fun getValue(component: T): IVec2 = get(component)
-        override fun default(): IVec2 = MATH.Zero2
-        override fun readJson(component: T, json: IJsonObject) {
-            json.array(name) { set(component, Vec2(float(0, 0f), float(1, 0f))) }
-        }
-        override fun writeJson(component: T, json: IJsonObject) {
-            get(component).also {
-                if (it.x != 0f || it.y != 0f) {
-                    json.setArray(name) { add(it.x, it.y) }
-                }
-            }
-        }
-    })
-
     fun vec2(property: KMutableProperty1<T, IVec2>) = property(object : IPropertyDescriptor<T, IVec2> {
         override val name: String = property.name
         override val type = PropertyType.Vec2
@@ -177,31 +145,12 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
-    /** Define 3-dimensional float vector property */
-    fun vec3(name: String, get: T.() -> IVec3, set: T.(value: IVec3) -> Unit) = property(object : IPropertyDescriptor<T, IVec3> {
-        override val name: String = name
-        override val type = PropertyType.Vec3
-        override fun setValue(component: T, value: IVec3) = set(component, value)
-        override fun getValue(component: T): IVec3 = get(component)
-        override fun default(): IVec3 = MATH.Zero3
-        override fun readJson(component: T, json: IJsonObject) {
-            json.array(name) { set(component, Vec3(float(0, 0f), float(1, 0f), float(2, 0f))) }
-        }
-        override fun writeJson(component: T, json: IJsonObject) {
-            get(component).also {
-                if (it.x != 0f || it.y != 0f || it.z != 0f) {
-                    json.setArray(name) { add(it.x, it.y, it.z) }
-                }
-            }
-        }
-    })
-
-    fun vec3(property: KMutableProperty1<T, IVec3>) = property(object : IPropertyDescriptor<T, IVec3> {
+    fun vec3(property: KMutableProperty1<T, IVec3>, default: IVec3 = MATH.Zero3) = property(object : IPropertyDescriptor<T, IVec3> {
         override val name: String = property.name
         override val type = PropertyType.Vec3
         override fun setValue(component: T, value: IVec3) = property.set(component, value)
         override fun getValue(component: T): IVec3 = property.get(component)
-        override fun default(): IVec3 = MATH.Zero3
+        override fun default(): IVec3 = default
         override fun readJson(component: T, json: IJsonObject) {
             json.array(name) { property.set(component, Vec3(float(0, 0f), float(1, 0f), float(2, 0f))) }
         }
@@ -214,36 +163,17 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
-    fun vec3(name: String, default: IVec3, get: T.() -> IVec3, set: T.(value: IVec3) -> Unit) = property(object : IPropertyDescriptor<T, IVec3> {
-        override val name: String = name
-        override val type = PropertyType.Vec3
-        override fun setValue(component: T, value: IVec3) = set(component, value)
-        override fun getValue(component: T): IVec3 = get(component)
-        override fun default(): IVec3 = default
-        override fun readJson(component: T, json: IJsonObject) {
-            json.array(name) { set(component, Vec3(float(0, default.x), float(1, default.y), float(2, default.z))) }
-        }
-        override fun writeJson(component: T, json: IJsonObject) {
-            get(component).also {
-                if (it.x != default.x || it.y != default.y || it.z != default.z) {
-                    json.setArray(name) { add(it.x, it.y, it.z) }
-                }
-            }
-        }
-    })
-
-    /** Define 4-dimensional float vector property */
-    fun vec4(name: String, get: T.() -> IVec4, set: T.(value: IVec4) -> Unit) = property(object : IPropertyDescriptor<T, IVec4> {
-        override val name: String = name
+    fun vec4(property: KMutableProperty1<T, IVec4>) = property(object : IPropertyDescriptor<T, IVec4> {
+        override val name: String = property.name
         override val type = PropertyType.Vec4
-        override fun setValue(component: T, value: IVec4) = set(component, value)
-        override fun getValue(component: T): IVec4 = get(component)
+        override fun setValue(component: T, value: IVec4) = property.set(component, value)
+        override fun getValue(component: T): IVec4 = property.get(component)
         override fun default(): IVec4 = MATH.Zero3One1
         override fun readJson(component: T, json: IJsonObject) {
-            json.array(name) { set(component, Vec4(float(0, 0f), float(1, 0f), float(2, 0f), float(3, 1f))) }
+            json.array(name) { property.set(component, Vec4(float(0, 0f), float(1, 0f), float(2, 0f), float(3, 1f))) }
         }
         override fun writeJson(component: T, json: IJsonObject) {
-            get(component).also {
+            property.get(component).also {
                 if (it.x != 0f || it.y != 0f || it.z != 0f || it.w != 1f) {
                     json.setArray(name) { add(it.x, it.y, it.z, it.w) }
                 }
@@ -251,9 +181,9 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
-    fun vec4(property: KMutableProperty1<T, IVec4>) = property(object : IPropertyDescriptor<T, IVec4> {
+    fun quaternion(property: KMutableProperty1<T, IVec4>) = property(object : IPropertyDescriptor<T, IVec4> {
         override val name: String = property.name
-        override val type = PropertyType.Vec4
+        override val type = PropertyType.Quaternion
         override fun setValue(component: T, value: IVec4) = property.set(component, value)
         override fun getValue(component: T): IVec4 = property.get(component)
         override fun default(): IVec4 = MATH.Zero3One1
@@ -407,31 +337,6 @@ class ComponentDescriptor<T: IEntityComponent>(
         }
     })
 
-    /** Define absolute reference-property to component
-     * @param name property name
-     * @param requiredComponent component name
-     * @param get get component reference from this component's property
-     * @param set set component reference to this component's property */
-    @Suppress("UNCHECKED_CAST")
-    fun <V: IEntityComponent> refAbs(name: String, requiredComponent: String, get: T.() -> V?, set: T.(value: V?) -> Unit) = property(object : IPropertyDescriptor<T, V?> {
-        override val name: String = name
-        override val type = ComponentRefType(requiredComponent)
-        override fun setValue(component: T, value: V?) = set(component, value)
-        override fun getValue(component: T): V? = get(component)
-        override fun default(): V? = null
-        override fun readJson(component: T, json: IJsonObject) {
-            val path = json.string(name, "")
-            val entity = component.entityOrNull
-            if (path.isNotEmpty() && entity != null) {
-                set(component, RES.entity.makePath(path).componentTyped<V>(requiredComponent))
-            }
-        }
-        override fun writeJson(component: T, json: IJsonObject) {
-            val path = (get(component) as IEntityComponent?)?.entityOrNull?.path ?: ""
-            if (path.isNotEmpty()) json[name] = path
-        }
-    })
-
     fun <V: IEntityComponent> refAbs(property: KMutableProperty1<T, V?>, requiredComponent: String) = property(object : IPropertyDescriptor<T, V?> {
         override val name: String = property.name
         override val type = ComponentRefType(requiredComponent)
@@ -461,10 +366,6 @@ class ComponentDescriptor<T: IEntityComponent>(
 
     inline fun <reified V: IEntityComponent> ref(property: KMutableProperty1<T, V?>) {
         ref(property, V::class.simpleName!!)
-    }
-
-    inline fun <reified V: IEntityComponent> refAbs(name: String, noinline get: T.() -> V?, noinline set: T.(value: V?) -> Unit) {
-        refAbs(name, V::class.simpleName!!, get, set)
     }
 
     inline fun <reified V: IEntityComponent> refAbs(property: KMutableProperty1<T, V?>) {

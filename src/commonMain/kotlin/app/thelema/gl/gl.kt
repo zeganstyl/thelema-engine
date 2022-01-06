@@ -114,6 +114,8 @@ interface IGL {
     /** [OpenGL API documentation](https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glDepthMask.xml) */
     var isDepthMaskEnabled: Boolean
 
+    var lineWidth: Float
+
     fun initGL() {
         throw NotImplementedError()
     }

@@ -129,7 +129,6 @@ void main() {
     override fun prepareShader(mesh: IMesh, scene: IScene?) {
         super.prepareShader(mesh, scene)
         set("viewProj", ActiveCamera.viewProjectionMatrix)
-        set("viewDirection", ActiveCamera.direction)
 
         val color = color
         if (color != null) set("color", color)
@@ -142,7 +141,7 @@ void main() {
 
         val lightDirection = lightDirection
         if (lightDirection != null) {
-            lightDirection.set(ActiveCamera.direction).scl(-1f)
+            lightDirection.set(ActiveCamera.node.position).nor()
             set("lightDirection", lightDirection)
         }
         set("lightIntensity", lightIntensity)

@@ -38,11 +38,7 @@ class CylinderMeshTest: Test {
     override fun testMain() {
         val shader = SimpleShader3D()
 
-        val mesh = CylinderMesh {
-            radius = 0.5f
-            length = 2f
-            divisions = 16
-        }
+        val mesh = CylinderMesh {}
 
         val control = OrbitCameraControl()
 

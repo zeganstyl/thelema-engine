@@ -40,53 +40,40 @@ object Attachments {
     }
 
     /** Depth as attachment */
-    fun depth(
-        pixelFormat: Int = GL_DEPTH_COMPONENT,
-        internalFormat: Int = GL_DEPTH_COMPONENT32F,
-        type: Int = GL_FLOAT,
-        mipmapLevel: Int = 0
-    ) = FrameBufferAttachment2D {
+    fun depth() = FrameBufferAttachment2D {
         this.attachment = GL_DEPTH_ATTACHMENT
-        this.internalFormat = internalFormat
-        this.pixelFormat = pixelFormat
-        this.type = type
-        this.mipmapLevel = mipmapLevel
+        this.internalFormat = GL_DEPTH_COMPONENT32F
+        this.pixelFormat = GL_DEPTH_COMPONENT
+        this.type = GL_FLOAT
+        this.mipmapLevel = 0
     }
 
-    fun depthStencil(
-        pixelFormat: Int = GL_DEPTH_STENCIL,
-        internalFormat: Int = GL_DEPTH24_STENCIL8,
-        type: Int = GL_UNSIGNED_INT_24_8,
-        mipmapLevel: Int = 0
-    ) = FrameBufferAttachment2D {
+    fun depthStencil() = FrameBufferAttachment2D {
         this.attachment = GL_DEPTH_STENCIL_ATTACHMENT
-        this.internalFormat = internalFormat
-        this.pixelFormat = pixelFormat
-        this.type = type
-        this.mipmapLevel = mipmapLevel
+        this.internalFormat = GL_DEPTH24_STENCIL8
+        this.pixelFormat = GL_DEPTH_STENCIL
+        this.type = GL_UNSIGNED_INT_24_8
+        this.mipmapLevel = 0
     }
 
     /** Write-only high-speed depth buffer */
-    fun depthRenderBuffer(internalFormat: Int = GL_DEPTH_COMPONENT16, handle: Int = 0) =
-        RenderBufferAttachment(
-            glHandle = handle,
-            internalFormat = internalFormat,
+    fun depthRenderBuffer() = RenderBufferAttachment(
+            glHandle = 0,
+            internalFormat = if (GL.glesMajVer >= 3) GL_DEPTH_COMPONENT32F else GL_DEPTH_COMPONENT16,
             attachment = GL_DEPTH_ATTACHMENT
         )
 
     /** Write-only high-speed stencil buffer */
-    fun stencilRenderBuffer(internalFormat: Int = GL_STENCIL_INDEX8, handle: Int = 0) =
-        RenderBufferAttachment(
-            glHandle = handle,
-            internalFormat = internalFormat,
+    fun stencilRenderBuffer() = RenderBufferAttachment(
+            glHandle = 0,
+            internalFormat = GL_STENCIL_INDEX8,
             attachment = GL_STENCIL_ATTACHMENT
         )
 
     /** Write-only high-speed depth stencil buffer. */
-    fun depthStencilRenderBuffer(internalFormat: Int = GL_DEPTH24_STENCIL8, handle: Int = 0) =
-        RenderBufferAttachment(
-            glHandle = handle,
-            internalFormat = internalFormat,
+    fun depthStencilRenderBuffer() = RenderBufferAttachment(
+            glHandle = 0,
+            internalFormat = GL_DEPTH24_STENCIL8,
             attachment = GL_DEPTH_STENCIL_ATTACHMENT
         )
 }

@@ -17,7 +17,7 @@
 package app.thelema.math
 
 /** @author zeganstyl */
-open class Vec3(
+data class Vec3(
     override var x: Float = 0f,
     override var y: Float = 0f,
     override var z: Float = 0f

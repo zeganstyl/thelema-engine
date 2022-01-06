@@ -16,7 +16,6 @@
 
 package app.thelema.test.phys
 
-
 import app.thelema.app.APP
 import app.thelema.ecs.Entity
 import app.thelema.g3d.cam.orbitCameraControl
@@ -24,7 +23,6 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.sphereMesh
 import app.thelema.g3d.scene
 import app.thelema.gl.mesh
-import app.thelema.math.MATH
 import app.thelema.phys.*
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -86,11 +84,11 @@ class SphereShapeTest: Test {
                 startSimulation()
 
                 addPhysicsWorldListener(object: IPhysicsWorldListener {
-                    override fun collisionBegin(contact: IBodyContact) {
+                    override fun contactBegin(contact: IBodyContact) {
                         LOG.info("begin contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
 
-                    override fun collisionEnd(contact: IBodyContact) {
+                    override fun contactEnd(contact: IBodyContact) {
                         LOG.info("end contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
                 })

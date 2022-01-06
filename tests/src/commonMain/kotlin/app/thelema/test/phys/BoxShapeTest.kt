@@ -23,7 +23,6 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.boxMesh
 import app.thelema.g3d.scene
 import app.thelema.gl.mesh
-import app.thelema.math.MATH
 import app.thelema.phys.*
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -69,7 +68,7 @@ class BoxShapeTest: Test {
                 rigidBody {
                     node.position.set(1.25f, 0f, 0f)
                     isStatic = true
-                    onCollision { contact, body, other ->
+                    onContact { contact, body, other ->
                         LOG.info("${body.entity.name} collided with ${other.entity.name}, depth = ${contact.depth}, normal = ${contact.normal}")
                     }
                 }
@@ -88,11 +87,11 @@ class BoxShapeTest: Test {
                 startSimulation()
 
                 addPhysicsWorldListener(object: IPhysicsWorldListener {
-                    override fun collisionBegin(contact: IBodyContact) {
+                    override fun contactBegin(contact: IBodyContact) {
                         LOG.info("begin contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
 
-                    override fun collisionEnd(contact: IBodyContact) {
+                    override fun contactEnd(contact: IBodyContact) {
                         LOG.info("end contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
                 })

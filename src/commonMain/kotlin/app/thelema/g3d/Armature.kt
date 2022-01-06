@@ -223,6 +223,8 @@ class Armature: IArmature {
                     boneMatrices[floatIndex] = tmp.values[j]
                     floatIndex++
                 }
+            } else {
+                floatIndex += 16
             }
         }
     }

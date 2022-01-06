@@ -16,32 +16,103 @@
 
 package app.thelema.jvm.ode
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
+import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.TransformNodeListener
 import app.thelema.math.IVec3
+import app.thelema.math.Vec3
 import app.thelema.phys.IRayShape
-import org.ode4j.ode.DMass
-import org.ode4j.ode.DRay
-import org.ode4j.ode.OdeHelper
+import app.thelema.phys.IPhysicalShape
+import org.ode4j.ode.*
+
 
 /** @author zeganstyl */
-class RayShape: SpecificShape<DRay>(), IRayShape {
-    override var length: Float = 0f
+class RayShape: OdeShapeAdapter<DRay>(), IRayShape {
+    var contacts = DContactGeomBuffer(1)
+
+    override var length: Float = 1f
         set(value) {
             field = value
             geom?.length = value.toDouble()
         }
 
-    override fun createGeom(): DRay =
-        OdeHelper.createRay(null, length.toDouble())
+    override var position: IVec3 = Vec3()
+        set(value) {
+            field.set(value)
+            geom?.setPosition(value.x.toDouble(), value.y.toDouble(), value.z.toDouble())
+        }
 
-    override fun setRayDirection(x: Float, y: Float, z: Float) {
-        val pos = geom?.position
-        if (pos != null) geom?.set(pos.get0(), pos.get1(), pos.get2(), x.toDouble(), y.toDouble(), z.toDouble())
+    override var direction: IVec3 = Vec3(0f, 0f, 1f)
+        set(value) {
+            field.set(value)
+            updateRay()
+        }
+
+    override var directionOffset: IVec3 = Vec3(0f, 0f, 0f)
+        set(value) {
+            field.set(value)
+            updateRay()
+        }
+
+    override var useTransformNode: Boolean = true
+        set(value) {
+            if (field != value) {
+                field = value
+                node = if (value) entityOrNull?.component() else null
+            }
+        }
+
+    var node: ITransformNode? = null
+        set(value) {
+            if (field != value) {
+                field?.addListener(nodeListener)
+                field = value
+                value?.addListener(nodeListener)
+            }
+        }
+
+    private val nodeListener = object : TransformNodeListener {
+        override fun worldMatrixChanged(node: ITransformNode) {
+            if (useTransformNode) {
+                position.set(node.worldPosition)
+                node.worldMatrix.getWorldForward(direction).nor()
+                updateRay()
+            }
+        }
     }
 
-    override fun getRayDirection(out: IVec3): IVec3 {
-        val dir = geom?.direction
-        if (dir != null) out.set(dir.get0().toFloat(), dir.get1().toFloat(), dir.get2().toFloat())
-        return out
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            if (useTransformNode) node = value?.component()
+        }
+
+    override fun updateRay() {
+        geom?.set(
+            position.x.toDouble(),
+            position.y.toDouble(),
+            position.z.toDouble(),
+            (direction.x + directionOffset.x).toDouble(),
+            (direction.y + directionOffset.y).toDouble(),
+            (direction.z + directionOffset.z).toDouble(),
+        )
+    }
+
+    override fun checkCollision(shape: IPhysicalShape): Boolean {
+        val geom = geom
+        return if (geom != null) OdeHelper.collide(geom, shape.sourceObject as DGeom, 1, contacts) != 0 else false
+    }
+
+    override fun createGeom(): DRay =
+        OdeHelper.createRay(getSpace(), length.toDouble()).also {
+            updateRay()
+        }
+
+    override fun setRayDirection(x: Float, y: Float, z: Float) {
+        direction.set(x, y, z)
+        updateRay()
     }
 
     override fun setupMass(density: Double, mass: DMass) {}

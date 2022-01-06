@@ -113,9 +113,9 @@ interface IRigidBody: IEntityComponent {
 fun IEntity.rigidBody(block: IRigidBody.() -> Unit) = component(block)
 fun IEntity.rigidBody() = component<IRigidBody>()
 
-fun IRigidBody.onCollision(block: (contact: IBodyContact, body: IRigidBody, other: IRigidBody) -> Unit): RigidBodyListener {
+fun IRigidBody.onContact(block: (contact: IBodyContact, body: IRigidBody, other: IRigidBody) -> Unit): RigidBodyListener {
     val listener = object : RigidBodyListener {
-        override fun collisionBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
+        override fun contactBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
             block(contact, body, other)
         }
     }

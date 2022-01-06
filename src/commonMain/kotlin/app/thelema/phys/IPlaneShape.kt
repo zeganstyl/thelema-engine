@@ -19,16 +19,16 @@ package app.thelema.phys
 import app.thelema.math.IVec3
 
 /** @author zeganstyl */
-interface IPlaneShape: IShape {
-    val depth: Float
+interface IPlaneShape: IPhysicalShape {
+    var depth: Float
+
+    var normal: IVec3
 
     override val componentName: String
         get() = "PlaneShape"
 
-    fun getNormal(out: IVec3)
-
-    fun setParamsD(a: Double, b: Double, c: Double, d: Double)
+    fun setParams(a: Double, b: Double, c: Double, d: Double)
 
     fun setParams(a: Float, b: Float, c: Float, d: Float) =
-        setParamsD(a.toDouble(), b.toDouble(), c.toDouble(), d.toDouble())
+        setParams(a.toDouble(), b.toDouble(), c.toDouble(), d.toDouble())
 }

@@ -37,6 +37,8 @@ abstract class FrameBufferAttachmentAdapter : IFrameBufferAttachment {
     override val glHandle: Int
         get() = texture?.textureHandle ?: 0
 
+    override var isShadowMap: Boolean = false
+
     override fun destroy() {
         texture?.destroy()
     }

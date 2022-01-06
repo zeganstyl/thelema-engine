@@ -8,8 +8,7 @@ import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.scene
-import app.thelema.gl.ScreenQuad
-import app.thelema.gl.mesh
+import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.math.*
 import app.thelema.shader.Shader

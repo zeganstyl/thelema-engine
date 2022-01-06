@@ -19,9 +19,21 @@ package app.thelema.studio
 import app.thelema.app.APP
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
-import kotlin.script.experimental.api.ScriptCompilationConfiguration
+import org.jetbrains.kotlin.mainKts.COMPILED_SCRIPTS_CACHE_DIR_ENV_VAR
+import org.jetbrains.kotlin.mainKts.COMPILED_SCRIPTS_CACHE_DIR_PROPERTY
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.PrintStream
+import kotlin.script.experimental.api.*
+import kotlin.script.experimental.dependencies.FileSystemDependenciesResolver
+import kotlin.script.experimental.host.StringScriptSource
+import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvm.JvmDependencyFromClassLoader
+import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvm.updateClasspath
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
+import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
+import kotlin.script.templates.standard.SimpleScriptTemplate
 
 object ThelemaStudioJvm {
     @JvmStatic
@@ -43,13 +55,16 @@ object ThelemaStudioJvm {
 
         val host = BasicJvmScriptingHost()
 
-        KotlinScripting.init(host, JvmDependencyFromClassLoader { app::class.java.classLoader!! })
+        KotlinScripting.init(
+            host,
+            JvmDependencyFromClassLoader { app::class.java.classLoader!! },
+        )
 
         Thread {
             println("Scripting engine is warming up...")
             val time = APP.time
             host.eval(
-                SourceCodeImp("fun main(){}", ""),
+                StringScriptSource("fun main(){}", ""),
                 ScriptCompilationConfiguration(),
                 null
             )

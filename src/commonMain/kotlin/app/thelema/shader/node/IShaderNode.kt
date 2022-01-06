@@ -30,7 +30,7 @@ interface IShaderNode: IEntityComponent {
 
     val inputs: List<IShaderNodeInput<IShaderData?>>
 
-    val outputs: List<IShaderData>
+    fun forEachOutput(block: (output: IShaderData) -> Unit)
 
     /** Before code will be generated */
     fun prepareToBuild()

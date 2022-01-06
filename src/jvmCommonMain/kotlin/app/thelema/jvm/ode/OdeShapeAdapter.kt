@@ -17,16 +17,17 @@
 package app.thelema.jvm.ode
 
 import app.thelema.ecs.*
-import app.thelema.math.IMat4
+import app.thelema.g3d.ITransformNode
+import app.thelema.math.*
 import app.thelema.phys.IRigidBody
-import app.thelema.phys.IShape
+import app.thelema.phys.IPhysicalShape
 import org.ode4j.math.DMatrix3
 import org.ode4j.ode.DGeom
 import org.ode4j.ode.DMass
 import org.ode4j.ode.DSpace
 import org.ode4j.ode.OdeHelper
 
-abstract class SpecificShape<T: DGeom>: IShape {
+abstract class OdeShapeAdapter<T: DGeom>: IPhysicalShape {
     override var entityOrNull: IEntity? = null
 
     var geom: T? = null
@@ -37,12 +38,16 @@ abstract class SpecificShape<T: DGeom>: IShape {
 
     override var body: IRigidBody? = null
 
-    override var shapeOffset: IMat4? = null
-
     override val sourceObject: Any
         get() = geom!!
 
     override var mass: Float = 1f
+
+    override var positionOffset: IVec3 = Vec3()
+        set(value) { field.set(value) }
+
+    override var rotationOffset: IVec4 = Vec4()
+        set(value) { field.set(value) }
 
     fun getWorld(): RigidBodyPhysicsWorld? =
         entityOrNull?.getRootEntity()?.componentOrNull()
@@ -62,17 +67,33 @@ abstract class SpecificShape<T: DGeom>: IShape {
                 val subMass = OdeHelper.createMass()
                 setupMass(mass.toDouble(), subMass)
 
-                shapeOffset?.also { offset ->
-                    geom.setOffsetPosition(offset.m03.toDouble(), offset.m13.toDouble(), offset.m23.toDouble())
+                val node = siblingOrNull<ITransformNode>() ?: entityOrNull?.parentEntity?.componentOrNull()
+                val pos = node?.worldPosition
+
+                if (pos != null || positionOffset.isNotZero) {
+                    var x = positionOffset.x
+                    var y = positionOffset.y
+                    var z = positionOffset.z
+                    if (pos != null) {
+                        x += pos.x
+                        y += pos.y
+                        z += pos.z
+                    }
+                    geom.setOffsetPosition(x.toDouble(), y.toDouble(), z.toDouble())
+                    subMass.translate(x.toDouble(), y.toDouble(), z.toDouble())
+                }
+
+                if (rotationOffset.isNotEqual(MATH.Zero3One1)) {
+                    val mat = Mat4().rotate(rotationOffset)
+                    if (node != null) mat.mulLeft(node.worldMatrix)
 
                     val rotation = DMatrix3(
-                        offset.m00.toDouble(), offset.m01.toDouble(), offset.m02.toDouble(),
-                        offset.m10.toDouble(), offset.m11.toDouble(), offset.m12.toDouble(),
-                        offset.m20.toDouble(), offset.m21.toDouble(), offset.m22.toDouble()
+                        mat.m00.toDouble(), mat.m01.toDouble(), mat.m02.toDouble(),
+                        mat.m10.toDouble(), mat.m11.toDouble(), mat.m12.toDouble(),
+                        mat.m20.toDouble(), mat.m21.toDouble(), mat.m22.toDouble()
                     )
                     geom.setOffsetWorldRotation(rotation)
                     subMass.rotate(rotation)
-                    subMass.translate(offset.m03.toDouble(), offset.m13.toDouble(), offset.m23.toDouble())
                 }
 
                 dMass.add(subMass)

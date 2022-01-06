@@ -22,7 +22,7 @@ import org.ode4j.ode.DSphere
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class SphereShape: SpecificShape<DSphere>(), ISphereShape {
+class SphereShape: OdeShapeAdapter<DSphere>(), ISphereShape {
     override var radius: Float = 1f
         set(value) {
             field = value

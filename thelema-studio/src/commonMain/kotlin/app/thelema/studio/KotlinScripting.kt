@@ -2,7 +2,6 @@ package app.thelema.studio
 
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
 import app.thelema.fs.IFile
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
@@ -99,24 +98,31 @@ object KotlinScripting {
         val list = ArrayList<IEntity>()
         traverseEntities(RES.absoluteDirectory, list)
         var functionMapFill = ""
+        val hashSet = HashSet<KotlinScriptStudio>()
         list.forEach { scriptEntity ->
             val script = scriptEntity.component("KotlinScript") as KotlinScriptStudio
-            script.file?.also { file ->
-                functionMapFill += if (file.path.contains('/')) {
-                    val functionPath = file.parent().path.replace('/', '.') + '.' + script.mainFunction
-                    "    \"$functionPath\" to { $functionPath(it) }\n"
-                } else {
-                    val functionPath = script.mainFunction
-                    "    \"$functionPath\" to { $functionPath(it) }\n"
-                }
+            if (script.file != null) hashSet.add(script)
+        }
+        hashSet.forEach { script ->
+            val file = script.file!!
+            val scriptPackage = file.parent().path.replace('/', '.')
+            functionMapFill += if (scriptPackage.isNotEmpty() && scriptPackage != RES.appPackage) {
+                val functionPath = scriptPackage + '.' + script.functionName
+                "    \"${script.functionName}\" to { $functionPath(it) },\n"
+            } else {
+                val functionPath = script.functionName
+                "    \"$functionPath\" to { $functionPath(it) },\n"
             }
         }
-        kotlinDirectory?.child("scripts.kt")?.writeText(
-            (if (bakedScriptsPackage.isEmpty()) "" else "package $bakedScriptsPackage\n\n") +
-            """import app.thelema.script.setScriptMap
+        kotlinDirectory?.also { kotlinDir ->
+            val path = RES.appPackage.replace('.', '/')
+            kotlinDir.child(path).child("scripts.kt").writeText(
+                (if (bakedScriptsPackage.isEmpty()) "" else "package $bakedScriptsPackage\n\n") +
+                        """${if (RES.appPackage.isEmpty()) "" else "package ${RES.appPackage}\n\n"}import app.thelema.script.setScriptMap
 
 fun initScripts() = setScriptMap(
 $functionMapFill)
 """)
+        }
     }
 }

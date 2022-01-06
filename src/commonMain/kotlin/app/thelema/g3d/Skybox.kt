@@ -45,25 +45,14 @@ class Skybox: IEntityComponent {
 
     val velocityShader: IShader by lazy {
         Shader {
-            addNode(velocityVertexNode)
-            addNode(velocityCameraDataNode)
             addNode(velocityOutputNode)
-        }
-    }
-
-    val velocityCameraDataNode: CameraDataNode by lazy { CameraDataNode() }
-
-    val velocityVertexNode: SkyboxVertexNode by lazy {
-        SkyboxVertexNode {
-            viewProjectionMatrix = velocityCameraDataNode.viewProjectionMatrix
-            previousViewProjectionMatrix = velocityCameraDataNode.previousViewProjectionMatrix
         }
     }
 
     val velocityOutputNode: OutputNode by lazy {
         OutputNode {
-            vertPosition = velocityVertexNode.clipSpacePosition
-            fragColor = velocityVertexNode.velocity
+            vertPosition = vertexNode.clipSpacePosition
+            fragColor = vertexNode.velocity
             fadeStart = -1f
         }
     }
@@ -72,18 +61,18 @@ class Skybox: IEntityComponent {
 
     val cameraDataNode = shader.addNode(CameraDataNode(vertexNode.worldSpacePosition))
 
+    val outputNode = shader.addNode(OutputNode {
+        vertPosition = cameraDataNode.clipSpacePosition
+        fadeStart = -1f
+        cullFaceMode = 0
+    })
+
     val textureNode = TextureCubeNode {
         sRGB = false
         uv = vertexNode.textureCoordinates
 
         outputNode.fragColor = texColor
     }
-
-    val outputNode = shader.addNode(OutputNode {
-        vertPosition = cameraDataNode.clipSpacePosition
-        fadeStart = -1f
-        cullFaceMode = 0
-    })
 
     var box = SkyboxMesh {
         mesh.material = sibling<IMaterial>().apply {
@@ -93,6 +82,7 @@ class Skybox: IEntityComponent {
 
     init {
         shader.depthMask = false
+        shader.rootNode = outputNode
     }
 
     fun setupVelocityShader() {

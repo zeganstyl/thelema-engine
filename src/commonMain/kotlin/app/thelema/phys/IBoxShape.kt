@@ -17,11 +17,10 @@
 package app.thelema.phys
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 
 /** @author zeganstyl */
-interface IBoxShape: IShape {
+interface IBoxShape: IPhysicalShape {
     var xSize: Float
     var ySize: Float
     var zSize: Float

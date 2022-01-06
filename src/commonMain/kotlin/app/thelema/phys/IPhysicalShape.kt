@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-package app.thelema.shader.node
+package app.thelema.phys
+
+import app.thelema.ecs.IEntityComponent
+import app.thelema.math.IMat4
+import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 
 /** @author zeganstyl */
-class GLSLFloatInline(var value: Float = 0f, name: String = ""): GLSLInlineBase(name) {
-    override var inlineCode: String
-        get() = asFloat()
-        set(_) {}
+interface IPhysicalShape: IEntityComponent {
+    val sourceObject: Any
+        get() = this
 
-    override val type: String
-        get() = GLSLType.Float
+    var body: IRigidBody?
 
-    override fun asFloat(): String = str(value)
-    override fun asVec2(): String {
-        val v = str(value)
-        return "vec2($v, $v)"
-    }
-    override fun asVec3(): String {
-        val v = str(value)
-        return "vec3($v, $v, $v)"
-    }
-    override fun asVec4(): String {
-        val v = str(value)
-        return "vec4($v, $v, $v, $v)"
-    }
+    var rotationOffset: IVec4
+
+    var positionOffset: IVec3
+
+    var mass: Float
 }

@@ -252,7 +252,7 @@ object ShaderComponentScene: ComponentScenePanel<IShader, ShaderNodeBox>() {
                 itemPanelTable.clearChildren()
                 if (newValue != null) itemPanelTable.add(
                     ComponentPanelProvider.getOrCreatePanel(newValue.node).also { it.isExpanded = true }
-                )
+                ).growX()
             }
 
             override fun removed(item: ShaderNodeBox) {

@@ -87,6 +87,11 @@ interface ITransformNode: IEntityComponent {
         requestTransformUpdate()
     }
 
+    fun translate(offset: IVec3) {
+        position.add(offset)
+        requestTransformUpdate()
+    }
+
     fun translateForward(distance: Float) {
         // vector normalization
         val x = worldMatrix.m02
@@ -159,9 +164,12 @@ class TransformNode: ITransformNode {
 
     var attachedTo: ITransformNode? = null
 
-    override val position: IVec3 = Vec3(0f, 0f, 0f)
-    override val rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
-    override val scale: IVec3 = Vec3(1f, 1f, 1f)
+    override var position: IVec3 = Vec3(0f, 0f, 0f)
+        set(value) { field.set(value) }
+    override var rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
+        set(value) { field.set(value) }
+    override var scale: IVec3 = Vec3(1f, 1f, 1f)
+        set(value) { field.set(value) }
     override val worldMatrix: IMat4 = Mat4()
 
     override val worldPosition: IVec3 = Vec3Mat4Translation(worldMatrix)
@@ -252,13 +260,16 @@ class TransformNode: ITransformNode {
         fun setupTransformNodeComponents() {
             ECS.descriptor({ TransformNode() }) {
                 setAliases(ITransformNode::class)
-                vec3("position", { position }) { position.set(it) }
-                vec4("rotation", { rotation }) { rotation.set(it) }
-                vec3("scale", MATH.One3, { scale }) { scale.set(it) }
+                vec3(TransformNode::position)
+                quaternion(TransformNode::rotation)
+                vec3(TransformNode::scale, MATH.One3)
                 mat4("worldMatrix", { worldMatrix }) { worldMatrix.set(it) }
 
                 descriptor({ Scene() }) {
                     setAliases(IScene::class)
+
+                    refAbs(Scene::renderingPipeline)
+                    ref(Scene::activeCamera)
 
                     descriptor({ SceneInstance() }) {
                         setAliases(ISceneInstance::class)
@@ -272,11 +283,23 @@ class TransformNode: ITransformNode {
                 descriptor { SimpleSkybox() }
                 descriptor { Skybox() }
                 descriptor({ PointLight() }) {
-                    float("range", { range }) { range = it }
-                    vec4("color", { color }) { color.set(it) }
+                    float(PointLight::range)
+                    vec3(PointLight::color)
+                    float(PointLight::intensity, 1f)
+                    bool(PointLight::isShadowEnabled, false)
+                    bool(PointLight::isLightEnabled, true)
                 }
                 descriptor({ DirectionalLight() }) {
-                    vec4("color", { color }) { color.set(it) }
+                    vec3(DirectionalLight::color)
+                    float(DirectionalLight::intensity, 1f)
+                    bool(DirectionalLight::lookAtZero, true)
+                    bool(DirectionalLight::isShadowEnabled, false)
+                    bool(DirectionalLight::isLightEnabled, true)
+                    float(DirectionalLight::lightPositionOffset, 50f)
+                    int(DirectionalLight::shadowCascadesNum, 4)
+                    int(DirectionalLight::shadowMapWidth, 1024)
+                    int(DirectionalLight::shadowMapHeight, 1024)
+                    float(DirectionalLight::shadowSoftness, 1f)
                 }
                 descriptor({ Camera() }) {
                     setAliases(ICamera::class)

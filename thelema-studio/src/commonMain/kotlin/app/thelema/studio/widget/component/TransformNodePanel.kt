@@ -17,6 +17,7 @@
 package app.thelema.studio.widget.component
 
 import app.thelema.g3d.ITransformNode
+import app.thelema.studio.widget.QuaternionWidget
 import app.thelema.studio.widget.Vec3Widget
 import app.thelema.studio.widget.Vec4Widget
 import app.thelema.ui.TextButton
@@ -29,11 +30,10 @@ class TransformNodePanel: ComponentPanel<ITransformNode>(ITransformNode::class, 
             yField.onChanged(block)
             zField.onChanged(block)
         }
-        fieldWidget<Vec4Widget>("rotation") {
+        fieldWidget<QuaternionWidget>("rotation") {
             xField.onChanged(block)
             yField.onChanged(block)
             zField.onChanged(block)
-            wField.onChanged(block)
         }
         fieldWidget<Vec3Widget>("scale") {
             xField.onChanged(block)

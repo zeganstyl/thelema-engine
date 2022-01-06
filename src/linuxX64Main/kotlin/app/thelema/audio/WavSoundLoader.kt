@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Anton Trushkov
+ * Copyright 2020 Anton Trushkov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package app.thelema.phys
+package app.thelema.audio
 
-import app.thelema.ecs.IEntityComponent
-import app.thelema.math.IMat4
+import app.thelema.fs.IFile
 
-/** @author zeganstyl */
-interface IShape: IEntityComponent {
-    val sourceObject: Any
-        get() = this
-
-    var body: IRigidBody?
-
-    var shapeOffset: IMat4?
-
-    var mass: Float
+class WavSoundLoader(audio: OpenAL, file: IFile) : OpenALSound(audio) {
+    init {
+        if (!audio.noDevice) {
+            val input = WavData(file)
+            setup(
+                pcm = input.bytes!!,
+                channels = input.channels,
+                sampleRate = input.sampleRate
+            )
+        }
+    }
 }

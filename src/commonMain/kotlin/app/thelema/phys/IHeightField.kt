@@ -17,7 +17,7 @@
 package app.thelema.phys
 
 /** @author zeganstyl */
-interface IHeightField: IShape {
+interface IHeightField: IPhysicalShape {
     var heightProvider: HeightProvider?
 
     override val componentName: String

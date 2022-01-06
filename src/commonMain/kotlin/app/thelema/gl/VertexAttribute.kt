@@ -161,7 +161,7 @@ class VertexAttribute(
         return out
     }
 
-    override fun putBytesNext(vararg values: Int) {
+    override fun putBytesNext(vararg values: Int): IVertexAttribute {
         val bytes = buffer.bytes
         var offset = 0
         for (i in values.indices) {
@@ -169,9 +169,10 @@ class VertexAttribute(
             offset += 4
         }
         nextVertex()
+        return this
     }
 
-    override fun putShortsNext(vararg values: Int) {
+    override fun putShortsNext(vararg values: Int): IVertexAttribute {
         val bytes = buffer.bytes
         var offset = 0
         for (i in values.indices) {
@@ -179,14 +180,16 @@ class VertexAttribute(
             offset += 4
         }
         nextVertex()
+        return this
     }
 
-    override fun putIntNext(x: Int) {
+    override fun putIntNext(x: Int): IVertexAttribute {
         buffer.bytes.putBytes(positionInternal, x)
         nextVertex()
+        return this
     }
 
-    override fun putIntsNext(vararg values: Int) {
+    override fun putIntsNext(vararg values: Int): IVertexAttribute {
         val bytes = buffer.bytes
         var offset = 0
         for (i in values.indices) {
@@ -194,46 +197,54 @@ class VertexAttribute(
             offset += 4
         }
         nextVertex()
+        return this
     }
 
-    override fun putFloatNext(x: Float) {
+    override fun putFloatNext(x: Float): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal, x)
         nextVertex()
+        return this
     }
 
-    override fun setFloat(byteOffset: Int, x: Float) {
+    override fun setFloat(byteOffset: Int, x: Float): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal + byteOffset, x)
+        return this
     }
 
-    override fun setFloat(value: Float) {
+    override fun setFloat(value: Float): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal, value)
+        return this
     }
 
-    override fun setVec2(value: IVec2) {
+    override fun setVec2(value: IVec2): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal, value.x)
         buffer.bytes.putFloat(positionInternal + 4, value.y)
+        return this
     }
 
-    override fun setVec3(value: IVec3) {
+    override fun setVec3(value: IVec3): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal, value.x)
         buffer.bytes.putFloat(positionInternal + 4, value.y)
         buffer.bytes.putFloat(positionInternal + 8, value.z)
+        return this
     }
 
-    override fun setVec4(value: IVec4) {
+    override fun setVec4(value: IVec4): IVertexAttribute {
         buffer.bytes.putFloat(positionInternal, value.x)
         buffer.bytes.putFloat(positionInternal + 4, value.y)
         buffer.bytes.putFloat(positionInternal + 8, value.z)
         buffer.bytes.putFloat(positionInternal + 12, value.w)
+        return this
     }
 
-    override fun setFloats(vararg values: Float) {
+    override fun setFloats(vararg values: Float): IVertexAttribute {
         val bytes = buffer.bytes
         var offset = 0
         for (i in values.indices) {
             bytes.putFloat(positionInternal + offset, values[i])
             offset += 4
         }
+        return this
     }
 
     override fun putFloatsWithStep(step: Int, vararg values: Float) {

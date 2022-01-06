@@ -80,8 +80,8 @@ class OrbitCameraControl(): IEntityComponent {
 
     protected var pressedButton = 0
 
-    val right = Vec3()
-    val up = Vec3()
+    val left = Vec3(1f, 0f, 0f)
+    val up = Vec3(0f, 1f, 0f)
 
     var isTranslationEnabled: Boolean = true
 
@@ -188,11 +188,11 @@ class OrbitCameraControl(): IEntityComponent {
 
             camPos.set(desiredPosNormalized).scl(currentTargetDistance).add(target)
 
-            camera.position.lerp(camPos, min(translationTransition * delta2, 1f))
+            camera.node.position.lerp(camPos, min(translationTransition * delta2, 1f))
 
-            camera.lookAt(camera.position, target)
+            camera.lookAt(camera.node.position, target)
 
-            camera.viewMatrix.getRow0Vec3(right)
+            camera.viewMatrix.getRow0Vec3(left)
             camera.viewMatrix.getRow1Vec3(up)
 
             camera.node.requestTransformUpdate()
@@ -215,7 +215,7 @@ class OrbitCameraControl(): IEntityComponent {
 
         if (dRight != 0f) {
             dRight *= translationSpeed * 0.01f * currentTargetDistance
-            target.add(right.x * dRight, right.y * dRight, right.z * dRight)
+            target.add(left.x * dRight, left.y * dRight, left.z * dRight)
         }
 
         if (dUp != 0f) {
@@ -265,7 +265,7 @@ class OrbitCameraControl(): IEntityComponent {
                     val deltaY = translationSpeed * currentTargetDistance * (y - startY) / APP.height
 
                     target.add(up.x * deltaY, up.y * deltaY, up.z * deltaY)
-                    target.add(right.x * deltaX, right.y * deltaX, right.z * deltaX)
+                    target.add(left.x * deltaX, left.y * deltaX, left.z * deltaX)
                 }
             } else {
                 val dAzimuth = rotationSpeed * (x - startX) / APP.width

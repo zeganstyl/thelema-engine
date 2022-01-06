@@ -28,7 +28,7 @@ class ShaderNodeBox(val diagram: ShaderNodesDiagram, val node: IShaderNode): Win
 
         content.touchable = Touchable.ChildrenOnly
 
-        node.outputs.iterate {
+        node.forEachOutput {
             val label = ShaderOutputView(this, it)
             content.add(Actor().also { it.touchable = Touchable.Disabled })
 

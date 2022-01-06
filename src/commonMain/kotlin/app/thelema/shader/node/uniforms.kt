@@ -25,12 +25,10 @@ abstract class UniformNodeBase<T>(type: String): ShaderNode() {
     protected abstract fun setupShader(value: T)
 
     override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        if (uniform.isUsed) {
-            try {
-                setupShader(mesh.getMaterialValue(uniformName) ?: defaultValue)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        try {
+            setupShader(mesh.getMaterialValue(uniformName) ?: defaultValue)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

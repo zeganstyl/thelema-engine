@@ -16,26 +16,30 @@
 
 package app.thelema.shader.node
 
+import app.thelema.math.IVec4
+import app.thelema.math.Vec4
+
 /** @author zeganstyl */
-class GLSLVec3Inline(
-    var x: Float = 0f,
-    var y: Float = 0f,
-    var z: Float = 0f,
-    override var name: String = ""
-): GLSLInlineBase() {
+class GLSLVec4Literal(): GLSLLiteralBase() {
+    constructor(x: Float, y: Float, z: Float, w: Float): this() {
+        value.set(x, y, z, w)
+    }
+
     override var inlineCode: String
-        get() = asVec3()
+        get() = asVec4()
         set(_) {}
 
     override val type: String
-        get() = GLSLType.Vec3
+        get() = GLSLType.Vec4
 
-    override var scope: Int
-        get() = GLSLScope.Inline
-        set(_) {}
+    override val componentName: String
+        get() = "GLSLVec4Literal"
 
-    override fun asFloat(): String = str(x)
-    override fun asVec2(): String = "vec2(${str(x)}, ${str(y)})"
-    override fun asVec3(): String = "vec3(${str(x)}, ${str(y)}, ${str(z)})"
-    override fun asVec4(): String = "vec4(${str(x)}, ${str(y)}, ${str(z)}, 1.0)"
+    var value: IVec4 = Vec4()
+        set(value) { field.set(value) }
+
+    override fun asFloat(): String = str(value.x)
+    override fun asVec2(): String = "vec2(${str(value.x)}, ${str(value.y)})"
+    override fun asVec3(): String = "vec3(${str(value.x)}, ${str(value.y)}, ${str(value.z)})"
+    override fun asVec4(): String = "vec4(${str(value.x)}, ${str(value.y)}, ${str(value.z)}, ${str(value.w)})"
 }

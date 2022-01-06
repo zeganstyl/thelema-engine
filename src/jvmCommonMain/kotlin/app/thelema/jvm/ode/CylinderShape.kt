@@ -22,21 +22,21 @@ import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class CylinderShape: SpecificShape<DCylinder>(), ICylinderShape {
-    override var radius: Float = 0f
+class CylinderShape: OdeShapeAdapter<DCylinder>(), ICylinderShape {
+    override var radius: Float = 1f
         set(value) {
             field = value
-            geom?.setParams(value.toDouble(), length.toDouble())
+            geom?.setParams(radius.toDouble(), length.toDouble())
         }
 
-    override var length: Float = 0f
+    override var length: Float = 1f
         set(value) {
             field = value
-            geom?.setParams(radius.toDouble(), value.toDouble())
+            geom?.setParams(radius.toDouble(), length.toDouble())
         }
 
     override fun createGeom(): DCylinder =
-        OdeHelper.createCylinder(radius.toDouble(), length.toDouble())
+        OdeHelper.createCylinder(getSpace(), radius.toDouble(), length.toDouble())
 
     override fun setupMass(density: Double, mass: DMass) {
         mass.setCylinder(density, 2, radius.toDouble(), length.toDouble())

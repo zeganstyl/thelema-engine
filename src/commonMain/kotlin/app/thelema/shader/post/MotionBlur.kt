@@ -22,10 +22,13 @@ import app.thelema.gl.ScreenQuad
 
 /** @author zeganstyl */
 class MotionBlur(
-    blurStrength: Float = 0.5f,
+    blurStrength: Float = 1f,
     numSamples: Int = 8,
     visualizeVelocity: Float = 0f
 ): PostShader(motionBlurCode(numSamples, visualizeVelocity)) {
+    override val componentName: String
+        get() = "MotionBlur"
+
     var velocityMap: ITexture? = null
 
     var blurStrength = blurStrength

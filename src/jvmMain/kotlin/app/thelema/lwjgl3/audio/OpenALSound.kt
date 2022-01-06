@@ -16,14 +16,14 @@
 
 package app.thelema.lwjgl3.audio
 
-import app.thelema.audio.ISound
+import app.thelema.audio.ISoundLoader
 import org.lwjgl.openal.AL10
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
 
 /** @author Nathan Sweet */
-open class OpenALSound(private val audio: OpenAL) : ISound {
+open class OpenALSound(private val audio: OpenAL) : ISoundLoader {
     private var bufferID = -1
     var duration = 0f
         private set

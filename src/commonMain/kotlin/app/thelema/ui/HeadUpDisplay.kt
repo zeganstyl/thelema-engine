@@ -99,8 +99,6 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
         far = 1f
         isOrthographic = true
         isCentered = false
-        direction.set(1f, 0f, 0f)
-        up.set(0f, 1f, 0f)
         projectionMatrix.setToOrtho(0f, viewportWidth, 0f, viewportHeight, near, far)
     }
 

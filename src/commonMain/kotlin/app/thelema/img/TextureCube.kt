@@ -22,6 +22,7 @@ import app.thelema.math.IRectangle
 import app.thelema.math.Rectangle
 import app.thelema.res.RES
 import app.thelema.res.load
+import app.thelema.utils.iterate
 
 /**
  * @author zeganstyl */
@@ -70,7 +71,7 @@ class TextureCube(): Texture(GL_TEXTURE_CUBE_MAP) {
     override val depth: Int
         get() = 0
 
-    val sides: List<ITexture2D> = listOf(
+    val sides: List<TextureCubeSide> = listOf(
         TextureCubeSide(this, GL_TEXTURE_CUBE_MAP_POSITIVE_X),
         TextureCubeSide(this, GL_TEXTURE_CUBE_MAP_NEGATIVE_X),
         TextureCubeSide(this, GL_TEXTURE_CUBE_MAP_POSITIVE_Y),
@@ -91,6 +92,11 @@ class TextureCube(): Texture(GL_TEXTURE_CUBE_MAP) {
         get() = sides[4]
     val nz: ITexture2D
         get() = sides[5]
+
+    override fun bind(unit: Int) {
+        super.bind(unit)
+        sides.iterate { it.prepareImage() }
+    }
 
     override fun initTexture(color: Int) {
         for (i in 0 until 6) {
@@ -145,12 +151,17 @@ class TextureCube(): Texture(GL_TEXTURE_CUBE_MAP) {
             }
         }
         this.px.image = RES.load(px)
+        this.nx.image = RES.load(nx)
+        this.py.image = RES.load(py)
+        this.ny.image = RES.load(ny)
+        this.pz.image = RES.load(pz)
+        this.nz.image = RES.load(nz)
         //this.px.load(px, mipLevel, error, checkComplete)
-        this.nx.load(nx, mipLevel, error, checkComplete)
-        this.py.load(py, mipLevel, error, checkComplete)
-        this.ny.load(ny, mipLevel, error, checkComplete)
-        this.pz.load(pz, mipLevel, error, checkComplete)
-        this.nz.load(nz, mipLevel, error, checkComplete)
+//        this.nx.load(nx, mipLevel, error, checkComplete)
+//        this.py.load(py, mipLevel, error, checkComplete)
+//        this.ny.load(ny, mipLevel, error, checkComplete)
+//        this.pz.load(pz, mipLevel, error, checkComplete)
+//        this.nz.load(nz, mipLevel, error, checkComplete)
     }
 
     /** Helps to load sides from single image.

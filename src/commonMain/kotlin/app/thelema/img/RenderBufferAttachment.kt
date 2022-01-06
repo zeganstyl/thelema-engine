@@ -38,6 +38,9 @@ class RenderBufferAttachment(
     override val mipmapLevel: Int
         get() = 0
 
+    override val isShadowMap: Boolean
+        get() = false
+
     override fun setup(frameBuffer: IFrameBuffer) {
         if (glHandle == 0) glHandle = GL.glGenRenderbuffer()
         GL.glBindRenderbuffer(GL_RENDERBUFFER, glHandle)

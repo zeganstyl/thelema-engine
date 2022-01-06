@@ -16,6 +16,7 @@
 
 package app.thelema.math
 
+import app.thelema.utils.Color
 import kotlin.math.*
 
 /** 3-dimensional vector. Suitable for 3d-positions, normals and etc
@@ -81,6 +82,8 @@ interface IVec3 : IVec {
      * @return This vector for chaining
      */
     fun set(other: IVec2, z: Float) = set(other.x, other.y, z)
+
+    fun setColor(color: Int): IVec3 = Color.intToVec3(color, this)
 
     /** Adds the given vector to this component
      * @return This vector for chaining. */
@@ -374,6 +377,12 @@ interface IVec3 : IVec {
         if (vDot > 1f) vDot = 1f
         return acos(vDot)
     }
+
+    fun angleXZ(other: IVec3): Float =
+        atan2(x * other.z - z * other.x, x * other.x + z * other.z)
+
+    fun angleXY(other: IVec3): Float =
+        atan2(x * other.y - y * other.x, x * other.x + y * other.y)
 
     override fun copy(): IVec3 = Vec3().set(this)
 

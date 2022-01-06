@@ -42,7 +42,7 @@ package app.thelema.audio
  *
  * @author badlogicgames@gmail.com, zeganstyl
  */
-interface ISound {
+interface ISoundLoader {
     var isMuted: Boolean
         get() = false
         set(value) {}

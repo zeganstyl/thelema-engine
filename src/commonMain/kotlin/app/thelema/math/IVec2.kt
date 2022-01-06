@@ -225,8 +225,8 @@ interface IVec2: IVec {
      * (typically counter-clockwise) and between 0 and 360.
      */
     fun angle(): Float {
-        var angle = atan2(y.toDouble(), x.toDouble()).toFloat() * MATH.radDeg
-        if (angle < 0) angle += 360f
+        var angle = atan2(y.toDouble(), x.toDouble()).toFloat()
+        if (angle < 0) angle += MATH.PI2
         return angle
     }
 
@@ -234,34 +234,13 @@ interface IVec2: IVec {
      * (typically counter-clockwise.) between -180 and +180
      */
     fun angle(reference: IVec2): Float {
-        return atan2(crs(reference).toDouble(), dot(reference).toDouble()).toFloat() * MATH.radDeg
-    }
-
-    /** @return the angle in radians of this vector (point) relative to the x-axis. Angles are towards the positive y-axis.
-     * (typically counter-clockwise)
-     */
-    fun angleRad(): Float {
-        return atan2(y.toDouble(), x.toDouble()).toFloat()
-    }
-
-    /** @return the angle in radians of this vector (point) relative to the given vector. Angles are towards the positive y-axis.
-     * (typically counter-clockwise.)
-     */
-    fun angleRad(reference: IVec2): Float {
-        return atan2(crs(reference).toDouble(), dot(reference).toDouble()).toFloat()
-    }
-
-    /** Sets the angle of the vector in degrees relative to the x-axis, towards the positive y-axis (typically counter-clockwise).
-     * @param degrees The angle in degrees to set.
-     */
-    fun setAngle(degrees: Float): IVec2 {
-        return setAngleRad(degrees * MATH.degRad)
+        return atan2(crs(reference), dot(reference))
     }
 
     /** Sets the angle of the vector in radians relative to the x-axis, towards the positive y-axis (typically counter-clockwise).
      * @param radians The angle in radians to set.
      */
-    fun setAngleRad(radians: Float): IVec2 {
+    fun setAngle(radians: Float): IVec2 {
         set(len(), 0f)
         rotateRad(radians)
         return this

@@ -18,6 +18,7 @@ package app.thelema.phys
 
 /** @author zeganstyl */
 interface IPhysicsWorldListener {
-    fun collisionBegin(contact: IBodyContact) = Unit
-    fun collisionEnd(contact: IBodyContact) = Unit
+    fun contactBegin(contact: IBodyContact) = Unit
+    fun contactUpdated(contact: IBodyContact) = Unit
+    fun contactEnd(contact: IBodyContact) = Unit
 }

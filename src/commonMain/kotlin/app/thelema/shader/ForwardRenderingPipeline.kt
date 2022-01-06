@@ -18,20 +18,37 @@ package app.thelema.shader
 
 import app.thelema.app.APP
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
+import app.thelema.ecs.sibling
 import app.thelema.g3d.ShaderChannel
 import app.thelema.gl.*
 import app.thelema.img.*
 import app.thelema.shader.post.*
 import app.thelema.utils.Color
 
-class ForwardRenderingPipeline: IEntityComponent, IRenderingPipeline {
+class ForwardRenderingPipeline: IRenderingPipeline {
     override val componentName: String
         get() = "ForwardRenderingPipeline"
 
     override var entityOrNull: IEntity? = null
+        set(value) {
+            field = value
+            sibling<RenderingPipeline>().proxy = this
+            value?.also {
+                fxaa = value.component()
+                bloom = value.entity("Bloom").component()
+                bloom.apply { brightnessMap = buffer3.texture }
+                bloomThreshold = value.entity("Bloom").component()
+                motionBlur = value.component()
+                motionBlur.apply { velocityMap = buffer3.texture }
+                godRays = value.entity("GodRays").component()
+                godRays.apply { occlusionMap = buffer3.texture }
+                godRaysThreshold = value.entity("GodRays").component()
+                vignette = value.component()
+            }
+        }
 
-    var height: Int = APP.width
+    var height: Int = APP.height
     var width: Int = APP.width
 
     val buffer1: SimpleFrameBuffer by lazy { SimpleFrameBuffer(
@@ -67,25 +84,47 @@ class ForwardRenderingPipeline: IEntityComponent, IRenderingPipeline {
     var motionBlurEnabled = true
     var godRaysEnabled = false
 
-    val fxaa: FXAA by lazy { FXAA() }
+    var fxaa = FXAA()
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val vignette: Vignette by lazy { Vignette() }
+    var vignette = Vignette()
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val bloomThreshold: Threshold by lazy { Threshold() }
+    var bloomThreshold = Threshold()
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val bloom: Bloom by lazy {
-        Bloom(width, height).apply { brightnessMap = buffer3.texture }
-    }
+    var bloom = Bloom(width, height).apply { brightnessMap = buffer3.texture }
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val motionBlur: MotionBlur by lazy {
-        MotionBlur(numSamples = 16).apply { velocityMap = buffer3.texture }
-    }
+    var motionBlur = MotionBlur(numSamples = 16).apply { velocityMap = buffer3.texture }
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val godRays: GodRays by lazy {
-        GodRays().apply { occlusionMap = buffer3.texture }
-    }
+    var godRays = GodRays().apply { occlusionMap = buffer3.texture }
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val godRaysThreshold: Threshold by lazy { Threshold() }
+    var godRaysThreshold = Threshold()
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
     override fun setResolution(width: Int, height: Int) {
         this.width = width
@@ -129,6 +168,9 @@ class ForwardRenderingPipeline: IEntityComponent, IRenderingPipeline {
             swapper.render(vignette)
         }
 
+        val depthTest = GL.isDepthTestEnabled
+        GL.isDepthTestEnabled = false
         ScreenQuad.render(swapper.currentTexture, false)
+        GL.isDepthTestEnabled = depthTest
     }
 }

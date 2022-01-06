@@ -154,6 +154,14 @@ abstract class AbstractGL: IGL {
 
     protected var textureUnitCounter = 0
 
+    override var lineWidth: Float = 1f
+        set(value) {
+            if (field != value) {
+                field = value
+                glLineWidth(value)
+            }
+        }
+
     override fun enableRequiredByDefaultExtensions() {}
 
     protected abstract fun glActiveTextureBase(value: Int)

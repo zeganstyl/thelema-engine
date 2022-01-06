@@ -41,9 +41,9 @@ object ActorUtils {
         val camera = headUpDisplay.camera
         val parentWidth = headUpDisplay.width
         val parentHeight = headUpDisplay.height
-        if (actor.getX(Align.right) - camera.position.x > parentWidth / 2 / camera.zoom) actor.setPosition(camera.position.x + parentWidth / 2 / camera.zoom, actor.getY(Align.right), Align.right)
-        if (actor.getX(Align.left) - camera.position.x < -parentWidth / 2 / camera.zoom) actor.setPosition(camera.position.x - parentWidth / 2 / camera.zoom, actor.getY(Align.left), Align.left)
-        if (actor.getY(Align.top) - camera.position.y > parentHeight / 2 / camera.zoom) actor.setPosition(actor.getX(Align.top), camera.position.y + parentHeight / 2 / camera.zoom, Align.top)
-        if (actor.getY(Align.bottom) - camera.position.y < -parentHeight / 2 / camera.zoom) actor.setPosition(actor.getX(Align.bottom), camera.position.y - parentHeight / 2 / camera.zoom, Align.bottom)
+        if (actor.getX(Align.right) - camera.eye.x > parentWidth / 2 / camera.zoom) actor.setPosition(camera.eye.x + parentWidth / 2 / camera.zoom, actor.getY(Align.right), Align.right)
+        if (actor.getX(Align.left) - camera.eye.x < -parentWidth / 2 / camera.zoom) actor.setPosition(camera.eye.x - parentWidth / 2 / camera.zoom, actor.getY(Align.left), Align.left)
+        if (actor.getY(Align.top) - camera.eye.y > parentHeight / 2 / camera.zoom) actor.setPosition(actor.getX(Align.top), camera.eye.y + parentHeight / 2 / camera.zoom, Align.top)
+        if (actor.getY(Align.bottom) - camera.eye.y < -parentHeight / 2 / camera.zoom) actor.setPosition(actor.getX(Align.bottom), camera.eye.y - parentHeight / 2 / camera.zoom, Align.bottom)
     }
 }

@@ -26,10 +26,10 @@ object OpenALCodecs {
     val music = HashMap<String, (audio: OpenAL, file: IFile) -> OpenALMusic>()
 
     init {
-        sound["wav"] = { audio, file -> WavSound(audio, file) }
+        sound["wav"] = { audio, file -> WavSoundLoader(audio, file) }
         music["wav"] = { audio, file -> WavMusic(audio, file) }
 
-        sound["ogg"] = { audio, file -> OggSound(audio, file) }
+        sound["ogg"] = { audio, file -> OggSoundLoader(audio, file) }
         music["ogg"] = { audio, file -> OggMusic(audio, file) }
     }
 }

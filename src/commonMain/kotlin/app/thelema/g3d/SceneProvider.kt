@@ -10,6 +10,9 @@ class SceneProvider: ISceneProvider {
 
     var proxy: ISceneProvider? = null
 
+    override val instances: List<ISceneInstance>
+        get() = proxy?.instances ?: emptyList()
+
     override fun cancelProviding(instance: ISceneInstance) {
         proxy?.cancelProviding(instance)
     }

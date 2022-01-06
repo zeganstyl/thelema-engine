@@ -22,7 +22,6 @@ import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.g3d.terrain.GrassPatchMesh
 import app.thelema.gl.*
-import app.thelema.img.IMG
 import app.thelema.img.ImageSampler
 import app.thelema.img.Texture2D
 import app.thelema.img.image
@@ -152,8 +151,8 @@ void main() {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
-            val tileIndexX = floor(ActiveCamera.position.x / tileSize).toInt()
-            val tileIndexZ = floor(ActiveCamera.position.z / tileSize).toInt()
+            val tileIndexX = floor(ActiveCamera.eye.x / tileSize).toInt()
+            val tileIndexZ = floor(ActiveCamera.eye.z / tileSize).toInt()
 
             if (tileIndexX != indexX || tileIndexZ != indexZ) {
                 val floatView = instancesFloatView

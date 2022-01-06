@@ -71,7 +71,7 @@ class CascadedShadowMappingBaseTest: Test {
 
         val sceneCameraFrustumPoints = sceneCameraFrustum.points
 
-        lightView.setToLook(ActiveCamera.position, lightDirection, MATH.Y)
+        lightView.setToLook(ActiveCamera.node.position, lightDirection, MATH.Y)
 
         val camFar = ActiveCamera.far
 

@@ -17,13 +17,12 @@
 package app.thelema.audio
 
 import kotlinx.cinterop.*
-import app.thelema.audio.ISound
 import app.thelema.data.IByteData
 import app.thelema.ptr
 import app.thelema.uint
 
 /** @author Nathan Sweet */
-open class OpenALSound(private val audio: OpenAL) : ISound {
+open class OpenALSound(private val audio: OpenAL) : ISoundLoader {
     private var bufferID = -1
     var duration = 0f
         private set

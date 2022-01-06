@@ -22,7 +22,7 @@ import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.light.ILight
 import app.thelema.g3d.particles.IParticleEmitter
 import app.thelema.g3d.particles.IParticleSystem
-import app.thelema.gl.IMesh
+import app.thelema.gl.IRenderable
 import app.thelema.input.*
 import app.thelema.shader.IRenderingPipeline
 import app.thelema.utils.iterate
@@ -41,7 +41,7 @@ interface IScene: IEntityComponent {
 
     val lights: List<ILight>
 
-    val meshes: List<IMesh>
+    val renderables: List<IRenderable>
 
     val particleEmitters: List<IParticleEmitter>
 
@@ -85,9 +85,9 @@ class Scene: IScene {
 
     override var world: IWorld? = null
 
-    var translucentSorter: Comparator<IMesh> = Comparator { o1, o2 ->
-        val mesh1Priority = o1.material?.translucentPriority ?: Int.MIN_VALUE
-        val mesh2Priority = o2.material?.translucentPriority ?: Int.MIN_VALUE
+    var translucentSorter: Comparator<IRenderable> = Comparator { o1, o2 ->
+        val mesh1Priority = o1.translucencyPriority
+        val mesh2Priority = o2.translucencyPriority
         when {
             mesh1Priority > mesh2Priority -> 1
             mesh1Priority < mesh2Priority -> -1
@@ -99,21 +99,21 @@ class Scene: IScene {
     }
 
     // https://stackoverflow.com/questions/40082085/webgl-2-0-occlusion-query
-    var frontToBackSorter: Comparator<IMesh> = Comparator { o1, o2 ->
+    var frontToBackSorter: Comparator<IRenderable> = Comparator { o1, o2 ->
         val dst = ActiveCamera.node.worldPosition.dst2(o1.worldPosition) - ActiveCamera.node.worldPosition.dst2(o2.worldPosition)
         if (dst < 0f) 1 else if (dst > 0f) -1 else 0
     }
 
-    override val meshes = ArrayList<IMesh>()
+    override val renderables = ArrayList<IRenderable>()
 
     override val particleEmitters = ArrayList<IParticleEmitter>()
     private val particleSystems = HashSet<IParticleSystem>()
 
     override val lights = ArrayList<ILight>()
 
-    private val opaque = ArrayList<IMesh>()
-    private val masked = ArrayList<IMesh>()
-    private val translucent = ArrayList<IMesh>()
+    private val opaque = ArrayList<IRenderable>()
+    private val masked = ArrayList<IRenderable>()
+    private val translucent = ArrayList<IRenderable>()
 
     override var renderingPipeline: IRenderingPipeline? = null
 
@@ -176,26 +176,28 @@ class Scene: IScene {
     }
 
     override fun addedEntityToBranch(entity: IEntity) {
+        entity.forEachComponent { addedComponentToBranch(it) }
         entity.forEachChildEntity { child ->
             child.forEachComponentInBranch { addedComponentToBranch(it) }
         }
     }
 
     override fun removedEntityFromBranch(entity: IEntity) {
+        entity.forEachComponent { removedComponentFromBranch(it) }
         entity.forEachChildEntity { child ->
             child.forEachComponentInBranch { removedComponentFromBranch(it) }
         }
     }
 
     override fun addedComponentToBranch(component: IEntityComponent) {
-        if (component is IMesh) if (!meshes.contains(component)) meshes.add(component)
+        if (component is IRenderable) if (!renderables.contains(component)) renderables.add(component)
         if (component is ILight) if (!lights.contains(component)) lights.add(component)
         if (component is SimulationNode) simulationNodes.add(component)
         if (component is IParticleEmitter) if (!particleEmitters.contains(component)) particleEmitters.add(component)
     }
 
     override fun removedComponentFromBranch(component: IEntityComponent) {
-        if (component is IMesh) meshes.remove(component)
+        if (component is IRenderable) renderables.remove(component)
         if (component is ILight) lights.remove(component)
         if (component is SimulationNode) simulationNodes.remove(component)
         if (component is IParticleEmitter) particleEmitters.remove(component)
@@ -234,13 +236,13 @@ class Scene: IScene {
         masked.clear()
         translucent.clear()
 
-        for (i in meshes.indices) {
-            val mesh = meshes[i]
-            if (frustumCulling && mesh.boundings?.intersectsWith(mesh.worldMatrix, ActiveCamera.frustum) != false) {
-                when (mesh.material?.alphaMode) {
-                    Blending.BLEND -> translucent.add(mesh)
-                    Blending.MASK -> masked.add(mesh)
-                    else -> opaque.add(mesh)
+        for (i in renderables.indices) {
+            val renderable = renderables[i]
+            if (frustumCulling && renderable.visibleInFrustum(ActiveCamera.frustum)) {
+                when (renderable.alphaMode) {
+                    Blending.BLEND -> translucent.add(renderable)
+                    Blending.MASK -> masked.add(renderable)
+                    else -> opaque.add(renderable)
                 }
             }
         }
@@ -272,7 +274,7 @@ class Scene: IScene {
 
     override fun destroy() {
         super.destroy()
-        meshes.clear()
+        renderables.clear()
         lights.clear()
         opaque.clear()
         masked.clear()

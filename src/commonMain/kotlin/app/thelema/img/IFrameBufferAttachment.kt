@@ -39,6 +39,8 @@ interface IFrameBufferAttachment {
 
     val mipmapLevel: Int
 
+    val isShadowMap: Boolean
+
     /** Setup this attachment for frame buffer */
     fun setup(frameBuffer: IFrameBuffer)
 

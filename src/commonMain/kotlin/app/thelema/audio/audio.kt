@@ -20,7 +20,7 @@ import app.thelema.audio.mock.AudioStub
 import app.thelema.fs.IFile
 
 /** This interface encapsulates the creation and management of audio resources. It allows you to get direct access to the audio
- * hardware via the [IAudioDevice] and [IAudioRecorder] interfaces, create sound effects via the [ISound] interface
+ * hardware via the [IAudioDevice] and [IAudioRecorder] interfaces, create sound effects via the [ISoundLoader] interface
  * and play music streams via the [IMusic] interface.
  *
  *
@@ -55,7 +55,7 @@ interface IAudio {
     /**
      *
      *
-     * Creates a new [ISound] which is used to play back audio effects such as gun shots or explosions. The Sound's audio data
+     * Creates a new [ISoundLoader] which is used to play back audio effects such as gun shots or explosions. The Sound's audio data
      * is retrieved from the file specified via the [IFile]. Note that the complete audio data is loaded into RAM. You
      * should therefore not load big audio files with this methods. The current upper limit for decoded audio is 1 MB.
      *
@@ -67,13 +67,13 @@ interface IAudio {
      *
      *
      *
-     * The Sound has to be disposed if it is no longer used via the [ISound.destroy] method.
+     * The Sound has to be disposed if it is no longer used via the [ISoundLoader.destroy] method.
      *
      *
      * @return the new Sound
      * @throws RuntimeException in case the sound could not be loaded
      */
-    fun newSound(file: IFile): ISound
+    fun newSound(file: IFile): ISoundLoader
 
     /** Creates a new [IMusic] instance which is used to play back a music stream from a file. Currently supported formats are
      * WAV, MP3 and OGG. The Music instance has to be disposed if it is no longer used via the [IMusic.destroy] method.

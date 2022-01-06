@@ -85,9 +85,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         val materialEntity = material.getOrCreateEntity()
         val shaderEntity = materialEntity.entity("Default")
 
-        val shader = shaderEntity.component<Shader> {
-            version = if (gltf.conf.ibl && gltf.conf.shaderVersion < 130) 130 else gltf.conf.shaderVersion
-        }
+        val shader = shaderEntity.component<Shader>()
 
         material.shader = shader
         material.shaderChannels[ShaderChannel.Default] = shader
@@ -177,11 +175,11 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 baseColor = color
 
-                val factor = GLSLVec4Inline(color.x, color.y, color.z, color.w)
+                val factor = shader.addNode(GLSLVec4Literal(color.x, color.y, color.z, color.w))
                 baseColorValue = if (baseColorValue !== GLSL.oneFloat) {
                     val node = shader.addNode(Op2Node(baseColorValue, factor, "in1 * in2", GLSLType.Vec4))
                     alphaNodes.add(node)
-                    node.result
+                    node.opResult
                 } else {
                     factor
                 }
@@ -206,9 +204,9 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
             float("roughnessFactor") {
                 roughness = it
-                val factor = GLSLFloatInline(it)
+                val factor = shader.addNode(GLSLFloatLiteral(it))
                 roughnessValue = if (roughnessValue !== GLSL.oneFloat) {
-                    shader.addNode(Op2Node(roughnessValue, factor, "in1 * in2", GLSLType.Float)).result
+                    shader.addNode(Op2Node(roughnessValue, factor, "in1 * in2", GLSLType.Float)).opResult
                 } else {
                     factor
                 }
@@ -216,16 +214,16 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
             float("metallicFactor") {
                 metallic = it
-                val factor = GLSLFloatInline(it)
+                val factor = shader.addNode(GLSLFloatLiteral(it))
                 metallicValue = if (metallicValue !== GLSL.zeroFloat) {
-                    shader.addNode(Op2Node(metallicValue, factor, "in1 * in2", GLSLType.Float)).result
+                    shader.addNode(Op2Node(metallicValue, factor, "in1 * in2", GLSLType.Float)).opResult
                 } else {
                     factor
                 }
             }
         }
 
-        val pbrNode = shader.addNode(PBRNode().apply {
+        val pbrNode = shader.addNode(PBRNode {
             normal = normalValue
             worldPosition = vertexNode.position
             normalizedViewVector = cameraDataNode.normalizedViewVector
@@ -265,7 +263,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         }
 
         if (gltf.conf.setupVelocityShader) {
-            material.shaderChannels[ShaderChannel.Velocity] = Shader(version = gltf.conf.shaderVersion).apply {
+            material.shaderChannels[ShaderChannel.Velocity] = Shader {
                 addNode(vertexNode)
 
                 val blurCameraDataNode = addNode(CameraDataNode(vertexNode.position))
@@ -273,6 +271,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                     worldSpacePosition = vertexNode.position
                     clipSpacePosition = blurCameraDataNode.clipSpacePosition
                     previousViewProjectionMatrix = blurCameraDataNode.previousViewProjectionMatrix
+                    viewProjectionMatrix = blurCameraDataNode.viewProjectionMatrix
                     normal = vertexNode.normal
                     aBonesName = "JOINTS_"
                     aBoneWeightsName = "WEIGHTS_"
@@ -291,43 +290,51 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 //nodes.addAll(alphaNodes)
 
-                val outputNode = addNode(OutputNode(velocityNode.stretchedClipSpacePosition, alphaOp.result))
+                val outputNode = node<OutputNode> {
+                    vertPosition = velocityNode.stretchedClipSpacePosition
+                    fragColor = alphaOp.opResult
+                }
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
+                rootNode = outputNode.sibling()
             }
         }
 
         if (gltf.conf.setupDepthRendering) {
-            material.shaderChannels[ShaderChannel.Depth] = Shader(version = gltf.conf.shaderVersion).apply {
+            material.shaderChannels[ShaderChannel.Depth] = Shader {
                 addNode(vertexNode)
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
                 //nodes.addAll(alphaNodes)
 
-                val outputNode = addNode(OutputNode(depthCameraDataNode.clipSpacePosition, baseColorValue))
+                val outputNode = node<OutputNode> {
+                    vertPosition = depthCameraDataNode.clipSpacePosition
+                    fragColor = baseColorValue
+                }
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
+                rootNode = outputNode.sibling()
             }
         }
 
         val solidColor = gltf.conf.solidColor
         if (solidColor != null) {
-            material.shaderChannels[ShaderChannel.SolidColor] = Shader(version = gltf.conf.shaderVersion).apply {
+            material.shaderChannels[ShaderChannel.SolidColor] = Shader {
                 addNode(vertexNode)
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
                 //nodes.addAll(alphaNodes)
 
-                val color = GLSLVec3Inline(solidColor.x, solidColor.y, solidColor.z)
+                val color = shader.addNode(GLSLVec3Literal(solidColor.x, solidColor.y, solidColor.z))
                 val alphaCombineOp = addNode(Op2Node(color, baseColorValue, "vec4(in1, in2.a)", GLSLType.Vec4))
                 alphaCombineOp.isFragment = true
                 alphaCombineOp.isVarying = false
 
-                val outputNode = addNode(OutputNode(depthCameraDataNode.clipSpacePosition, alphaCombineOp.result))
+                val outputNode = addNode(OutputNode(depthCameraDataNode.clipSpacePosition, alphaCombineOp.opResult))
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
@@ -374,13 +381,13 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 emissiveFactor = color
 
-                val factor = GLSLVec3Inline(color.x, color.y, color.z)
+                val factor = shader.addNode(GLSLVec3Literal(color.x, color.y, color.z))
                 emissiveValue = if (emissiveValue !== GLSL.zeroFloat) {
                     val op = Op2Node(emissiveValue, factor, "in1.xyz * in2", GLSLType.Vec3)
                     op.isFragment = true
                     op.isVarying = false
                     val node = shader.addNode(op)
-                    node.result
+                    node.opResult
                 } else {
                     factor
                 }

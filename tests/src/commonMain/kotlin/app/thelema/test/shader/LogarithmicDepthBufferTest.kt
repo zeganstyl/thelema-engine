@@ -49,7 +49,7 @@ class LogarithmicDepthBufferTest: Test {
         val shader = Shader(
             vertCode = """
 attribute vec3 POSITION;
-attribute vec2 UV;
+attribute vec2 TEXCOORD_0;
 
 varying vec2 uv;
 varying float flogz;
@@ -60,7 +60,7 @@ uniform vec4 posScale;
 uniform mat4 viewProj;
 
 void main() {
-    uv = UV;
+    uv = TEXCOORD_0;
     gl_Position = viewProj * vec4(POSITION * posScale.w + posScale.xyz, 1.0);
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * Fcoef - ${ActiveCamera.near};
     flogz = 1.0 + gl_Position.w;

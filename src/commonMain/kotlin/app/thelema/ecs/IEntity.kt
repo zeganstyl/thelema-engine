@@ -130,7 +130,9 @@ interface IEntity: IJsonObjectIO {
     fun getEntityByName(name: String): IEntity?
 
     /** Search whole branch */
-    fun findEntityByName(name: String): IEntity?
+    fun findEntityByName(name: String): IEntity = findEntityByNameOrNull(name)!!
+
+    fun findEntityByNameOrNull(name: String): IEntity?
 
     fun findEntityByPredicate(predicate: (item: IEntity) -> Boolean): IEntity?
 

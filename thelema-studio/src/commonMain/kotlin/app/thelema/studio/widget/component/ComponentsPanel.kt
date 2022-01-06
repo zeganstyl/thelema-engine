@@ -55,13 +55,14 @@ class ComponentsPanel: Table() {
 
     init {
         add(HBox {
+            background = SKIN.background
             add(TextButton("Add/Remove") {
                 onClick {
                     Studio.entityWindow.entity = entity
                     hud?.also { Studio.entityWindow.show(it) }
                 }
             })
-        }).newRow()
+        }).growX().newRow()
         add(componentsListScroll).grow()
         componentsListScroll.fadeScrollBars = false
     }

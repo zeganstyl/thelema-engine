@@ -28,13 +28,11 @@ abstract class ShaderNode: IShaderNode {
 
     override var entityOrNull: IEntity? = null
 
-    protected val _inputs = ArrayList<IShaderNodeInput<IShaderData?>>(0)
+    protected open val _inputs: MutableList<IShaderNodeInput<IShaderData?>> = ArrayList(0)
     override val inputs: List<IShaderNodeInput<IShaderData?>>
         get() = _inputs
 
-    protected val _output = ArrayList<IShaderData>(0)
-    override val outputs: List<IShaderData>
-        get() = _output
+    protected open val _output: MutableList<IShaderData> = ArrayList(0)
 
     val attribute: String
         get() = if (shader.version >= 130) "in" else "attribute"
@@ -45,7 +43,11 @@ abstract class ShaderNode: IShaderNode {
     val varIn: String
         get() = if (shader.version >= 130) "in" else "varying"
 
-    protected fun output(initial: IShaderData): IShaderData {
+    override fun forEachOutput(block: (output: IShaderData) -> Unit) {
+        _output.iterate(block)
+    }
+
+    protected open fun output(initial: IShaderData): IShaderData {
         _output.add(initial)
         initial.container = this
         return initial

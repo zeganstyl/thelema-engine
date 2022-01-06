@@ -19,7 +19,6 @@ package app.thelema.shader.node
 import app.thelema.g3d.IScene
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
-import app.thelema.json.IJsonObject
 import app.thelema.math.MATH
 
 /** @author zeganstyl */
@@ -47,18 +46,18 @@ class VelocityNode(): ShaderNode() {
     val stretchedClipSpacePosition = output(GLSLVec4("stretchedPosition"))
 
     /** Current world space position. It can be taken from [VertexNode.position] */
-    var worldSpacePosition by input(GLSL.zeroFloat)
+    var worldSpacePosition by input(GLSLNode.vertex.position)
 
     /** Current clip space position. It can be taken from [CameraDataNode.clipSpacePosition] */
-    var clipSpacePosition by input(GLSL.zeroFloat)
+    var clipSpacePosition by input(GLSLNode.camera.clipSpacePosition)
 
     /** Previous clip space position. It can be taken from [CameraDataNode.previousViewProjectionMatrix] */
-    var previousViewProjectionMatrix by input(GLSL.oneFloat)
+    var previousViewProjectionMatrix by input(GLSLNode.camera.previousViewProjectionMatrix)
 
     /** Vertex shader normal, used for stretching */
-    var normal by input(GLSL.defaultNormal)
+    var normal by input(GLSLNode.vertex.normal)
 
-    var viewProjectionMatrix by input(GLSL.oneFloat)
+    var viewProjectionMatrix by input(GLSLNode.camera.viewProjectionMatrix)
 
     private val uPrevBoneMatricesName: String
         get() = "uPrevBoneMatrices$uid"
@@ -66,56 +65,17 @@ class VelocityNode(): ShaderNode() {
     private val uPrevWorldMatrixName: String
         get() = "uPrevWorldMatrix$uid"
 
+    private val uUsePrevBones: String
+        get() = "uUsePrevBones$uid"
+
     val uid: Int
         get() = 0
 
     private val hasBones
         get() = maxBones > 0 && bonesSetsNum > 0
 
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        aPositionName = json.string("aPositionName", "POSITION")
-        aBonesName = json.string("aBonesName", "JOINTS_")
-        aBoneWeightsName = json.string("aBoneWeightsName", "WEIGHTS_")
-
-        maxBones = json.int("maxBones", 0)
-        bonesSetsNum = json.int("bonesSetsNum", 1)
-        worldTransformType = when (json.string("worldTransformType")) {
-            "trs" -> TransformDataType.TRS
-            "translation" -> TransformDataType.Translation
-            "translationScale" -> TransformDataType.TranslationScale
-            "translationRotation" -> TransformDataType.TranslationRotation
-            "translationRotationY" -> TransformDataType.TranslationRotationY
-            "translationScaleProportional" -> TransformDataType.TranslationScaleProportional
-            else -> TransformDataType.None
-        }
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        if (aPositionName != "POSITION") json["aPositionName"] = aPositionName
-        if (aBonesName != "JOINTS_") json["aBonesName"] = aBonesName
-        if (aBoneWeightsName != "WEIGHTS_") json["aBoneWeightsName"] = aBoneWeightsName
-
-        if (maxBones > 0) json["maxBones"] = maxBones
-        if (bonesSetsNum != 1) json["bonesSetsNum"] = bonesSetsNum
-        if (worldTransformType != TransformDataType.None) {
-            json["worldTransformType"] = when (worldTransformType) {
-                TransformDataType.TRS -> "trs"
-                TransformDataType.Translation -> "translation"
-                TransformDataType.TranslationScale -> "translationScale"
-                TransformDataType.TranslationRotation -> "translationRotation"
-                TransformDataType.TranslationRotationY -> "translationRotationY"
-                TransformDataType.TranslationScaleProportional -> "translationScaleProportional"
-                else -> "none"
-            }
-        }
-    }
-
     private fun boneInfluenceCode(component: String, bonesName: String, weightsName: String, sumName: String = "skinning"): String {
-        return "if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * $uPrevBoneMatricesName[int($bonesName.$component)];\n"
+        return "    if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * $uPrevBoneMatricesName[int($bonesName.$component)];\n"
     }
 
     private fun skinningSetCode(out: StringBuilder, bonesName: String, weightsName: String, sumName: String = "skinning") {
@@ -130,11 +90,21 @@ class VelocityNode(): ShaderNode() {
 
         val worldMat = (mesh.previousWorldMatrix ?: mesh.worldMatrix) ?: MATH.IdentityMat4
         shader[uPrevWorldMatrixName] = worldMat
+        shader[uUsePrevBones] = mesh.armature?.previousBoneMatrices?.isNotEmpty() == true
 
         val armature = mesh.armature
         if (armature != null) {
             val prevMatrices = armature.previousBoneMatrices
             shader.setMatrix4(uPrevBoneMatricesName, prevMatrices, length = prevMatrices.size)
+        }
+    }
+
+    private fun worldTransformPos(out: StringBuilder, prevPos: String) {
+        when (worldTransformType) {
+            TransformDataType.TRS -> out.append("$prevPos = $uPrevWorldMatrixName * $prevPos;\n")
+            TransformDataType.Translation -> out.append("$prevPos.xyz = $prevPos.xyz + uTransVec4$uid.xyz;\n")
+            TransformDataType.TranslationScale -> out.append("$prevPos.xyz = $prevPos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
+            TransformDataType.TranslationRotationY -> out.append("$prevPos.xyz = rotate_vertex_position(uTransVec4$uid.xyz, uTransVec4$uid.w) + uTransVec4$uid.xyz;\n")
         }
     }
 
@@ -148,6 +118,7 @@ class VelocityNode(): ShaderNode() {
             val prevSkinningName = "prevSkinning"
 
             if (hasBones) {
+                out.append("if ($uUsePrevBones) {\n")
                 val aBonesName = aBonesName
                 val aBoneWeightsName = aBoneWeightsName
                 for (i in 0 until bonesSetsNum) {
@@ -155,14 +126,12 @@ class VelocityNode(): ShaderNode() {
                     skinningSetCode(out, "$aBonesName$index", "$aBoneWeightsName$index", prevSkinningName)
                 }
 
-                out.append("$prevPos = $prevSkinningName * $prevPos;\n")
-            }
-
-            when (worldTransformType) {
-                TransformDataType.TRS -> out.append("$prevPos = $uPrevWorldMatrixName * $prevPos;\n")
-                TransformDataType.Translation -> out.append("$prevPos.xyz = $prevPos.xyz + uTransVec4$uid.xyz;\n")
-                TransformDataType.TranslationScale -> out.append("$prevPos.xyz = $prevPos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
-                TransformDataType.TranslationRotationY -> out.append("$prevPos.xyz = rotate_vertex_position(uTransVec4$uid.xyz, uTransVec4$uid.w) + uTransVec4$uid.xyz;\n")
+                out.append("    $prevPos = $prevSkinningName * $prevPos;\n")
+                out.append("} else {\n")
+                worldTransformPos(out, prevPos)
+                out.append("}\n")
+            } else {
+                worldTransformPos(out, prevPos)
             }
 
             val prevPositionRef = prevPosition.ref
@@ -227,6 +196,7 @@ if (dot($posRef - ${prevPosition.ref}, ${normal.asVec3()}) > 0.0) {
 
             if (hasBones) {
                 out.append("uniform mat4 $uPrevBoneMatricesName[$maxBones];\n")
+                out.append("uniform bool $uUsePrevBones;\n")
                 out.append("mat4 prevSkinning = mat4(0.0);\n")
             }
         }

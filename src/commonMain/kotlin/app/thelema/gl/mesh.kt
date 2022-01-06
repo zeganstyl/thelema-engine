@@ -18,6 +18,7 @@ package app.thelema.gl
 
 import app.thelema.ecs.*
 import app.thelema.g3d.*
+import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.*
 import app.thelema.math.*
 import app.thelema.shader.IShader
@@ -25,7 +26,7 @@ import app.thelema.shader.IShader
 /**
  * @author zeganstyl
  * */
-interface IMesh: IEntityComponent {
+interface IMesh: IRenderable {
     /** Note: index buffer also have primitive type property,
      * and if [indices] is not null, mesh will use index buffer's primitive type. */
     var primitiveType: Int
@@ -40,8 +41,6 @@ interface IMesh: IEntityComponent {
 
     var worldMatrix: IMat4?
     var previousWorldMatrix: IMat4?
-
-    val worldPosition: IVec3
 
     var boundings: IBoundings?
 
@@ -62,8 +61,6 @@ interface IMesh: IEntityComponent {
      * If zero, nothing will be drawn. */
     var instancesCountToRender: Int
 
-    var isVisible: Boolean
-
     var positionsName: String
     var uvsName: String
     var normalsName: String
@@ -71,6 +68,17 @@ interface IMesh: IEntityComponent {
     var boneWeightsName: String
     var boneIndicesName: String
     var instancesPositionsName: String
+
+    override var translucencyPriority: Int
+        get() = material?.translucentPriority ?: 0
+        set(_) {}
+
+    override var alphaMode: String
+        get() = material?.alphaMode ?: Blending.OPAQUE
+        set(_) {}
+
+    override fun visibleInFrustum(frustum: Frustum): Boolean =
+        boundings?.intersectsWith(worldMatrix, frustum) != false
 
     fun setMaterialValue(name: String, value: Any)
 
@@ -129,14 +137,16 @@ interface IMesh: IEntityComponent {
 
     fun render(shader: IShader, scene: IScene?, offset: Int, count: Int)
 
-    fun render(shader: IShader, scene: IScene? = null) =
+    override fun render(shader: IShader, scene: IScene?) =
         render(shader, scene, 0, indices?.count ?: verticesCount)
 
-    fun render(scene: IScene? = null, shaderChannel: String? = null) {
+    override fun render(scene: IScene?, shaderChannel: String?) {
         val material = material ?: DEFAULT_MATERIAL
         val shader = if (shaderChannel == null) material?.shader else material?.shaderChannels?.get(shaderChannel)
         if (shader != null) render(shader, scene)
     }
+
+    fun render() = render(null, null)
 }
 
 inline fun IMesh.forEachLine(block: (v1: Int, v2: Int) -> Unit) {
@@ -525,6 +535,13 @@ class Mesh(): IMesh {
                         float("radius", { radius }) { radius = it }
                         int("hDivisions", { hDivisions }) { hDivisions = it }
                         int("vDivisions", { vDivisions }) { vDivisions = it }
+                    }
+
+                    descriptor({ CylinderMesh() }) {
+                        float(CylinderMesh::radius)
+                        float(CylinderMesh::length)
+                        int(CylinderMesh::divisions)
+                        bool(CylinderMesh::cap)
                     }
 
                     descriptor({ PlaneMesh() }) {

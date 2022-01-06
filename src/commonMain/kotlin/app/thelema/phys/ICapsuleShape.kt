@@ -17,7 +17,7 @@
 package app.thelema.phys
 
 /** @author zeganstyl */
-interface ICapsuleShape: IShape {
+interface ICapsuleShape: IPhysicalShape {
     var radius: Float
     var length: Float
 

@@ -24,7 +24,7 @@ import app.thelema.res.*
 /** 2D texture object
  *
  * @author zeganstyl */
-class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
+open class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
     constructor(block: Texture2D.() -> Unit): this() {
         block(this)
     }
@@ -93,6 +93,10 @@ class Texture2D() : ITexture2D, Texture(GL_TEXTURE_2D) {
 
     override fun bind(unit: Int) {
         super<ITexture2D>.bind(unit)
+        prepareImage()
+    }
+
+    fun prepareImage() {
         if (loadImage) {
             image?.also { image ->
                 if (!(image.isLoaded || image.isLoading)) image.load()

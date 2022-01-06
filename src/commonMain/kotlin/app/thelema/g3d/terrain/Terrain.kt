@@ -28,6 +28,7 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
         padding = 1
         tileSize = 1f
         builder.uvs = false
+        builder.tangents = false
         builder.positionName = vertexPositionName
     }
 
@@ -50,6 +51,7 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
             frameSize = 1f
             outerLodDivisions = tileDivisions
             builder.uvs = false
+            builder.tangents = false
             builder.positionName = vertexPositionName
             setSideFlags(left = false, right = false, top = false, bottom = false)
         }

@@ -27,10 +27,7 @@ import app.thelema.test.Test
 import app.thelema.utils.LOG
 
 /** @author zeganstyl */
-class SkyboxVertexNodeTest: Test {
-    override val name: String
-        get() = "Skybox vertex node"
-
+class SkyboxShaderNodeTest: Test {
     override fun testMain() {
         Entity {
             makeCurrent()
@@ -41,11 +38,9 @@ class SkyboxVertexNodeTest: Test {
                 skyboxMesh()
                 material {
                     shader = Shader {
-                        val cameraDataNode = addNode(CameraDataNode(GLSL.zeroFloat))
-                        val vertexNode = addNode(SkyboxVertexNode(cameraDataNode.viewProjectionMatrix))
-                        vertexNode.positionsName = "POSITION"
+                        val vertexNode = SkyboxVertexNode()
 
-                        val textureNode = addNode(TextureCubeNode {
+                        val textureNode = TextureCubeNode {
                             uv = vertexNode.textureCoordinates
                             sRGB = false
                             texture = TextureCube(
@@ -56,15 +51,15 @@ class SkyboxVertexNodeTest: Test {
                                 pz = "clouds1/clouds1_pz.jpg",
                                 nz = "clouds1/clouds1_nz.jpg"
                             )
-                        })
+                        }
 
-                        addNode(OutputNode {
+                        rootNode = OutputNode {
                             vertPosition = vertexNode.clipSpacePosition
                             fragColor = textureNode.texColor
                             fadeStart = -1f
                             alphaMode = Blending.OPAQUE
                             cullFaceMode = 0
-                        })
+                        }
 
                         build()
                         LOG.info(printCode())

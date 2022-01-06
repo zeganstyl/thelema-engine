@@ -16,12 +16,14 @@
 
 package app.thelema.utils
 
+import app.thelema.math.IVec3
 import app.thelema.math.IVec4
+import app.thelema.math.Vec3
 import app.thelema.math.Vec4
 
 /** Color utils */
 object Color {
-    fun int(rgba8888: Int, out: IVec4 = Vec4()): IVec4 {
+    fun intToVec4(rgba8888: Int, out: IVec4 = Vec4()): IVec4 {
         out.r = (rgba8888 and -0x1000000 ushr 24) * inv255
         out.g = (rgba8888 and 0x00ff0000 ushr 16) * inv255
         out.b = (rgba8888 and 0x0000ff00 ushr 8) * inv255
@@ -29,8 +31,12 @@ object Color {
         return out
     }
 
-    fun int(r: Int, g: Int, b: Int, a: Int = 255): IVec4 =
-        Vec4(r * inv255, g * inv255, b * inv255, a * inv255)
+    fun intToVec3(rgba8888: Int, out: IVec3 = Vec3()): IVec3 {
+        out.r = (rgba8888 and -0x1000000 ushr 24) * inv255
+        out.g = (rgba8888 and 0x00ff0000 ushr 16) * inv255
+        out.b = (rgba8888 and 0x0000ff00 ushr 8) * inv255
+        return out
+    }
 
     /** Returns color from a hex string with the format RRGGBBAA. */
     fun hex(hex: String): IVec4 {

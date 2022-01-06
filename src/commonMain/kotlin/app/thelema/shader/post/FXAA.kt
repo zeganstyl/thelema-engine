@@ -23,6 +23,9 @@ import app.thelema.gl.ScreenQuad
 
 /** @author zeganstyl */
 class FXAA: PostShader(fxaaCode) {
+    override val componentName: String
+        get() = "FXAA"
+
     var lumaThreshold = 0.7f
         set(value) {
             field = value
@@ -73,13 +76,13 @@ class FXAA: PostShader(fxaaCode) {
     }
 
     override fun render(inputMap: ITexture, out: IFrameBuffer?) {
-        inputMap.bind(0)
+        bind()
         if (out != null) {
             updateWidthHeight(out.width, out.height)
         } else{
             updateWidthHeight(GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
         }
-        ScreenQuad.render(this, out)
+        super.render(inputMap, out)
     }
 
     companion object {

@@ -163,12 +163,12 @@ interface IShader: IEntityComponent {
     fun set(location: Int, mat: Mat3, transpose: Boolean) =
         GL.glUniformMatrix3fv(location, 1, transpose, mat.values, 0)
 
-    fun setMatrix3(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size) {
-        GL.glUniformMatrix3fv(location, length / 9, false, values, offset)
+    fun setMatrix3(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) {
+        GL.glUniformMatrix3fv(location, length / 9, transpose, values, offset)
     }
 
-    fun setMatrix4(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size) {
-        GL.glUniformMatrix4fv(location, length / 16, false, values, offset)
+    fun setMatrix4(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) {
+        GL.glUniformMatrix4fv(location, length / 16, transpose, values, offset)
     }
 
     operator fun set(location: Int, value: Boolean) = GL.glUniform1i(location, if (value) 1 else 0)
@@ -284,8 +284,11 @@ interface IShader: IEntityComponent {
         GL.glUniformMatrix4fv(location, count, transpose, buffer)
     }
 
-    fun setMatrix4(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size) =
-        setMatrix4(getUniformLocation(name), values, offset, length)
+    fun setMatrix3(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) =
+        setMatrix3(getUniformLocation(name), values, offset, length, transpose)
+
+    fun setMatrix4(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) =
+        setMatrix4(getUniformLocation(name), values, offset, length, transpose)
 
     operator fun set(name: String, value: Boolean) = setUniformi(name, if (value) 1 else 0)
 

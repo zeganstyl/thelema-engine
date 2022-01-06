@@ -16,35 +16,33 @@
 
 package app.thelema.shader.post
 
-import app.thelema.img.IFrameBuffer
-import app.thelema.img.ITexture
-import app.thelema.gl.ScreenQuad
+import app.thelema.math.IVec3
+import app.thelema.math.Vec3
 
 /** @author zeganstyl */
-class Threshold(cutoff: Float = 1f) {
+class Threshold(cutoff: Float = 1f): PostShader(thresholdCode) {
+    override val componentName: String
+        get() = "Threshold"
+
     var cutoff = cutoff
         set(value) {
             field = value
-            shader.bind()
-            shader["cutoff"] = value
+            bind()
+            this["cutoff"] = value
         }
 
-    val shader = PostShader(thresholdCode)
+    var thresholdColor: IVec3 = Vec3(1f)
+        set(value) {
+            field.set(value)
+            bind()
+            this["thresholdColor"] = value
+        }
 
     init {
-        shader.bind()
-        shader["cutoff"] = cutoff
-        shader["tex"] = 0
-    }
-
-    fun render(inputMap: ITexture, out: IFrameBuffer?) {
-        shader.bind()
-        inputMap.bind(0)
-        ScreenQuad.render(shader, out)
-    }
-
-    fun dispose() {
-        shader.destroy()
+        bind()
+        this["cutoff"] = cutoff
+        this["thresholdColor"] = thresholdColor
+        this["tex"] = 0
     }
 
     companion object {
@@ -53,11 +51,13 @@ varying vec2 uv;
 uniform sampler2D tex;
 
 uniform float cutoff;
+uniform vec3 thresholdColor;
 
 void main() {
     vec4 color = texture2D(tex, uv);
 
-    float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+    //float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = dot(color.rgb, thresholdColor);
     if (brightness > cutoff) {
         gl_FragColor = vec4(color.rgb, 1.0);
     } else {

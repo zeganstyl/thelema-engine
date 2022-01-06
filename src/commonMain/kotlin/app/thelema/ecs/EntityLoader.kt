@@ -16,14 +16,11 @@
 
 package app.thelema.ecs
 
-import app.thelema.fs.FS
-import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.LoaderAdapter
-import app.thelema.res.RES
 import app.thelema.utils.LOG
 
 /** Loads entity from file.
@@ -35,19 +32,25 @@ class EntityLoader: LoaderAdapter() {
     override val componentName: String
         get() = "EntityLoader"
 
+    var saveTargetEntityOnWrite = false
+
     override fun loadBase(file: IFile) {
+        loadEntityTo(targetEntity, file)
+
+        currentProgress = 1
+        stop()
+    }
+
+    fun loadEntityTo(entity: IEntity, file: IFile) {
         file.readText {
             try {
                 val json = JSON.parseObject(it)
-                targetEntity.readJson(json)
+                entity.readJson(json)
             } catch (ex: Exception) {
                 LOG.error("EntityLoader: can't load entity \"${file.path}\"")
                 ex.printStackTrace()
             }
         }
-
-        currentProgress = 1
-        stop()
     }
 
     override fun getOrCreateFile(): IFile? {
@@ -64,7 +67,10 @@ class EntityLoader: LoaderAdapter() {
 
     override fun writeJson(json: IJsonObject) {
         super.writeJson(json)
-        if (targetEntity.name.isNotEmpty()) saveTargetEntity()
+        if (saveTargetEntityOnWrite) {
+            if (targetEntity.name.isEmpty()) targetEntity.name = entityOrNull?.name ?: ""
+            if (targetEntity.name.isNotEmpty()) saveTargetEntity()
+        }
     }
 
     companion object {

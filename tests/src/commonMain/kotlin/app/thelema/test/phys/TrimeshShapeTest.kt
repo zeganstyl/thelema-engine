@@ -77,11 +77,11 @@ class TrimeshShapeTest: Test {
                 startSimulation()
 
                 addPhysicsWorldListener(object: IPhysicsWorldListener {
-                    override fun collisionBegin(contact: IBodyContact) {
+                    override fun contactBegin(contact: IBodyContact) {
                         LOG.info("begin contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
 
-                    override fun collisionEnd(contact: IBodyContact) {
+                    override fun contactEnd(contact: IBodyContact) {
                         LOG.info("end contact ${contact.body1.entity.name} with ${contact.body2.entity.name}")
                     }
                 })

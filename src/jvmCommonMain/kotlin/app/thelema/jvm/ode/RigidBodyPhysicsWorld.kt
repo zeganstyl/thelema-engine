@@ -18,9 +18,9 @@ package app.thelema.jvm.ode
 
 import app.thelema.ecs.*
 import app.thelema.math.IVec3
+import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import app.thelema.phys.*
-import app.thelema.utils.Pool
 import app.thelema.utils.iterate
 import org.ode4j.math.DVector3C
 import org.ode4j.ode.*
@@ -71,8 +71,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     val bodies = ArrayList<RigidBody>()
 
-    val bodyPairsPool = Pool { BodyContact(RigidBody(), RigidBody(), Vec3(), Vec3(), 0f) }
-
     val world = OdeHelper.createWorld().apply {
         // https://ode.org/ode-latest-userguide.html#sec_3_7_0
         erp = 0.2
@@ -88,18 +86,19 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     override var maxContacts = 40
 
-    val newContacts = HashSet<BodyContact>()
+    val newContacts = ArrayList<BodyContact>()
     val currentContacts = HashSet<BodyContact>()
-    val currentContactsMap = HashMap<Int, BodyContact>()
-    val oldContacts = HashSet<BodyContact>()
+    val updatedContacts = ArrayList<BodyContact>()
+    val endContacts = HashSet<BodyContact>()
+    val previousContacts = HashSet<BodyContact>()
 
     val listeners = ArrayList<IPhysicsWorldListener>()
 
     override var fixedDelta: Float = 0.02f
 
     var nearCallback = DGeom.DNearCallback { _, o1, o2 ->
-        val g1 = o1.data as IShape
-        val g2 = o2.data as IShape
+        val g1 = o1.data as IPhysicalShape
+        val g2 = o2.data as IPhysicalShape
         val b1 = o1.body
         val b2 = o2.body
         if (b1 != null && b2 != null && OdeHelper.areConnectedExcluding(b1, b2, DContactJoint::class.java)) return@DNearCallback
@@ -142,7 +141,14 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
                 // <Collect collisions> ================================================================================
                 if (bm1 != null && bm2 != null) {
-                    newContacts.add(bodyPairsPool.getOrCreate { BodyContact(bm1, bm2, contact) })
+                    val bc = BodyContact(bm1, bm2, contact)
+                    if (currentContacts.add(bc)) {
+                        if (endContacts.remove(bc)) {
+                            updatedContacts.add(bc)
+                        } else {
+                            newContacts.add(bc)
+                        }
+                    }
                 }
                 // </Collect collisions> ===============================================================================
             }
@@ -187,9 +193,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         listeners.remove(listener)
     }
 
-    override fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact? =
-        currentContactsMap[BodyContact.contactHash(body1, body2)]
-
     override fun step(delta: Float) {
         if (simulationRequest != 0) {
             isSimulationRunning = simulationRequest == 1
@@ -198,19 +201,15 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         }
 
         if (isSimulationRunning) {
+            currentContacts.clear()
+            newContacts.clear()
+            updatedContacts.clear()
+            endContacts.clear()
+            endContacts.addAll(previousContacts)
             space.collide(null, nearCallback)
 
-            oldContacts.clear()
-            oldContacts.addAll(currentContacts)
-
-            currentContacts.clear()
-            currentContacts.addAll(newContacts)
-
-            currentContactsMap.clear()
-            currentContacts.forEach { currentContactsMap[it.hashCode()] = it }
-
-            newContacts.removeAll(oldContacts)
-            oldContacts.removeAll(currentContacts)
+            previousContacts.clear()
+            previousContacts.addAll(currentContacts)
 
             val iterations = max((delta / fixedDelta).toInt(), 1)
             for (i in 0 until iterations) {
@@ -219,20 +218,33 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
             contactGroup.empty()
 
-            oldContacts.forEach { contact ->
-                bodyPairsPool.free(contact)
-                for (j in listeners.indices) {
-                    listeners[j].collisionEnd(contact)
+            endContacts.removeAll(currentContacts)
+            if (endContacts.isNotEmpty()) {
+                endContacts.forEach { contact ->
+                    listeners.iterate { it.contactEnd(contact) }
+                    val b1 = contact.body1
+                    val b2 = contact.body2
+                    b1.contactEnd(contact, b1, b2)
+                    b2.contactEnd(contact, b2, b1)
                 }
+                endContacts.clear()
             }
-            oldContacts.clear()
 
-            newContacts.forEach { contact ->
-                listeners.iterate { listener ->
-                    listener.collisionBegin(contact)
-                    contact.body1.collided(contact, contact.body1, contact.body2)
-                    contact.body2.collided(contact, contact.body2, contact.body1)
-                }
+            updatedContacts.iterate { contact ->
+                listeners.iterate { it.contactUpdated(contact) }
+                val b1 = contact.body1
+                val b2 = contact.body2
+                b1.contactUpdated(contact, b1, b2)
+                b2.contactUpdated(contact, b2, b1)
+            }
+            updatedContacts.clear()
+
+            newContacts.iterate { contact ->
+                listeners.iterate { it.contactBegin(contact) }
+                val b1 = contact.body1
+                val b2 = contact.body2
+                b1.contactBegin(contact, b1, b2)
+                b2.contactBegin(contact, b2, b1)
             }
             newContacts.clear()
 
@@ -249,38 +261,63 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     }
 
     companion object {
+        private fun <T: IPhysicalShape> ComponentDescriptor<T>.setupShape() {
+            val desc = this as ComponentDescriptor<IPhysicalShape>
+            desc.float(IPhysicalShape::mass)
+            desc.vec3(IPhysicalShape::positionOffset)
+            desc.quaternion(IPhysicalShape::rotationOffset)
+        }
+
         fun initOdeComponents() {
-            ECS.descriptor({ RigidBodyPhysicsWorld() }) {
-                setAliases(IRigidBodyPhysicsWorld::class)
+            ECS.descriptorI<IRigidBodyPhysicsWorld>(::RigidBodyPhysicsWorld) {
+                vec3(IRigidBodyPhysicsWorld::gravity, Vec3(0f, -3f, 0f))
+                float(IRigidBodyPhysicsWorld::fixedDelta, 0.02f)
+                int(IRigidBodyPhysicsWorld::maxContacts, 40)
+                bool(IRigidBodyPhysicsWorld::isSimulationRunning)
 
-                vec3(RigidBodyPhysicsWorld::gravity)
-                float(RigidBodyPhysicsWorld::fixedDelta, 0.02f)
-                int(RigidBodyPhysicsWorld::maxContacts, 40)
-                bool(RigidBodyPhysicsWorld::isSimulationRunning)
-
-                descriptor({ BoxShape() }) {
-                    setAliases(IBoxShape::class)
-                    float(BoxShape::mass, 1f)
-                    float(BoxShape::xSize, 1f)
-                    float(BoxShape::ySize, 1f)
-                    float(BoxShape::zSize, 1f)
+                descriptorI<IPlaneShape>(::PlaneShape) {
+                    setupShape()
+                    float(IPlaneShape::depth)
+                    vec3(IPlaneShape::normal, MATH.Y)
                 }
-                descriptor({ SphereShape() }) {
-                    setAliases(ISphereShape::class)
-                    float(SphereShape::radius, 1f)
+                descriptorI<IBoxShape>(::BoxShape) {
+                    setupShape()
+                    float(IBoxShape::xSize, 1f)
+                    float(IBoxShape::ySize, 1f)
+                    float(IBoxShape::zSize, 1f)
                 }
-                descriptor({ TrimeshShape() }) {
-                    setAliases(ITrimeshShape::class)
-                    refAbs(TrimeshShape::mesh)
+                descriptorI<ISphereShape>(::SphereShape) {
+                    setupShape()
+                    float(ISphereShape::radius, 1f)
                 }
-                descriptor({ RigidBody() }) {
-                    setAliases(IRigidBody::class)
-                    float(RigidBody::maxAngularSpeed)
-                    float(RigidBody::friction, 1f)
-                    bool(RigidBody::isStatic, false)
-                    bool(RigidBody::isGravityEnabled, true)
-                    bool(RigidBody::isKinematic)
-                    bool(RigidBody::influenceOtherBodies, true)
+                descriptorI<ICylinderShape>(::CylinderShape) {
+                    setupShape()
+                    float(ICylinderShape::radius, 1f)
+                    float(ICylinderShape::length, 1f)
+                }
+                descriptorI<ICapsuleShape>(::CapsuleShape) {
+                    setupShape()
+                    float(ICapsuleShape::radius, 1f)
+                    float(ICapsuleShape::length, 1f)
+                }
+                descriptorI<ITrimeshShape>(::TrimeshShape) {
+                    setupShape()
+                    refAbs(ITrimeshShape::mesh)
+                }
+                descriptorI<IRayShape>(::RayShape) {
+                    setupShape()
+                    vec3(IRayShape::position)
+                    vec3(IRayShape::direction, MATH.Z)
+                    float(IRayShape::length, 1f)
+                    bool(IRayShape::useTransformNode, true)
+                }
+                descriptorI<IRigidBody>(::RigidBody) {
+                    float(IRigidBody::maxAngularSpeed)
+                    float(IRigidBody::friction, 1f)
+                    bool(IRigidBody::isStatic, false)
+                    bool(IRigidBody::isGravityEnabled, true)
+                    bool(IRigidBody::isKinematic)
+                    bool(IRigidBody::influenceOtherBodies, true)
                 }
             }
         }

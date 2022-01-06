@@ -21,7 +21,6 @@ import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.math.IVec3
 import app.thelema.phys.IRigidBody
-import app.thelema.phys.IShape
 import app.thelema.phys.RigidBodyListener
 
 class RigidBody(val body: Body): IRigidBody {

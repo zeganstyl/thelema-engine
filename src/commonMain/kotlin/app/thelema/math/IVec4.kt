@@ -140,7 +140,7 @@ interface IVec4: IVec {
         return this
     }
 
-    fun setColor(rgba8888: Int): IVec4 = Color.int(rgba8888, this)
+    fun setColor(rgba8888: Int): IVec4 = Color.intToVec4(rgba8888, this)
 
     fun set(other: IVec4) = set(other.x, other.y, other.z, other.w)
     fun set(other: IVec3, w: Float): IVec4 {
@@ -366,25 +366,21 @@ interface IVec4: IVec {
     fun rotateQuaternionByAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float): IVec4 {
         if (radians == 0f) return this
 
-        val radians2 = getQuaternionAngleAround(axisX, axisY, axisZ) + radians
-        val ang = if (radians2 < 0) MATH.PI2 - -radians2 % MATH.PI2 else radians2 % MATH.PI2
+        val sin = MATH.sin(radians * 0.5f)
+        val cos = MATH.cos(radians * 0.5f)
+        mul(axisX * sin, axisY * sin, axisZ * sin, cos)
 
-        val sin = MATH.sin(ang * 0.5f)
-        val cos = MATH.cos(ang * 0.5f)
-
-        return set(axisX * sin, axisY * sin, axisZ * sin, cos)
+        return this
     }
 
-    fun rotateQuaternionByY(radians: Float): IVec4 {
-        if (radians == 0f) return this
+    fun rotateQuaternionByX(radians: Float): IVec4 =
+        if (radians == 0f) this else mul(MATH.sin(radians * 0.5f), 0f, 0f, MATH.cos(radians * 0.5f))
 
-        val l2 = y * y + w * w
+    fun rotateQuaternionByY(radians: Float): IVec4 =
+        if (radians == 0f) this else mul(0f, MATH.sin(radians * 0.5f), 0f, MATH.cos(radians * 0.5f))
 
-        val radians2 = (if (MATH.isZero(l2)) 0f else (2f * MATH.acos(MATH.clamp(((if (y < 0f) -w else w) / MATH.sqrt(l2)), -1f, 1f)))) + radians
-        val ang = if (radians2 < 0) MATH.PI2 - -radians2 % MATH.PI2 else radians2 % MATH.PI2
-
-        return set(0f, MATH.sin(ang * 0.5f), 0f, MATH.cos(ang * 0.5f))
-    }
+    fun rotateQuaternionByZ(radians: Float): IVec4 =
+        if (radians == 0f) this else mul(0f, 0f, MATH.sin(radians * 0.5f), MATH.cos(radians * 0.5f))
 
     /** Sets the Quaternion from the given matrix, optionally removing any scaling.  */
     fun setQuaternion(normalizeAxes: Boolean, mat: IMat4): IVec4 {

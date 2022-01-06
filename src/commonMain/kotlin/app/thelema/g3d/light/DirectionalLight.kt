@@ -21,12 +21,10 @@ import app.thelema.ecs.component
 import app.thelema.g3d.*
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.Camera
-import app.thelema.gl.GL
-import app.thelema.gl.GL_COLOR_BUFFER_BIT
-import app.thelema.gl.GL_DEPTH_BUFFER_BIT
-import app.thelema.gl.GL_NEAREST
+import app.thelema.gl.*
 import app.thelema.img.*
 import app.thelema.math.*
+import app.thelema.utils.iterate
 import kotlin.math.max
 import kotlin.math.min
 
@@ -44,13 +42,15 @@ class DirectionalLight: ILight {
 
     override var node: ITransformNode = TransformNode()
         set(value) {
-            field.removeListener(nodeListener)
-            field = value
-            updateDirection()
-            value.addListener(nodeListener)
+            if (field != value) {
+                field.removeListener(nodeListener)
+                field = value
+                updateDirection()
+                value.addListener(nodeListener)
+            }
         }
 
-    override val lightType: Int
+    override val lightType: String
         get() = LightType.Directional
 
     override var shadowMaps: Array<ITexture> = emptyArray()
@@ -60,16 +60,55 @@ class DirectionalLight: ILight {
     private var shadowFrameBuffers: Array<IFrameBuffer> = emptyArray()
 
     var shadowCascadesNum = 4
+        set(value) {
+            if (field != value) {
+                field = value
+                setupShadowsRequested = true
+            }
+        }
 
     var shadowCascadeEnd = arrayOf<Float>()
+
+    var shadowMapWidth: Int = 1024
+        set(value) {
+            if (field != value) {
+                field = value
+                setupShadowsRequested = true
+            }
+        }
+    var shadowMapHeight: Int = 1024
+        set(value) {
+            if (field != value) {
+                field = value
+                setupShadowsRequested = true
+            }
+        }
+    var shadowSoftness: Float = 1f
+    private var cameraFar: Float = 0f
+        private set(value) {
+            if (field != value) {
+                field = value
+                shadowCascadeEnd = arrayOf(
+                    value * 0.1f,
+                    value * 0.2f,
+                    value * 0.4f,
+                    value
+                )
+            }
+        }
 
     var lightPositionOffset: Float = 50f
 
     override var intensity: Float = 1f
-    override val color: IVec4 = Vec4(1f)
+    override var color: IVec3 = Vec3(1f)
+        set(value) {
+            field.set(value)
+        }
     override val direction: IVec3 = Vec3(0f, 0f, 1f)
     override var isLightEnabled: Boolean = true
     override var isShadowEnabled: Boolean = false
+
+    private var setupShadowsRequested = true
 
     override var range: Float = 0f
     override var innerConeCos: Float = 0f
@@ -103,16 +142,19 @@ class DirectionalLight: ILight {
             val pos = node.worldPosition
             direction.set(-pos.x, -pos.y, -pos.z).nor()
         } else {
-            node.worldMatrix.getCol2Vec3(direction)
-            direction.nor()
+            node.getDirection(direction)
         }
     }
 
     override fun setupShadowMaps(width: Int, height: Int) {
+        setupShadowsRequested = false
+
+        shadowFrameBuffers.iterate { it.destroy() }
+
         val shadowFrameBuffers = Array<IFrameBuffer>(shadowCascadesNum) {
             FrameBuffer {
                 setResolution(width, height)
-                addAttachment(Attachments.depth())
+                addAttachment(Attachments.depth().also { it.isShadowMap = true })
                 buildAttachments()
 
                 if (GL.isGLES) {
@@ -125,12 +167,7 @@ class DirectionalLight: ILight {
             }
         }
 
-        shadowCascadeEnd = arrayOf(
-            ActiveCamera.far * 0.05f,
-            ActiveCamera.far * 0.10f,
-            ActiveCamera.far * 0.40f,
-            ActiveCamera.far
-        )
+        cameraFar = ActiveCamera.far
 
         viewProjectionMatrices = Array(shadowCascadesNum) { Mat4() }
 
@@ -138,89 +175,87 @@ class DirectionalLight: ILight {
 
         this.shadowMaps = shadowMaps
         this.shadowFrameBuffers = shadowFrameBuffers
-        isShadowEnabled = true
     }
 
     override fun renderShadowMaps(scene: IScene) {
-        if (isShadowEnabled) {
-            val sceneCameraFrustumPoints = ActiveCamera.frustum.points
-            val camFarSubNear = ActiveCamera.far
+        if (setupShadowsRequested) setupShadowMaps(shadowMapWidth, shadowMapHeight)
 
-            val tmp = ActiveCamera
-            ActiveCamera = tmpCam
-            tmpCam.direction.set(direction)
-            tmpCam.near = 0f
-            tmpCam.isOrthographic = true
-            tmpCam.up.set(0f, 1f, 0f)
+        val sceneCameraFrustumPoints = ActiveCamera.frustum.points
+        val camFarSubNear = ActiveCamera.far
+        cameraFar = ActiveCamera.far
 
-            val shadowFrameBuffers = shadowFrameBuffers
-            for (i in 0 until shadowCascadesNum) {
-                shadowFrameBuffers[i].render {
-                    GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        val tmp = ActiveCamera
+        ActiveCamera = tmpCam
+        tmpCam.near = 0f
+        tmpCam.isOrthographic = true
 
-                    centroid.set(0f, 0f, 0f)
+        val shadowFrameBuffers = shadowFrameBuffers
+        for (i in 0 until shadowCascadesNum) {
+            shadowFrameBuffers[i].render {
+                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
-                    val alphaNear = if (i == 0) 0f else (shadowCascadeEnd[i - 1] / camFarSubNear)
-                    for (j in 0 until 4) {
-                        val p = subFrustumPoints[j]
-                        p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaNear)
-                        centroid.add(p)
-                    }
+                centroid.set(0f, 0f, 0f)
 
-                    val alphaFar = shadowCascadeEnd[i] / camFarSubNear
-                    for (j in 0 until 4) {
-                        val p = subFrustumPoints[j + 4]
-                        p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaFar)
-                        centroid.add(p)
-                    }
-
-                    centroid.scl(0.125f)
-
-                    var minX = Float.MAX_VALUE
-                    var maxX = Float.MIN_VALUE
-                    var minY = Float.MAX_VALUE
-                    var maxY = Float.MIN_VALUE
-                    var minZ = Float.MAX_VALUE
-                    var maxZ = Float.MIN_VALUE
-
-                    lightViewTmp.setToLook(centroid, direction, MATH.Y)
-
-                    for (j in 0 until 8) {
-                        val vW = subFrustumPoints[j].mul(lightViewTmp)
-
-                        minX = min(minX, vW.x)
-                        maxX = max(maxX, vW.x)
-                        minY = min(minY, vW.y)
-                        maxY = max(maxY, vW.y)
-                        minZ = min(minZ, vW.z)
-                        maxZ = max(maxZ, vW.z)
-                    }
-
-                    val lightMat = viewProjectionMatrices[i]
-                    val far = maxZ - minZ + lightPositionOffset
-                    lightMat.setToOrtho(
-                        left = minX,
-                        right = maxX,
-                        bottom = minY,
-                        top = maxY,
-                        near = 0f,
-                        far = far
-                    )
-
-                    lightPos.set(direction).scl(-maxZ - lightPositionOffset).add(centroid)
-                    lightViewTmp.setToLook(lightPos, direction, MATH.Y)
-
-                    lightMat.mul(lightViewTmp)
-
-                    tmpCam.far = far
-                    tmpCam.position.set(lightPos)
-                    tmpCam.viewProjectionMatrix.set(lightMat)
-                    scene.render(ShaderChannel.Depth)
+                val alphaNear = if (i == 0) 0f else (shadowCascadeEnd[i - 1] / camFarSubNear)
+                for (j in 0 until 4) {
+                    val p = subFrustumPoints[j]
+                    p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaNear)
+                    centroid.add(p)
                 }
-            }
 
-            ActiveCamera = tmp
+                val alphaFar = shadowCascadeEnd[i] / camFarSubNear
+                for (j in 0 until 4) {
+                    val p = subFrustumPoints[j + 4]
+                    p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaFar)
+                    centroid.add(p)
+                }
+
+                centroid.scl(0.125f)
+
+                var minX = Float.MAX_VALUE
+                var maxX = Float.MIN_VALUE
+                var minY = Float.MAX_VALUE
+                var maxY = Float.MIN_VALUE
+                var minZ = Float.MAX_VALUE
+                var maxZ = Float.MIN_VALUE
+
+                lightViewTmp.setToLook(centroid, direction, MATH.Y)
+
+                for (j in 0 until 8) {
+                    val vW = subFrustumPoints[j].mul(lightViewTmp)
+
+                    minX = min(minX, vW.x)
+                    maxX = max(maxX, vW.x)
+                    minY = min(minY, vW.y)
+                    maxY = max(maxY, vW.y)
+                    minZ = min(minZ, vW.z)
+                    maxZ = max(maxZ, vW.z)
+                }
+
+                val lightMat = viewProjectionMatrices[i]
+                val far = maxZ - minZ + lightPositionOffset
+                lightMat.setToOrtho(
+                    left = minX,
+                    right = maxX,
+                    bottom = minY,
+                    top = maxY,
+                    near = 0f,
+                    far = far
+                )
+
+                lightPos.set(direction).scl(-maxZ - lightPositionOffset).add(centroid)
+                lightViewTmp.setToLook(lightPos, direction, MATH.Y)
+
+                lightMat.mul(lightViewTmp)
+
+                tmpCam.far = far
+                tmpCam.eye.set(lightPos)
+                tmpCam.viewProjectionMatrix.set(lightMat)
+                scene.render(ShaderChannel.Depth)
+            }
         }
+
+        ActiveCamera = tmp
     }
 }
 

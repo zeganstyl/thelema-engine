@@ -32,13 +32,8 @@ import kotlin.math.abs
 interface ICamera: IEntityComponent {
     val node: ITransformNode
 
-    val position: IVec3
+    val eye: IVec3
         get() = node.position
-
-    /** the unit length direction vector of the camera */
-    val direction: IVec3
-    /** the unit length up vector of the camera */
-    val up: IVec3
 
     /** the projection matrix  */
     val projectionMatrix: IMat4
@@ -149,8 +144,9 @@ class Camera(): ICamera {
     override val componentName: String
         get() = "Camera"
 
-    override val direction: IVec3 = Vec3(1f, 0f, 0f)
-    override val up: IVec3 = Vec3(0f, 1f, 0f)
+    val left: IVec3 = Vec3(1f, 0f, 0f)
+    val up: IVec3 = Vec3(0f, 1f, 0f)
+    val forward: IVec3 = Vec3(0f, 0f, 1f)
 
     override var near: Float = 0.1f
         set(value) {
@@ -235,7 +231,7 @@ class Camera(): ICamera {
     protected val tmpM = Mat4()
 
     init {
-        viewMatrix.setToLook(position, direction, up)
+        viewMatrix.setToLook(eye, forward, up)
     }
 
     override fun makeCameraActive() {
@@ -295,9 +291,28 @@ class Camera(): ICamera {
     }
 
     override fun lookAt(position: IVec3, target: IVec3, up: IVec3) {
-        direction.set(target).sub(position).nor()
-        this.position.set(position)
+        forward.set(target).sub(position).nor()
+        this.eye.set(position)
         this.up.set(up)
+        left.set(forward).crs(up).nor()
+
+        node.worldMatrix.apply {
+            m00 = left.x
+            m10 = left.y
+            m20 = left.z
+            m01 = up.x
+            m11 = up.y
+            m21 = up.z
+            m02 = forward.x
+            m12 = forward.y
+            m22 = forward.z
+            m03 = position.x
+            m13 = position.y
+            m23 = position.z
+
+            node.position.set(position)
+            getRotation(node.rotation)
+        }
 
         requestCameraUpdate()
     }
@@ -306,9 +321,10 @@ class Camera(): ICamera {
         node.reset()
         near = 0.1f
         far = 100f
+        left.set(1f, 0f, 0f)
         up.set(0f, 1f, 0f)
-        direction.set(1f, 0f, 0f)
-        position.set(0f, 0f, 0f)
+        forward.set(0f, 0f, 1f)
+        eye.set(0f, 0f, 0f)
         node.requestTransformUpdate()
 
         requestCameraUpdate()
@@ -318,9 +334,6 @@ class Camera(): ICamera {
         isCameraUpdateRequested = false
 
         tmpM.set(viewProjectionMatrix)
-
-        viewMatrix.set(node.worldMatrix)
-        viewMatrix.setTransposed3x3From(node.worldMatrix)
 
         if (isOrthographic) {
             if (isCentered) {
@@ -336,7 +349,7 @@ class Camera(): ICamera {
 
         viewProjectionMatrix.set(projectionMatrix)
         if (useViewMatrix) {
-            viewMatrix.setToLook(position, direction, up)
+            viewMatrix.setToLook(eye, forward, up)
             viewProjectionMatrix.mul(viewMatrix)
         }
 

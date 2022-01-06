@@ -35,7 +35,7 @@ class PointLight: ILight {
 
     override var node: ITransformNode = TransformNode()
 
-    override val lightType: Int
+    override val lightType: String
         get() = LightType.Point
 
     override val componentName: String
@@ -43,7 +43,10 @@ class PointLight: ILight {
 
     override var isLightEnabled: Boolean = true
     override var intensity = 1f
-    override var color: IVec4 = Vec4(1f)
+    override var color: IVec3 = Vec3(1f)
+        set(value) {
+            field.set(value)
+        }
 
     override var range = 100f
 

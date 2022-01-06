@@ -54,7 +54,7 @@ class RigidBody: IRigidBody {
             }
         }
 
-    val shapes = ArrayList<SpecificShape<DGeom>>(1)
+    val shapes = ArrayList<OdeShapeAdapter<DGeom>>(1)
 
     override var userObject: Any = this
 
@@ -138,8 +138,16 @@ class RigidBody: IRigidBody {
 
     private var listeners: ArrayList<RigidBodyListener>? = null
 
-    fun collided(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
-        listeners?.iterate { it.collisionBegin(contact, body, other) }
+    fun contactBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
+        listeners?.iterate { it.contactBegin(contact, body, other) }
+    }
+
+    fun contactEnd(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
+        listeners?.iterate { it.contactEnd(contact, body, other) }
+    }
+
+    fun contactUpdated(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
+        listeners?.iterate { it.contactUpdated(contact, body, other) }
     }
 
     override fun addListener(listener: RigidBodyListener) {
@@ -184,14 +192,16 @@ class RigidBody: IRigidBody {
     private fun world(): RigidBodyPhysicsWorld? =
         entityOrNull?.getRootEntity()?.componentOrNull()
 
-    fun setupShape(shape: SpecificShape<*>, dMass: DMass?) {
+    fun setupShape(shape: OdeShapeAdapter<*>, dMass: DMass?) {
         shape.body = this
         shape.setupGeom(dMass)?.also { geom ->
             geom.collideBits = collideBits
             geom.categoryBits = categoryBits
 
             if (isStatic) {
-                geom.setPosition(tmpV3.x.toDouble(), tmpV3.y.toDouble(), tmpV3.z.toDouble())
+                if (geom !is DPlane) {
+                    geom.setPosition(tmpV3.x.toDouble(), tmpV3.y.toDouble(), tmpV3.z.toDouble())
+                }
             } else {
                 geom.body = body
             }
@@ -213,19 +223,19 @@ class RigidBody: IRigidBody {
             }
 
             entity.forEachComponent {
-                if (it is SpecificShape<*>) {
+                if (it is OdeShapeAdapter<*>) {
                     setupShape(it, mass)
                 }
             }
             entity.forEachChildEntity { entity ->
                 entity.forEachComponent { component ->
-                    if (component is SpecificShape<*>) {
+                    if (component is OdeShapeAdapter<*>) {
                         setupShape(component, mass)
                     }
                 }
             }
 
-            body?.mass = mass
+            if (mass?.mass != 0.0) body?.mass = mass
         }
     }
 

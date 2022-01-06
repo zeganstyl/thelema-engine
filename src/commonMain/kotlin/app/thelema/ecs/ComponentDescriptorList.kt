@@ -44,6 +44,21 @@ open class ComponentDescriptorList(override val componentName: String): ICompone
         descriptor(T::class.simpleName!!, create, block)
     }
 
+    inline fun <reified I: IEntityComponent> descriptorI(
+        noinline create: () -> I,
+        noinline block: ComponentDescriptor<I>.() -> Unit
+    ) {
+        val interfaceName = I::class.simpleName!!
+        var implementationName = I::class.simpleName!!
+        if (implementationName.length > 1) {
+            if (implementationName[0] == 'I' && implementationName[1].isUpperCase()) implementationName = implementationName.substring(1)
+        }
+        val desc = descriptor(implementationName, create, block)
+        if (implementationName != interfaceName) {
+            ECS.allDescriptors[interfaceName] = desc as ComponentDescriptor<IEntityComponent>
+        }
+    }
+
     inline fun <reified T: IEntityComponent> descriptor(noinline create: () -> T) {
         descriptor(T::class.simpleName!!, create)
     }

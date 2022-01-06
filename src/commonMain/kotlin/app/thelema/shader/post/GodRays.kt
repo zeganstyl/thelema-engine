@@ -79,6 +79,9 @@ void main() {
 }
 """
 ) {
+    override val componentName: String
+        get() = "GodRays"
+
     val screenSpaceLightPos = Vec3()
 
     /** This texture must contain pixels, that must emitting light shafts. */

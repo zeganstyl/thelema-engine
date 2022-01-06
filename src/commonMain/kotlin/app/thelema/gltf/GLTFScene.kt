@@ -21,10 +21,10 @@ import app.thelema.ecs.*
 import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
-import app.thelema.math.TransformDataType
 import app.thelema.shader.findShaderNode
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
+import app.thelema.utils.iterate
 import kotlin.math.max
 
 /** @author zeganstyl */
@@ -92,19 +92,16 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                                 armature = skin
                                 material?.shader?.findShaderNode<VertexNode> {
                                     maxBones = max(skin.bones.size, maxBones)
-                                    worldTransformType = TransformDataType.None
                                 }
 
                                 if (gltf.conf.setupVelocityShader) {
                                     material?.shaderChannels?.get(ShaderChannel.Velocity)?.apply {
                                         findShaderNode<VertexNode> {
                                             maxBones = max(skin.bones.size, maxBones)
-                                            worldTransformType = TransformDataType.None
                                         }
 
                                         findShaderNode<VelocityNode> {
                                             maxBones = max(skin.bones.size, maxBones)
-                                            worldTransformType = TransformDataType.None
                                         }
                                     }
                                 }
@@ -112,7 +109,6 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                                 if (gltf.conf.setupDepthRendering) {
                                     material?.shaderChannels?.get(ShaderChannel.Depth)?.findShaderNode<VertexNode> {
                                         maxBones = max(skin.bones.size, maxBones)
-                                        worldTransformType = TransformDataType.None
                                     }
                                 }
                             }
@@ -143,7 +139,16 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         writeEntity(scene)
 
-        scene.scene {}
+        if (loader.file?.exists() == true) {
+            loader.onLoaded {
+                gltf.siblingOrNull<ISceneProvider>()?.instances?.iterate {
+                    it.reloadInstance()
+                }
+            }
+            loader.load()
+        }
+
+        scene.scene()
 
         ready()
     }

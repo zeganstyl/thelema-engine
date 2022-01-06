@@ -28,7 +28,7 @@ import org.ode4j.ode.DTriMeshData
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class TrimeshShape: SpecificShape<DTriMesh>(), ITrimeshShape {
+class TrimeshShape: OdeShapeAdapter<DTriMesh>(), ITrimeshShape {
     var trimeshData: DTriMeshData? = null
 
     override var mesh: IMesh? = null

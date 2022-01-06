@@ -4,6 +4,7 @@ import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
+import app.thelema.ecs.sibling
 import app.thelema.g3d.IScene
 import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ITransformNode
@@ -11,7 +12,8 @@ import app.thelema.gl.*
 import app.thelema.img.*
 import app.thelema.math.IMat4
 import app.thelema.math.Vec4
-import app.thelema.shader.SimpleShader3D
+import app.thelema.shader.Shader
+import app.thelema.shader.node.*
 import app.thelema.shader.post.FXAA
 import app.thelema.shader.post.PostShader
 import app.thelema.shader.post.SobelFilter
@@ -47,13 +49,18 @@ void main() {
 
     val fxaa: FXAA by lazy { FXAA() }
 
-    val selectionRenderShader: SimpleShader3D by lazy {
-        SimpleShader3D {
-            alphaCutoff = 0f
-            lightDirection = null
-            renderAttributeName = ""
-            color = Vec4()
-        }
+    val colorUniform = StudioColorUniformNode()
+    val selectionRenderShader = Shader {
+        getOrCreateEntity()
+        val vertex = VertexNode()
+        vertex.maxBones = 100
+        val camera = CameraDataNode()
+        camera.vertexPosition = vertex.position
+        val output = sibling<OutputNode>()
+        output.vertPosition = camera.clipSpacePosition
+        output.fragColor = colorUniform.uniform
+        output.fadeStart = -1f
+        rootNode = output.sibling()
     }
 
     val meshes = ArrayList<IMesh>()
@@ -77,64 +84,68 @@ void main() {
         meshes.clear()
         scenes.clear()
 
-        Studio.tabsPane.activeTab?.scene?.entity?.forEachChildEntity {
-            traverseSelection(it)
-        }
+        val selection = selection
+        if (selection?.isDisabled == false) {
+            Studio.tabsPane.activeTab?.scene?.entity?.forEachChildEntity {
+                traverseSelection(it)
+            }
 
-        if (selectRequest) {
-            selectRequest = false
+            if (selectRequest) {
+                selectRequest = false
 
-            frameBuffer.renderNoClear {
-                selectionRenderShader.bind()
+                frameBuffer.renderNoClear {
+                    selectionRenderShader.bind()
 
-                GL.glClearColor(Color.BLACK)
-                GL.glClear()
+                    GL.glClearColor(Color.BLACK)
+                    GL.glClear()
 
-                colorMap.clear()
+                    colorMap.clear()
 
-                // render to main frame buffer and read pixels from it
-                var color = 0x000001FFL
-                var colorId = 1
+                    // render to main frame buffer and read pixels from it
+                    var color = 0x000001FFL
+                    var colorId = 1
 
-                meshes.iterate { mesh ->
-                    colorMap[colorId] = mesh.entity
-                    selectionRenderShader.color?.also { Color.rgba8888ToColor(it, color.toInt()) }
-                    mesh.render(selectionRenderShader)
-                    color += 256
-                    colorId++
-                }
-
-                scenes.iterate { scene ->
-                    colorMap[colorId] = scene.entity
-                    selectionRenderShader.color?.also { Color.rgba8888ToColor(it, color.toInt()) }
-                    scene.sceneInstance?.componentOrNull<IScene>()?.also { instance ->
-                        for (j in instance.meshes.indices) {
-                            instance.meshes[j].render(selectionRenderShader)
-                        }
+                    meshes.iterate { mesh ->
+                        colorMap[colorId] = mesh.entity
+                        Color.rgba8888ToColor(colorUniform.color, color.toInt())
+                        mesh.render(selectionRenderShader)
+                        color += 256
+                        colorId++
                     }
-                    color += 256
-                    colorId++
+
+                    scenes.iterate { scene ->
+                        colorMap[colorId] = scene.entity
+                        Color.rgba8888ToColor(colorUniform.color, color.toInt())
+                        scene.sceneInstance?.componentOrNull<IScene>()?.also { instance ->
+                            for (j in instance.renderables.indices) {
+                                instance.renderables[j].render(selectionRenderShader)
+                            }
+                        }
+                        color += 256
+                        colorId++
+                    }
+
+                    GL.glReadPixels(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+                    GL.glClearColor(Color.BLACK)
+                    GL.glClear()
+
+                    val selectedColor = pixels[pixelStart].toInt() * 65025 + pixels[pixelStart + 1].toInt() * 255 + pixels[pixelStart + 2].toInt()
+
+                    selection.choose(colorMap[selectedColor])
                 }
-
-                GL.glReadPixels(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-                GL.glClearColor(Color.BLACK)
-                GL.glClear()
-
-                val selectedColor = pixels[pixelStart].toInt() * 65025 + pixels[pixelStart + 1].toInt() * 255 + pixels[pixelStart + 2].toInt()
-
-                selection?.choose(colorMap[selectedColor])
             }
         }
     }
 
     fun render() {
-        selection?.also { selected ->
+        val selected = selection
+        if (selected?.isDisabled == false) {
             if (selected.isNotEmpty()) {
                 var worldMatrix: IMat4? = null
 
                 var selection = false
                 frameBuffer.render {
-                    selectionRenderShader.color?.set(1f, 1f, 1f, 1f)
+                    colorUniform.color.set(1f, 1f, 1f, 1f)
                     selected.iterate { selected ->
                         selected.componentOrNull<IMesh>()?.also {
                             worldMatrix = it.worldMatrix
@@ -143,8 +154,8 @@ void main() {
                         }
                         selected.componentOrNull<ISceneInstance>()?.also { instance ->
                             instance.sceneInstance?.componentOrNull<IScene>()?.also { scene ->
-                                scene.meshes.iterate { it.render(selectionRenderShader) }
-                                if (scene.meshes.isNotEmpty()) selection = true
+                                scene.renderables.iterate { it.render(selectionRenderShader) }
+                                if (scene.renderables.isNotEmpty()) selection = true
                             }
                         }
                         if (worldMatrix == null) worldMatrix = selected.componentOrNull<ITransformNode>()?.worldMatrix
@@ -170,5 +181,22 @@ void main() {
                 }
             }
         }
+    }
+}
+
+class StudioColorUniformNode: ShaderNode() {
+    override val componentName: String
+        get() = "StudioColorUniformNode"
+
+    val uniform: IShaderData = GLSLValue("color", GLSLType.Vec4).also { output(it) }
+
+    val color = Vec4(1f)
+
+    override fun declarationFrag(out: StringBuilder) {
+        out.append("uniform ${uniform.typedRef};\n")
+    }
+
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        shader[uniform.ref] = color
     }
 }

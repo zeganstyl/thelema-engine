@@ -16,8 +16,6 @@
 
 package app.thelema.g3d
 
-import app.thelema.app.APP
-import app.thelema.app.DesktopApp
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
@@ -86,7 +84,7 @@ void main () {
         shader.onPrepareShader = { _, _ ->
             shader["viewProj"] = ActiveCamera.viewProjectionMatrix
             shader["camFar"] = ActiveCamera.far
-            shader["camPos"] = ActiveCamera.position
+            shader["camPos"] = ActiveCamera.eye
             texture.bind(0)
             if (GL.isCullFaceEnabled) GL.cullFaceMode = GL_BACK
         }

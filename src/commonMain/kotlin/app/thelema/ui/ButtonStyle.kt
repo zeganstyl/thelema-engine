@@ -16,7 +16,7 @@
 
 package app.thelema.ui
 
-import app.thelema.audio.ISound
+import app.thelema.audio.ISoundLoader
 
 /** The style for a button, see [Button].
  * @author mzechner
@@ -32,7 +32,7 @@ open class ButtonStyle(
     var checkedFocused: Drawable? = null
     var disabled: Drawable? = null
 
-    var clickSound: ISound? = null
+    var clickSound: ISoundLoader? = null
 
     var pressedOffsetX = 0f
     var pressedOffsetY = 0f

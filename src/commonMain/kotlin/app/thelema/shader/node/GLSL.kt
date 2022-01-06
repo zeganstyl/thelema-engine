@@ -22,11 +22,11 @@ import kotlin.native.concurrent.ThreadLocal
  * @author zeganstyl */
 @ThreadLocal
 object GLSL {
-    val undefined = GLSLFloatInline(0f)
-    val zeroFloat = GLSLFloatInline(0f)
-    val oneFloat = GLSLFloatInline(1f)
+    val undefined = GLSLFloatLiteral(0f)
+    val zeroFloat = GLSLFloatLiteral(0f)
+    val oneFloat = GLSLFloatLiteral(1f)
 
-    val defaultNormal = GLSLVec3Inline(0.5f, 0.5f, 1f)
+    val defaultNormal = GLSLVec3Literal(0.5f, 0.5f, 1f)
 
     private var idCounter = 0
 
@@ -51,3 +51,40 @@ object GLSLNode {
 
     val particleData = ParticleDataNode()
 }
+
+
+val q = """
+=== VERTEX SHADER ===
+in vec3 POSITION;
+out vec3 vPosition;
+out vec3 textureCoordinates39;
+out vec3 worldSpacePosition38;
+out vec4 clipSpacePosition37;
+out vec4 prevClipSpacePos;
+uniform vec4 uSkyboxVertexTransform;
+uniform mat4 uViewProjectionMatrix;
+uniform mat4 uPreviousViewProjectionMatrix;
+varying float depthForFade;
+void main() {
+vPosition = POSITION.xyz;
+worldSpacePosition38 = uSkyboxVertexTransform.xyz + POSITION.xyz * uSkyboxVertexTransform.w;
+clipSpacePosition37 = uViewProjectionMatrix * vec4(worldSpacePosition38, 1.0);
+gl_Position = clipSpacePosition37;
+depthForFade = gl_Position.w;
+}
+
+=== FRAGMENT SHADER ===
+out vec3 vPosition;
+vec3 textureCoordinates39;
+in vec3 worldSpacePosition38;
+in vec4 clipSpacePosition37;
+uniform float fadeStart;
+uniform float fadeMul;
+varying float depthForFade;
+void main() {
+textureCoordinates39 = normalize(vPosition);
+gl_FragColor = vec4(textureCoordinates39, 1.0);
+gl_FragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);
+}
+
+"""

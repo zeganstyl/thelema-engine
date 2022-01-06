@@ -1,11 +1,9 @@
 package app.thelema.studio
 
-import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.PlaneMesh
-import app.thelema.math.IVec4
-import app.thelema.math.MATH
-import app.thelema.math.Vec4
+import app.thelema.img.ITexture2D
+import app.thelema.math.*
 import app.thelema.shader.Shader
 
 // TODO
@@ -13,20 +11,29 @@ class IconRenderTool {
     private val shader = Shader(
         vertCode = """
 attribute vec3 POSITION;
+attribute vec2 TEXCOORD_0;
+
+varying vec2 uv;
 
 uniform mat4 viewProj;
-uniform mat4 worldMatrix;
-uniform float size;
+uniform mat3 worldMatrix;
+uniform vec3 camPos;
+uniform vec3 objPos;
 
 void main() {
-    gl_Position = viewProj * worldMatrix * vec4(POSITION.x * size, POSITION.y * size, POSITION.z * size, 1.0);
+    uv = TEXCOORD_0;
+    float size = distance(objPos, camPos);
+    gl_Position = viewProj * vec4(worldMatrix * (POSITION * size) + objPos, 1.0);
 }
 """,
         fragCode = """
 uniform vec4 color;
+uniform sampler2D tex;
+
+varying vec2 uv;
 
 void main() {
-    gl_FragColor = color;
+    gl_FragColor = texture2D(tex, uv);
 }
 """
     )
@@ -34,14 +41,28 @@ void main() {
     val color: IVec4 = Vec4(0.5f)
 
     private val quad = PlaneMesh {
-        setSize(0.1f)
+        setSize(0.05f)
         normal.set(0f, 0f, 1f)
     }
 
-    private fun render(node: ITransformNode?) {
+    val mat = Mat3()
+
+    init {
+        shader["tex"] = 0
+    }
+
+    fun prepareShader() {
         shader.bind()
         shader["viewProj"] = ActiveCamera.viewProjectionMatrix
+        shader["camPos"] = ActiveCamera.node.worldPosition
+        mat.set(ActiveCamera.viewMatrix)
+        mat.transpose()
+        shader["worldMatrix"] = mat
+    }
 
-        shader["worldMatrix"] = node?.worldMatrix ?: MATH.IdentityMat4
+    fun render(icon: ITexture2D, x: Float, y: Float, z: Float) {
+        icon.bind(0)
+        shader.set("objPos", x, y, z)
+        quad.render(shader)
     }
 }

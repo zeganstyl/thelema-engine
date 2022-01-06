@@ -19,10 +19,10 @@ package app.thelema.js.ode
 import app.thelema.ecs.IEntity
 import app.thelema.math.IMat4
 import app.thelema.phys.IRigidBody
-import app.thelema.phys.IShape
+import app.thelema.phys.IPhysicalShape
 
 /** @author zeganstyl */
-class Shape: IShape {
+class Shape: IPhysicalShape {
     override var shapeOffset: IMat4?
         get() = TODO("Not yet implemented")
         set(value) {}

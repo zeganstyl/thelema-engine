@@ -59,7 +59,7 @@ open class Tests: TestGroup("Core") {
         EmissionBloomTest(),
         GBufferTest(),
         MotionBlurTest(),
-        SkyboxVertexNodeTest(),
+        SkyboxShaderNodeTest(),
         SSAOTest()
     )
 

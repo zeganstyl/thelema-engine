@@ -18,8 +18,8 @@ package app.thelema.g3d.light
 
 /** @author zeganstyl */
 object LightType {
-    const val None = 0
-    const val Directional = 1
-    const val Point = 2
-    const val Spot = 3
+    const val None = "None"
+    const val Directional = "Directional"
+    const val Point = "Point"
+    const val Spot = "Spot"
 }

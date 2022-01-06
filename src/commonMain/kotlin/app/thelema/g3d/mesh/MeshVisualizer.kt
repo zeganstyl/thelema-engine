@@ -80,7 +80,7 @@ void main() {
     }
 
     fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: Int, scale: Float = 1f) {
-        addVectors3D(positions, vectors, Color.int(color), scale)
+        addVectors3D(positions, vectors, Color.intToVec4(color), scale)
     }
 
     fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: IVec4, scale: Float = 1f) {

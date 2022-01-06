@@ -28,7 +28,7 @@ import app.thelema.math.IVec4
 interface ILight: IEntityComponent {
     val node: ITransformNode
 
-    val color: IVec4
+    var color: IVec3
 
     val direction: IVec3
 
@@ -41,7 +41,7 @@ interface ILight: IEntityComponent {
     var intensity: Float
 
     /** Use [LightType] */
-    val lightType: Int
+    val lightType: String
 
     var isLightEnabled: Boolean
 

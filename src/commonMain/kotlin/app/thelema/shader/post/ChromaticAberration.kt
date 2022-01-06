@@ -41,6 +41,9 @@ void main() {
 }
 """
 ) {
+    override val componentName: String
+        get() = "ChromaticAberration"
+
     var strength: Float = 0.02f
 
     init {

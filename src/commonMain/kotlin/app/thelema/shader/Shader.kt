@@ -16,12 +16,14 @@
 
 package app.thelema.shader
 
+import app.thelema.app.APP
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
 import app.thelema.gl.*
 import app.thelema.shader.node.*
+import app.thelema.shader.post.*
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
@@ -32,8 +34,8 @@ open class Shader(
     compile: Boolean = true,
 
     /** Precision will be added as first line */
-    override var floatPrecision: String = "mediump",
-    override var version: Int = 110,
+    override var floatPrecision: String = "highp",
+    override var version: Int = if (GL.glesMajVer < 3) 110 else 330,
     override var profile: String = ""
 ): IShader {
     constructor(block: Shader.() -> Unit): this() {
@@ -44,13 +46,13 @@ open class Shader(
     override var fragCode: String = fragCode
 
     /** the log  */
-    protected var logInternal = ""
+    protected var _log = ""
     override val log
-        get() = if (isCompiled) GL.glGetProgramInfoLog(this.programHandle) else logInternal
+        get() = if (isCompiled) GL.glGetProgramInfoLog(this.programHandle) else _log
 
-    protected var isCompiledInternal: Boolean = false
+    protected var _isCompiled: Boolean = false
     override val isCompiled: Boolean
-        get() = isCompiledInternal
+        get() = _isCompiled
 
     override val uniforms = HashMap<String, Int>()
     override val attributes = HashMap<String, Int>()
@@ -112,8 +114,26 @@ open class Shader(
         val ver = getVersionStr()
         val floatPrecision = getFloatPrecisionStr()
 
-        val fullVertCode = ver + floatPrecision + vertCode
-        val fullFragCode = ver + floatPrecision + fragCode
+        var vert = vertCode
+        var frag = fragCode
+        if (version >= 330 && refineShaderCode) {
+            vert = vertCode
+                .replace("\nattribute ", "\nin ")
+                .replace("\nvarying ", "\nout ")
+
+            frag = fragCode
+                .replace("\nvarying ", "\nin ")
+                .replace("texture2D(", "texture(")
+
+            if (frag.contains("gl_FragColor")) {
+                frag = "out vec4 gl_FragColor;\n$frag"
+            }
+        }
+        this.vertCode = vert
+        this.fragCode = frag
+
+        val fullVertCode = ver + floatPrecision + vert
+        val fullFragCode = ver + floatPrecision + frag
 
         compileShaders(fullVertCode, fullFragCode)
         if (isCompiled) {
@@ -166,22 +186,22 @@ open class Shader(
      * @param fragmentShader
      */
     private fun compileShaders(vertexShader: String, fragmentShader: String) {
-        logInternal = ""
+        _log = ""
         vertexShaderHandle = loadShader(GL_VERTEX_SHADER, vertexShader)
         fragmentShaderHandle = loadShader(GL_FRAGMENT_SHADER, fragmentShader)
 
         if (vertexShaderHandle == -1 || fragmentShaderHandle == -1) {
-            isCompiledInternal = false
+            _isCompiled = false
             return
         }
 
         this.programHandle = linkProgram(GL.glCreateProgram())
         if (this.programHandle == -1) {
-            isCompiledInternal = false
+            _isCompiled = false
             return
         }
 
-        isCompiledInternal = true
+        _isCompiled = true
     }
 
     private fun loadShader(type: Int, source: String): Int {
@@ -202,8 +222,8 @@ open class Shader(
             // int infoLogLength = intbuf.get(0);
             // if (infoLogLength > 1) {
             val infoLog = GL.glGetShaderInfoLog(shader)
-            logInternal += if (type == GL_VERTEX_SHADER) "Vertex shader:\n" else "Fragment shader:\n"
-            logInternal += infoLog
+            _log += if (type == GL_VERTEX_SHADER) "Vertex shader:\n" else "Fragment shader:\n"
+            _log += infoLog
             // }
             return -1
         }
@@ -230,7 +250,7 @@ open class Shader(
             // GL.glGetProgramiv(program, GL_INFO_LOG_LENGTH, intbuf);
             // int infoLogLength = intbuf.get(0);
             // if (infoLogLength > 1) {
-            logInternal += GL.glGetProgramInfoLog(program)
+            _log += GL.glGetProgramInfoLog(program)
             // }
             return -1
         }
@@ -323,7 +343,7 @@ open class Shader(
         nodes = nodeSet.toTypedArray()
         nodes.iterate { node ->
             node.shaderOrNull = this
-            node.outputs.iterate { it.isUsed = false }
+            node.forEachOutput { it.isUsed = false }
         }
 
         nodes.iterate { node ->
@@ -379,8 +399,8 @@ open class Shader(
     }
 
     override fun destroy() {
-        isCompiledInternal = false
-        logInternal = ""
+        _isCompiled = false
+        _log = ""
         vertexShaderHandle = 0
         fragmentShaderHandle = 0
         programHandle = 0
@@ -388,6 +408,8 @@ open class Shader(
     }
 
     companion object {
+        var refineShaderCode: Boolean = true
+
         /** Sort nodes with order:
          * less depth - node will be first,
          * more depth - node will be last */
@@ -424,6 +446,35 @@ open class Shader(
                 string(Shader::profile)
                 string(Shader::floatPrecision)
                 bool(Shader::depthMask)
+
+                descriptor({ FXAA() }) {
+                    float(FXAA::lumaThreshold)
+                    float(FXAA::reduceMin)
+                    float(FXAA::reduceMul)
+                    float(FXAA::spanMax)
+                }
+
+                descriptor({ Bloom(APP.width, APP.height) }) {
+                    float(Bloom::intensity)
+                }
+
+                descriptor({ GodRays() }) {
+
+                }
+
+                descriptor({ MotionBlur() }) {
+                    float(MotionBlur::blurStrength)
+                }
+
+                descriptor({ Threshold() }) {
+                    float(Threshold::cutoff)
+                    vec3(Threshold::thresholdColor)
+                }
+
+                descriptor({ Vignette() }) {
+                    float(Vignette::radius)
+                    float(Vignette::softness)
+                }
 
                 descriptor({ VertexNode() }) {
                     int(VertexNode::maxBones)
@@ -531,7 +582,7 @@ open class Shader(
                     shaderNodeInputOrNull(PBRNode::emissive)
                     shaderNodeInput(PBRNode::normalizedViewVector)
                     shaderNodeInput(PBRNode::worldPosition)
-                    shaderNodeInputOrNull(PBRNode::clipSpacePosition)
+                    shaderNodeInput(PBRNode::clipSpacePosition)
                     shaderNodeOutput(PBRNode::result)
                 }
 
@@ -540,7 +591,8 @@ open class Shader(
                     shaderNodeInput(OutputNode::fragColor)
 
                     stringEnum(OutputNode::alphaMode, Blending.items)
-                    float(OutputNode::alphaCutoff)
+                    float(OutputNode::alphaCutoff, 0.5f)
+                    float(OutputNode::fadeStart, 0.8f)
 
                     intEnum(
                         OutputNode::cullFaceMode,
@@ -612,11 +664,11 @@ open class Shader(
                 descriptor({ Op2Node() }) {
                     string(Op2Node::function)
                     string(Op2Node::resultType)
-                    bool(Op2Node::isFragment)
-                    bool(Op2Node::isVarying)
+                    bool(Op2Node::isFragment, true)
+                    bool(Op2Node::isVarying, true)
                     shaderNodeInput(Op2Node::in1)
                     shaderNodeInput(Op2Node::in2)
-                    shaderNodeOutput(Op2Node::result)
+                    shaderNodeOutput(Op2Node::opResult)
                 }
 
                 descriptor({ TerrainVertexNode() }) {
@@ -628,7 +680,11 @@ open class Shader(
                 }
 
                 descriptor({ SkyboxVertexNode() }) {
-
+                    string(SkyboxVertexNode::positionsName, "POSITION")
+                    shaderNodeOutput(SkyboxVertexNode::clipSpacePosition)
+                    shaderNodeOutput(SkyboxVertexNode::worldSpacePosition)
+                    shaderNodeOutput(SkyboxVertexNode::textureCoordinates)
+                    shaderNodeOutput(SkyboxVertexNode::velocity)
                 }
 
                 descriptor({ ToneMapNode() }) {
@@ -638,6 +694,19 @@ open class Shader(
 
                 descriptor({ VelocityNode() }) {
 
+                }
+
+                descriptor({ GLSLFloatLiteral() }) {
+                    float(GLSLFloatLiteral::value)
+                }
+                descriptor({ GLSLVec2Literal() }) {
+                    vec2(GLSLVec2Literal::value)
+                }
+                descriptor({ GLSLVec3Literal() }) {
+                    vec3(GLSLVec3Literal::value)
+                }
+                descriptor({ GLSLVec4Literal() }) {
+                    vec4(GLSLVec4Literal::value)
                 }
             }
         }

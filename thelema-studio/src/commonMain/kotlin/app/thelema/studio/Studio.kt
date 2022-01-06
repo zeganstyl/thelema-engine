@@ -27,7 +27,7 @@ import app.thelema.utils.iterate
 object Studio: AppListener, IJsonObjectIO {
     lateinit var fileChooser: IFileChooser
 
-    var projectTab = EntityTab(RES.entity, null)
+    var projectTab = createProjectTab()
 
     val menuBar = StudioMenuBar()
 
@@ -114,7 +114,7 @@ object Studio: AppListener, IJsonObjectIO {
 
         ECS.replaceDescriptor(KotlinScript::class.simpleName!!, { KotlinScriptStudio() }) {
             setAliases(IKotlinScript::class)
-            string("customMainFunctionName", { customMainFunctionName }) { customMainFunctionName = it }
+            string(KotlinScriptStudio::functionName)
             kotlinScriptFile("file", { file }) { file = it }
         }
 
@@ -162,12 +162,16 @@ object Studio: AppListener, IJsonObjectIO {
         // project/src/main/kotlin
         appProjectDirectory = kotlinSiblingDir.parent().parent().parent()
 
-        projectTab = EntityTab(RES.entity, null)
+        projectTab = createProjectTab()
 
         ECS.removeAllEntities()
         tabsPane.clearTabs()
         tabsPane.addTab(projectTab)
         openProjectTab()
+    }
+
+    private fun createProjectTab(): EntityTab = EntityTab(RES.entity, null).also {
+        it.scene.selection.isDisabled = true
     }
 
     fun startSimulation(source: IEntity) {
@@ -233,6 +237,8 @@ object Studio: AppListener, IJsonObjectIO {
     fun openEntity(loader: EntityLoader) {
         loader.load()
         tabsPane.activeTab = tabsPane.tabs.firstOrNull { it.loader == loader } ?: EntityTab(loader.targetEntity).also {
+            loader.saveTargetEntityOnWrite = true
+            if (loader.targetEntity.name.isEmpty()) loader.targetEntity.name = loader.entityOrNull?.name ?: ""
             it.loader = loader
             tabsPane.addTab(it, false)
         }
@@ -278,14 +284,10 @@ object Studio: AppListener, IJsonObjectIO {
             }
         } else {
             RES.file.writeText(JSON.printObject(RES.entity))
+            KotlinScripting.bakeScripts()
             savePreferences()
             showStatus("App saved")
         }
-    }
-
-    override fun update(delta: Float) {
-        hud.update(delta)
-        CameraControl.control.update(delta)
     }
 
     override fun resized(width: Int, height: Int) {

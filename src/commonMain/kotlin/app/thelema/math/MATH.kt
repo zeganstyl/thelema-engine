@@ -23,6 +23,7 @@ import kotlin.math.min
 
 /** @author Nathan Sweet, zeganstyl */
 object MATH {
+    const val PI_HALF = 1.5707963f
     const val PI = 3.1415927f
     const val PI2 = 6.2831854f
 

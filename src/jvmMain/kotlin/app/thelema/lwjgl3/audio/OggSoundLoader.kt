@@ -29,7 +29,7 @@ import java.nio.ByteBuffer
 /** STB Vorbis implementation
  *
  * @author zeganstyl */
-class OggSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
+class OggSoundLoader(audio: OpenAL, file: IFile) : OpenALSound(audio) {
     init {
         if (!audio.noDevice) {
             // allocate a buffer for data

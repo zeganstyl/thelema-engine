@@ -32,7 +32,7 @@ class OutputNode(
     /** Clip space vertex position */
     vertPosition: IShaderData = GLSLNode.camera.clipSpacePosition,
     fragColor: IShaderData = GLSL.oneFloat
-): ShaderNode() {
+): ShaderNode(), IRootShaderNode {
     constructor(block: OutputNode.() -> Unit): this() { block(this) }
 
     override val componentName: String
@@ -60,6 +60,10 @@ class OutputNode(
             super.entityOrNull = value
             value?.component<IRootShaderNode>()?.proxy = this
         }
+
+    override var proxy: IShaderNode?
+        get() = this
+        set(_) {}
 
     init {
         this.vertPosition = vertPosition

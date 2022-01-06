@@ -1,10 +1,11 @@
 package app.thelema.studio.widget
 
-import app.thelema.ecs.ECS
 import app.thelema.ecs.EntityLoader
 import app.thelema.ecs.IEntity
-import app.thelema.studio.*
+import app.thelema.studio.SKIN
+import app.thelema.studio.Selection3D
 import app.thelema.studio.Tab
+import app.thelema.studio.TabsPane
 import app.thelema.ui.*
 
 open class EntityTab(entity: IEntity, tabCloseButton: TextButton? = TextButton("X")): Tab {
@@ -54,11 +55,7 @@ open class EntityTab(entity: IEntity, tabCloseButton: TextButton? = TextButton("
     }
 
     override fun tabSwitched(activated: Boolean, oldTab: Tab?, newTab: Tab?) {
-        if (activated) {
-            ECS.addEntity(scene.entity)
-        } else {
-            ECS.removeEntity(scene.entity)
-        }
+        scene.setActive(activated)
 
         tabTitle.background = if (activated) SKIN.titleBackground else null
 

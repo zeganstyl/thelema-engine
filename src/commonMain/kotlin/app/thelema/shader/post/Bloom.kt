@@ -16,6 +16,8 @@
 
 package app.thelema.shader.post
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.*
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
@@ -30,15 +32,20 @@ import kotlin.math.pow
 class Bloom(
     width: Int,
     height: Int,
-    iterations: Int = 6,
-    iterationsStep: Int = 1,
-    intensity: Float = 1f,
+    iterations: Int = 5,
+    stepOffset: Int = 2,
+    intensity: Float = 1.25f,
     pixelFormat: Int = GL_RGBA,
     internalFormat: Int = GL_RGBA,
     pixelChannelType: Int = GL_UNSIGNED_BYTE
-): IPostEffect {
+): IPostEffect, IEntityComponent {
+    override val componentName: String
+        get() = "Bloom"
+
+    override var entityOrNull: IEntity? = null
+
     private var downBuffers = Array(iterations) {
-        val div = 2f.pow(it + 1).toInt() * iterationsStep
+        val div = 2f.pow(it + stepOffset).toInt()
         SimpleFrameBuffer(
             width / div,
             height / div,
@@ -50,7 +57,7 @@ class Bloom(
     }
 
     private var upBuffers = Array(iterations) {
-        val div = 2f.pow(it + 1).toInt() * iterationsStep
+        val div = 2f.pow(it + stepOffset).toInt()
         SimpleFrameBuffer(
             width / div,
             height / div,
@@ -90,7 +97,7 @@ class Bloom(
         width: Int,
         height: Int,
         iterations: Int = 6,
-        iterationsStep: Int = 1,
+        stepOffset: Int = 1,
         pixelFormat: Int = GL_RGBA,
         internalFormat: Int = pixelFormat,
         pixelType: Int = GL_UNSIGNED_BYTE
@@ -106,7 +113,7 @@ class Bloom(
         }
 
         this.downBuffers = Array(iterations) {
-            val div = 2f.pow(it + 1).toInt() * iterationsStep
+            val div = 2f.pow(it + stepOffset).toInt()
             SimpleFrameBuffer(
                 width / div,
                 height / div,
@@ -118,7 +125,7 @@ class Bloom(
         }
 
         this.upBuffers = Array(iterations) {
-            val div = 2f.pow(it + 1).toInt() * iterationsStep
+            val div = 2f.pow(it + stepOffset).toInt()
             SimpleFrameBuffer(
                 width / div,
                 height / div,
@@ -129,7 +136,7 @@ class Bloom(
             )
         }
 
-        texelSizes = Array(iterations) { Vec2(1f / downBuffers[it].width, 1f / downBuffers[it].height) }
+        texelSizes = Array(iterations) { Vec2(1f / this.downBuffers[it].width, 1f / this.downBuffers[it].height) }
     }
 
     override fun render(inputMap: ITexture, out: IFrameBuffer?) {
@@ -169,7 +176,7 @@ class Bloom(
         ScreenQuad.render(blurUp, out)
     }
 
-    fun destroy() {
+    override fun destroy() {
         for (i in downBuffers.indices) {
             downBuffers[i].destroy()
         }

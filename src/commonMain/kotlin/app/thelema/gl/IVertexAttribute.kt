@@ -127,49 +127,51 @@ interface IVertexAttribute {
     /** Move cursor to vertex by index */
     fun setVertexPosition(index: Int)
 
-    fun putBytesNext(vararg values: Int)
+    fun putBytesNext(vararg values: Int): IVertexAttribute
 
-    fun putShortsNext(vararg values: Int)
+    fun putShortsNext(vararg values: Int): IVertexAttribute
 
     /** Put int at the current vertex and move cursor to next vertex */
-    fun putIntNext(x: Int)
+    fun putIntNext(x: Int): IVertexAttribute
 
     /** Put ints at the current vertex and move cursor to next vertex */
-    fun putIntsNext(vararg values: Int)
+    fun putIntsNext(vararg values: Int): IVertexAttribute
 
     /** Put float at the current vertex and move cursor to next vertex */
-    fun putFloatNext(x: Float)
+    fun putFloatNext(x: Float): IVertexAttribute
 
     /** Put float at the current vertex with offset */
-    fun setFloat(byteOffset: Int, x: Float)
+    fun setFloat(byteOffset: Int, x: Float): IVertexAttribute
 
     /** Put first float at the current vertex */
-    fun setFloat(value: Float)
+    fun setFloat(value: Float): IVertexAttribute
 
     /** Put first vec2 at the current vertex */
-    fun setVec2(value: IVec2)
+    fun setVec2(value: IVec2): IVertexAttribute
 
     /** Put first vec3 at the current vertex */
-    fun setVec3(value: IVec3)
+    fun setVec3(value: IVec3): IVertexAttribute
 
     /** Put first vec4 at the current vertex */
-    fun setVec4(value: IVec4)
+    fun setVec4(value: IVec4): IVertexAttribute
 
     /** Put floats at the current vertex */
-    fun setFloats(vararg values: Float)
+    fun setFloats(vararg values: Float): IVertexAttribute
 
     /** @param step it means, that every [step] floats, cursor will be moved to next vertex */
     fun putFloatsWithStep(step: Int, vararg values: Float)
 
-    fun putFloatsStart(index: Int, vararg values: Float) {
+    fun putFloatsStart(index: Int, vararg values: Float): IVertexAttribute {
         setVertexPosition(index)
         setFloats(*values)
+        return this
     }
 
     /** Put floats at the current vertex and move cursor to next vertex */
-    fun putFloatsNext(vararg values: Float) {
+    fun putFloatsNext(vararg values: Float): IVertexAttribute {
         setFloats(*values)
         nextVertex()
+        return this
     }
 
     fun toFloatArray(out: FloatArray? = null): FloatArray

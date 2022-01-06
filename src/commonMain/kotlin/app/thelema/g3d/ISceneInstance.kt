@@ -10,4 +10,6 @@ interface ISceneInstance: IEntityComponent {
     var sceneClassEntity: IEntity?
 
     var sceneInstance: IEntity?
+
+    fun reloadInstance()
 }

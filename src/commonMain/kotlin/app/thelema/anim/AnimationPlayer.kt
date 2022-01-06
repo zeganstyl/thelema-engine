@@ -127,6 +127,13 @@ class AnimationPlayer: IEntityComponent {
             justChangedAnimation = false
         }
 
+        if (current != null) {
+            val animName = current.animName
+            if (current.animation == null && animName != null) {
+                current.animation = getAnimationOrNull(animName)
+            }
+        }
+
         if (current == null || current.loopCount == 0 || current.animation == null) return
 
         val remain = current.update(delta)

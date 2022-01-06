@@ -60,10 +60,10 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     val floatVar = nativeHeap.alloc<FloatVar>()
 
     init {
-        soundCodecs["wav"] = { audio, file -> WavSound(audio, file) }
+        soundCodecs["wav"] = { audio, file -> WavSoundLoader(audio, file) }
 //        musicCodecs["wav"] = { audio, file -> WavMusic(audio, file) }
 //
-        soundCodecs["ogg"] = { audio, file -> OggSound(audio, file) }
+        soundCodecs["ogg"] = { audio, file -> OggSoundLoader(audio, file) }
 //        musicCodecs["ogg"] = { audio, file -> OggMusic(audio, file) }
     }
 

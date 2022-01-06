@@ -259,17 +259,17 @@ open class Window(
         val camera = stage.camera
         val parentWidth = stage.width
         val parentHeight = stage.height
-        if (getX(Align.right) - camera.position.x > parentWidth / camera.zoom) {
-            setPosition(camera.position.x + parentWidth / camera.zoom, getY(Align.right), Align.right)
+        if (getX(Align.right) - camera.eye.x > parentWidth / camera.zoom) {
+            setPosition(camera.eye.x + parentWidth / camera.zoom, getY(Align.right), Align.right)
         }
-        if (getX(Align.left) - camera.position.x < 0) {
-            setPosition(camera.position.x, getY(Align.left), Align.left)
+        if (getX(Align.left) - camera.eye.x < 0) {
+            setPosition(camera.eye.x, getY(Align.left), Align.left)
         }
-        if (getY(Align.top) - camera.position.y > parentHeight / camera.zoom) {
-            setPosition(getX(Align.top), camera.position.y + parentHeight / camera.zoom, Align.top)
+        if (getY(Align.top) - camera.eye.y > parentHeight / camera.zoom) {
+            setPosition(getX(Align.top), camera.eye.y + parentHeight / camera.zoom, Align.top)
         }
-        if (getY(Align.bottom) - camera.position.y < 0) {
-            setPosition(getX(Align.bottom), camera.position.y, Align.bottom)
+        if (getY(Align.bottom) - camera.eye.y < 0) {
+            setPosition(getX(Align.bottom), camera.eye.y, Align.bottom)
         }
     }
 

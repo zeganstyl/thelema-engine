@@ -61,7 +61,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         super.prepareShaderNode(mesh, scene)
 
         val cam = ActiveCamera
-        shader[cameraPosition.ref] = cam.position
+        shader[cameraPosition.ref] = cam.eye
         shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
         previousViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix }
         viewMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.viewMatrix }

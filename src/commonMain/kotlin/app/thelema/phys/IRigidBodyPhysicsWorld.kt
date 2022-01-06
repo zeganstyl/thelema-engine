@@ -40,9 +40,6 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
 
     fun step(delta: Float)
 
-    fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact?
-    fun isContactExist(body1: IRigidBody, body2: IRigidBody): Boolean = getContact(body1, body2) != null
-
     fun addPhysicsWorldListener(listener: IPhysicsWorldListener)
     fun removePhysicsWorldListener(listener: IPhysicsWorldListener)
 

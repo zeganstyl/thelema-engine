@@ -52,6 +52,7 @@ open class ComponentPanel<T: IEntityComponent>(
                     PropertyType.Float -> { size = 1; FloatField() }
                     PropertyType.Vec3 -> { size = 2; Vec3Widget() }
                     PropertyType.Vec4 -> { size = 2; Vec4Widget() }
+                    PropertyType.Quaternion -> { size = 2; QuaternionWidget() }
                     PropertyType.File -> ProjectFileField()
                     PropertyType.String -> StringField()
                     PropertyType.Bool -> { size = 3; BoolField() }

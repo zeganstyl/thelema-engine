@@ -18,12 +18,12 @@ package app.thelema.js.audio
 
 import kotlinx.browser.document
 import app.thelema.audio.IMusic
-import app.thelema.audio.ISound
+import app.thelema.audio.ISoundLoader
 import app.thelema.utils.Pool
 import org.w3c.dom.HTMLAudioElement
 
 /** @author zeganstyl */
-class JsSound(val al: JsAL, val src: String): ISound, IMusic {
+class JsSoundLoader(val al: JsAL, val src: String): ISoundLoader, IMusic {
     var pool: Pool<SoundInstance> = Pool {
         val element = document.createElement("audio") as HTMLAudioElement
         val source = al.context.createMediaElementSource(element)
@@ -33,7 +33,7 @@ class JsSound(val al: JsAL, val src: String): ISound, IMusic {
     }
 
     override var isMuted: Boolean
-        get() = super<ISound>.isMuted
+        get() = super<ISoundLoader>.isMuted
         set(value) {}
 
     override var isPlaying: Boolean = false

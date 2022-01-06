@@ -17,20 +17,28 @@
 package app.thelema.shader.node
 
 /** @author zeganstyl */
-class GLSLVec2Inline(var x: Float = 0f, var y: Float = 0f, name: String = ""): GLSLInlineBase(name) {
+class GLSLFloatLiteral(var value: Float = 0f): GLSLLiteralBase() {
     override var inlineCode: String
-        get() = asVec2()
+        get() = asFloat()
         set(_) {}
 
     override val type: String
-        get() = GLSLType.Vec2
+        get() = GLSLType.Float
 
-    override var scope: Int
-        get() = GLSLScope.Inline
-        set(_) {}
+    override val componentName: String
+        get() = "GLSLFloatLiteral"
 
-    override fun asFloat(): String = str(x)
-    override fun asVec2(): String = "vec2(${str(x)}, ${str(y)})"
-    override fun asVec3(): String = "vec3(${str(x)}, ${str(y)}, 0.0)"
-    override fun asVec4(): String = "vec4(${str(x)}, ${str(y)}, 0.0, 1.0)"
+    override fun asFloat(): String = str(value)
+    override fun asVec2(): String {
+        val v = str(value)
+        return "vec2($v, $v)"
+    }
+    override fun asVec3(): String {
+        val v = str(value)
+        return "vec3($v, $v, $v)"
+    }
+    override fun asVec4(): String {
+        val v = str(value)
+        return "vec4($v, $v, $v, $v)"
+    }
 }

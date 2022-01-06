@@ -32,7 +32,6 @@ class GBufferTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override fun testMain() {
         GLTF.defaultConf {
             setupGBufferShader = true
-            shaderVersion = 330
         }
 
         super.testMain()

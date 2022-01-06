@@ -19,7 +19,7 @@ package app.thelema.lwjgl3.audio
 import app.thelema.fs.IFile
 import java.io.IOException
 
-class WavSound(audio: OpenAL, file: IFile) : OpenALSound(audio) {
+class WavSoundLoader(audio: OpenAL, file: IFile) : OpenALSound(audio) {
     init {
         if (!audio.noDevice) {
             var input: WavInputStream? = null

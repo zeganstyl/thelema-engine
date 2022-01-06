@@ -44,6 +44,9 @@ class SSAO(
     val noiseTextureSideSize: Int = 4,
     occlusionSamplesNum: Int = 64
 ): PostShader(ssaoCode(occlusionSamplesNum)) {
+    override val componentName: String
+        get() = "SSAO"
+
     // generate noise texture
     val noiseTexture: Texture2D = Texture2D {
         val ssaoNoiseBuffer = DATA.bytes(noiseTextureSideSize * noiseTextureSideSize * 3 * 4)

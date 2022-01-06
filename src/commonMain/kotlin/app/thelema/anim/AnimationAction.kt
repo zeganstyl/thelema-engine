@@ -23,20 +23,26 @@ import app.thelema.math.MATH
 import kotlin.math.abs
 
 /** @author Xoppa, zeganstyl */
-class AnimationAction: ActionAdapter() {
+class AnimationAction(): ActionAdapter() {
+    constructor(block: AnimationAction.() -> Unit): this() {
+        block(this)
+    }
+
     override val componentName: String
         get() = "AnimationAction"
+
+    var animName: String? = null
 
     /** The animation to be applied.  */
     var animation: IAnimation? = null
     /** The speed at which to play the animation (can be negative), 1.0 for normal speed.  */
-    var speed = 0f
+    var speed = 1f
     /** The current animation time.  */
     var time = 0f
     /** The offset within the animation (animation time = offsetTime + time)  */
     var offset = 0f
     /** The duration of the animation  */
-    var duration = 0f
+    var duration = -1f
         get() {
             return if (field < 0f) {
                 val anim = animation
@@ -44,7 +50,7 @@ class AnimationAction: ActionAdapter() {
             } else field
         }
     /** The number of remaining loops, negative for continuous, zero if stopped.  */
-    var loopCount = 0
+    var loopCount = -1
 
     var previousTime: Float = 0f
 

@@ -19,11 +19,21 @@ package app.thelema.shader.post
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.gl.ScreenQuad
+import app.thelema.math.IVec3
+import app.thelema.math.IVec4
+import app.thelema.math.Vec3
+import app.thelema.math.Vec4
 
 /** @author zeganstyl */
 class Vignette: PostShader(vignetteCode) {
+    override val componentName: String
+        get() = "Vignette"
+
     var radius: Float = 0.75f
     var softness: Float = 0.45f
+    var color: IVec3 = Vec3()
+        set(value) { field.set(value) }
+    var opacity: Float = 0.5f
 
     init {
         bind()
@@ -36,6 +46,8 @@ class Vignette: PostShader(vignetteCode) {
         inputMap.bind(0)
         this["uRadius"] = radius
         this["uSoftness"] = softness
+        this["opacity"] = opacity
+        this["color"] = color
         ScreenQuad.render(this, out)
     }
 
@@ -51,6 +63,8 @@ class Vignette: PostShader(vignetteCode) {
 
         //softness of our vignette, between 0.0 and 1.0
         uniform float uSoftness;
+        uniform float opacity;
+        uniform vec3 color;
 
         void main() {
             //sample our texture
@@ -69,7 +83,7 @@ class Vignette: PostShader(vignetteCode) {
             float vignette = smoothstep(uRadius, uRadius-uSoftness, len);
 
             //apply our vignette with 50% opacity
-            texColor.rgb = mix(texColor.rgb, texColor.rgb * vignette, 0.5);
+            texColor.rgb = mix(texColor.rgb, texColor.rgb * vignette, opacity);
 
             gl_FragColor = texColor;
         }

@@ -77,7 +77,7 @@ class InstancedParticlesTest: Test {
                         val particleColor = ParticleColorNode().apply {
                             lifeTimePercent = particleData.lifeTimePercent
                             inputColor = texture.texColor
-                            color1 = GLSLVec4Inline(1f, 1f, 1f, 0f)
+                            color1 = GLSLVec4Literal(1f, 1f, 1f, 0f)
                         }
 
                         val output = component<OutputNode> {

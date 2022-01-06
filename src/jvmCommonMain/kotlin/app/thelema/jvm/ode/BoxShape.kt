@@ -17,29 +17,28 @@
 package app.thelema.jvm.ode
 
 import app.thelema.phys.IBoxShape
-import org.ode4j.math.DVector3
 import org.ode4j.ode.DBox
 import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class BoxShape: SpecificShape<DBox>(), IBoxShape {
+class BoxShape: OdeShapeAdapter<DBox>(), IBoxShape {
     override var xSize: Float = 1f
         set(value) {
             field = value
-            geom?.setLengths(value.toDouble(), ySize.toDouble(), zSize.toDouble())
+            geom?.setLengths(xSize.toDouble(), ySize.toDouble(), zSize.toDouble())
         }
 
     override var ySize: Float = 1f
         set(value) {
             field = value
-            geom?.setLengths(xSize.toDouble(), value.toDouble(), zSize.toDouble())
+            geom?.setLengths(xSize.toDouble(), ySize.toDouble(), zSize.toDouble())
         }
 
     override var zSize: Float = 1f
         set(value) {
             field = value
-            geom?.setLengths(xSize.toDouble(), ySize.toDouble(), value.toDouble())
+            geom?.setLengths(xSize.toDouble(), ySize.toDouble(), zSize.toDouble())
         }
 
     override fun createGeom(): DBox =

@@ -10,30 +10,28 @@ import app.thelema.fs.IFile
 import app.thelema.json.IJsonObject
 import app.thelema.jvm.JvmFile
 import app.thelema.script.KotlinScriptAdapter
+import app.thelema.utils.iterate
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.script.experimental.api.*
+import kotlin.script.experimental.host.FileScriptSource
+import kotlin.script.experimental.host.StringScriptSource
+import kotlin.script.experimental.host.toScriptSource
 
 class KotlinScriptStudio: KotlinScriptAdapter() {
-    val code = SourceCodeImp("", "")
-
     var file: IFile? = null
 
-    override var customMainFunctionName: String = ""
-        set(value) {
-            field = value
-            mainFunction = getMainFunctionName()
-        }
-
-    var mainFunction: String = ""
+    override var functionName: String
+        get() = file?.nameWithoutExtension ?: ""
+        set(_) {}
 
     private var oldFullCode = ""
 
     fun loadImports(out: MutableList<SourceCode>) {
-        code.also { out.add(it) }
         imports.forEach { (it as KotlinScriptStudio).loadImports(out) }
     }
 
+    // FIXME script imports
     override fun execute() {
         file?.readText { text ->
             val importsList = ArrayList<SourceCode>()
@@ -41,8 +39,10 @@ class KotlinScriptStudio: KotlinScriptAdapter() {
 
             val entityPropertyName = "entity" + APP.hashCode().toString(16)
 
-            code.name = entity.name
-            code.text = "$text\n$mainFunction($entityPropertyName)"
+            val code = StringScriptSource(
+                "$text\n$functionName($entityPropertyName)",
+                entity.name
+            )
 
             runBlocking { KotlinScripting.eval(entity, code, entityPropertyName, importsList) }
         }
@@ -51,7 +51,6 @@ class KotlinScriptStudio: KotlinScriptAdapter() {
     override fun destroy() {
         oldFullCode = ""
         file = null
-        code.text = ""
         super.destroy()
     }
 }

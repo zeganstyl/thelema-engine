@@ -19,6 +19,7 @@ package app.thelema.test
 import app.thelema.app.APP
 import app.thelema.g3d.cam.Camera
 import app.thelema.g3d.cam.OrbitCameraControl
+import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
 import app.thelema.gl.GL_COLOR_BUFFER_BIT
 import app.thelema.gl.GL_DEPTH_BUFFER_BIT
@@ -71,12 +72,13 @@ class CascadedShadowMatricesTest: Test {
 
     fun updateFrustums() {
         sceneCamera.updateCamera()
+        //println(sceneCamera.viewMatrix)
         sceneCameraFrustum.setFromMatrix(sceneCamera.inverseViewProjectionMatrix)
 
         val sceneCameraFrustumPoints = sceneCameraFrustum.points
         val camFarSubNear = sceneCamera.far - sceneCamera.near
 
-        lightView.setToLook(sceneCamera.position, lightDirection, MATH.Y)
+        lightView.setToLook(sceneCamera.node.position, lightDirection, MATH.Y)
 
         for (i in 0 until numCascades) {
             val alphaNear = cascadeEnd[i] / camFarSubNear
@@ -186,41 +188,40 @@ void main () {
 
         val control = OrbitCameraControl {
             this.camera = camera
+            keyboardEnabled = false
             zenith = 1f
             azimuth = 0f
             target = Vec3(10f, 3f, 0f)
             targetDistance = 10f
         }
-        control.listenToMouse()
 
         LOG.info("Use W A S D keys to move object")
 
-        val quaternion = Vec4()
-
-        GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.render {
+        APP.onRender = {
+            GL.glClearColor(0f, 0f, 0f, 1f)
             GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
             val delta = APP.deltaTime
 
-            control.update(delta)
+            control.updateNow()
             camera.updateCamera()
 
             if (KEY.isPressed(KEY.A)) {
-                quaternion.setQuaternionByAxis(x = 0f, y = 1f, z = 0f, delta)
-                quaternion.rotateVec3(sceneCamera.direction)
-                updateFrustums()
+                sceneCamera.node.rotateAroundAxis(0f, 1f, 0f, delta)
             } else if (KEY.isPressed(KEY.D)) {
-                quaternion.setQuaternionByAxis(x = 0f, y = 1f, z = 0f, -delta)
-                quaternion.rotateVec3(sceneCamera.direction)
-                updateFrustums()
+                sceneCamera.node.rotateAroundAxis(0f, 1f, 0f, -delta)
             }
 
             if (KEY.isPressed(KEY.W)) {
-                sceneCamera.position.add(tmpVec.set(sceneCamera.direction).scl(delta * 5f))
-                updateFrustums()
+                sceneCamera.node.getDirection(tmpVec).scl(delta * 5f)
+                sceneCamera.node.translate(tmpVec)
             } else if (KEY.isPressed(KEY.S)) {
-                sceneCamera.position.sub(tmpVec.set(sceneCamera.direction).scl(delta * 5f))
+                sceneCamera.node.getDirection(tmpVec).scl(-delta * 5f)
+                sceneCamera.node.translate(tmpVec)
+            }
+
+            if (sceneCamera.node.isTransformUpdateRequested) {
+                sceneCamera.node.updateTransform()
                 updateFrustums()
             }
 
@@ -228,12 +229,12 @@ void main () {
             shader["viewProj"] = camera.viewProjectionMatrix
 
             for (i in sceneCameraFrustumMeshes.indices) {
-                shader["color"] = colors[i]
+                shader.setColor("color", colors[i])
                 sceneCameraFrustumMeshes[i].render(shader)
             }
 
             for (i in cascadeFrustumMeshes.indices) {
-                shader["color"] = colors[i + sceneCameraFrustumMeshes.size]
+                shader.setColor("color", colors[i + sceneCameraFrustumMeshes.size])
                 cascadeFrustumMeshes[i].render(shader)
             }
         }

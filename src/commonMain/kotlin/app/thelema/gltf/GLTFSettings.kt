@@ -16,14 +16,21 @@
 
 package app.thelema.gltf
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.GL_LINEAR
 import app.thelema.gl.GL_LINEAR_MIPMAP_LINEAR
 import app.thelema.math.IVec4
 import app.thelema.shader.node.PBRNode
 
 /** @author zeganstyl */
-class GLTFConf() {
-    constructor(block: GLTFConf.() -> Unit): this() { block(this) }
+class GLTFSettings(): IEntityComponent {
+    constructor(block: GLTFSettings.() -> Unit): this() { block(this) }
+
+    override val componentName: String
+        get() = "GLTFSettings"
+
+    override var entityOrNull: IEntity? = null
 
     /** Store file buffers in RAM */
     var saveFileBuffersInCPUMem: Boolean = false
@@ -58,14 +65,11 @@ class GLTFConf() {
     /** Setup pipeline for deferred shading */
     var setupGBufferShader: Boolean = false
 
-    /** Default shader version */
-    var shaderVersion: Int = if (setupGBufferShader) 330 else 110
-
     var defaultTextureMinFilter = GL_LINEAR_MIPMAP_LINEAR
     var defaultTextureMagFilter = GL_LINEAR
 
     /** You can make some changes to shader graph, before shaders will be compiled */
     var configureMaterials: (material: GLTFMaterial) -> Unit = {}
 
-    operator fun invoke(block: GLTFConf.() -> Unit) = block(this)
+    operator fun invoke(block: GLTFSettings.() -> Unit) = block(this)
 }

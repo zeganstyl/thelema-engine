@@ -22,7 +22,7 @@ import org.ode4j.ode.DMass
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class CapsuleShape: SpecificShape<DCapsule>(), ICapsuleShape {
+class CapsuleShape: OdeShapeAdapter<DCapsule>(), ICapsuleShape {
     override var radius: Float = 0f
         set(value) {
             field = value
@@ -36,7 +36,7 @@ class CapsuleShape: SpecificShape<DCapsule>(), ICapsuleShape {
         }
 
     override fun createGeom(): DCapsule =
-        OdeHelper.createCapsule(radius.toDouble(), length.toDouble())
+        OdeHelper.createCapsule(getSpace(), radius.toDouble(), length.toDouble())
 
     override fun setupMass(density: Double, mass: DMass) {
         mass.setCapsule(density, 2, radius.toDouble(), length.toDouble())

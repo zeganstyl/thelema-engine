@@ -58,7 +58,7 @@ void main() {
     pos.x += tilePosScale.x;
     pos.z += tilePosScale.y;
     uv = pos.xz;
-    pos.y = texture2D(heightMap, uv * 0.001 + vec2(0.5)).r * 100.0;
+    pos.y = texture(heightMap, uv * 0.001 + vec2(0.5)).r * 100.0;
     gl_Position = viewProj * vec4(pos, 1.0);
 }""",
             fragCode = """
@@ -66,7 +66,7 @@ varying vec2 uv;
 uniform sampler2D heightMap;
 
 void main() {
-    gl_FragColor = texture2D(heightMap, uv * 0.001 + vec2(0.5));
+    gl_FragColor = texture(heightMap, uv * 0.001 + vec2(0.5));
 }"""
         )
         terrainShader["heightMap"] = 0
@@ -95,8 +95,8 @@ void main() {
         }
 
         val cameraPosition = Vec3()
-        cameraPosition.set(ActiveCamera.position)
-        var updateCameraPositionOnSpacePress = true
+        cameraPosition.set(ActiveCamera.eye)
+        var updateCameraPositionOnSpacePress = false
 
         val frustum = Frustum(ActiveCamera.inverseViewProjectionMatrix)
         terrain.frustum = frustum
@@ -108,7 +108,7 @@ void main() {
                 when (keycode) {
                     KEY.SPACE -> {
                         // update frustum
-                        cameraPosition.set(ActiveCamera.position)
+                        cameraPosition.set(ActiveCamera.eye)
                         frustum.setFromMatrix(ActiveCamera.inverseViewProjectionMatrix)
                         frustumMesh.frustumPoints = frustum.points
                         frustumMesh.updateMesh()
@@ -156,7 +156,7 @@ void main() {
                 simpleMeshShader[simpleMeshShader.viewProjName] = ActiveCamera.viewProjectionMatrix
                 frustumMesh.render(simpleMeshShader)
             } else {
-                cameraPosition.set(ActiveCamera.position)
+                cameraPosition.set(ActiveCamera.eye)
                 frustum.setFromMatrix(ActiveCamera.inverseViewProjectionMatrix)
             }
 

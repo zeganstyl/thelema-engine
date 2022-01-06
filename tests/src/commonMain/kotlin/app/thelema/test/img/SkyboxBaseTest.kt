@@ -20,7 +20,6 @@ import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.SkyboxMesh
-import app.thelema.gl.GL
 import app.thelema.img.TextureCube
 import app.thelema.shader.Shader
 import app.thelema.test.Test
@@ -32,6 +31,7 @@ class SkyboxBaseTest: Test {
 
     override fun testMain() {
         val shader = Shader(
+            version = 110,
             vertCode = """
 attribute vec3 POSITION;
 varying vec3 vPosition;
@@ -72,7 +72,7 @@ void main () {
             shader.bind()
             shader["viewProj"] = ActiveCamera.viewProjectionMatrix
             shader["camFar"] = ActiveCamera.far
-            shader["camPos"] = ActiveCamera.position
+            shader["camPos"] = ActiveCamera.eye
             textureCube.bind(0)
             box.render(shader)
         }

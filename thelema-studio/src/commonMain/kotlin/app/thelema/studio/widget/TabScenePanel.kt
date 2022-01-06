@@ -1,8 +1,12 @@
 package app.thelema.studio.widget
 
 import app.thelema.app.APP
+import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
+import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.cam.Camera
+import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.input.BUTTON
 import app.thelema.input.KEY
 import app.thelema.input.MOUSE
@@ -58,6 +62,16 @@ class TabScenePanel: Table() {
 
     val translationGizmo = TranslationGizmo()
 
+    val editorCamera = Camera()
+    val cameraControl = OrbitCameraControl {
+        this.camera = editorCamera
+        rotateButton = BUTTON.MIDDLE
+        keyboardEnabled = false
+        scrollFactor = 0.05f
+        isEnabled = true
+        stopListenMouse()
+    }
+
     init {
         fillParent = true
 
@@ -97,22 +111,22 @@ class TabScenePanel: Table() {
         sceneOverlayInput.touchable = Touchable.Enabled
         sceneOverlayInput.addListener(object : InputListener {
             override fun mouseMoved(event: InputEvent, x: Float, y: Float): Boolean {
-                CameraControl.control.isEnabled = true
-                CameraControl.control.mouseListener.moved(MOUSE.x, MOUSE.y)
+                cameraControl.isEnabled = true
+                cameraControl.mouseListener.moved(MOUSE.x, MOUSE.y)
                 hud?.scrollFocus = sceneOverlayInput
                 translationGizmo.onMouseMove(MOUSE.x.toFloat(), MOUSE.y.toFloat())
                 return super.mouseMoved(event, x, y)
             }
 
             override fun touchDown(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int): Boolean {
-                CameraControl.control.mouseListener.buttonDown(button, MOUSE.x, MOUSE.y, pointer)
+                cameraControl.mouseListener.buttonDown(button, MOUSE.x, MOUSE.y, pointer)
                 hud?.scrollFocus = sceneOverlayInput
                 if (button == BUTTON.LEFT) translationGizmo.onMouseDown(MOUSE.x.toFloat(), MOUSE.y.toFloat())
                 return super.touchDown(event, x, y, pointer, button)
             }
 
             override fun touchDragged(event: InputEvent, x: Float, y: Float, pointer: Int) {
-                CameraControl.control.mouseListener.dragged(MOUSE.x, MOUSE.y, pointer)
+                cameraControl.mouseListener.dragged(MOUSE.x, MOUSE.y, pointer)
                 hud?.scrollFocus = sceneOverlayInput
                 if (BUTTON.isPressed(BUTTON.LEFT)) translationGizmo.onMouseMove(MOUSE.x.toFloat(), MOUSE.y.toFloat())
             }
@@ -123,14 +137,14 @@ class TabScenePanel: Table() {
                     translationGizmo.onMouseUp(MOUSE.x.toFloat(), MOUSE.y.toFloat())
                 }
 
-                CameraControl.control.mouseListener.buttonUp(button, x.toInt(), y.toInt(), pointer)
+                cameraControl.mouseListener.buttonUp(button, x.toInt(), y.toInt(), pointer)
 
                 hud?.scrollFocus = sceneOverlayInput
                 hud?.setKeyboardFocus(sceneOverlayInput)
             }
 
             override fun scrolled(event: InputEvent, x: Float, y: Float, amount: Int): Boolean {
-                CameraControl.control.mouseListener.scrolled(amount)
+                cameraControl.mouseListener.scrolled(amount)
                 return super.scrolled(event, x, y, amount)
             }
 
@@ -143,5 +157,19 @@ class TabScenePanel: Table() {
                 return super.keyDown(event, keycode)
             }
         })
+    }
+
+    override fun act(delta: Float) {
+        super.act(delta)
+        cameraControl.update(delta)
+    }
+
+    fun setActive(active: Boolean) {
+        if (active) {
+            ActiveCamera = editorCamera
+            ECS.addEntity(entity)
+        } else {
+            ECS.removeEntity(entity)
+        }
     }
 }

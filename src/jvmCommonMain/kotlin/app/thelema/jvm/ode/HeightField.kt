@@ -25,7 +25,7 @@ import org.ode4j.ode.OdeHelper
 /** http://ode.org/wiki/index.php?title=Manual#Heightfield_Class
  *
  * @author zeganstyl */
-class HeightField: SpecificShape<DHeightfield>(), IHeightField {
+class HeightField: OdeShapeAdapter<DHeightfield>(), IHeightField {
     var width: Float = 1f
     var depth: Float = 1f
     var widthSamples: Int = 1

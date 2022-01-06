@@ -35,7 +35,7 @@ fun main() {
 
     KB.addListener(object : IKeyListener {
         override fun keyDown(keycode: Int) {
-            if (keycode == KEY.SPACE) println(ActiveCamera.position)
+            if (keycode == KEY.SPACE) println(ActiveCamera.eye)
         }
     })
 

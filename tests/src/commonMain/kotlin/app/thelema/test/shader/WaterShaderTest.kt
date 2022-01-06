@@ -154,7 +154,7 @@ void main() {
             shader["time"] = time
             shader["projViewMatrix"] = ActiveCamera.viewProjectionMatrix
             shader["worldMatrix"] = cubeMatrix4
-            shader["cameraPos"] = ActiveCamera.position
+            shader["cameraPos"] = ActiveCamera.eye
 
             environmentTexture.bind(0)
             normalTexture.bind(1)

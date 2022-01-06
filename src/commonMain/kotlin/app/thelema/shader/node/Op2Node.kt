@@ -43,10 +43,10 @@ class Op2Node(
     var in2 by input(GLSL.oneFloat)
 
     var resultType: String
-        get() = result.type
-        set(value) { result.type = value }
+        get() = opResult.type
+        set(value) { opResult.type = value }
 
-    val result = GLSLValue("op", resultType).apply { output(this) }
+    val opResult = GLSLValue("opResult", resultType).apply { output(this) }
 
     var isFragment = true
     var isVarying = true
@@ -60,9 +60,9 @@ class Op2Node(
         if (!isFragment) {
             val f = function.replace("in1", in1.ref).replace("in2", in2.ref)
             if (isVarying) {
-                out.append("${result.ref} = $f;\n")
+                out.append("${opResult.ref} = $f;\n")
             } else {
-                out.append("${result.typedRef} = $f;\n")
+                out.append("${opResult.typedRef} = $f;\n")
             }
         }
     }
@@ -71,7 +71,7 @@ class Op2Node(
         super.declarationVert(out)
 
         if (isVarying) {
-            out.append("varying ${result.typedRef};\n")
+            out.append("$varOut ${opResult.typedRef};\n")
         }
     }
 
@@ -79,7 +79,7 @@ class Op2Node(
         super.declarationFrag(out)
 
         if (isVarying) {
-            out.append("varying ${result.typedRef};\n")
+            out.append("$varIn ${opResult.typedRef};\n")
         }
     }
 
@@ -89,7 +89,7 @@ class Op2Node(
             inputs.forEach {
                 f = f.replace(it.name, it.valueOrDefault()!!.ref)
             }
-            out.append("${result.typedRef} = $f;\n")
+            out.append("${opResult.typedRef} = $f;\n")
         }
     }
 }

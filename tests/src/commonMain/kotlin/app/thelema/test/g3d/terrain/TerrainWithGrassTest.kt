@@ -395,22 +395,22 @@ void main () {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
-            terrain.update(ActiveCamera.position)
+            terrain.update(ActiveCamera.eye)
 
             skyboxShader.bind()
             skyboxShader["viewProj"] = ActiveCamera.viewProjectionMatrix
             skyboxShader["camFar"] = ActiveCamera.far
-            skyboxShader["camPos"] = ActiveCamera.position
+            skyboxShader["camPos"] = ActiveCamera.eye
             textureCube.bind(0)
             mesh.render(skyboxShader)
 
             terrainShader.bind()
             terrainShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            terrainShader["camPos"] = ActiveCamera.position
+            terrainShader["camPos"] = ActiveCamera.eye
 
             grassShader.bind()
             grassShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            grassShader["camPos"] = ActiveCamera.position
+            grassShader["camPos"] = ActiveCamera.eye
 
             terrain.render(terrainShader)
         }

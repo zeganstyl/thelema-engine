@@ -67,6 +67,12 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
         }
     }
 
+    override fun reloadInstance() {
+        sceneInstance?.also { instance ->
+            sceneClassEntity?.also { instance.setDeep(it) }
+        }
+    }
+
     override fun addedComponentToBranch(component: IEntityComponent) {
         super<ComponentAdapter>.addedComponentToBranch(component)
         if (component != this && component is SceneInstance) {

@@ -42,6 +42,9 @@ void main(void)
     gl_FragColor = vec4(edgeColor * sobel.xyz, 1.0);
 }"""
 ) {
+    override val componentName: String
+        get() = "SobelFilter"
+
     val edgeColor = Vec3(1f, 1f, 1f)
 
     init {

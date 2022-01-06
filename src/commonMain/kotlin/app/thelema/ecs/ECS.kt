@@ -31,6 +31,9 @@ import app.thelema.res.Project
 import app.thelema.script.BakedKotlinScripts
 import app.thelema.script.IKotlinScript
 import app.thelema.script.KotlinScript
+import app.thelema.shader.ForwardRenderingPipeline
+import app.thelema.shader.IRenderingPipeline
+import app.thelema.shader.RenderingPipeline
 import app.thelema.shader.Shader
 import app.thelema.utils.iterate
 import kotlin.native.concurrent.ThreadLocal
@@ -147,11 +150,13 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 bool(GLTF::receiveShadows)
                 bool(GLTF::ibl)
                 int(GLTF::iblMaxMipLevels)
+                bool(GLTF::overrideAssets)
             }
             descriptor { app.thelema.font.BitmapFont() }
             descriptor({ Project() }) {
                 setAliases(app.thelema.res.IProject::class)
                 refAbs(Project::mainScene)
+                string(Project::appPackage)
             }
             descriptor { app.thelema.res.ResourceHolder() }
         }
@@ -160,7 +165,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
 
         descriptor({ KotlinScript() }) {
             setAliases(IKotlinScript::class)
-            string(KotlinScript::customMainFunctionName)
+            string(KotlinScript::functionName)
         }
 
         descriptor { SimulationNode() }
@@ -168,7 +173,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptor { KeyboardHandler() }
         descriptor { MouseHandler() }
 
-        descriptor({ Image() }) {
+        descriptor(::Image) {
             setAliases(IImage::class)
             int(Image::width)
             int(Image::height)
@@ -176,9 +181,9 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             int(Image::pixelChannelType)
             int(Image::internalFormat)
         }
-        descriptor({ Texture2D() }) {
+        descriptor(::Texture2D) {
             setAliases(ITexture2D::class)
-            ref("image", { image }) { image = it }
+            ref(Texture2D::image)
             intEnum(
                 Texture2D::minFilter,
                 linkedMapOf(
@@ -195,8 +200,8 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 linkedMapOf(GL_NEAREST to "Nearest", GL_LINEAR to "Linear"),
                 "???"
             )
-            int("sWrap", { sWrap }) { sWrap = it }
-            int("tWrap", { tWrap }) { tWrap = it }
+            int(Texture2D::sWrap)
+            int(Texture2D::tWrap)
             float(Texture2D::anisotropicFilter)
         }
         descriptor { TextureCube() }
@@ -225,6 +230,18 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             descriptor({ ParticleTextureFrameEffect() }) {
                 int(ParticleTextureFrameEffect::framesU)
                 int(ParticleTextureFrameEffect::framesV)
+            }
+        }
+
+        descriptor({ RenderingPipeline() }) {
+            setAliases(IRenderingPipeline::class)
+
+            descriptor({ ForwardRenderingPipeline() }) {
+                bool(ForwardRenderingPipeline::fxaaEnabled)
+                bool(ForwardRenderingPipeline::vignetteEnabled)
+                bool(ForwardRenderingPipeline::bloomEnabled)
+                bool(ForwardRenderingPipeline::godRaysEnabled)
+                bool(ForwardRenderingPipeline::motionBlurEnabled)
             }
         }
 

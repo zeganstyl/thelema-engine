@@ -1,16 +1,6 @@
 import app.thelema.GLFWApp
 import app.thelema.GLFWAppConf
-import app.thelema.app.APP
-import app.thelema.audio.WavSound
-import app.thelema.data.DATA
-import app.thelema.gl.GL
-import app.thelema.test.PBRShaderTest
-import app.thelema.test.SelectionByColorTest
-import app.thelema.test.audio.SoundOggTest
-import app.thelema.test.g3d.BoxMeshTest
-import app.thelema.test.g3d.SimpleSkyboxTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
-import app.thelema.test.phys.BoxShapeTest
 import kotlinx.cinterop.*
 import platform.posix.PATH_MAX
 import platform.posix.getcwd

@@ -16,11 +16,17 @@
 
 package app.thelema.phys
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.component
+
 /** @author zeganstyl */
-interface ICylinderShape: IShape {
+interface ICylinderShape: IPhysicalShape {
     var radius: Float
     var length: Float
 
     override val componentName: String
         get() = "CylinderShape"
 }
+
+fun IEntity.cylinderShape(block: ICylinderShape.() -> Unit) = component(block)
+fun IEntity.cylinderShape() = component<ICylinderShape>()

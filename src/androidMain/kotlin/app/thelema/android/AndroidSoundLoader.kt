@@ -1,10 +1,10 @@
 package app.thelema.android
 
 import android.media.SoundPool
-import app.thelema.audio.ISound
+import app.thelema.audio.ISoundLoader
 import kotlin.math.abs
 
-internal class AndroidSound(pool: SoundPool, val soundId: Int) : ISound {
+internal class AndroidSoundLoader(pool: SoundPool, val soundId: Int) : ISoundLoader {
     val soundPool: SoundPool = pool
     val streamIds = ArrayList<Int>(8)
 

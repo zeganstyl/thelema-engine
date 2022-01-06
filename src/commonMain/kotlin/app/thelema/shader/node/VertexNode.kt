@@ -19,7 +19,6 @@ package app.thelema.shader.node
 import app.thelema.g3d.IScene
 import app.thelema.gl.IMesh
 import app.thelema.math.TransformDataType
-import app.thelema.json.IJsonObject
 import app.thelema.math.MATH
 
 /** For static, moving, skinned objects
@@ -55,72 +54,17 @@ class VertexNode(
     private val uWorldMatrix: String
         get() = "uWorldMatrix$uid"
 
+    private val uUseBones: String
+        get() = "uUseBones$uid"
+
     private val hasBones
         get() = maxBones > 0 && bonesSetsNum > 0
 
     val uid: Int
         get() = 0
 
-    override fun readJson(json: IJsonObject) {
-        super.readJson(json)
-
-        positionName = json.string("aPositionName", "POSITION")
-        normalName = json.string("aNormalName", "NORMAL")
-        tangentName = json.string("aTangentName", "TANGENT")
-        bonesName = json.string("aBonesName", "JOINTS_")
-        boneWeightsName = json.string("aBoneWeightsName", "WEIGHTS_")
-
-        maxBones = json.int("maxBones", 0)
-        bonesSetsNum = json.int("bonesSetsNum", 1)
-        worldTransformType = when (json.string("worldTransformType")) {
-            "trs" -> TransformDataType.TRS
-            "translation" -> TransformDataType.Translation
-            "translationScale" -> TransformDataType.TranslationScale
-            "translationRotation" -> TransformDataType.TranslationRotation
-            "translationRotationY" -> TransformDataType.TranslationRotationY
-            "translationScaleProportional" -> TransformDataType.TranslationScaleProportional
-            else -> TransformDataType.None
-        }
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-
-        if (positionName != "POSITION") json["aPositionName"] = positionName
-        if (normalName != "NORMAL") json["aNormalName"] = normalName
-        if (tangentName != "TANGENT") json["aTangentName"] = tangentName
-        if (bonesName != "JOINTS_") json["aBonesName"] = bonesName
-        if (boneWeightsName != "WEIGHTS_") json["aBoneWeightsName"] = boneWeightsName
-
-        if (maxBones > 0) json["maxBones"] = maxBones
-        if (bonesSetsNum != 1) json["bonesSetsNum"] = bonesSetsNum
-        if (worldTransformType != TransformDataType.None) {
-            json["worldTransformType"] = when (worldTransformType) {
-                TransformDataType.TRS -> "trs"
-                TransformDataType.Translation -> "translation"
-                TransformDataType.TranslationScale -> "translationScale"
-                TransformDataType.TranslationRotation -> "translationRotation"
-                TransformDataType.TranslationRotationY -> "translationRotationY"
-                TransformDataType.TranslationScaleProportional -> "translationScaleProportional"
-                else -> "none"
-            }
-        }
-    }
-
-    fun set(other: VertexNode): VertexNode {
-        maxBones = other.maxBones
-        worldTransformType = other.worldTransformType
-        bonesSetsNum = other.bonesSetsNum
-        positionName = other.positionName
-        normalName = other.normalName
-        tangentName = other.tangentName
-        bonesName = other.bonesName
-        boneWeightsName = other.boneWeightsName
-        return this
-    }
-
     private fun boneInfluenceCode(component: String, bonesName: String, weightsName: String, sumName: String = "skinning"): String {
-        return "if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * $uBoneMatricesName[int($bonesName.$component)];\n"
+        return "    if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * $uBoneMatricesName[int($bonesName.$component)];\n"
     }
 
     private fun skinningSetCode(out: StringBuilder, bonesName: String, weightsName: String, sumName: String = "skinning") {
@@ -134,6 +78,7 @@ class VertexNode(
         super.prepareShaderNode(mesh, scene)
 
         shader[uWorldMatrix] = mesh.worldMatrix ?: MATH.IdentityMat4
+        shader[uUseBones] = mesh.armature?.boneMatrices?.isNotEmpty() == true
 
         val armature = mesh.armature
         if (armature != null) {
@@ -148,6 +93,15 @@ class VertexNode(
         return "mat3($mat4[0].xyz, $mat4[1].xyz, $mat4[2].xyz);"
     }
 
+    private fun worldTransformPos(out: StringBuilder, pos: String) {
+        when (worldTransformType) {
+            TransformDataType.TRS -> out.append("$pos = $uWorldMatrix * $pos;\n")
+            TransformDataType.Translation -> out.append("$pos.xyz = $pos.xyz + uTransVec4$uid.xyz;\n")
+            TransformDataType.TranslationScale -> out.append("$pos.xyz = $pos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
+            TransformDataType.TranslationRotationY -> out.append("$pos.xyz = rotate_vertex_position(uTransVec4$uid.xyz, uTransVec4$uid.w) + uTransVec4$uid.xyz;\n")
+        }
+    }
+
     override fun executionVert(out: StringBuilder) {
         if (position.isUsed) {
             val pos = "pos$uid"
@@ -156,6 +110,7 @@ class VertexNode(
             val skinningName = "skinning"
 
             if (hasBones) {
+                out.append("if ($uUseBones) {\n")
                 val aBonesName = bonesName
                 val aBoneWeightsName = boneWeightsName
                 for (i in 0 until bonesSetsNum) {
@@ -164,14 +119,12 @@ class VertexNode(
                     skinningSetCode(out, "$aBonesName$index", "$aBoneWeightsName$index", skinningName)
                 }
 
-                out.append("$pos = $skinningName * $pos;\n")
-            }
-
-            when (worldTransformType) {
-                TransformDataType.TRS -> out.append("$pos = $uWorldMatrix * $pos;\n")
-                TransformDataType.Translation -> out.append("$pos.xyz = $pos.xyz + uTransVec4$uid.xyz;\n")
-                TransformDataType.TranslationScale -> out.append("$pos.xyz = $pos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
-                TransformDataType.TranslationRotationY -> out.append("$pos.xyz = rotate_vertex_position(uTransVec4$uid.xyz, uTransVec4$uid.w) + uTransVec4$uid.xyz;\n")
+                out.append("    $pos = $skinningName * $pos;\n")
+                out.append("} else {\n")
+                worldTransformPos(out, pos)
+                out.append("}\n")
+            } else {
+                worldTransformPos(out, pos)
             }
 
             out.append("${position.ref} = $pos.xyz;\n")
@@ -243,6 +196,7 @@ class VertexNode(
 
             if (hasBones) {
                 out.append("uniform mat4 $uBoneMatricesName[$maxBones];\n")
+                out.append("uniform bool $uUseBones;\n")
                 out.append("mat4 skinning = mat4(0.0);\n")
 
                 for (i in 0 until bonesSetsNum) {

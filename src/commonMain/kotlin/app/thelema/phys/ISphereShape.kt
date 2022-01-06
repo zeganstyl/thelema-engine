@@ -17,11 +17,10 @@
 package app.thelema.phys
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 
 /** @author zeganstyl */
-interface ISphereShape: IShape {
+interface ISphereShape: IPhysicalShape {
     var radius: Float
 
     override val componentName: String

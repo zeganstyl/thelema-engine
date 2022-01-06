@@ -23,12 +23,12 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
         return app.thelema.android.AndroidAudioRecorder(samplingRate, isMono)
     }
 
-    override fun newSound(file: IFile): ISound {
-        val androidSound: app.thelema.android.AndroidSound
+    override fun newSound(file: IFile): ISoundLoader {
+        val androidSound: app.thelema.android.AndroidSoundLoader
         if (file.location == FileLocation.Internal) {
             try {
                 val descriptor: AssetFileDescriptor = context.assets.openFd(file.path)
-                androidSound = app.thelema.android.AndroidSound(soundPool, soundPool.load(descriptor, 1))
+                androidSound = app.thelema.android.AndroidSoundLoader(soundPool, soundPool.load(descriptor, 1))
                 descriptor.close()
             } catch (ex: IOException) {
                 throw IllegalStateException(
@@ -38,7 +38,7 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
             }
         } else {
             try {
-                androidSound = app.thelema.android.AndroidSound(soundPool, soundPool.load(file.path, 1))
+                androidSound = app.thelema.android.AndroidSoundLoader(soundPool, soundPool.load(file.path, 1))
             } catch (ex: Exception) {
                 throw IllegalStateException("Error loading audio file: $file", ex)
             }

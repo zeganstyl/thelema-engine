@@ -17,6 +17,7 @@
 package app.thelema.ecs
 
 import app.thelema.concurrency.ATOM
+import app.thelema.g3d.scene
 import app.thelema.json.IJsonObject
 import app.thelema.res.RES
 import app.thelema.utils.LOG
@@ -119,12 +120,12 @@ class Entity() : IEntity {
 
     override fun getEntityByName(name: String): IEntity? = childrenInternal.firstOrNull { it.name == name }
 
-    override fun findEntityByName(name: String): IEntity? {
+    override fun findEntityByNameOrNull(name: String): IEntity? {
         val item = getEntityByName(name)
         if (item != null) return item
 
         for (i in children.indices) {
-            val item2 = children[i].findEntityByName(name)
+            val item2 = children[i].findEntityByNameOrNull(name)
             if (item2 != null) return item2
         }
 
@@ -393,5 +394,5 @@ class Entity() : IEntity {
 
 /** Create entity that will be set to rendering and updating, see [IEntity.makeCurrent] */
 fun mainEntity(block: Entity.() -> Unit) {
-    Entity().apply(block).makeCurrent()
+    Entity().apply { scene() }.apply(block).makeCurrent()
 }

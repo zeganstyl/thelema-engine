@@ -22,7 +22,9 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
+import app.thelema.fs.projectFile
 import app.thelema.g3d.ISceneInstance
+import app.thelema.g3d.ISceneProvider
 import app.thelema.g3d.SceneProvider
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
@@ -31,6 +33,7 @@ import app.thelema.res.LoaderAdapter
 import app.thelema.res.RES
 import app.thelema.res.load
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
 
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
  *
@@ -39,12 +42,12 @@ import app.thelema.utils.LOG
 class GLTF: IGLTF, LoaderAdapter() {
     var source: Any = ""
     var sourceType: GLTFSourceType = GLTFSourceType.Auto
-    override var directory: IFile = FS.internal("/")
+    override var directory: IFile = projectFile("/")
 
     override val componentName: String
         get() = "GLTF"
 
-    override var conf = defaultConf
+    override var conf = GLTFSettings()
 
     override var generator = ""
     override var version = "2.0"
@@ -94,26 +97,31 @@ class GLTF: IGLTF, LoaderAdapter() {
 
     private val glProgress = ATOM.int(0)
 
-    val instances = HashSet<ISceneInstance>(0)
+    var provider: ISceneProvider = SceneProvider().also { it.proxy = this }
 
     override var entityOrNull: IEntity?
         get() = super.entityOrNull
         set(value) {
             super.entityOrNull = value
-            value?.component<SceneProvider>()?.proxy = this
+            provider = (value?.component() ?: SceneProvider()).also { it.proxy = this }
         }
 
+    private val _instances = ArrayList<ISceneInstance>()
+    override val instances: List<ISceneInstance>
+        get() =_instances
+
+    override var overrideAssets: Boolean = false
+
     override fun cancelProviding(instance: ISceneInstance) {
-        instances.remove(instance)
+        _instances.remove(instance)
     }
 
     override fun provideScene(instance: ISceneInstance) {
         load()
         if (isLoaded) {
             instance.sceneClassEntity = scene
-        } else {
-            instances.add(instance)
         }
+        _instances.add(instance)
     }
 
     fun iterateArrays(block: (array: IGLTFArray) -> Unit) {
@@ -167,8 +175,7 @@ class GLTF: IGLTF, LoaderAdapter() {
                     buffers.forEach { (it as GLTFBuffer).bytes.destroy() }
                 }
                 stop()
-                instances.forEach { it.sceneClassEntity = scene }
-                instances.clear()
+                provider.instances.iterate { it.sceneClassEntity = scene }
             }
         }
     }
@@ -290,6 +297,20 @@ class GLTF: IGLTF, LoaderAdapter() {
             }
         }
 
+        if (overrideAssets) {
+            file?.also { file ->
+                directory.child("${file.name}_override.entity").readText {
+                    JSON.parseObject(it).get("children") {
+                        get(meshesEntity.name) { meshesEntity.readJson(this) }
+                        get(imagesEntity.name) { imagesEntity.readJson(this) }
+                        get(texturesEntity.name) { texturesEntity.readJson(this) }
+                        get(materialsEntity.name) { materialsEntity.readJson(this) }
+                        get(animationsEntity.name) { animationsEntity.readJson(this) }
+                    }
+                }
+            }
+        }
+
         json.int("scene") {
             mainSceneIndex = it
             scene = (scenes.getOrNullTyped<GLTFScene>(it) ?:
@@ -323,6 +344,32 @@ class GLTF: IGLTF, LoaderAdapter() {
         glProgress += 1
     }
 
+    override fun writeJson(json: IJsonObject) {
+        super<LoaderAdapter>.writeJson(json)
+
+        if (overrideAssets) {
+            file?.also { file ->
+                directory.child("${file.name}_override.entity").writeText(
+                    JSON.printObject {
+                        setObj("children") {
+                            setObj(meshesEntity.name) { meshesEntity.writeJson(this) }
+                            setObj(imagesEntity.name) { imagesEntity.writeJson(this) }
+                            setObj(texturesEntity.name) { texturesEntity.writeJson(this) }
+                            setObj(materialsEntity.name) { materialsEntity.writeJson(this) }
+                            setObj(animationsEntity.name) { animationsEntity.writeJson(this) }
+                        }
+                    }
+                )
+            }
+        }
+
+        scenes.iterate { scene ->
+            (scene as GLTFScene).loader.also {
+                if (it.saveTargetEntityOnWrite) it.saveTargetEntity()
+            }
+        }
+    }
+
     override fun destroy() {
         iterateArrays { it.destroy() }
     }
@@ -335,7 +382,7 @@ class GLTF: IGLTF, LoaderAdapter() {
         const val UInt = 5125
         const val Float = 5126
 
-        val defaultConf = GLTFConf()
+        val defaultConf = GLTFSettings()
     }
 }
 

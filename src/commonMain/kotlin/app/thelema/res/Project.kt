@@ -55,7 +55,7 @@ class Project: IProject {
         set(value) {
             if (field != value) {
                 field = value
-                mainScene?.load()
+                if (runMainSceneRequest) mainScene?.load()
             }
         }
 
@@ -64,6 +64,8 @@ class Project: IProject {
         get() = absoluteDirectoryInternal
 
     private var runMainSceneRequest = false
+
+    override var appPackage: String = ""
 
     override fun runMainScene() {
         runMainSceneRequest = true

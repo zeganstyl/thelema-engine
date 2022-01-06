@@ -16,7 +16,9 @@
 
 package app.thelema.shader
 
-interface IRenderingPipeline {
+import app.thelema.ecs.IEntityComponent
+
+interface IRenderingPipeline: IEntityComponent {
     fun setResolution(width: Int, height: Int)
 
     fun render(block: (shaderChannel: String?) -> Unit)

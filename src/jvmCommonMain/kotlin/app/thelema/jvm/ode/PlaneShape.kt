@@ -17,25 +17,36 @@
 package app.thelema.jvm.ode
 
 import app.thelema.math.IVec3
+import app.thelema.math.Vec3
 import app.thelema.phys.IPlaneShape
 import org.ode4j.ode.DMass
 import org.ode4j.ode.DPlane
 import org.ode4j.ode.OdeHelper
 
 /** @author zeganstyl */
-class PlaneShape: SpecificShape<DPlane>(), IPlaneShape {
-    override val depth: Float
-        get() = geom?.depth?.toFloat() ?: 0f
+class PlaneShape: OdeShapeAdapter<DPlane>(), IPlaneShape {
+    override var depth: Float = 0f
+        set(value) {
+            field = value
+            setParams()
+        }
 
-    override fun createGeom(): DPlane =
-        OdeHelper.createPlane(null, 0.0, 1.0, 0.0, 0.0)
+    override var normal: IVec3 = Vec3(0f, 1f, 0f)
+        set(value) {
+            field.set(value)
+            setParams()
+        }
 
-    override fun getNormal(out: IVec3) {
-        val normal = geom?.normal
-        if (normal != null) out.set(normal.get0().toFloat(), normal.get1().toFloat(), normal.get2().toFloat())
+    private fun setParams() {
+        geom?.setParams(normal.x.toDouble(), normal.y.toDouble(), normal.z.toDouble(), depth.toDouble())
     }
 
-    override fun setParamsD(a: Double, b: Double, c: Double, d: Double) {
+    override fun createGeom(): DPlane =
+        OdeHelper.createPlane(getSpace(), normal.x.toDouble(), normal.y.toDouble(), normal.z.toDouble(), depth.toDouble())
+
+    override fun setParams(a: Double, b: Double, c: Double, d: Double) {
+        normal.set(a.toFloat(), b.toFloat(), c.toFloat())
+        depth = d.toFloat()
         geom?.setParams(a, b, c, d)
     }
 

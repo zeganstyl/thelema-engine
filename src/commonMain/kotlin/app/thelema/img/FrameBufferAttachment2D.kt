@@ -46,6 +46,10 @@ class FrameBufferAttachment2D() : FrameBufferAttachmentAdapter() {
                 texture.magFilter = filter
                 texture.sWrap = GL_CLAMP_TO_EDGE
                 texture.tWrap = GL_CLAMP_TO_EDGE
+                if (isShadowMap) {
+                    GL.glTexParameteri(texture.glTarget, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE)
+                    GL.glTexParameteri(texture.glTarget, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL)
+                }
                 texture.load(
                     frameBuffer.width, frameBuffer.height, null,
                     internalFormat, pixelFormat, type, mipmapLevel

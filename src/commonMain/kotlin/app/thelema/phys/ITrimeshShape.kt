@@ -17,12 +17,11 @@
 package app.thelema.phys
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.gl.IMesh
 
 /** @author zeganstyl */
-interface ITrimeshShape: IShape {
+interface ITrimeshShape: IPhysicalShape {
     var mesh: IMesh?
 
     override val componentName: String

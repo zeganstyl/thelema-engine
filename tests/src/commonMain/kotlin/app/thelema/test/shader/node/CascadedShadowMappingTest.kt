@@ -30,6 +30,7 @@ import app.thelema.gl.TextureRenderer
 import app.thelema.gltf.gltf
 import app.thelema.res.RES
 import app.thelema.shader.Shader
+import app.thelema.shader.node
 import app.thelema.shader.node.*
 import app.thelema.test.Test
 
@@ -50,10 +51,9 @@ class CascadedShadowMappingTest : Test {
 
             entity("light1") {
                 directionalLight {
-                    color.set(0.1f, 0.1f, 1f, 1f)
+                    color.set(1f, 1f, 1f)
                     setDirectionFromPosition(1f, 1f, 1f)
-                    setupShadowMaps(1024, 1024)
-                    lightPositionOffset = 50f
+                    isShadowEnabled = true
                 }
             }
 
@@ -70,33 +70,20 @@ class CascadedShadowMappingTest : Test {
                 planeMesh { setSize(100f) }
                 material {
                     shader = Shader {
-                        val vertexNode = addNode(VertexNode())
-                        val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-
-                        val pbrNode = addNode(PBRNode {
-                            baseColor = GLSL.oneFloat
-                            normal = GLSLVec3Inline(0f, 1f, 0f)
-                            occlusion = GLSL.oneFloat
-                            roughness = GLSL.oneFloat
-                            metallic = GLSL.zeroFloat
-                            normalizedViewVector = cameraDataNode.normalizedViewVector
-                            worldPosition = vertexNode.position
-                            clipSpacePosition = cameraDataNode.clipSpacePosition
+                        val pbrNode = PBRNode {
                             receiveShadows = true
-                            maxNumDirectionLights = 2
-                        })
+                        }
 
-                        addNode(OutputNode(cameraDataNode.clipSpacePosition, pbrNode.result))
+                        rootNode = node<OutputNode> {
+                            fragColor = pbrNode.result
+                        }
 
                         build()
                         //println(printCode())
                     }
 
                     shaderChannels[ShaderChannel.Depth] = Shader {
-                        val vertexNode = addNode(VertexNode())
-                        val cameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                        addNode(OutputNode(cameraDataNode.clipSpacePosition, GLSL.oneFloat))
-
+                        rootNode = node<OutputNode> {}
                         build()
                         //println(printCode())
                     }
@@ -105,9 +92,7 @@ class CascadedShadowMappingTest : Test {
         }
 
         RES.gltf("nightshade/nightshade.gltf") {
-            separateThread = true
-            conf.setupDepthRendering = true
-            conf.receiveShadows = false
+            setupDepthRendering = true
 
             onLoaded {
                 mainScene.addEntity(scene.copyDeep("model"))
