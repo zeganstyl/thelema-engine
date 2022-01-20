@@ -16,17 +16,36 @@
 
 package app.thelema.lwjgl3.audio
 
+import app.thelema.audio.AL
 import app.thelema.audio.ISoundLoader
+import app.thelema.fs.IFile
+import app.thelema.math.MATH
+import app.thelema.res.LoaderAdapter
+import app.thelema.utils.LOG
 import org.lwjgl.openal.AL10
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
 
-/** @author Nathan Sweet */
-open class OpenALSound(private val audio: OpenAL) : ISoundLoader {
+/** @author Nathan Sweet, zeganstyl */
+class SoundLoader : ISoundLoader, LoaderAdapter() {
     private var bufferID = -1
-    var duration = 0f
-        private set
+    override var duration: Float = 0f
+
+    private val audio: OpenAL
+        get() = AL as OpenAL
+
+    override val componentName: String
+        get() = "SoundLoader"
+
+    override fun loadBase(file: IFile) {
+        val codec = OpenALCodecs.sound[file.extension.lowercase()]
+        if (codec == null) {
+            LOG.error("Sound file extension is unknown: ${file.path}")
+            return
+        }
+        codec.invoke(file, this)
+    }
 
     fun setup(pcm: ByteArray, channels: Int, sampleRate: Int) {
         val bytesNum = pcm.size - pcm.size % if (channels > 1) 4 else 2
@@ -80,13 +99,14 @@ open class OpenALSound(private val audio: OpenAL) : ISoundLoader {
         AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
         AL10.alSourcei(sourceID, AL10.AL_LOOPING, if (loop) AL10.AL_TRUE else AL10.AL_FALSE)
         AL10.alSourcef(sourceID, AL10.AL_GAIN, volume)
-        setPitch(soundId, pitch)
-        setPan(soundId, pan)
+        AL10.alSourcef(sourceID, AL10.AL_PITCH, pitch)
+        AL10.alSource3f(sourceID, AL10.AL_POSITION, MATH.cos((pan - 1) * MATH.PI / 2), 0f,
+            MATH.sin((pan + 1) * MATH.PI / 2))
         AL10.alSourcePlay(sourceID)
         return soundId
     }
 
-    override fun stop() {
+    override fun stopSound() {
         if (audio.noDevice) return
         audio.stopSourcesWithBuffer(bufferID)
     }
@@ -100,7 +120,7 @@ open class OpenALSound(private val audio: OpenAL) : ISoundLoader {
         audio.forget(this)
     }
 
-    override fun stop(soundId: Int) {
+    override fun stopSound(soundId: Int) {
         if (audio.noDevice) return
         audio.stopSound(soundId)
     }

@@ -36,9 +36,11 @@ import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.*
 import org.lwjgl.system.Callback
 import app.thelema.app.*
+import app.thelema.audio.ISoundLoader
 import app.thelema.concurrency.ATOM
 import app.thelema.jvm.concurrency.AtomicProviderJvm
 import app.thelema.jvm.ode.RigidBodyPhysicsWorld
+import app.thelema.lwjgl3.audio.SoundLoader
 import app.thelema.res.RES
 import java.nio.IntBuffer
 import java.util.concurrent.CountDownLatch
@@ -116,6 +118,8 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
             try {
                 AL = OpenAL(conf.audioDeviceSimultaneousSources,
                     conf.audioDeviceBufferCount, conf.audioDeviceBufferSize)
+
+                setupAudioComponents()
             } catch (t: Throwable) {
                 LOG.info("Couldn't initialize audio, disabling audio")
                 t.printStackTrace()
@@ -143,6 +147,12 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
     override fun setupPhysicsComponents() {
         RigidBodyPhysicsWorld.initOdeComponents()
+    }
+
+    override fun setupAudioComponents() {
+        ECS.descriptorI<ISoundLoader>({ SoundLoader() }) {
+            bool(ISoundLoader::isMuted)
+        }
     }
 
     private fun getOrCreateSystemCursor(shape: Int): Long {

@@ -16,16 +16,21 @@
 
 package app.thelema.g3d.mesh
 
+import app.thelema.ecs.ComponentCanBeRebuild
 import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexAttribute
 import app.thelema.shader.IShader
 
-interface IMeshBuilder: IEntityComponent {
+interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
     val mesh: IMesh
 
     var isMeshUpdateRequested: Boolean
+
+    override var rebuildComponentRequested: Boolean
+        get() = isMeshUpdateRequested
+        set(value) { isMeshUpdateRequested = value }
 
     fun getVerticesCount(): Int
 
@@ -43,6 +48,10 @@ interface IMeshBuilder: IEntityComponent {
 
     fun render(shader: IShader) {
         mesh.render(shader)
+    }
+
+    override fun rebuildComponent() {
+        updateMesh()
     }
 
     fun updateMesh()

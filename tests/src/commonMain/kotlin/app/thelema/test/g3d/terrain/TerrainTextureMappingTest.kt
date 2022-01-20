@@ -170,7 +170,8 @@ void main() {
         val heightMap = Texture2D("terrain/heightmap.png")
         val splatMap = Texture2D("terrain/splatmap.png")
 
-        val terrain = Terrain(minTileSize, 25, numLevelOfDetail, vertexPositionName = "POSITION")
+        val terrain = Terrain()
+        // minTileSize, 25, numLevelOfDetail, vertexPositionName = "POSITION"
         terrain.minY = terrainMinY
         terrain.maxY = terrainMaxY
 

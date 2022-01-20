@@ -98,9 +98,9 @@ class OutputNode(
 
     override fun declarationFrag(out: StringBuilder) {
         if (fadeStart in 0f..1f) {
-            out.append("uniform float fadeStart;")
-            out.append("uniform float fadeMul;")
-            out.append("varying float depthForFade;")
+            out.append("uniform float fadeStart;\n")
+            out.append("uniform float fadeMul;\n")
+            out.append("varying float depthForFade;\n")
         }
     }
 

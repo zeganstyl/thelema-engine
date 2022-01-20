@@ -89,7 +89,7 @@ class Entity() : IEntity {
                 try {
                     component(it).readJson(this)
                 } catch (e: ComponentNotFoundException) {
-                    LOG.error("Can't find component type: $it", e)
+                    LOG.error("$path: Can't find component type: $it", e)
                 }
             }
         }

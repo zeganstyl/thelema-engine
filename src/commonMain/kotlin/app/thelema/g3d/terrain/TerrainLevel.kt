@@ -16,16 +16,30 @@
 
 package app.thelema.g3d.terrain
 
+import app.thelema.g3d.IScene
+import app.thelema.math.Vec3
 import app.thelema.shader.IShader
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
 
 /** Terrain level of detail */
-class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int) {
-    val tileSize: Float = minTileSize * 2f.pow(levelIndex)
-    private val tileSizeHalf: Float = tileSize * 0.5f
-    private val tileSizeOneAndHalf: Float = tileSize * 1.5f
+class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float = 1f) {
+
+    var minTileSize: Float = minTileSize
+        set(value) {
+            field = value
+            _tileSize = value * 2f.pow(levelIndex)
+            tileSizeHalf = tileSize * 0.5f
+            tileSizeOneAndHalf = tileSize * 1.5f
+        }
+
+    private var _tileSize: Float = minTileSize * 2f.pow(levelIndex)
+    val tileSize: Float
+        get() = _tileSize
+
+    private var tileSizeHalf: Float = tileSize * 0.5f
+    private var tileSizeOneAndHalf: Float = tileSize * 1.5f
 
     var camX: Float = 0f
     var camZ: Float = 0f
@@ -35,10 +49,13 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
     var centerTileX: Float = 0f
     var centerTileZ: Float = 0f
 
-    val instances: MutableList<TerrainInstancesLevel> = ArrayList()
+    //val instances: MutableList<TerrainInstancesLevel> = ArrayList()
+
+    val tmp = Vec3()
 
     fun renderTiles(
         shader: IShader,
+        scene: IScene?,
         startX: Float,
         startZ: Float,
         camX: Float,
@@ -56,12 +73,16 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
             for (zi in 0 until 2) {
                 if (abs(camX - tileCenterX) >= tileSizeOneAndHalf || abs(camZ - tileCenterZ) >= tileSizeOneAndHalf) {
                     if (terrain.frustum?.minMaxInFrustum(tileX, terrain.minY, tileZ, nextTileX, terrain.maxY, nextTileZ) != false) {
-                        for (i in terrain.listeners.indices) {
-                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
-                        }
-                        terrain.plane.render(shader)
+//                        for (i in terrain.listeners.indices) {
+//                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
+//                        }
+                        tmp.set(tileX, tileZ, tileSize)
+                        terrain.plane.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+                        terrain.frame.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+
+                        terrain.plane.mesh.render(shader, scene)
                         terrain.frameMesh.indices = terrain.frameIndexBufferMap6x6[tileIndexZ + zi][tileIndexX + xi]
-                        terrain.frameMesh.render(shader)
+                        terrain.frameMesh.render(shader, scene)
                     }
                 }
                 tileZ += tileSize
@@ -87,12 +108,12 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
         centerTileZ = centerTileIndexZ * tileSize
 
         if (oldIndexX != centerTileIndexX || oldIndexZ != centerTileIndexZ) {
-            val startX = centerTileX - tileSize
-            val startZ = centerTileZ - tileSize
-
-            for (i in instances.indices) {
-                instances[i].rebuild(startX, startZ, tileSize)
-            }
+//            val startX = centerTileX - tileSize
+//            val startZ = centerTileZ - tileSize
+//
+//            for (i in instances.indices) {
+//                instances[i].rebuild(startX, startZ, tileSize)
+//            }
 
             for (i in terrain.listeners.indices) {
                 terrain.listeners[i].tileIndexChanged(this, oldIndexX, oldIndexZ, oldX, oldZ)
@@ -100,13 +121,13 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
         }
     }
 
-    fun renderInstances() {
-        for (i in instances.indices) {
-            instances[i].render()
-        }
-    }
+//    fun renderInstances() {
+//        for (i in instances.indices) {
+//            instances[i].render()
+//        }
+//    }
 
-    fun render(shader: IShader) {
+    fun render(shader: IShader, scene: IScene?) {
         var tileX = centerTileX - tileSize
         var tileCenterX = centerTileX - tileSizeHalf
         var nextTileX = tileX + tileSize
@@ -121,23 +142,27 @@ class TerrainLevel(val terrain: Terrain, minTileSize: Float, val levelIndex: Int
             while (zi < 6) {
                 if (terrain.frustum?.minMaxInFrustum(tileX, terrain.minY - tileSize, tileZ, nextTileX, terrain.maxY + tileSize, nextTileZ) != false) {
                     if (levelIndex != 0) {
-                        terrain.levels[levelIndex - 1].renderTiles(shader, tileX, tileZ, camX, camZ, xi, zi)
+                        terrain.levels[levelIndex - 1].renderTiles(shader, scene, tileX, tileZ, camX, camZ, xi, zi)
                     } else {
-                        for (i in terrain.listeners.indices) {
-                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
-                        }
-                        terrain.plane.render(shader)
-                        terrain.frameMesh.indices = terrain.frameIndexBuffers[4] // center
-                        terrain.frameMesh.render(shader)
+//                        for (i in terrain.listeners.indices) {
+//                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
+//                        }
+                        tmp.set(tileX, tileZ, tileSize)
+                        terrain.plane.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+                        terrain.frame.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+
+                        terrain.plane.mesh.render(shader, scene)
+                        terrain.frame.mesh.indices = terrain.frameIndexBuffers[4] // center
+                        terrain.frame.mesh.render(shader, scene)
                     }
 
-                    for (i in instances.indices) {
-                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = true
-                    }
+//                    for (i in instances.indices) {
+//                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = true
+//                    }
                 } else {
-                    for (i in instances.indices) {
-                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = false
-                    }
+//                    for (i in instances.indices) {
+//                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = false
+//                    }
                 }
 
                 tileZ += tileSize

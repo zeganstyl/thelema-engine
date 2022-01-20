@@ -30,8 +30,6 @@ class AudioStub : IAudio {
     override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder =
         AudioRecorderStub()
 
-    override fun newSound(file: IFile): ISoundLoader = SoundLoaderStub()
-
     override fun newMusic(file: IFile): IMusic = MusicStub()
 
     override fun getVersion(param: Int): String = ""

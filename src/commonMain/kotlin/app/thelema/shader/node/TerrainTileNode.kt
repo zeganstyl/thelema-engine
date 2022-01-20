@@ -18,56 +18,38 @@ package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
 import app.thelema.math.IVec3
-import app.thelema.math.Vec3
 import app.thelema.gl.IMesh
-import app.thelema.img.ITexture2D
+import app.thelema.math.MATH
 
 /** @author zeganstyl */
-class HeightMapNode: ShaderNode() {
+class TerrainTileNode: ShaderNode() {
     override val componentName: String
-        get() = "HeightMapNode"
-
-    /** Component from [inputPosition] will be used as U texture coordinate */
-    var u = "x"
-    /** Component from [inputPosition] will be used as V texture coordinate */
-    var v = "z"
-
-    var texture: ITexture2D? = null
-
-    var uvScale: Float = 1f
+        get() = "TerrainTileNode"
 
     var inputPosition by input(GLSLNode.vertex.position)
 
-    var mapWorldSize: IVec3 = Vec3(1f, 1f, 1f)
-        set(value) { field.set(value) }
-
-    private val sampler = GLSLValue("tex", GLSLType.Sampler2D)
-    val texColor = output(GLSLVec4("texColor"))
-    val height = output(GLSLFloat("height"))
+    val tilePositionScale = output(GLSLVec3("tilePositionScale"))
     val outputPosition = output(GLSLVec3("outputPosition"))
     val uv = output(GLSLVec2("uv"))
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    var tilePositionScaleName: String = "tilePositionScale"
 
-        val unit = shader.getNextTextureUnit()
-        shader[sampler.ref] = unit
-        texture?.bind(unit)
+    var uvScale = 10f
+
+    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+        shader[tilePositionScale.ref] = mesh.getMaterialValue<IVec3>(tilePositionScaleName) ?: MATH.Zero3
     }
 
     override fun declarationVert(out: StringBuilder) {
         super.declarationVert(out)
-        out.append(sampler.uniformRefEnd)
-        out.append(texColor.varOutRefEnd)
-        out.append(height.varOutRefEnd)
+        out.append(tilePositionScale.uniformRefEnd)
         out.append(outputPosition.varOutRefEnd)
         out.append(uv.varOutRefEnd)
     }
 
     override fun declarationFrag(out: StringBuilder) {
         super.declarationFrag(out)
-        out.append(texColor.varInRefEnd)
-        out.append(height.varInRefEnd)
+        out.append(tilePositionScale.uniformRefEnd)
         out.append(outputPosition.varInRefEnd)
         out.append(uv.varInRefEnd)
     }
@@ -75,10 +57,17 @@ class HeightMapNode: ShaderNode() {
     override fun executionVert(out: StringBuilder) {
         super.executionVert(out)
         val pos = inputPosition.ref
-        out.append("${uv.ref} = vec2($pos.$u / ${mapWorldSize.x} + 0.5, $pos.$v / ${mapWorldSize.z} + 0.5) * $uvScale;\n")
-        out.append("${texColor.ref} = texture2D(${sampler.ref}, ${uv.ref});\n")
-        out.append("${height.ref} = ${texColor.ref}.x * ${mapWorldSize.y};\n")
-        out.append("${outputPosition.ref} = $pos;\n")
-        out.append("${outputPosition.ref}.y = ${height.ref};\n")
+        val outputPos = outputPosition.ref
+        val tilePositionScale = tilePositionScale.ref
+        out.append("$outputPos = $pos;\n")
+        out.append("$outputPos.x *= $tilePositionScale.z;\n")
+        out.append("$outputPos.z *= $tilePositionScale.z;\n")
+        out.append("$outputPos.x += $tilePositionScale.x;\n")
+        out.append("$outputPos.z += $tilePositionScale.y;\n")
+        if (uvScale == 1f) {
+            out.append("${uv.ref} = $outputPos.xz;\n")
+        } else if (uvScale != 0f) {
+            out.append("${uv.ref} = $outputPos.xz * $uvScale;\n")
+        }
     }
 }

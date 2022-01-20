@@ -88,9 +88,9 @@ kotlin {
                     )
                 }
 
-//                doFirst {
-//                    from(configurations.getByName("jvmRuntimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
-//                }
+                doFirst {
+                    from(configurations.getByName("jvmRuntimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
+                }
             }
         }
 

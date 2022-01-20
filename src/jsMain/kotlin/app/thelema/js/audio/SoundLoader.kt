@@ -16,14 +16,20 @@
 
 package app.thelema.js.audio
 
+import app.thelema.audio.AL
 import kotlinx.browser.document
 import app.thelema.audio.IMusic
 import app.thelema.audio.ISoundLoader
+import app.thelema.fs.IFile
+import app.thelema.res.LoaderAdapter
 import app.thelema.utils.Pool
 import org.w3c.dom.HTMLAudioElement
 
 /** @author zeganstyl */
-class JsSoundLoader(val al: JsAL, val src: String): ISoundLoader, IMusic {
+class SoundLoader: ISoundLoader, IMusic, LoaderAdapter() {
+    val al: JsAL
+        get() = AL as JsAL
+
     var pool: Pool<SoundInstance> = Pool {
         val element = document.createElement("audio") as HTMLAudioElement
         val source = al.context.createMediaElementSource(element)
@@ -57,11 +63,17 @@ class JsSoundLoader(val al: JsAL, val src: String): ISoundLoader, IMusic {
 
     override var onCompletionListener: IMusic.OnCompletionListener? = null
 
-    init {
+    override var duration: Float = 0f
+
+    override val componentName: String
+        get() = "SoundLoader"
+
+    override fun loadBase(file: IFile) {
         pool = Pool {
             val element = document.createElement("audio") as HTMLAudioElement
-            element.src = src
+            element.src = file.path
             element.autoplay = true
+            duration = element.duration.toFloat()
             val source = al.context.createMediaElementSource(element)
             val gain = al.context.createGain()
             val panner = al.context.createStereoPanner()
@@ -91,7 +103,7 @@ class JsSoundLoader(val al: JsAL, val src: String): ISoundLoader, IMusic {
         return pool.used.indexOf(instance)
     }
 
-    override fun stop() {
+    override fun stopSound() {
         val used = pool.used
         for (i in used.indices) {
             val element = used[i].element
@@ -116,7 +128,11 @@ class JsSoundLoader(val al: JsAL, val src: String): ISoundLoader, IMusic {
         }
     }
 
-    override fun stop(soundId: Int) {
+    override fun stop() {
+
+    }
+
+    override fun stopSound(soundId: Int) {
         val element = pool.used.getOrNull(soundId)?.element
         if (element != null) {
             element.pause()

@@ -16,16 +16,13 @@
 
 package app.thelema.test.audio
 
-import app.thelema.audio.AL
-import app.thelema.fs.FS
+import app.thelema.audio.sound
+import app.thelema.res.RES
 import app.thelema.test.Test
 
 /** @author zeganstyl */
 class SoundWavTest: Test {
-    override val name: String
-        get() = "Sound Wav"
-
     override fun testMain() {
-        AL.newSound(FS.internal("242501__gabrielaraujo__powerup-success.wav")).play()
+        RES.sound("242501__gabrielaraujo__powerup-success.wav").play()
     }
 }

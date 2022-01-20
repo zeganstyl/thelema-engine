@@ -30,46 +30,6 @@ interface IGLTF: ILoader, ISceneProvider {
 
     var conf: GLTFSettings
 
-    /** Store mesh buffers in RAM */
-    var saveMeshesInCPUMem: Boolean
-        get() = conf.saveMeshesInCPUMem
-        set(value) { conf.saveMeshesInCPUMem = value }
-
-    /** Velocity rendering may be used for motion blur */
-    var setupVelocityShader: Boolean
-        get() = conf.setupVelocityShader
-        set(value) { conf.setupVelocityShader = value }
-
-    var receiveShadows: Boolean
-        get() = conf.receiveShadows
-        set(value) { conf.receiveShadows = value }
-
-    var setupDepthRendering: Boolean
-        get() = conf.setupDepthRendering
-        set(value) { conf.setupDepthRendering = value }
-
-    /** Merge vertex attribute data in one VBO for each primitive */
-    var mergeVertexAttributes: Boolean
-        get() = conf.mergeVertexAttributes
-        set(value) { conf.mergeVertexAttributes = value }
-
-    var generateShaders: Boolean
-        get() = conf.generateShaders
-        set(value) { conf.generateShaders = value }
-
-    var ibl: Boolean
-        get() = conf.ibl
-        set(value) { conf.ibl = value }
-
-    var iblMaxMipLevels: Int
-        get() = conf.iblMaxMipLevels
-        set(value) { conf.iblMaxMipLevels = value }
-
-    /** Setup pipeline for deferred shading */
-    var setupGBufferShader: Boolean
-        get() = conf.setupGBufferShader
-        set(value) { conf.setupGBufferShader = value }
-
     /** Main scene */
     var scene: IEntity
 

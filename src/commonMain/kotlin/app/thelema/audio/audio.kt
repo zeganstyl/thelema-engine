@@ -52,28 +52,6 @@ interface IAudio {
      */
     fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder
 
-    /**
-     *
-     *
-     * Creates a new [ISoundLoader] which is used to play back audio effects such as gun shots or explosions. The Sound's audio data
-     * is retrieved from the file specified via the [IFile]. Note that the complete audio data is loaded into RAM. You
-     * should therefore not load big audio files with this methods. The current upper limit for decoded audio is 1 MB.
-     *
-     *
-     *
-     *
-     * Currently supported formats are WAV, MP3 and OGG.
-     *
-     *
-     *
-     *
-     * The Sound has to be disposed if it is no longer used via the [ISoundLoader.destroy] method.
-     *
-     *
-     * @return the new Sound
-     * @throws RuntimeException in case the sound could not be loaded
-     */
-    fun newSound(file: IFile): ISoundLoader
 
     /** Creates a new [IMusic] instance which is used to play back a music stream from a file. Currently supported formats are
      * WAV, MP3 and OGG. The Music instance has to be disposed if it is no longer used via the [IMusic.destroy] method.

@@ -11,10 +11,5 @@ class ScenePanel: ComponentPanel<IScene>(IScene::class) {
                 component?.also { Studio.startSimulation(it.entity) }
             }
         }).newRow()
-        content.add(TextButton("Stop Simulation") {
-            onClick {
-                component?.stopSimulation()
-            }
-        }).newRow()
     }
 }

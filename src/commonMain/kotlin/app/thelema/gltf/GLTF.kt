@@ -17,9 +17,7 @@
 package app.thelema.gltf
 
 import app.thelema.concurrency.ATOM
-import app.thelema.ecs.Entity
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
+import app.thelema.ecs.*
 import app.thelema.fs.FS
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
@@ -47,7 +45,7 @@ class GLTF: IGLTF, LoaderAdapter() {
     override val componentName: String
         get() = "GLTF"
 
-    override var conf = GLTFSettings()
+    override var conf: GLTFSettings = RES.sibling()
 
     override var generator = ""
     override var version = "2.0"
@@ -104,6 +102,7 @@ class GLTF: IGLTF, LoaderAdapter() {
         set(value) {
             super.entityOrNull = value
             provider = (value?.component() ?: SceneProvider()).also { it.proxy = this }
+            conf = value?.componentOrNull() ?: RES.sibling()
         }
 
     private val _instances = ArrayList<ISceneInstance>()
@@ -111,6 +110,17 @@ class GLTF: IGLTF, LoaderAdapter() {
         get() =_instances
 
     override var overrideAssets: Boolean = false
+
+    /** Create local glTF settings */
+    fun gltfSettings(block: GLTFSettings.() -> Unit) = sibling(block)
+
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        if (component is GLTFSettings) conf = component
+    }
+
+    override fun removedSiblingComponent(component: IEntityComponent) {
+        if (component is GLTFSettings) conf = RES.sibling()
+    }
 
     override fun cancelProviding(instance: ISceneInstance) {
         _instances.remove(instance)
@@ -347,7 +357,7 @@ class GLTF: IGLTF, LoaderAdapter() {
     override fun writeJson(json: IJsonObject) {
         super<LoaderAdapter>.writeJson(json)
 
-        if (overrideAssets) {
+        if (overrideAssets && isLoaded) {
             file?.also { file ->
                 directory.child("${file.name}_override.entity").writeText(
                     JSON.printObject {

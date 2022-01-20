@@ -38,14 +38,6 @@ class OdeWorld: IRigidBodyPhysicsWorld {
         TODO("Not yet implemented")
     }
 
-    override fun getContact(body1: IRigidBody, body2: IRigidBody): IBodyContact? {
-        TODO("Not yet implemented")
-    }
-
-    override fun isContactExist(body1: IRigidBody, body2: IRigidBody): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun addPhysicsWorldListener(listener: IPhysicsWorldListener) {
         TODO("Not yet implemented")
     }

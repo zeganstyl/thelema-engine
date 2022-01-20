@@ -124,6 +124,7 @@ open class Shader(
             frag = fragCode
                 .replace("\nvarying ", "\nin ")
                 .replace("texture2D(", "texture(")
+                .replace("textureCube(", "texture(")
 
             if (frag.contains("gl_FragColor")) {
                 frag = "out vec4 gl_FragColor;\n$frag"
@@ -671,12 +672,22 @@ open class Shader(
                     shaderNodeOutput(Op2Node::opResult)
                 }
 
-                descriptor({ TerrainVertexNode() }) {
-
+                descriptor({ TerrainTileNode() }) {
+                    float(TerrainTileNode::uvScale, 0.1f)
+                    shaderNodeInput(TerrainTileNode::inputPosition)
+                    shaderNodeOutput(TerrainTileNode::tilePositionScale)
+                    shaderNodeOutput(TerrainTileNode::outputPosition)
+                    shaderNodeOutput(TerrainTileNode::uv)
                 }
 
                 descriptor({ HeightMapNode() }) {
-
+                    refAbs(HeightMapNode::texture)
+                    vec3(HeightMapNode::mapWorldSize)
+                    float(HeightMapNode::uvScale)
+                    shaderNodeInput(HeightMapNode::inputPosition)
+                    shaderNodeOutput(HeightMapNode::height)
+                    shaderNodeOutput(HeightMapNode::texColor)
+                    shaderNodeOutput(HeightMapNode::outputPosition)
                 }
 
                 descriptor({ SkyboxVertexNode() }) {

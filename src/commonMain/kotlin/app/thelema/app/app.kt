@@ -66,6 +66,8 @@ interface IApp {
 
     fun setupPhysicsComponents() {}
 
+    fun setupAudioComponents() {}
+
     fun addListener(listener: AppListener)
     fun removeListener(listener: AppListener)
 

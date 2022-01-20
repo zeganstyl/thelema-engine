@@ -16,6 +16,7 @@
 
 package app.thelema.studio.widget.component
 
+import app.thelema.audio.ISoundLoader
 import app.thelema.ecs.*
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
@@ -69,6 +70,7 @@ class ProjectPanel: ComponentPanel<Project>(Project::class) {
                         "jpg", "jpeg", "png", "tga", "bmp", "hdr" -> {
                             makeResourcePath<IImage>(it).sibling<ITexture2D>()
                         }
+                        "ogg", "wav", "mp3" -> makeResourcePath<ISoundLoader>(it)
                     }
                 }
             }

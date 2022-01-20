@@ -19,6 +19,9 @@ package app.thelema.test.g3d.terrain
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.terrain.TerrainLodFrame2to1Mesh
+import app.thelema.gl.GL
+import app.thelema.gl.GL_BACK
+import app.thelema.gl.GL_FRONT
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
@@ -38,7 +41,7 @@ class TerrainLodFrame2to1MeshTest: Test {
             left = false
         }
 
-        frame.mesh.indices = frame.mesh.indices!!.trianglesToWireframe()
+        //frame.mesh.indices = frame.mesh.indices!!.trianglesToWireframe()
 
         ActiveCamera {
             lookAt(Vec3(0f, 10f, 0.001f), MATH.Zero3)
@@ -48,6 +51,8 @@ class TerrainLodFrame2to1MeshTest: Test {
         }
 
         APP.onRender = {
+            GL.isCullFaceEnabled = true
+            GL.cullFaceMode = 1029
             frame.render(shader)
         }
     }

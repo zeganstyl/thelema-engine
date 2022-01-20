@@ -16,14 +16,67 @@
 
 package app.thelema.g3d.terrain
 
+import app.thelema.ecs.*
+import app.thelema.g3d.Blending
+import app.thelema.g3d.IMaterial
+import app.thelema.g3d.IScene
+import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
+import app.thelema.gl.IRenderable
+import app.thelema.gl.Mesh
+import app.thelema.math.Mat4
+import app.thelema.math.Vec3
 import app.thelema.shader.IShader
+import app.thelema.utils.iterate
 
-class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertexPositionName: String = "POSITION") {
-    val plane = TerrainTileMesh {
+class Terrain(
+    minTileSize: Float = 10f,
+    tileDivisions: Int = 10,
+    levelsNum: Int = 10,
+    vertexPositionName: String = "POSITION"
+): IEntityComponent, UpdatableComponent, IRenderable {
+    constructor(block: Terrain.() -> Unit): this() {
+        block()
+        rebuildComponent()
+    }
+
+    override val componentName: String
+        get() = "Terrain"
+
+    override var entityOrNull: IEntity? = null
+
+    var minTileSize: Float = minTileSize
+        set(value) {
+            if (field != value) {
+                field = value
+                _levels.iterate { it.minTileSize = value }
+            }
+        }
+
+    var tileDivisions: Int = tileDivisions
+        set(value) {
+            if (field != value) {
+                field = value
+                rebuildRequested = true
+                _levels = Array(levelsNum) { TerrainLevel(this, it, minTileSize) }
+            }
+        }
+
+    var levelsNum: Int = levelsNum
+        set(value) {
+            if (field != value) {
+                field = value
+
+            }
+        }
+
+    private var rebuildRequested = true
+
+    val plane = TerrainTileMesh().apply {
+        getOrCreateEntity()
         divisions = tileDivisions * 2
         padding = 1
         tileSize = 1f
@@ -32,49 +85,103 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
         builder.positionName = vertexPositionName
     }
 
-    val levels = Array(levelsNum) { TerrainLevel(this, minTileSize, it) }
+    val frame = TerrainLodFrame2to1Mesh().apply {
+        getOrCreateEntity()
+        frameSize = 1f
+        outerLodDivisions = tileDivisions
+        builder.uvs = plane.builder.uvs
+        builder.tangents = plane.builder.tangents
+        builder.positionName = plane.builder.positionName
+        setSideFlags(left = false, right = false, top = false, bottom = false)
+    }
 
+    var vertexPositionName: String
+        get() = plane.builder.positionName
+        set(value) {
+            plane.builder.positionName = value
+            frame.builder.positionName = value
+        }
+
+    private var _levels = Array(levelsNum) { TerrainLevel(this, it, minTileSize) }
+    val levels: Array<TerrainLevel>
+        get() = _levels
+
+    private var _frameMesh: IMesh = Mesh()
     val frameMesh: IMesh
+        get() = _frameMesh
 
+    private var _frameIndexBuffers: Array<IIndexBuffer> = emptyArray()
     val frameIndexBuffers: Array<IIndexBuffer>
+        get() = _frameIndexBuffers
+
+    private var _frameIndexBufferMap6x6: Array<Array<IIndexBuffer>> = emptyArray()
     val frameIndexBufferMap6x6: Array<Array<IIndexBuffer>>
+        get() = _frameIndexBufferMap6x6
 
     var maxY = 100f
     var minY = 0f
 
     var frustum: Frustum? = null
 
+    var useCameraFrustum: Boolean = true
+
     val listeners: MutableList<TerrainListener> = ArrayList()
 
-    init {
-        val builder = TerrainLodFrame2to1Mesh {
-            frameSize = 1f
-            outerLodDivisions = tileDivisions
-            builder.uvs = false
-            builder.tangents = false
-            builder.positionName = vertexPositionName
-            setSideFlags(left = false, right = false, top = false, bottom = false)
+    var material: IMaterial? = null
+        set(value) {
+            field = value
+            plane.mesh.material = value
+            frame.mesh.material = value
         }
 
-        frameMesh = builder.mesh
+    override var isVisible: Boolean = true
+
+    override var alphaMode: String
+        get() = material?.alphaMode ?: Blending.OPAQUE
+        set(_) {}
+
+    override var translucencyPriority: Int
+        get() = material?.translucentPriority ?: 0
+        set(_) {}
+
+    override val worldPosition: IVec3 = Vec3(0f)
+
+    var tilePositionScaleName: String = "tilePositionScale"
+
+    override fun visibleInFrustum(frustum: Frustum): Boolean = true
+
+    override fun updateComponent(delta: Float) {
+        update(ActiveCamera.node.worldPosition)
+    }
+
+    fun rebuildComponent() {
+        rebuildRequested = false
+
+        plane.divisions = tileDivisions * 2
+        frame.outerLodDivisions = tileDivisions
+
+        plane.rebuildComponent()
+        frame.rebuildComponent()
+
+        _frameMesh = frame.mesh
 
         val center = frameMesh.indices!!
-        val leftTop = builder.setSideFlags(left = true, right = false, top = true, bottom = false).buildIndices()
-        val top = builder.setSideFlags(left = false, right = false, top = true, bottom = false).buildIndices()
-        val rightTop = builder.setSideFlags(left = false, right = true, top = true, bottom = false).buildIndices()
-        val left = builder.setSideFlags(left = true, right = false, top = false, bottom = false).buildIndices()
-        val right = builder.setSideFlags(left = false, right = true, top = false, bottom = false).buildIndices()
-        val leftBottom = builder.setSideFlags(left = true, right = false, top = false, bottom = true).buildIndices()
-        val bottom = builder.setSideFlags(left = false, right = false, top = false, bottom = true).buildIndices()
-        val rightBottom = builder.setSideFlags(left = false, right = true, top = false, bottom = true).buildIndices()
+        val leftTop = frame.setSideFlags(left = true, right = false, top = true, bottom = false).buildIndices()
+        val top = frame.setSideFlags(left = false, right = false, top = true, bottom = false).buildIndices()
+        val rightTop = frame.setSideFlags(left = false, right = true, top = true, bottom = false).buildIndices()
+        val left = frame.setSideFlags(left = true, right = false, top = false, bottom = false).buildIndices()
+        val right = frame.setSideFlags(left = false, right = true, top = false, bottom = false).buildIndices()
+        val leftBottom = frame.setSideFlags(left = true, right = false, top = false, bottom = true).buildIndices()
+        val bottom = frame.setSideFlags(left = false, right = false, top = false, bottom = true).buildIndices()
+        val rightBottom = frame.setSideFlags(left = false, right = true, top = false, bottom = true).buildIndices()
 
-        frameIndexBuffers = arrayOf(
+        _frameIndexBuffers = arrayOf(
             leftTop, top, rightTop,
             left, center, right,
             leftBottom, bottom, rightBottom
         )
 
-        frameIndexBufferMap6x6 = arrayOf(
+        _frameIndexBufferMap6x6 = arrayOf(
             arrayOf(leftTop, top, top, top, top, rightTop),
             arrayOf(left, center, center, center, center, right),
             arrayOf(left, center, center, center, center, right),
@@ -84,7 +191,14 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
         )
     }
 
+    /** (x, y, z) - camera position */
     fun update(x: Float, y: Float, z: Float) {
+        if (useCameraFrustum) {
+            frustum = ActiveCamera.frustum
+        }
+
+        if (rebuildRequested) rebuildComponent()
+
         for (i in levels.indices) {
             levels[i].update(x, y, z)
         }
@@ -93,13 +207,18 @@ class Terrain(minTileSize: Float, tileDivisions: Int, levelsNum: Int = 5, vertex
     fun update(cameraPosition: IVec3) =
         update(cameraPosition.x, cameraPosition.y, cameraPosition.z)
 
-    fun render(shader: IShader) {
+    override fun render(shader: IShader, scene: IScene?) {
         for (i in levels.indices) {
-            levels[i].render(shader)
+            levels[i].render(shader, scene)
         }
+    }
 
-        for (i in levels.indices) {
-            levels[i].renderInstances()
+    override fun render(scene: IScene?, shaderChannel: String?) {
+        material?.also { material ->
+            val shader = if (shaderChannel != null) material.shaderChannels[shaderChannel] else material.shader
+            if (shader != null) {
+                render(shader, scene)
+            }
         }
     }
 }

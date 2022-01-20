@@ -46,6 +46,7 @@ class TerrainTileMesh(): MeshBuilderAdapter() {
     override fun applyVertices() {
         preparePositions {
             val uvs = mesh.getAttributeOrNull(builder.uvName)
+            val normals = mesh.getAttributeOrNull(builder.normalName)
             val verticesPerLine = divisions - padding * 2 + 1
 
             val step = tileSize / divisions
@@ -61,6 +62,7 @@ class TerrainTileMesh(): MeshBuilderAdapter() {
                 while (ix < verticesPerLine) {
                     putFloatsNext(x, 0f, z)
                     uvs?.putFloatsNext(u, v)
+                    normals?.putFloatsNext(0f, 1f, 0f)
 
                     u += texStep
                     x += step

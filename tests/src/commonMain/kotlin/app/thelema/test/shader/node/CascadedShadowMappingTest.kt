@@ -92,7 +92,9 @@ class CascadedShadowMappingTest : Test {
         }
 
         RES.gltf("nightshade/nightshade.gltf") {
-            setupDepthRendering = true
+            gltfSettings {
+                setupDepthRendering = true
+            }
 
             onLoaded {
                 mainScene.addEntity(scene.copyDeep("model"))

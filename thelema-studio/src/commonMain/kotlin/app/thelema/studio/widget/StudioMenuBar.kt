@@ -63,22 +63,18 @@ class StudioMenuBar: Table() {
         }
     }
 
-    val projectPath = Label("")
-
     init {
         add(bar)
 
         background = SKIN.background
         pad(5f)
 
-        projectPath.lineAlign = 0
-        projectPath.setEllipsis("...")
-        projectPath.setEllipsis(true)
-        add(projectPath).growX()
-    }
-
-    override fun draw(batch: Batch, parentAlpha: Float) {
-        super.draw(batch, parentAlpha)
-        Studio.menuBar.projectPath.text = RES.file.path
+        add(HBox {
+            add(TextButton("Play") {
+                onClick {
+                    Studio.startSimulation()
+                }
+            })
+        }).growX()
     }
 }

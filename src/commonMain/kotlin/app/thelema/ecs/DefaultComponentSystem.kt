@@ -28,17 +28,20 @@ import app.thelema.gl.IMesh
 import app.thelema.phys.IRigidBodyPhysicsWorld
 import app.thelema.utils.iterate
 
-class DefaultComponentSystem: IComponentSystem {
+class DefaultComponentSystem: IComponentSystem, RebuildListener {
     private val armatures = ArrayList<IArmature>()
     private val meshes = ArrayList<IMesh>()
     private val nodes = ArrayList<ITransformNode>()
-    private val meshBuilders = ArrayList<MeshBuilder>()
     private val scenes = ArrayList<IScene>(1)
     private val physicsWorlds = ArrayList<IRigidBodyPhysicsWorld>(1)
     private val actions = ArrayList<IAction>()
     private val mainLoops = ArrayList<MainLoop>()
     private val particleEmitters = ArrayList<IParticleEmitter>()
-    private val particleSystems = HashSet<IParticleSystem>()
+    private val particleSystemsSet = HashSet<IParticleSystem>()
+    private val particleSystems = ArrayList<IParticleSystem>()
+
+    private val componentsCanBeRebuild = ArrayList<ComponentCanBeRebuild>()
+    private val updatableComponents = ArrayList<UpdatableComponent>()
 
     private var idCounter = 1
     private val syncMap = HashMap<Int, Any>()
@@ -60,7 +63,10 @@ class DefaultComponentSystem: IComponentSystem {
             if (component is IArmature) armatures.add(component)
             if (component is IMesh) meshes.add(component)
             if (component is ITransformNode) nodes.add(component)
-            if (component is MeshBuilder) meshBuilders.add(component)
+            if (component is ComponentCanBeRebuild && component.rebuildComponentRequested) {
+                componentsCanBeRebuild.add(component)
+            }
+            if (component is UpdatableComponent) updatableComponents.add(component)
             if (component is MainLoop) mainLoops.add(component)
             if (component is IParticleEmitter) particleEmitters.add(component)
         }
@@ -69,10 +75,21 @@ class DefaultComponentSystem: IComponentSystem {
             if (component is IArmature) armatures.remove(component)
             if (component is IMesh) meshes.remove(component)
             if (component is ITransformNode) nodes.remove(component)
-            if (component is MeshBuilder) meshBuilders.remove(component)
+            if (component is ComponentCanBeRebuild && component.rebuildComponentRequested) {
+                componentsCanBeRebuild.remove(component)
+            }
+            if (component is UpdatableComponent) updatableComponents.remove(component)
             if (component is MainLoop) mainLoops.remove(component)
             if (component is IParticleEmitter) particleEmitters.remove(component)
         }
+    }
+
+    override fun requestRebuild(component: ComponentCanBeRebuild) {
+        componentsCanBeRebuild.add(component)
+    }
+
+    override fun cancelRebuild(component: ComponentCanBeRebuild) {
+        componentsCanBeRebuild.remove(component)
     }
 
     override fun addedScene(entity: IEntity) {
@@ -120,17 +137,24 @@ class DefaultComponentSystem: IComponentSystem {
         armatures.iterate { it.preUpdateBoneMatrices() }
         nodes.iterate { if (it.isTransformUpdateRequested) it.updateTransform() }
 
+        updatableComponents.iterate { it.updateComponent(delta) }
+
         if (ActiveCamera.isCameraUpdateRequested) ActiveCamera.updateCamera()
 
+        particleSystemsSet.clear()
         particleSystems.clear()
-        particleEmitters.iterate {
-            it.particleSystem?.also { particleSystems.add(it) }
-            it.updateParticles(delta)
+        particleEmitters.iterate { emitter ->
+            emitter.particleSystem?.also { if (particleSystemsSet.add(it)) particleSystems.add(it) }
+            emitter.updateParticles(delta)
         }
-        particleSystems.forEach { it.updateParticleSystem(delta) }
+        particleSystems.iterate { it.updateParticleSystem(delta) }
 
         armatures.iterate { it.updateBoneMatrices() }
-        meshBuilders.iterate { if (it.isMeshUpdateRequested) it.updateMesh() }
+
+        if (componentsCanBeRebuild.isNotEmpty()) {
+            componentsCanBeRebuild.iterate { it.rebuildComponent() }
+            componentsCanBeRebuild.clear()
+        }
 
         physicsWorlds.iterate { it.step(delta) }
     }

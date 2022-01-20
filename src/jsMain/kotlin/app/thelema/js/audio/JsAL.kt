@@ -30,9 +30,7 @@ class JsAL: IAudio {
         TODO("Not yet implemented")
     }
 
-    override fun newSound(file: IFile): ISoundLoader = JsSoundLoader(this, file.path)
-
-    override fun newMusic(file: IFile): IMusic = JsSoundLoader(this, file.path)
+    override fun newMusic(file: IFile): IMusic = SoundLoader()
 
     override fun getVersion(param: Int): String = "Web Audio API"
 

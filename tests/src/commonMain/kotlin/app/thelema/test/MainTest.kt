@@ -17,18 +17,12 @@
 package app.thelema.test
 
 import app.thelema.app.APP
-import app.thelema.test.g3d.CylinderMeshTest
-import app.thelema.test.g3d.terrain.TerrainMeshWithLoDTest
-import app.thelema.test.g3d.terrain.TerrainTextureMappingTest
-import app.thelema.test.phys.CylinderShapeTest
-import app.thelema.test.phys.RayShapeTest
-import app.thelema.test.shader.LogarithmicDepthBufferTest
-import app.thelema.test.shader.node.*
+import app.thelema.test.shader.TBNCalculationInShaderTest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        TerrainMeshWithLoDTest().testMain()
+        TBNCalculationInShaderTest().testMain()
     }
 }

@@ -17,6 +17,7 @@
 package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.RebuildListener
 import app.thelema.ecs.component
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
@@ -43,6 +44,10 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
     override var isMeshUpdateRequested: Boolean
         get() = builder.isMeshUpdateRequested
         set(value) { builder.isMeshUpdateRequested = value }
+
+    override var rebuildListener: RebuildListener?
+        get() = builder.rebuildListener
+        set(value) { builder.rebuildListener = value }
 
     override fun preparePositions(block: IVertexAttribute.() -> Unit) {
         if (getVerticesCount() > 0) builder.preparePositions(block)

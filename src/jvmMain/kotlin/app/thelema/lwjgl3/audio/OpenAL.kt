@@ -31,15 +31,14 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 
-/** @author Nathan Sweet, zeganstyl
- */
+/** @author Nathan Sweet, zeganstyl */
 class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int = 9, private val deviceBufferSize: Int = 512) : IAudio {
     private val idleSources = ArrayList<Int>()
     private val allSources = ArrayList<Int>()
     private val soundIdToSource = HashMap<Int, Int>()
     private val sourceToSoundId = HashMap<Int, Int>()
     private var nextSoundId: Int = 0
-    private val recentSounds = ArrayList<OpenALSound?>()
+    private val recentSounds = ArrayList<SoundLoader?>()
     private var mostRecentSound = -1
     val music: ArrayList<OpenALMusic> = ArrayList()
     val device: Long = ALC10.alcOpenDevice(null as ByteBuffer?)
@@ -48,12 +47,6 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     var checkAndValidatePlayingMusic = false
 
     val tmpMusic = ArrayList<OpenALMusic>()
-
-    override fun newSound(file: IFile): OpenALSound {
-        val builder = OpenALCodecs.sound[file.extension.lowercase()] ?:
-        throw IllegalArgumentException("Sound file extension is unknown")
-        return builder.invoke(this, file)
-    }
 
     override fun newMusic(file: IFile): OpenALMusic {
         val builder = OpenALCodecs.music[file.extension.lowercase()] ?:
@@ -272,18 +265,18 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
 
     /** Retains a list of the most recently played sounds and stops the sound played least recently if necessary for a new sound to
      * play  */
-    fun retain(sound: OpenALSound?, stop: Boolean) { // Move the pointer ahead and wrap
+    fun retain(sound: SoundLoader?, stop: Boolean) { // Move the pointer ahead and wrap
         mostRecentSound++
         mostRecentSound %= recentSounds.size
         if (stop) { // Stop the least recent sound (the one we are about to bump off the buffer)
-            if (recentSounds[mostRecentSound] != null) recentSounds[mostRecentSound]!!.stop()
+            if (recentSounds[mostRecentSound] != null) recentSounds[mostRecentSound]!!.stopSound()
         }
 
         recentSounds[mostRecentSound] = sound
     }
 
     /** Removes the disposed sound from the least recently played list  */
-    fun forget(sound: OpenALSound) {
+    fun forget(sound: SoundLoader) {
         for (i in 0 until recentSounds.size) {
             if (recentSounds[i] === sound) recentSounds[i] = null
         }

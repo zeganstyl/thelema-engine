@@ -76,25 +76,6 @@ object Studio: AppListener, IJsonObjectIO {
 
     private val prefsName = "thelema-studio"
 
-    val popupMenu = PopupMenu {
-        item("Add Entity") {
-            onClickWithContextTyped<EntityTreeNode> {
-                it.entity.addEntity(Entity("New Entity"))
-                it.isExpanded = true
-            }
-        }
-        separator()
-        item("Edit") {
-            onClickWithContextTyped<EntityTreeNode> { it.showEditWindow() }
-        }
-        separator()
-        item("Remove") {
-            onClickWithContextTyped<EntityTreeNode> {
-                it.entity.parentEntity?.removeEntity(it.entity)
-            }
-        }
-    }
-
     var componentScenePanel: IComponentScenePanel<IEntityComponent>? = null
         set(value) {
             field = value
@@ -178,6 +159,10 @@ object Studio: AppListener, IJsonObjectIO {
         val tab = SimulationEntityTab(source)
         tabsPane.addTab(tab, true)
         tab.startSimulation()
+    }
+
+    fun startSimulation() {
+        tabsPane.activeTab?.also { startSimulation(it.scene.entity) }
     }
 
     fun openProjectDialog() {

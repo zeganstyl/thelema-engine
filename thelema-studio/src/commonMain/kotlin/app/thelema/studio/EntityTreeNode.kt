@@ -24,6 +24,10 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
             }
         }
 
+    var filterEntityNameTemplate: String = ""
+    var filterComponentNameTemplates: List<String> = ArrayList()
+    var filterMatch: Boolean = false
+
     val entityListener: EntityListener = object : EntityListener {
         override fun addedEntity(entity: IEntity) {
             checkEntityAndAdd(entity)
@@ -57,7 +61,9 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
 
     private fun checkEntityAndAdd(entity: IEntity) {
         if (isExpanded) {
-            addNodeIfExpandedAndNotAdded(entity)
+            if (checkEntityDeep(entity)) {
+                addNodeIfExpandedAndNotAdded(entity)
+            }
         }
     }
 
@@ -73,6 +79,89 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
                     add(node)
                 }
             }
+            node.filter(filterEntityNameTemplate, filterComponentNameTemplates, filterMatch)
         }
+    }
+
+    private fun checkEntityContainsComponent(entity: IEntity): Boolean {
+        if (filterComponentNameTemplates.isEmpty()) return true
+        var contains = false
+        entity.forEachComponent { component ->
+            for (i in filterComponentNameTemplates.indices) {
+                if (filterMatch) {
+                    if (component.isComponentNameAlias(filterComponentNameTemplates[i])) {
+                        contains = true
+                        return@forEachComponent
+                    }
+                } else {
+                    if (component.isComponentNameAlias(filterComponentNameTemplates[i])) {
+                        contains = true
+                        return@forEachComponent
+                    }
+                }
+            }
+        }
+        return contains
+    }
+
+    private fun toLower(text: String): String = text.toLowerCase()
+
+    private fun checkEntityName(entity: IEntity): Boolean {
+        return if (filterEntityNameTemplate.isNotEmpty()) {
+            if (filterMatch) {
+                entity.name.contains(filterEntityNameTemplate)
+            } else {
+                toLower(entity.name).contains(toLower(filterEntityNameTemplate))
+            }
+        } else {
+            true
+        }
+    }
+
+    private fun checkEntity(entity: IEntity): Boolean =
+        checkEntityName(entity) && checkEntityContainsComponent(entity)
+
+    private fun checkEntityDeep(entity: IEntity): Boolean {
+        if (checkEntity(entity)) {
+            return true
+        } else {
+            val cached = cache[entity]
+            if (cached != null) {
+                return cached.filter(filterEntityNameTemplate, filterComponentNameTemplates, filterMatch)
+            } else {
+                var returnTrue = false
+                entity.forEachEntityInBranch { entityInBranch ->
+                    if (checkEntity(entityInBranch)) {
+                        returnTrue = true
+                        return@forEachEntityInBranch
+                    }
+                }
+                return returnTrue
+            }
+        }
+    }
+
+    fun validate() {
+        isExpanded = isExpanded
+    }
+
+    fun filter(entityNameTemplate: String, componentNameTemplates: List<String>, match: Boolean): Boolean {
+        filterEntityNameTemplate = entityNameTemplate
+        filterComponentNameTemplates = componentNameTemplates
+        filterMatch = match
+
+        var containsFilteredEntities = false
+        entity.forEachChildEntity { entity ->
+            if (checkEntityDeep(entity)) {
+                containsFilteredEntities = true
+                addNodeIfExpandedAndNotAdded(entity)
+            } else {
+                cache[entity]?.remove()
+            }
+        }
+
+        if (containsFilteredEntities) sortNodes()
+
+        return containsFilteredEntities
     }
 }

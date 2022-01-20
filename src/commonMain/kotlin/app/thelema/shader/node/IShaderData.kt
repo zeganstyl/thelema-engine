@@ -69,9 +69,48 @@ interface IShaderData {
             else -> ""
         }
 
-    /** May be used for declaration */
+    /** example: **vec3 position** */
     val typedRef: String
         get() = "$type $ref"
+
+    /** example: **vec3 position;\n** */
+    val typedRefEnd: String
+        get() = "$type $ref;\n"
+
+    /** example: **uniform vec3 position;\n** */
+    val uniformRefEnd: String
+        get() = "uniform $type $ref;\n"
+
+    /**
+     * example:
+     *
+     * if shader version >= 130 then
+     *
+     * **in vec3 position;\n**
+     *
+     * else
+     *
+     * **varying vec3 position;\n**
+     * */
+    val varInRefEnd: String
+        get() = "${varIn()} $type $ref;\n"
+
+    /**
+     * example:
+     *
+     * if shader version >= 130 then
+     *
+     * **out vec3 position;\n**
+     *
+     * else
+     *
+     * **varying vec3 position;\n**
+     * */
+    val varOutRefEnd: String
+        get() = "${varOut()} $type $ref;\n"
+
+    private fun varIn(): String = if ((container?.shader?.version ?: 110) >= 130) "in" else "varying"
+    private fun varOut(): String = if ((container?.shader?.version ?: 110) >= 130) "out" else "varying"
 
     fun declaration(): String {
         return if (scope == GLSLScope.Inline) {

@@ -22,6 +22,7 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.*
 import app.thelema.math.*
 import app.thelema.shader.IShader
+import app.thelema.utils.LOG
 
 /**
  * @author zeganstyl
@@ -430,6 +431,10 @@ class Mesh(): IMesh {
 
     override fun render(shader: IShader, scene: IScene?, offset: Int, count: Int) {
         if (count == 0 || !isVisible) return
+        if (verticesCount == 0) {
+            LOG.error("$path: mesh can't be rendered, verticesCount = 0")
+            return
+        }
         if (shader.buildRequested) shader.build()
         if (!shader.isCompiled) return
 

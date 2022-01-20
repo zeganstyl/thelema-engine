@@ -20,10 +20,12 @@ import app.thelema.app.APP
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
+import app.thelema.ecs.sibling
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.scene
 import app.thelema.math.*
+import app.thelema.res.RES
 import kotlin.math.abs
 
 /**
@@ -371,7 +373,7 @@ internal var ActiveCameraVar: ICamera? = null
 var ActiveCamera: ICamera
     get() {
         if (ActiveCameraVar == null) {
-            ActiveCameraVar = Camera { lookAt(Vec3(3f, 3f, 3f), MATH.Zero3) }
+            ActiveCameraVar = RES.entity.entity("Camera").component { lookAt(Vec3(3f, 3f, 3f), MATH.Zero3) }
         }
         return ActiveCameraVar!!
     }

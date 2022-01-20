@@ -48,18 +48,19 @@ class TerrainMeshWithLoDTest: Test {
 attribute vec3 POSITION;
 varying vec2 uv;
 uniform mat4 viewProj;
+uniform mat4 world_mat;
 uniform sampler2D heightMap;
 uniform vec3 $tilePosScaleName;
 
 void main() {
-    vec3 pos = POSITION;
+    vec4 pos = vec4(POSITION, 1.0);
     pos.x *= tilePosScale.z;
     pos.z *= tilePosScale.z;
     pos.x += tilePosScale.x;
     pos.z += tilePosScale.y;
     uv = pos.xz;
     pos.y = texture(heightMap, uv * 0.001 + vec2(0.5)).r * 100.0;
-    gl_Position = viewProj * vec4(pos, 1.0);
+    gl_Position = viewProj * pos;
 }""",
             fragCode = """
 varying vec2 uv;
@@ -73,7 +74,11 @@ void main() {
 
         val simpleMeshShader = SimpleMeshShader(colorName = "color")
 
-        val terrain = Terrain(10f, 25, 8, vertexPositionName = "POSITION")
+        val terrain = Terrain {
+            minTileSize = 10f
+            levelsNum = 8
+            tileDivisions = 25
+        }
         terrain.maxY = 100f
 
         terrain.listeners.add(object : TerrainListener {
@@ -88,7 +93,6 @@ void main() {
         val wireframeIndexBuffers = terrain.frameIndexBuffers.map { it.trianglesToWireframe().bytes }
 
         ActiveCamera {
-            lookAt(Vec3(0f, 200f, 0.001f), MATH.Zero3)
             near = 0.1f
             far = 5000f
             updateCamera()
@@ -142,6 +146,7 @@ void main() {
         })
 
         val control = OrbitCameraControl()
+        control.targetDistance = 300f
 
         val heightMap = Texture2D("terrain/heightmap.png")
 

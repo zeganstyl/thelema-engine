@@ -18,6 +18,7 @@ package app.thelema.g3d.mesh
 
 import app.thelema.concurrency.ATOM
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.RebuildListener
 import app.thelema.ecs.component
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
@@ -68,6 +69,8 @@ class MeshBuilder: IMeshBuilder {
         set(value) { field.set(value) }
 
     var proxy: IMeshBuilder? = null
+
+    override var rebuildListener: RebuildListener? = null
 
     var vertexBuffer: IVertexBuffer? = null
 

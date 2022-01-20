@@ -673,6 +673,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
             GL.setupSimpleAlphaBlending()
         }
 
+        mesh.verticesCount = spritesInBatch * 4
         mesh.render(shader, null,0, count)
         idx = 0
 

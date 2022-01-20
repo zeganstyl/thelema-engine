@@ -7,7 +7,9 @@ import app.thelema.math.IVec2
 import app.thelema.math.Vec2
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
+import app.thelema.shader.node.IRootShaderNode
 import app.thelema.shader.node.IShaderNode
+import app.thelema.shader.node.OutputNode
 import app.thelema.studio.Studio
 import app.thelema.ui.*
 import app.thelema.utils.iterate
@@ -233,7 +235,9 @@ class ShaderNodesDiagram(val shader: IShader): WidgetGroup() {
                                 diagram.shader.getOrCreateEntity().addEntity(
                                     Entity(componentName) {
                                         val component = component(componentName) as IShaderNode
-                                        if (diagram.shader.rootNode == null) diagram.shader.rootNode = component()
+                                        if (diagram.shader.rootNode == null && component is IRootShaderNode) {
+                                            diagram.shader.rootNode = component()
+                                        }
                                         diagram.addBox(component).also { box ->
                                             box.x = coords.x
                                             box.y = coords.y

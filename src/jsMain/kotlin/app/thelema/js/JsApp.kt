@@ -37,10 +37,12 @@ import org.w3c.dom.DragEvent
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.get
 import app.thelema.app.*
+import app.thelema.audio.ISoundLoader
 import app.thelema.img.IImage
 import app.thelema.img.Image
 import app.thelema.input.KB
 import app.thelema.input.MOUSE
+import app.thelema.js.audio.SoundLoader
 import kotlin.js.Date
 
 /**
@@ -216,6 +218,12 @@ class JsApp(
         GL.runSingleCalls()
 
         performDefaultSetup()
+    }
+
+    override fun setupAudioComponents() {
+        ECS.descriptorI<ISoundLoader>({ SoundLoader() }) {
+            bool(ISoundLoader::isMuted)
+        }
     }
 
     fun traverseFileTree(entry: FileSystemEntry, path: String, files: MutableList<IFile>, ready: () -> Unit) {

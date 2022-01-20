@@ -13,6 +13,7 @@ import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
 import app.thelema.gl.ScreenQuad
+import app.thelema.gltf.GLTFSettings
 import app.thelema.gltf.gltf
 import app.thelema.res.RES
 import app.thelema.shader.ForwardRenderingPipeline
@@ -64,8 +65,10 @@ class ForwardRenderingPipelineTest: Test {
 
             entity("model") {
                 component<SceneInstance>().provider = RES.gltf("nightshade/nightshade.gltf") {
-                    setupVelocityShader = true
-                    setupDepthRendering = true
+                    gltfSettings {
+                        setupVelocityShader = true
+                        setupDepthRendering = true
+                    }
                 }
 
                 entity("Scene").animationPlayer().setAnimation(

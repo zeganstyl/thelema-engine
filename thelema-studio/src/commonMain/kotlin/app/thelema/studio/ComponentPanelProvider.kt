@@ -20,6 +20,8 @@ object ComponentPanelProvider {
         addProvider { MeshPanel() }
         addProvider { AnimationPlayerPanel() }
         addProvider { ArmaturePanel() }
+        addProvider { SoundLoaderPanel() }
+        addProvider { Sound3DPanel() }
         addProvider("KotlinScript") { KotlinScriptPanel() }
     }
 

@@ -16,17 +16,16 @@
 
 package app.thelema.audio
 
+import app.thelema.res.ILoader
+import app.thelema.res.IProject
+import app.thelema.res.load
+
 
 /**
  *
  *
  * A Sound is a short audio clip that can be played numerous times in parallel. It's completely loaded into memory so only load
  * small audio files. Call the [dispose] method when you're done using the Sound.
- *
- *
- *
- *
- * Sound instances are created via a call to [IAudio.newSound].
  *
  *
  *
@@ -42,10 +41,12 @@ package app.thelema.audio
  *
  * @author badlogicgames@gmail.com, zeganstyl
  */
-interface ISoundLoader {
+interface ISoundLoader: ILoader {
     var isMuted: Boolean
         get() = false
         set(value) {}
+
+    val duration: Float
 
     /** Plays the sound. If the sound is already playing, it will be played again, concurrently.
      * @param volume the volume in the range `[0,1]`
@@ -56,7 +57,7 @@ interface ISoundLoader {
     fun play(volume: Float = 1f, pitch: Float = 1f, pan: Float = 0f, loop: Boolean = false): Int
 
     /** Stops playing all instances of this sound.  */
-    fun stop()
+    fun stopSound()
 
     /** Pauses all instances of this sound.  */
     fun pause()
@@ -68,7 +69,7 @@ interface ISoundLoader {
      * If the sound is no longer playing, this has no effect.
      * @param soundId the sound id
      */
-    fun stop(soundId: Int)
+    fun stopSound(soundId: Int)
 
     /** Pauses the sound instance with the given id.
      * If the sound is no longer playing, this has no effect.
@@ -110,6 +111,6 @@ interface ISoundLoader {
      * @param pan panning in the range -1 (full left) to 1 (full right). 0 is center position.
      */
     fun setPan(soundId: Int, pan: Float)
-
-    fun destroy()
 }
+
+fun IProject.sound(uri: String, block: ISoundLoader.() -> Unit = {}): ISoundLoader = load(uri, block)

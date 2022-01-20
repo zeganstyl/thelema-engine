@@ -124,6 +124,6 @@ interface IEntityComponent: IJsonObjectIO {
     fun destroy() {}
 }
 
-inline fun <reified T: IEntityComponent> IEntityComponent.sibling(): T = entity.component()
+inline fun <reified T: IEntityComponent> IEntityComponent.sibling(block: T.() -> Unit = {}): T = entity.component<T>().apply(block)
 
 inline fun <reified T: IEntityComponent> IEntityComponent.siblingOrNull(): T? = entity.componentOrNull()

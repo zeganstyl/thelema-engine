@@ -70,6 +70,6 @@ class EntityTreeWindow: Window("Entity tree") {
             val str = it.trim()
             if (str.isEmpty()) null else str
         }
-        //rootNode?.filter(entityNameSearchField.text, componentNameTemplates, false)
+        rootNode?.filter(entityNameSearchField.text, componentNameTemplates, false)
     }
 }

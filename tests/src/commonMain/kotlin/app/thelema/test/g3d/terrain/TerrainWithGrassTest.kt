@@ -286,24 +286,25 @@ void main() {
         sampler.texelWidth = 1.5f
         sampler.texelHeight = 1.5f
 
-        val terrain = Terrain(minTileSize, 25, numLevelOfDetail, vertexPositionName = "POSITION")
+        val terrain = Terrain()
+        // minTileSize, 25, numLevelOfDetail, vertexPositionName = "POSITION"
         terrain.minY = terrainMinY
         terrain.maxY = terrainMaxY
 
-        terrain.levels[1].instances.add(
-            TerrainInstancesLevel(sampler) {
-                addAttribute(3, "instancePos", GL_FLOAT, false)
-            }.apply {
-                noise = perlin
-                renderInstances = { instances, i, j ->
-                    grassShader.bind()
-                    grassTexture.bind(grassTexUnit)
-                    heightMap.bind(grassHeightMapUnit)
-                    //grass.instances = instances
-                    grass.render(grassShader)
-                }
-            }
-        )
+//        terrain.levels[1].instances.add(
+//            TerrainInstancesLevel(sampler) {
+//                addAttribute(3, "instancePos", GL_FLOAT, false)
+//            }.apply {
+//                noise = perlin
+//                renderInstances = { instances, i, j ->
+//                    grassShader.bind()
+//                    grassTexture.bind(grassTexUnit)
+//                    heightMap.bind(grassHeightMapUnit)
+//                    //grass.instances = instances
+//                    grass.render(grassShader)
+//                }
+//            }
+//        )
 
         terrain.listeners.add(object : TerrainListener {
             override fun beforeTileRender(level: TerrainLevel, tileX: Float, tileZ: Float) {

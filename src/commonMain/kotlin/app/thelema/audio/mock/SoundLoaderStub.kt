@@ -18,17 +18,27 @@
 package app.thelema.audio.mock
 
 import app.thelema.audio.ISoundLoader
+import app.thelema.fs.IFile
+import app.thelema.res.LoaderAdapter
 
 /** The headless backend does its best to mock elements. This is intended to make code-sharing between
  * server and client as simple as possible.
  */
-class SoundLoaderStub : ISoundLoader {
+class SoundLoaderStub : ISoundLoader, LoaderAdapter() {
+    override val duration: Float
+        get() = 0f
+
+    override val componentName: String
+        get() = "SoundLoader"
+
+    override fun loadBase(file: IFile) {}
+
     override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int = 0
-    override fun stop() = Unit
+    override fun stopSound() {}
+    override fun stopSound(soundId: Int) {}
     override fun pause() = Unit
     override fun resume() = Unit
     override fun destroy() = Unit
-    override fun stop(soundId: Int) = Unit
     override fun pause(soundId: Int) = Unit
     override fun resume(soundId: Int) = Unit
     override fun setLooping(soundId: Int, looping: Boolean) = Unit

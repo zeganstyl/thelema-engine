@@ -24,9 +24,7 @@ import app.thelema.math.IVec4
 import app.thelema.shader.node.PBRNode
 
 /** @author zeganstyl */
-class GLTFSettings(): IEntityComponent {
-    constructor(block: GLTFSettings.() -> Unit): this() { block(this) }
-
+class GLTFSettings: IEntityComponent {
     override val componentName: String
         get() = "GLTFSettings"
 
@@ -56,7 +54,7 @@ class GLTFSettings(): IEntityComponent {
     var loadAnimations: Boolean = true
     var generateShaders: Boolean = true
 
-    var ibl: Boolean = false
+    var ibl: Boolean = true
     var iblMaxMipLevels: Int = 5
 
     /** If not null, will be created shader for solid color rendering channel */

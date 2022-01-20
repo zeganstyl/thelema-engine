@@ -17,16 +17,21 @@
 package app.thelema.ecs
 
 import app.thelema.action.*
+import app.thelema.audio.Sound3D
 import app.thelema.g3d.Blending
 import app.thelema.g3d.Material
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.particles.*
+import app.thelema.g3d.terrain.Terrain
+import app.thelema.g3d.terrain.TerrainTileMesh
 import app.thelema.gl.*
 import app.thelema.gltf.GLTF
+import app.thelema.gltf.GLTFSettings
 import app.thelema.gltf.IGLTF
 import app.thelema.img.*
 import app.thelema.input.KeyboardHandler
 import app.thelema.input.MouseHandler
+import app.thelema.res.IProject
 import app.thelema.res.Project
 import app.thelema.script.BakedKotlinScripts
 import app.thelema.script.IKotlinScript
@@ -133,39 +138,37 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
 
         descriptor { MainLoop() }
 
-        descriptor({ app.thelema.res.Loader() }) {
-            setAliases(app.thelema.res.ILoader::class)
+        descriptorI<app.thelema.res.ILoader>({ app.thelema.res.Loader() }) {
             file("file", { file }) { file = it }
 
             descriptor { EntityLoader() }
-            descriptor({ GLTF() }) {
-                setAliases(IGLTF::class)
+            descriptorI<IGLTF>({ GLTF() }) {
+                bool(IGLTF::overrideAssets)
 
-                bool(GLTF::saveMeshesInCPUMem)
-                bool(GLTF::mergeVertexAttributes)
-                bool(GLTF::generateShaders)
-                bool(GLTF::setupDepthRendering)
-                bool(GLTF::setupVelocityShader)
-                bool(GLTF::setupGBufferShader)
-                bool(GLTF::receiveShadows)
-                bool(GLTF::ibl)
-                int(GLTF::iblMaxMipLevels)
-                bool(GLTF::overrideAssets)
+                descriptor({ GLTFSettings() }) {
+                    bool(GLTFSettings::saveMeshesInCPUMem)
+                    bool(GLTFSettings::mergeVertexAttributes)
+                    bool(GLTFSettings::generateShaders)
+                    bool(GLTFSettings::setupDepthRendering)
+                    bool(GLTFSettings::setupVelocityShader)
+                    bool(GLTFSettings::setupGBufferShader)
+                    bool(GLTFSettings::receiveShadows)
+                    bool(GLTFSettings::ibl)
+                    int(GLTFSettings::iblMaxMipLevels)
+                }
             }
             descriptor { app.thelema.font.BitmapFont() }
-            descriptor({ Project() }) {
-                setAliases(app.thelema.res.IProject::class)
-                refAbs(Project::mainScene)
-                string(Project::appPackage)
+            descriptorI<IProject>({ Project() }) {
+                refAbs(IProject::mainScene)
+                string(IProject::appPackage)
             }
             descriptor { app.thelema.res.ResourceHolder() }
         }
 
         descriptor { BakedKotlinScripts() }
 
-        descriptor({ KotlinScript() }) {
-            setAliases(IKotlinScript::class)
-            string(KotlinScript::functionName)
+        descriptorI<IKotlinScript>({ KotlinScript() }) {
+            string(IKotlinScript::functionName)
         }
 
         descriptor { SimulationNode() }
@@ -173,19 +176,17 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptor { KeyboardHandler() }
         descriptor { MouseHandler() }
 
-        descriptor(::Image) {
-            setAliases(IImage::class)
-            int(Image::width)
-            int(Image::height)
-            int(Image::pixelFormat)
-            int(Image::pixelChannelType)
-            int(Image::internalFormat)
+        descriptorI<IImage>(::Image) {
+            int(IImage::width)
+            int(IImage::height)
+            int(IImage::pixelFormat)
+            int(IImage::pixelChannelType)
+            int(IImage::internalFormat)
         }
-        descriptor(::Texture2D) {
-            setAliases(ITexture2D::class)
-            ref(Texture2D::image)
+        descriptorI<ITexture2D>(::Texture2D) {
+            ref(ITexture2D::image)
             intEnum(
-                Texture2D::minFilter,
+                ITexture2D::minFilter,
                 linkedMapOf(
                     GL_NEAREST to "Nearest",
                     GL_LINEAR to "Linear",
@@ -196,31 +197,27 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 "???"
             )
             intEnum(
-                Texture2D::magFilter,
+                ITexture2D::magFilter,
                 linkedMapOf(GL_NEAREST to "Nearest", GL_LINEAR to "Linear"),
                 "???"
             )
-            int(Texture2D::sWrap)
-            int(Texture2D::tWrap)
-            float(Texture2D::anisotropicFilter)
+            int(ITexture2D::sWrap)
+            int(ITexture2D::tWrap)
+            float(ITexture2D::anisotropicFilter)
         }
         descriptor { TextureCube() }
 
-        descriptor({ ParticleSystem() }) {
-            setAliases(IParticleSystem::class)
+        descriptorI<IParticleSystem>({ ParticleSystem() }) {
+            ref(IParticleSystem::mesh)
+            string(IParticleSystem::instancePositionName, "INSTANCE_POSITION")
+            string(IParticleSystem::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
+            bool(IParticleSystem::lifeTimesAsAttribute, false)
 
-            ref(ParticleSystem::mesh)
-            string(ParticleSystem::instancePositionName, "INSTANCE_POSITION")
-            string(ParticleSystem::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
-            bool(ParticleSystem::lifeTimesAsAttribute, false)
-
-            descriptor({ ParticleEmitter() }) {
-                setAliases(IParticleEmitter::class)
-
-                ref(ParticleEmitter::particleSystem)
-                int(ParticleEmitter::maxParticles)
-                float(ParticleEmitter::particleEmissionSpeed)
-                float(ParticleEmitter::maxParticleLifeTime)
+            descriptorI<IParticleEmitter>({ ParticleEmitter() }) {
+                ref(IParticleEmitter::particleSystem)
+                int(IParticleEmitter::maxParticles)
+                float(IParticleEmitter::particleEmissionSpeed)
+                float(IParticleEmitter::maxParticleLifeTime)
             }
 
             descriptor({ MoveParticleEffect() }) {
@@ -233,9 +230,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             }
         }
 
-        descriptor({ RenderingPipeline() }) {
-            setAliases(IRenderingPipeline::class)
-
+        descriptorI<IRenderingPipeline>({ RenderingPipeline() }) {
             descriptor({ ForwardRenderingPipeline() }) {
                 bool(ForwardRenderingPipeline::fxaaEnabled)
                 bool(ForwardRenderingPipeline::vignetteEnabled)
@@ -243,6 +238,25 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 bool(ForwardRenderingPipeline::godRaysEnabled)
                 bool(ForwardRenderingPipeline::motionBlurEnabled)
             }
+        }
+
+        descriptor({ Sound3D() }) {
+            refAbs(Sound3D::loader)
+            float(Sound3D::volume, 1f)
+            float(Sound3D::pitch, 1f)
+            bool(Sound3D::isLooped, false)
+        }
+
+        descriptor({ Terrain() }) {
+            refAbs(Terrain::material)
+            int(Terrain::tileDivisions, 10)
+            float(Terrain::minTileSize, 10f)
+            int(Terrain::levelsNum, 10)
+            bool(Terrain::useCameraFrustum, true)
+            string(Terrain::tilePositionScaleName, "tilePositionScale")
+            string(Terrain::vertexPositionName, "POSITION")
+            float(Terrain::minY, 0f)
+            float(Terrain::maxY, 100f)
         }
 
         Action.setupActionComponents()

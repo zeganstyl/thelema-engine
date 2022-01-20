@@ -83,25 +83,26 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
     override fun applyVertices() {
         preparePositions {
             val uvs = mesh.getAttributeOrNull(builder.uvName)
+            val normals = mesh.getAttributeOrNull(builder.normalName)
             val verticesPerLine = outerLodDivisions * 2
             val quadSize = frameSize * 0.5f / outerLodDivisions
 
-            leftOuterStart = vLine(this, uvs, verticesPerLine, quadSize, 0f, quadSize)
-            leftInnerStart = vLine(this, uvs, verticesPerLine, quadSize, quadSize, quadSize)
+            leftOuterStart = vLine(this, uvs, normals, verticesPerLine, quadSize, 0f, quadSize)
+            leftInnerStart = vLine(this, uvs, normals, verticesPerLine, quadSize, quadSize, quadSize)
 
-            rightInnerStart = vLine(this, uvs, verticesPerLine, quadSize, frameSize - quadSize, quadSize)
-            rightOuterStart = vLine(this, uvs, verticesPerLine, quadSize, frameSize, quadSize)
+            rightInnerStart = vLine(this, uvs, normals, verticesPerLine, quadSize, frameSize - quadSize, quadSize)
+            rightOuterStart = vLine(this, uvs, normals, verticesPerLine, quadSize, frameSize, quadSize)
 
-            topOuterStart = hLine(this, uvs, verticesPerLine, quadSize, quadSize, 0f)
-            topInnerStart = hLine(this, uvs, verticesPerLine, quadSize, quadSize, quadSize)
+            topOuterStart = hLine(this, uvs, normals, verticesPerLine, quadSize, quadSize, 0f)
+            topInnerStart = hLine(this, uvs, normals, verticesPerLine, quadSize, quadSize, quadSize)
 
-            bottomInnerStart = hLine(this, uvs, verticesPerLine, quadSize, quadSize, frameSize - quadSize)
-            bottomOuterStart = hLine(this, uvs, verticesPerLine, quadSize, quadSize, frameSize)
+            bottomInnerStart = hLine(this, uvs, normals, verticesPerLine, quadSize, quadSize, frameSize - quadSize)
+            bottomOuterStart = hLine(this, uvs, normals, verticesPerLine, quadSize, quadSize, frameSize)
 
-            leftTopCorner = corner(this, uvs, 0f, 0f)
-            rightTopCorner = corner(this, uvs, frameSize, 0f)
-            leftBottomCorner = corner(this, uvs, 0f, frameSize)
-            rightBottomCorner = corner(this, uvs, frameSize, frameSize)
+            leftTopCorner = corner(this, uvs, normals, 0f, 0f)
+            rightTopCorner = corner(this, uvs, normals, frameSize, 0f)
+            leftBottomCorner = corner(this, uvs, normals, 0f, frameSize)
+            rightBottomCorner = corner(this, uvs, normals, frameSize, frameSize)
         }
     }
 
@@ -110,16 +111,16 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
             val divs = outerLodDivisions * 2 - 2
 
             // corners
-            linkLineCorners(this, leftTopCorner, rightTopCorner, topInnerStart, topOuterStart, divs, if (top) 1 else 0)
-            linkLineCorners(this, leftTopCorner, leftBottomCorner, leftInnerStart, leftOuterStart, divs, if (left) 1 else 0)
-            linkLineCorners(this, rightTopCorner, rightBottomCorner, rightInnerStart, rightOuterStart, divs, if (right) 1 else 0)
-            linkLineCorners(this, leftBottomCorner, rightBottomCorner, bottomInnerStart, bottomOuterStart, divs, if (bottom) 1 else 0)
+            linkLineCorners(this, leftTopCorner, rightTopCorner, topInnerStart, topOuterStart, divs, if (top) 1 else 0, 1)
+            linkLineCorners(this, leftTopCorner, leftBottomCorner, leftInnerStart, leftOuterStart, divs, if (left) 1 else 0, 0)
+            linkLineCorners(this, rightTopCorner, rightBottomCorner, rightInnerStart, rightOuterStart, divs, if (right) 1 else 0, 1)
+            linkLineCorners(this, leftBottomCorner, rightBottomCorner, bottomInnerStart, bottomOuterStart, divs, if (bottom) 1 else 0, 0)
 
             // edges
-            if (top) linkTransitionEdge(this, topOuterStart, topInnerStart) else linkEdge(this, topOuterStart, topInnerStart)
-            if (left) linkTransitionEdge(this, leftOuterStart, leftInnerStart) else linkEdge(this, leftOuterStart, leftInnerStart)
-            if (bottom) linkTransitionEdge(this, bottomOuterStart, bottomInnerStart) else linkEdge(this, bottomOuterStart, bottomInnerStart)
-            if (right) linkTransitionEdge(this, rightOuterStart, rightInnerStart) else linkEdge(this, rightOuterStart, rightInnerStart)
+            if (top) linkTransitionEdge(this, topOuterStart, topInnerStart, 0) else linkEdge(this, topOuterStart, topInnerStart, 0)
+            if (left) linkTransitionEdge(this, leftOuterStart, leftInnerStart, 1) else linkEdge(this, leftOuterStart, leftInnerStart, 1) // 1
+            if (bottom) linkTransitionEdge(this, bottomOuterStart, bottomInnerStart, 1) else linkEdge(this, bottomOuterStart, bottomInnerStart, 1) // 1
+            if (right) linkTransitionEdge(this, rightOuterStart, rightInnerStart, 0) else linkEdge(this, rightOuterStart, rightInnerStart, 0)
         }
     }
 
@@ -131,7 +132,15 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
         return this
     }
 
-    private fun hLine(positions: IVertexAttribute, uvs: IVertexAttribute?, verticesNum: Int, step: Float, xOffset: Float, zOffset: Float): Int {
+    private fun hLine(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        verticesNum: Int,
+        step: Float,
+        xOffset: Float,
+        zOffset: Float
+    ): Int {
         val counter = vertexCounter
 
         val uStep = step / frameSize
@@ -143,6 +152,7 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
         for (i in 0 until verticesNum) {
             positions.putFloatsNext(x, 0f, zOffset)
             uvs?.putFloatsNext(u, v)
+            normals?.putFloatsNext(0f, 1f, 0f)
             vertexCounter++
             u += uStep
             x += step
@@ -151,7 +161,15 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
         return counter
     }
 
-    private fun vLine(positions: IVertexAttribute, uvs: IVertexAttribute?, verticesNum: Int, step: Float, xOffset: Float, zOffset: Float): Int {
+    private fun vLine(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        verticesNum: Int,
+        step: Float,
+        xOffset: Float,
+        zOffset: Float
+    ): Int {
         val counter = vertexCounter
 
         val vStep = step / frameSize
@@ -163,6 +181,7 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
         for (i in 0 until verticesNum) {
             positions.putFloatsNext(xOffset, 0f, z)
             uvs?.putFloatsNext(u, v)
+            normals?.putFloatsNext(0f, 1f, 0f)
             vertexCounter++
             v += vStep
             z += step
@@ -171,52 +190,94 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
         return counter
     }
 
-    private fun corner(positions: IVertexAttribute, uvs: IVertexAttribute?, x: Float, z: Float): Int {
+    private fun corner(
+        positions: IVertexAttribute,
+        uvs: IVertexAttribute?,
+        normals: IVertexAttribute?,
+        x: Float,
+        z: Float
+    ): Int {
         val counter = vertexCounter
         positions.putFloatsNext(x, 0f, z)
         uvs?.putFloatsNext(x / frameSize, z / frameSize)
+        normals?.putFloatsNext(0f, 1f, 0f)
         vertexCounter++
         return counter
     }
 
-    private fun linkTransitionEdge(out: IIndexBuffer, outerStart: Int, innerStart: Int) {
+    private fun linkTransitionEdge(out: IIndexBuffer, outerStart: Int, innerStart: Int, order: Int) {
         var outerQuadsNum = outerLodDivisions - 1
         var outer = outerStart + 1
         var inner = innerStart + 1
-        for (i in 0 until outerQuadsNum) {
-            out.putIndices(outer, inner, (inner - 1))
-            out.putIndices(outer, inner, (inner + 1))
-            outer += 2
-            inner += 2
-        }
 
-        outerQuadsNum = outerLodDivisions - 2
-        outer = outerStart + 3
-        inner = innerStart + 3
-        for (i in 0 until outerQuadsNum) {
-            out.putIndices(outer, (inner - 1), (outer - 2))
-            outer += 2
-            inner += 2
+        if (order == 1) {
+            for (i in 0 until outerQuadsNum) {
+                out.putIndices(outer, inner, (inner - 1))
+                out.putIndices(inner, outer, (inner + 1))
+                outer += 2
+                inner += 2
+            }
+
+            outerQuadsNum = outerLodDivisions - 2
+            outer = outerStart + 3
+            inner = innerStart + 3
+            for (i in 0 until outerQuadsNum) {
+                out.putIndices(outer, (inner - 1), (outer - 2))
+                outer += 2
+                inner += 2
+            }
+        } else {
+            for (i in 0 until outerQuadsNum) {
+                out.putIndices(inner, outer, (inner - 1))
+                out.putIndices(outer, inner, (inner + 1))
+                outer += 2
+                inner += 2
+            }
+
+            outerQuadsNum = outerLodDivisions - 2
+            outer = outerStart + 3
+            inner = innerStart + 3
+            for (i in 0 until outerQuadsNum) {
+                out.putIndices((inner - 1), outer, (outer - 2))
+                outer += 2
+                inner += 2
+            }
         }
     }
 
-    private fun linkEdge(out: IIndexBuffer, line1Start: Int, line2Start: Int) {
+    private fun linkEdge(out: IIndexBuffer, line1Start: Int, line2Start: Int, order: Int) {
         val quadsNum = outerLodDivisions * 2 - 2
         var line1 = line1Start
         var line2 = line2Start
-        for (i in 0 until quadsNum) {
-            out.putIndices(
-                line1, (line1 + 1), line2,
-                (line1 + 1), (line2 + 1), line2
-            )
-            line1++
-            line2++
+        if (order == 1) {
+            for (i in 0 until quadsNum) {
+                out.putIndices(
+                    line1, (line1 + 1), line2,
+                    (line2 + 1), line2, (line1 + 1)
+                )
+                line1++
+                line2++
+            }
+        } else {
+            for (i in 0 until quadsNum) {
+                out.putIndices(
+                    (line1 + 1), line1, line2,
+                    (line2 + 1), (line1 + 1), line2
+                )
+                line1++
+                line2++
+            }
         }
     }
 
-    private fun linkLineCorners(out: IIndexBuffer, firstCorner: Int, lastCorner: Int, innerStart: Int, outerStart: Int, divs: Int, add: Int) {
-        out.putIndices(firstCorner, innerStart, (outerStart + add))
-        out.putIndices(lastCorner, (innerStart + divs), (outerStart + divs - add))
+    private fun linkLineCorners(out: IIndexBuffer, firstCorner: Int, lastCorner: Int, innerStart: Int, outerStart: Int, divs: Int, add: Int, order: Int) {
+        if (order == 0) {
+            out.putIndices(innerStart, firstCorner, (outerStart + add))
+            out.putIndices(lastCorner, (innerStart + divs), (outerStart + divs - add))
+        } else {
+            out.putIndices(firstCorner, innerStart, (outerStart + add))
+            out.putIndices((innerStart + divs), lastCorner, (outerStart + divs - add))
+        }
     }
 
     fun buildIndices() = IndexBuffer {
@@ -224,16 +285,16 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
             val divs = outerLodDivisions * 2 - 2
 
             // corners
-            linkLineCorners(this, leftTopCorner, rightTopCorner, topInnerStart, topOuterStart, divs, if (top) 1 else 0)
-            linkLineCorners(this, leftTopCorner, leftBottomCorner, leftInnerStart, leftOuterStart, divs, if (left) 1 else 0)
-            linkLineCorners(this, rightTopCorner, rightBottomCorner, rightInnerStart, rightOuterStart, divs, if (right) 1 else 0)
-            linkLineCorners(this, leftBottomCorner, rightBottomCorner, bottomInnerStart, bottomOuterStart, divs, if (bottom) 1 else 0)
+            linkLineCorners(this, leftTopCorner, rightTopCorner, topInnerStart, topOuterStart, divs, if (top) 1 else 0, 1)
+            linkLineCorners(this, leftTopCorner, leftBottomCorner, leftInnerStart, leftOuterStart, divs, if (left) 1 else 0, 0)
+            linkLineCorners(this, rightTopCorner, rightBottomCorner, rightInnerStart, rightOuterStart, divs, if (right) 1 else 0, 1)
+            linkLineCorners(this, leftBottomCorner, rightBottomCorner, bottomInnerStart, bottomOuterStart, divs, if (bottom) 1 else 0, 0)
 
             // edges
-            if (top) linkTransitionEdge(this, topOuterStart, topInnerStart) else linkEdge(this, topOuterStart, topInnerStart)
-            if (left) linkTransitionEdge(this, leftOuterStart, leftInnerStart) else linkEdge(this, leftOuterStart, leftInnerStart)
-            if (bottom) linkTransitionEdge(this, bottomOuterStart, bottomInnerStart) else linkEdge(this, bottomOuterStart, bottomInnerStart)
-            if (right) linkTransitionEdge(this, rightOuterStart, rightInnerStart) else linkEdge(this, rightOuterStart, rightInnerStart)
+            if (top) linkTransitionEdge(this, topOuterStart, topInnerStart, 0) else linkEdge(this, topOuterStart, topInnerStart, 0)
+            if (left) linkTransitionEdge(this, leftOuterStart, leftInnerStart, 1) else linkEdge(this, leftOuterStart, leftInnerStart, 1)
+            if (bottom) linkTransitionEdge(this, bottomOuterStart, bottomInnerStart, 1) else linkEdge(this, bottomOuterStart, bottomInnerStart, 1)
+            if (right) linkTransitionEdge(this, rightOuterStart, rightInnerStart, 0) else linkEdge(this, rightOuterStart, rightInnerStart, 0)
         }
     }
 }

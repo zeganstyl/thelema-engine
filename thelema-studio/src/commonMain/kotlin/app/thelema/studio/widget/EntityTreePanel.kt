@@ -7,6 +7,7 @@ import app.thelema.input.BUTTON
 import app.thelema.input.KEY
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
+import app.thelema.studio.StudioPopupMenu
 import app.thelema.ui.*
 
 class EntityTreePanel: Table() {
@@ -51,7 +52,7 @@ class EntityTreePanel: Table() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
                 tree.requestKeyboardFocus()
                 (tree.overNode as EntityTreeNode?)?.also { node ->
-                    Studio.popupMenu.showMenu(event, node)
+                    StudioPopupMenu.showMenu(event, node)
                 }
             }
 

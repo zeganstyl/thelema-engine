@@ -30,7 +30,9 @@ class Armature: IArmature {
     override val inverseBindMatrices: List<IMat4>
         get() = if (inverseBindMatricesInternal.size == 0) (inheritedArmature?.inverseBindMatrices ?: inverseBindMatricesInternal) else inverseBindMatricesInternal
 
+    // TODO make update triggering through node listeners
     private val boneMatricesUpdateRequests = ArrayList<Boolean>()
+
     override var boneMatrices: FloatArray = FloatArray(0)
     override var previousBoneMatrices: FloatArray = FloatArray(0)
 
