@@ -138,6 +138,8 @@ class RigidBody: IRigidBody {
 
     private var listeners: ArrayList<RigidBodyListener>? = null
 
+    override var onBodyCreated: (IRigidBody.() -> Unit)? = null
+
     fun contactBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
         listeners?.iterate { it.contactBegin(contact, body, other) }
     }
@@ -236,6 +238,8 @@ class RigidBody: IRigidBody {
             }
 
             if (mass?.mass != 0.0) body?.mass = mass
+
+            onBodyCreated?.invoke(this)
         }
     }
 
@@ -253,18 +257,20 @@ class RigidBody: IRigidBody {
         body?.setAngularVel(x, y, z)
     }
 
-    override fun getAngularVelocity(out: IVec3) {
+    override fun getAngularVelocity(out: IVec3): IVec3 {
         val vel = body?.angularVel
         if (vel != null) out.set(vel.get0().toFloat(), vel.get1().toFloat(), vel.get2().toFloat())
+        return out
     }
 
     override fun setForce(x: Double, y: Double, z: Double) {
         body?.setForce(x, y, z)
     }
 
-    override fun getForce(out: IVec3) {
+    override fun getForce(out: IVec3): IVec3 {
         val force = body?.force
         if (force != null) out.set(force.get0().toFloat(), force.get1().toFloat(), force.get2().toFloat())
+        return out
     }
 
     override fun addForce(x: Double, y: Double, z: Double) {
@@ -275,13 +281,14 @@ class RigidBody: IRigidBody {
         body?.setTorque(x, y, z)
     }
 
-    override fun getTorque(out: IVec3) {
+    override fun getTorque(out: IVec3): IVec3 {
         val torque = body?.torque
         if (torque != null) {
             out.set(torque.get0().toFloat(), torque.get1().toFloat(), torque.get2().toFloat())
         } else {
             out.set(0f, 0f, 0f)
         }
+        return out
     }
 
     override fun addTorque(x: Double, y: Double, z: Double) {

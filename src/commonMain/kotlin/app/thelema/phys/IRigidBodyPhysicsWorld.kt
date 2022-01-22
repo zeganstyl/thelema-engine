@@ -32,11 +32,15 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
     /** If not 0.0, it will be used as time delta */
     var fixedDelta: Float
 
+    var iterations: Int
+
     var isSimulationRunning: Boolean
 
     var maxContacts: Int
 
     var gravity: IVec3
+
+    var useQuickStep: Boolean
 
     fun step(delta: Float)
 

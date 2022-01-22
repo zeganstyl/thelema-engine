@@ -17,12 +17,12 @@
 package app.thelema.test
 
 import app.thelema.app.APP
-import app.thelema.test.shader.TBNCalculationInShaderTest
+import app.thelema.test.phys.ObjectShotTest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        TBNCalculationInShaderTest().testMain()
+        ObjectShotTest().testMain()
     }
 }

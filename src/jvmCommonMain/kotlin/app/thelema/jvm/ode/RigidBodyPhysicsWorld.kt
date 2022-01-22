@@ -63,7 +63,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
             }
         }
 
-    override var gravity: IVec3 = Vec3(0f, -3f, 0f)
+    override var gravity: IVec3 = Vec3(0f, -9.8f, 0f)
         set(value) {
             field.set(value)
             world.setGravity(value.x.toDouble(), value.y.toDouble(), value.z.toDouble())
@@ -78,7 +78,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         // https://ode.org/ode-latest-userguide.html#sec_3_8_2
         cfm = 0.0001
 
-        quickStepNumIterations = 10
+        quickStepNumIterations = iterations
     }
 
     var space = OdeHelper.createHashSpace(null)
@@ -95,6 +95,14 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     val listeners = ArrayList<IPhysicsWorldListener>()
 
     override var fixedDelta: Float = 0.02f
+
+    override var iterations: Int = 10
+        set(value) {
+            field = value
+            world?.quickStepNumIterations = value
+        }
+
+    override var useQuickStep: Boolean = true
 
     var nearCallback = DGeom.DNearCallback { _, o1, o2 ->
         val g1 = o1.data as IPhysicalShape
@@ -177,7 +185,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     override fun addedComponentToBranch(component: IEntityComponent) {
         if (component is RigidBody) {
             bodies.add(component)
-            component.isSimulationRunning = isSimulationRunning
         }
     }
 
@@ -197,7 +204,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         if (simulationRequest != 0) {
             isSimulationRunning = simulationRequest == 1
             simulationRequest = 0
-            bodies.forEach { it.isSimulationRunning = isSimulationRunning }
+            bodies.iterate { it.isSimulationRunning = isSimulationRunning }
         }
 
         if (isSimulationRunning) {
@@ -211,9 +218,12 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
             previousContacts.clear()
             previousContacts.addAll(currentContacts)
 
-            val iterations = max((delta / fixedDelta).toInt(), 1)
-            for (i in 0 until iterations) {
-                world.quickStep((if (fixedDelta > 0f) fixedDelta else delta).toDouble())
+            if (useQuickStep) {
+                world.quickStep(fixedDelta.toDouble())
+            } else {
+                for (i in 0 until iterations) {
+                    world.step(fixedDelta.toDouble())
+                }
             }
 
             contactGroup.empty()

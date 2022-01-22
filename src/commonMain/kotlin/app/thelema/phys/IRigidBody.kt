@@ -60,6 +60,8 @@ interface IRigidBody: IEntityComponent {
 
     var isSimulationRunning: Boolean
 
+    var onBodyCreated: (IRigidBody.() -> Unit)?
+
     fun addListener(listener: RigidBodyListener)
 
     fun removeListener(listener: RigidBodyListener)
@@ -86,12 +88,12 @@ interface IRigidBody: IEntityComponent {
     fun setAngularVelocity(x: Double, y: Double, z: Double)
     fun setAngularVelocity(x: Float, y: Float, z: Float) = setAngularVelocity(x.toDouble(), y.toDouble(), z.toDouble())
     fun setAngularVelocity(velocity: IVec3) = setAngularVelocity(velocity.x, velocity.y, velocity.z)
-    fun getAngularVelocity(out: IVec3)
+    fun getAngularVelocity(out: IVec3): IVec3
 
     fun setForce(x: Double, y: Double, z: Double)
     fun setForce(x: Float, y: Float, z: Float) = setForce(x.toDouble(), y.toDouble(), z.toDouble())
     fun setForce(force: IVec3) = setForce(force.x, force.y, force.z)
-    fun getForce(out: IVec3)
+    fun getForce(out: IVec3): IVec3
     fun addForce(x: Double, y: Double, z: Double)
     fun addForce(x: Float, y: Float, z: Float) = addForce(x.toDouble(), y.toDouble(), z.toDouble())
     fun addForce(force: IVec3) = addForce(force.x, force.y, force.z)
@@ -99,7 +101,7 @@ interface IRigidBody: IEntityComponent {
     fun setTorque(x: Double, y: Double, z: Double)
     fun setTorque(x: Float, y: Float, z: Float) = setTorque(x.toDouble(), y.toDouble(), z.toDouble())
     fun setTorque(torque: IVec3) = setTorque(torque.x, torque.y, torque.z)
-    fun getTorque(out: IVec3)
+    fun getTorque(out: IVec3): IVec3
     fun addTorque(x: Double, y: Double, z: Double)
     fun addTorque(x: Float, y: Float, z: Float) = addTorque(x.toDouble(), y.toDouble(), z.toDouble())
     fun addTorque(torque: IVec3) = addTorque(torque.x, torque.y, torque.z)

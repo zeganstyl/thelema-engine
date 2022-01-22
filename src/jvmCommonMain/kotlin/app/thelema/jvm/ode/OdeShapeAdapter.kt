@@ -70,7 +70,7 @@ abstract class OdeShapeAdapter<T: DGeom>: IPhysicalShape {
                 val node = siblingOrNull<ITransformNode>() ?: entityOrNull?.parentEntity?.componentOrNull()
                 val pos = node?.worldPosition
 
-                if (pos != null || positionOffset.isNotZero) {
+                if ((pos != null || positionOffset.isNotZero) && siblingOrNull<IRigidBody>() == null) {
                     var x = positionOffset.x
                     var y = positionOffset.y
                     var z = positionOffset.z
