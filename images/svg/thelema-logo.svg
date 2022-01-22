@@ -87,6 +87,159 @@
          result="composite2"
          id="feComposite3642-1" />
     </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Additive Chromatic Aberration"
+       inkscape:menu="Optical Defect"
+       inkscape:menu-tooltip="Decompose the object into RGB additive chromatic aberration"
+       id="filter843">
+      <feOffset
+         dx="-1"
+         dy="0"
+         in="SourceGraphic"
+         result="result1"
+         id="feOffset827" />
+      <feOffset
+         dx="0"
+         dy="0"
+         in="SourceGraphic"
+         result="result2"
+         id="feOffset829" />
+      <feOffset
+         dx="1"
+         dy="0"
+         in="SourceGraphic"
+         result="result3"
+         id="feOffset831" />
+      <feColorMatrix
+         in="result1"
+         values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result4"
+         id="feColorMatrix833" />
+      <feColorMatrix
+         in="result2"
+         values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result5"
+         id="feColorMatrix835" />
+      <feColorMatrix
+         in="result3"
+         values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 "
+         result="result6"
+         id="feColorMatrix837" />
+      <feBlend
+         mode="screen"
+         in="result4"
+         in2="result5"
+         result="result7"
+         id="feBlend839" />
+      <feBlend
+         mode="screen"
+         in="result6"
+         in2="result7"
+         id="feBlend841" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Additive Chromatic Aberration"
+       inkscape:menu="Optical Defect"
+       inkscape:menu-tooltip="Decompose the object into RGB additive chromatic aberration"
+       id="filter861">
+      <feOffset
+         dx="-1"
+         dy="0"
+         in="SourceGraphic"
+         result="result1"
+         id="feOffset845" />
+      <feOffset
+         dx="0"
+         dy="0"
+         in="SourceGraphic"
+         result="result2"
+         id="feOffset847" />
+      <feOffset
+         dx="1"
+         dy="0"
+         in="SourceGraphic"
+         result="result3"
+         id="feOffset849" />
+      <feColorMatrix
+         in="result1"
+         values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result4"
+         id="feColorMatrix851" />
+      <feColorMatrix
+         in="result2"
+         values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result5"
+         id="feColorMatrix853" />
+      <feColorMatrix
+         in="result3"
+         values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 "
+         result="result6"
+         id="feColorMatrix855" />
+      <feBlend
+         mode="screen"
+         in="result4"
+         in2="result5"
+         result="result7"
+         id="feBlend857" />
+      <feBlend
+         mode="screen"
+         in="result6"
+         in2="result7"
+         id="feBlend859" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Additive Chromatic Aberration"
+       inkscape:menu="Optical Defect"
+       inkscape:menu-tooltip="Decompose the object into RGB additive chromatic aberration"
+       id="filter879">
+      <feOffset
+         dx="-1"
+         dy="0"
+         in="SourceGraphic"
+         result="result1"
+         id="feOffset863" />
+      <feOffset
+         dx="0"
+         dy="0"
+         in="SourceGraphic"
+         result="result2"
+         id="feOffset865" />
+      <feOffset
+         dx="1"
+         dy="0"
+         in="SourceGraphic"
+         result="result3"
+         id="feOffset867" />
+      <feColorMatrix
+         in="result1"
+         values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result4"
+         id="feColorMatrix869" />
+      <feColorMatrix
+         in="result2"
+         values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 "
+         result="result5"
+         id="feColorMatrix871" />
+      <feColorMatrix
+         in="result3"
+         values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 "
+         result="result6"
+         id="feColorMatrix873" />
+      <feBlend
+         mode="screen"
+         in="result4"
+         in2="result5"
+         result="result7"
+         id="feBlend875" />
+      <feBlend
+         mode="screen"
+         in="result6"
+         in2="result7"
+         id="feBlend877" />
+    </filter>
   </defs>
   <sodipodi:namedview
      inkscape:document-rotation="0"
@@ -98,8 +251,8 @@
      showgrid="false"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="230.5811"
-     inkscape:cx="23.405512"
+     inkscape:cy="179.39181"
+     inkscape:cx="133.02556"
      inkscape:zoom="1.4"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0"
@@ -125,7 +278,7 @@
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">
     <circle
-       style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:2.55988;stroke-miterlimit:68;stroke-dasharray:none"
+       style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:2.55988;stroke-miterlimit:68;stroke-dasharray:none;filter:url(#filter879)"
        id="path877"
        cx="50"
        cy="247"
@@ -134,11 +287,11 @@
        sodipodi:nodetypes="ccccccc"
        id="path831"
        d="m 20.410901,230.26763 29.865239,8.53293 29.865239,-8.53293 -21.332314,21.33231 -8.532925,29.86525 -8.532926,-29.86525 z"
-       style="vector-effect:none;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.55988;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="vector-effect:none;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2.55988;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter861)" />
     <path
        sodipodi:nodetypes="ccccccc"
        id="path831-7"
        d="m 80.141375,263.26275 -29.865239,-8.53292 -29.865239,8.53292 21.332314,-21.33231 8.532925,-29.86524 8.532925,29.86524 z"
-       style="vector-effect:none;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:2.55988;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="vector-effect:none;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:2.55988;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:68;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter843)" />
   </g>
 </svg>

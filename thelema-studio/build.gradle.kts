@@ -40,20 +40,14 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:$kotlin_version")
                 implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlin_version")
 
-                val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
-                platforms.forEach {
-                    implementation("$lwjgl_prefix:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-glfw:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-jemalloc:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-openal:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-opengl:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-stb:$lwjgl_version:$it")
-                }
+                lwjglImplementations.forEach { implementation(it) }
             }
 
             val jvmMainClass = "app.thelema.studio.ThelemaStudioJvm"
 
             val jvmJar by tasks.getting(Jar::class) {
+                duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
                 doFirst {
                     manifest {
                         attributes(

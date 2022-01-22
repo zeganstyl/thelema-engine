@@ -8,7 +8,6 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import app.thelema.app.APP
 import app.thelema.app.AbstractApp
 import app.thelema.app.AndroidApp
@@ -135,7 +134,7 @@ class AndroidApp(
         GL = AndroidGL(this)
         MOUSE = mouse
         KB = kb
-        AL = AndroidAL(context)
+        AL = AndroidAudio(context)
         WS = KtorWebSocket()
         TOUCH = touch
 

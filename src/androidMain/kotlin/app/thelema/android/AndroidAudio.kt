@@ -7,43 +7,17 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.SoundPool
-import android.os.Build
 import app.thelema.audio.*
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
-import java.io.IOException
 
-
-class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
+class AndroidAudio(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
     override fun newAudioDevice(samplingRate: Int, channelsNum: Int): IAudioDevice {
-        return app.thelema.android.AndroidAudioDevice(samplingRate, channelsNum)
+        return AndroidAudioDevice(samplingRate, channelsNum)
     }
 
     override fun newAudioRecorder(samplingRate: Int, isMono: Boolean): IAudioRecorder {
-        return app.thelema.android.AndroidAudioRecorder(samplingRate, isMono)
-    }
-
-    override fun newSound(file: IFile): ISoundLoader {
-        val androidSound: app.thelema.android.AndroidSoundLoader
-        if (file.location == FileLocation.Internal) {
-            try {
-                val descriptor: AssetFileDescriptor = context.assets.openFd(file.path)
-                androidSound = app.thelema.android.AndroidSoundLoader(soundPool, soundPool.load(descriptor, 1))
-                descriptor.close()
-            } catch (ex: IOException) {
-                throw IllegalStateException(
-                    "Error loading audio file: " + file
-                            + "\nNote: Internal audio files must be placed in the assets directory.", ex
-                )
-            }
-        } else {
-            try {
-                androidSound = app.thelema.android.AndroidSoundLoader(soundPool, soundPool.load(file.path, 1))
-            } catch (ex: Exception) {
-                throw IllegalStateException("Error loading audio file: $file", ex)
-            }
-        }
-        return androidSound
+        return AndroidAudioRecorder(samplingRate, isMono)
     }
 
     override fun newMusic(file: IFile): IMusic {
@@ -58,7 +32,7 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
                 )
                 descriptor.close()
                 mediaPlayer.prepare()
-                val music = app.thelema.android.AndroidMusic(mediaPlayer)
+                val music = AndroidMusic(mediaPlayer)
                 synchronized(musics) { musics.add(music) }
                 music
             } catch (ex: Exception) {
@@ -71,7 +45,7 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
             try {
                 mediaPlayer.setDataSource(file.path)
                 mediaPlayer.prepare()
-                val music = app.thelema.android.AndroidMusic(mediaPlayer)
+                val music = AndroidMusic(mediaPlayer)
                 synchronized(musics) { musics.add(music) }
                 music
             } catch (ex: Exception) {
@@ -87,8 +61,8 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
     override fun destroy() {
         synchronized(musics) {
 
-            val musicsCopy = ArrayList<app.thelema.android.AndroidMusic>(musics)
-            for (music: app.thelema.android.AndroidMusic in musicsCopy) {
+            val musicsCopy = ArrayList<AndroidMusic>(musics)
+            for (music: AndroidMusic in musicsCopy) {
                 music.destroy()
             }
         }
@@ -96,22 +70,15 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
     }
 
 
-    private var soundPool: SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        val audioAttrib: AudioAttributes = AudioAttributes.Builder()
+    val soundPool: SoundPool = SoundPool.Builder().setAudioAttributes(
+        AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        SoundPool.Builder().setAudioAttributes(audioAttrib).setMaxStreams(maxSimultaneousSounds).build()
-    } else {
-        SoundPool(
-            maxSimultaneousSounds,
-            AudioManager.STREAM_MUSIC,
-            0
-        ) // srcQuality: the sample-rate converter quality. Currently has no effect. Use 0 for the default.
-    }
+    ).setMaxStreams(maxSimultaneousSounds).build()
 
     private var manager: AudioManager? = null
-    private val musics: MutableList<app.thelema.android.AndroidMusic> = ArrayList<app.thelema.android.AndroidMusic>()
+    private val musics: MutableList<AndroidMusic> = ArrayList()
 
     init {
         manager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -120,7 +87,7 @@ class AndroidAL(val context: Context, maxSimultaneousSounds: Int = 16): IAudio {
 
     fun pause() {
         synchronized(musics) {
-            for (music: app.thelema.android.AndroidMusic in musics) {
+            for (music: AndroidMusic in musics) {
                 if (music.isPlaying) {
                     music.pause()
                     music.wasPlaying = true

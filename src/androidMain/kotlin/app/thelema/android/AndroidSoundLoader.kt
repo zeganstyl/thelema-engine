@@ -1,12 +1,49 @@
 package app.thelema.android
 
+import android.content.res.AssetFileDescriptor
 import android.media.SoundPool
+import app.thelema.audio.AL
 import app.thelema.audio.ISoundLoader
+import app.thelema.fs.FileLocation
+import app.thelema.fs.IFile
+import app.thelema.res.LoaderAdapter
+import java.io.IOException
 import kotlin.math.abs
 
-internal class AndroidSoundLoader(pool: SoundPool, val soundId: Int) : ISoundLoader {
-    val soundPool: SoundPool = pool
+class AndroidSoundLoader : LoaderAdapter(), ISoundLoader {
+    val soundPool: SoundPool
+        get() = (AL as AndroidAudio).soundPool
+
     val streamIds = ArrayList<Int>(8)
+
+    override val duration: Float
+        get() = 0f
+
+    override val componentName: String
+        get() = "SoundLoader"
+
+    var soundId: Int = -1
+
+    override fun loadBase(file: IFile) {
+        if (file.location == FileLocation.Internal || file.location == FileLocation.Project) {
+            try {
+                val descriptor: AssetFileDescriptor = (AL as AndroidAudio).context.assets.openFd(file.path)
+                soundId = soundPool.load(descriptor, 1)
+                descriptor.close()
+            } catch (ex: IOException) {
+                throw IllegalStateException(
+                    "Error loading audio file: " + file
+                            + "\nNote: Internal audio files must be placed in the assets directory.", ex
+                )
+            }
+        } else {
+            try {
+                soundId = soundPool.load(file.path, 1)
+            } catch (ex: Exception) {
+                throw IllegalStateException("Error loading audio file: $file", ex)
+            }
+        }
+    }
 
     override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int {
         if (streamIds.size == 8) streamIds.removeLast()
@@ -26,7 +63,7 @@ internal class AndroidSoundLoader(pool: SoundPool, val soundId: Int) : ISoundLoa
         return streamId
     }
 
-    override fun stop() {
+    override fun stopSound() {
         var i = 0
         val n = streamIds.size
         while (i < n) {
@@ -35,7 +72,7 @@ internal class AndroidSoundLoader(pool: SoundPool, val soundId: Int) : ISoundLoa
         }
     }
 
-    override fun stop(soundId: Int) {
+    override fun stopSound(soundId: Int) {
         soundPool.stop(soundId)
     }
 

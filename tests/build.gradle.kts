@@ -63,15 +63,7 @@ kotlin {
                 implementation("org.recast4j:detour-extras:1.5.0")
                 implementation("org.recast4j:detour-dynamic:1.5.0")
 
-                val platforms = arrayOf("natives-linux", "natives-windows", "natives-windows-x86", "natives-macos")
-                platforms.forEach {
-                    implementation("$lwjgl_prefix:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-glfw:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-jemalloc:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-openal:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-opengl:$lwjgl_version:$it")
-                    implementation("$lwjgl_prefix-stb:$lwjgl_version:$it")
-                }
+                lwjglImplementations.forEach { implementation(it) }
             }
 
             val jvmJar by tasks.getting(Jar::class) {
@@ -116,13 +108,13 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 31
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].assets.srcDir("src/commonMain/resources")
     defaultConfig {
         applicationId = "app.thelema.test.android.AndroidMain"
-        minSdkVersion(21)
-        targetSdkVersion(31)
+        minSdk = 21
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
     }

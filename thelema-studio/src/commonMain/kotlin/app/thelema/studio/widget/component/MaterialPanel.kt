@@ -15,6 +15,7 @@ import app.thelema.img.*
 import app.thelema.math.Vec3
 import app.thelema.ui.Scaling
 import app.thelema.ui.UIImage
+import app.thelema.utils.iterate
 
 class MaterialPanel: ComponentPanel<IMaterial>(IMaterial::class) {
     val sprite = Sprite()
@@ -36,6 +37,8 @@ class MaterialPanel: ComponentPanel<IMaterial>(IMaterial::class) {
         content.add(image).growX().height(200f).newRow()
 
         GL.render {
+            if (MaterialPreview.initOnGLThreadRequest) MaterialPreview.initOnGLThread()
+
             if (renderPreview) {
                 MaterialPreview.fb.render {
                     MaterialPreview.system.render()
@@ -84,30 +87,34 @@ object MaterialPreview {
         builder.uvName = "TEXCOORD_0"
         setSize(1f)
     }
-    val defaultSkyboxTexture = TextureCube {
-        GL.call {
-            val bytes = DATA.bytes(4 * 4 * 4) {
-                val b = 0x000000FF
-                val f = 0x808080FF.toInt()
-                putRGBAs(
-                    b, b, b, b,
-                    b, f, f, b,
-                    b, f, f, b,
-                    b, b, b, b
-                )
-                rewind()
-            }
-            sides.forEach {
-                it.load(4, 4, bytes, 0)
-            }
-            bytes.destroy()
-        }
-    }
+    val defaultSkyboxTexture = TextureCube()
     val skybox = previewScene.entity("skybox").simpleSkybox {
         texture = defaultSkyboxTexture
     }
 
+    var initOnGLThreadRequest = true
+
     init {
         system.addedScene(previewScene)
+    }
+
+    fun initOnGLThread() {
+        initOnGLThreadRequest = false
+
+        val bytes = DATA.bytes(4 * 4 * 4) {
+            val b = 0x000000FF
+            val f = 0x808080FF.toInt()
+            putRGBAs(
+                b, b, b, b,
+                b, f, f, b,
+                b, f, f, b,
+                b, b, b, b
+            )
+            rewind()
+        }
+        defaultSkyboxTexture.sides.iterate {
+            it.load(4, 4, bytes, 0)
+        }
+        bytes.destroy()
     }
 }

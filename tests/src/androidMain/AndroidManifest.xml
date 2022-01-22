@@ -9,6 +9,9 @@
     <application
             android:allowBackup="false"
             android:supportsRtl="true"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Thelema Engine"
             android:usesCleartextTraffic="true">
         <activity
                 android:name="app.thelema.test.android.AndroidMain"

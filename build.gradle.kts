@@ -68,15 +68,7 @@ kotlin {
             dependencies {
                 implementation(files("libs/ogg-jvm-lib-0.1.0.jar"))
 
-                val lwjglPrefix = "org.lwjgl:lwjgl"
-                val lwjglVersion = "3.2.3"
-                api("$lwjglPrefix-bom:$lwjglVersion")
-                api("$lwjglPrefix:$lwjglVersion")
-                api("$lwjglPrefix-glfw:$lwjglVersion")
-                api("$lwjglPrefix-jemalloc:$lwjglVersion")
-                api("$lwjglPrefix-openal:$lwjglVersion")
-                api("$lwjglPrefix-opengl:$lwjglVersion")
-                api("$lwjglPrefix-stb:$lwjglVersion")
+                lwjglApis.forEach { api(it) }
             }
 
             val jvmJar by tasks.getting(Jar::class) {
@@ -103,11 +95,11 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 31
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdkVersion(21)
-        targetSdkVersion(31)
+        minSdk = 21
+        targetSdk = 31
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
