@@ -41,9 +41,9 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
     override val mesh: IMesh
         get() = builder.mesh
 
-    override var isMeshUpdateRequested: Boolean
-        get() = builder.isMeshUpdateRequested
-        set(value) { builder.isMeshUpdateRequested = value }
+    override var rebuildComponentRequested: Boolean
+        get() = builder.rebuildComponentRequested
+        set(value) { builder.rebuildComponentRequested = value }
 
     override var rebuildListener: RebuildListener?
         get() = builder.rebuildListener

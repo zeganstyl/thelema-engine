@@ -26,12 +26,6 @@ import app.thelema.shader.IShader
 interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
     val mesh: IMesh
 
-    var isMeshUpdateRequested: Boolean
-
-    override var rebuildComponentRequested: Boolean
-        get() = isMeshUpdateRequested
-        set(value) { isMeshUpdateRequested = value }
-
     fun getVerticesCount(): Int
 
     fun getIndicesCount(): Int
@@ -57,6 +51,6 @@ interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
     fun updateMesh()
 
     fun requestMeshUpdate() {
-        isMeshUpdateRequested = true
+        requestRebuild()
     }
 }

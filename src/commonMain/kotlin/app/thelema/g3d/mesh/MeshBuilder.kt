@@ -56,10 +56,10 @@ class MeshBuilder: IMeshBuilder {
     override val mesh: IMesh
         get() = meshInternal
 
-    private val isMeshUpdateRequestedInternal = ATOM.bool(false)
-    override var isMeshUpdateRequested: Boolean
-        get() = isMeshUpdateRequestedInternal.value
-        set(value) { isMeshUpdateRequestedInternal.value = value }
+    private val _rebuildComponentRequested = ATOM.bool(false)
+    override var rebuildComponentRequested: Boolean
+        get() = _rebuildComponentRequested.value
+        set(value) { _rebuildComponentRequested.value = value }
 
     var position: IVec3 = Vec3(0f, 0f, 0f)
         set(value) { field.set(value) }
@@ -211,6 +211,6 @@ class MeshBuilder: IMeshBuilder {
         mesh.indices?.rewind()
         mesh.indices?.requestBufferUploading()
 
-        isMeshUpdateRequested = false
+        rebuildComponentRequested = false
     }
 }

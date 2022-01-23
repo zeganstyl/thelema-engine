@@ -63,8 +63,9 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
             if (component is IArmature) armatures.add(component)
             if (component is IMesh) meshes.add(component)
             if (component is ITransformNode) nodes.add(component)
-            if (component is ComponentCanBeRebuild && component.rebuildComponentRequested) {
-                componentsCanBeRebuild.add(component)
+            if (component is ComponentCanBeRebuild) {
+                if (component.rebuildComponentRequested) componentsCanBeRebuild.add(component)
+                if (component.rebuildListener == null) component.rebuildListener = this@DefaultComponentSystem
             }
             if (component is UpdatableComponent) updatableComponents.add(component)
             if (component is MainLoop) mainLoops.add(component)
@@ -75,8 +76,9 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
             if (component is IArmature) armatures.remove(component)
             if (component is IMesh) meshes.remove(component)
             if (component is ITransformNode) nodes.remove(component)
-            if (component is ComponentCanBeRebuild && component.rebuildComponentRequested) {
-                componentsCanBeRebuild.remove(component)
+            if (component is ComponentCanBeRebuild) {
+                if (component.rebuildComponentRequested) componentsCanBeRebuild.remove(component)
+                if (component.rebuildListener == this@DefaultComponentSystem) component.rebuildListener = null
             }
             if (component is UpdatableComponent) updatableComponents.remove(component)
             if (component is MainLoop) mainLoops.remove(component)
@@ -85,6 +87,7 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
     }
 
     override fun requestRebuild(component: ComponentCanBeRebuild) {
+        println(component)
         componentsCanBeRebuild.add(component)
     }
 

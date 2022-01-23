@@ -24,7 +24,7 @@ class BoxMesh(): MeshBuilderAdapter() {
     constructor(block: BoxMesh.() -> Unit): this() {
         getOrCreateEntity()
         block(this)
-        if (isMeshUpdateRequested) updateMesh()
+        if (rebuildComponentRequested) updateMesh()
     }
 
     override val componentName: String
