@@ -140,7 +140,7 @@ interface ITreeNode {
 
     /** Called to remove the actor from the tree, eg when the node is removed or the node's parent is collapsed.  */
     fun removeFromTree(tree: Tree, actorIndex: Int) {
-        val removeActorAt = tree.removeActorAt(actorIndex, true)
+        val removeActorAt = tree.removeActorAt(actorIndex, false)
         if (!isExpanded) return
         val children = children
         var i = 0

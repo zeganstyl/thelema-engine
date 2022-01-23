@@ -18,9 +18,12 @@ package app.thelema.ecs
 
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
+import app.thelema.gltf.GLTF
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
+import app.thelema.res.IProject
 import app.thelema.res.LoaderAdapter
+import app.thelema.res.load
 import app.thelema.utils.LOG
 
 /** Loads entity from file.
@@ -80,3 +83,4 @@ class EntityLoader: LoaderAdapter() {
 
 inline fun IEntity.entityLoader(block: EntityLoader.() -> Unit) = component(block)
 inline fun IEntity.entityLoader() = component<EntityLoader>()
+fun IProject.loadEntity(uri: String, block: EntityLoader.() -> Unit = {}): EntityLoader = load(uri, block)

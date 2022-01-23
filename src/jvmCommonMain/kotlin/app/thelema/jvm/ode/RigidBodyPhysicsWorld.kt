@@ -185,6 +185,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     override fun addedComponentToBranch(component: IEntityComponent) {
         if (component is RigidBody) {
             bodies.add(component)
+            if (component.isSimulationRunning && component.body == null) component.setupBody()
         }
     }
 
@@ -263,7 +264,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     }
 
     override fun destroy() {
-        bodies.iterate { it.destroy() }
+        bodies.iterate { it.endSimulation() }
         bodies.clear()
         contactGroup.destroy()
         space.destroy()

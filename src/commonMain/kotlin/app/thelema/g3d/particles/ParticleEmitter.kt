@@ -38,12 +38,12 @@ class ParticleEmitter: IParticleEmitter {
     override var particleEmissionSpeed = 1f
         set(value) {
             field = value
-            particlesEmissionSpeedInv = 1 / particleEmissionSpeed
+            particlesEmissionSpeedInv = if (particleEmissionSpeed != 0f) 1 / particleEmissionSpeed else 0f
         }
 
     override var maxParticleLifeTime = 1f
 
-    var particlesEmissionSpeedInv = 1 / particleEmissionSpeed
+    var particlesEmissionSpeedInv = if (particleEmissionSpeed != 0f) 1 / particleEmissionSpeed else 0f
         private set
 
     private var emissionTime = 0f
@@ -64,6 +64,14 @@ class ParticleEmitter: IParticleEmitter {
                 }
             }
         }
+
+    override fun emitParticle(x: Float, y: Float, z: Float) {
+        particleSystem?.also { particleSystem ->
+            val particle = particleSystem.emitParticle(this, this.maxParticleLifeTime, 0f)
+            _visibleParticles.add(particle)
+            particleSystem.positions[particle].set(x, y, z)
+        }
+    }
 
     override fun updateParticles(delta: Float) {
         particleSystem?.also { particleSystem ->
@@ -93,7 +101,7 @@ class ParticleEmitter: IParticleEmitter {
                 particleSystem.shutdownParticle(_visibleParticles.removeAt(toShutdown[j]))
             }
 
-            if (_visibleParticles.size < maxParticles) {
+            if (_visibleParticles.size < maxParticles && particleEmissionSpeed != 0f) {
                 for (i in 0 until maxParticles) {
                     if (emissionTime <= delta) {
                         emissionTime += particlesEmissionSpeedInv

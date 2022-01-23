@@ -112,6 +112,11 @@ interface ITransformNode: IEntityComponent {
         requestTransformUpdate()
     }
 
+    fun setPositionUpdate(position: IVec3) {
+        position.set(position.x, position.y, position.z)
+        requestTransformUpdate()
+    }
+
     fun scale(x: Float, y: Float, z: Float) {
         scale.add(x, y, z)
         requestTransformUpdate()

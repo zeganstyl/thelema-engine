@@ -17,12 +17,13 @@
 package app.thelema.test
 
 import app.thelema.app.APP
+import app.thelema.test.g3d.terrain.GrassPatchMeshTest
 import app.thelema.test.phys.ObjectShotTest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        ObjectShotTest().testMain()
+        EmitParticlesByCodeTest().testMain()
     }
 }

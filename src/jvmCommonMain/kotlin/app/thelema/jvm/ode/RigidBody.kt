@@ -121,7 +121,11 @@ class RigidBody: IRigidBody {
                 if (value) {
                     setupBody()
                 } else {
-                    body?.destroy()
+                    try {
+                        body?.destroy()
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
                     body = null
                 }
             }
@@ -191,9 +195,6 @@ class RigidBody: IRigidBody {
         }
     }
 
-    private fun world(): RigidBodyPhysicsWorld? =
-        entityOrNull?.getRootEntity()?.componentOrNull()
-
     fun setupShape(shape: OdeShapeAdapter<*>, dMass: DMass?) {
         shape.body = this
         shape.setupGeom(dMass)?.also { geom ->
@@ -211,15 +212,15 @@ class RigidBody: IRigidBody {
     }
 
     fun setupBody() {
-        world()?.also { world ->
-            node.worldMatrix.getTranslation(tmpV3)
+        val world = entityOrNull?.getRootEntity()?.componentOrNull<RigidBodyPhysicsWorld>()
+        if (world != null) {
             var mass: DMass? = null
 
             if (!isStatic) {
                 val body = OdeHelper.createBody(world.world)
                 body.data = this
                 body.gravityMode = isGravityEnabled
-                body.setPosition(tmpV3.x.toDouble(), tmpV3.y.toDouble(), tmpV3.z.toDouble())
+                body.setPosition(node.worldPosition.x.toDouble(), node.worldPosition.y.toDouble(), node.worldPosition.z.toDouble())
                 mass = OdeHelper.createMass()
                 this.body = body
             }
@@ -302,7 +303,16 @@ class RigidBody: IRigidBody {
             tmpV4.set(node.rotation)
 
             val pos = body.position
-            node.position.set(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
+            val parentPos = entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()?.worldPosition
+            if (parentPos != null) {
+                node.position.set(
+                    pos.get0().toFloat() - parentPos.x,
+                    pos.get1().toFloat() - parentPos.y,
+                    pos.get2().toFloat() - parentPos.z
+                )
+            } else {
+                node.position.set(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
+            }
 
             val q = body.quaternion
             node.rotation.set(q.get1().toFloat(), q.get2().toFloat(), q.get3().toFloat(), q.get0().toFloat())

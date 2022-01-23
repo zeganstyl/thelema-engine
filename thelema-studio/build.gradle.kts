@@ -41,6 +41,9 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:$kotlin_version")
 
                 lwjglImplementations.forEach { implementation(it) }
+
+                // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+                implementation("ch.qos.logback:logback-classic:1.2.10")
             }
 
             val jvmMainClass = "app.thelema.studio.ThelemaStudioJvm"

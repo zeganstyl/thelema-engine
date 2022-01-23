@@ -556,6 +556,12 @@ class Mesh(): IMesh {
                         int("xDivisions", { hDivisions }) { hDivisions = it }
                         int("yDivisions", { vDivisions }) { vDivisions = it }
                     }
+
+                    descriptor({ SpriteXYZPlanes() }) {
+                        float(SpriteXYZPlanes::xSize)
+                        float(SpriteXYZPlanes::ySize)
+                        float(SpriteXYZPlanes::zSize)
+                    }
                 }
             }
         }

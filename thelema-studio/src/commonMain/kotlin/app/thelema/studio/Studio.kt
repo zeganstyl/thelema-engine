@@ -189,7 +189,9 @@ object Studio: AppListener, IJsonObjectIO {
         val entity = Entity(sceneName)
         RES.entity.addEntity(entity)
         entity.apply {
-            RES.mainScene = entityLoader {
+            entityLoader {
+                if (RES.mainScene == null) RES.mainScene = this
+
                 targetEntity.apply {
                     this.name = sceneName
                     scene()

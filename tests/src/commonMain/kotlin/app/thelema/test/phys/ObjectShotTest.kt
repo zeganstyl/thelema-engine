@@ -21,6 +21,15 @@ class ObjectShotTest: Test {
         var emittedObjectsNum = 0
         var delayRemain = 0f
 
+        rigidBodyPhysicsWorld {
+            gravity = Vec3(0f)
+            useQuickStep = true
+            fixedDelta = 0.01f
+            iterations = 10
+        }
+
+        scene().startSimulation()
+
         orbitCameraControl {
             targetDistance = 20f
             azimuth = 2.5f
@@ -62,14 +71,5 @@ class ObjectShotTest: Test {
                 }
             }
         }
-
-        rigidBodyPhysicsWorld {
-            gravity = Vec3(0f)
-            useQuickStep = true
-            fixedDelta = 0.01f
-            iterations = 10
-        }
-
-        scene().startSimulation()
     }
 }

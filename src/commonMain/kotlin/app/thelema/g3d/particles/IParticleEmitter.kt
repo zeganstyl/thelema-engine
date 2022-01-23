@@ -25,6 +25,10 @@ interface IParticleEmitter: IEntityComponent {
 
     var isPlaying: Boolean
 
+    fun emitParticle(x: Float, y: Float, z: Float)
+
+    fun emitParticle(position: IVec3) = emitParticle(position.x, position.y, position.z)
+
     fun updateParticles(delta: Float)
 }
 

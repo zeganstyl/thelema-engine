@@ -34,9 +34,9 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
         }
 
         override fun removedEntity(entity: IEntity) {
-            children.firstOrNull { (it as EntityTreeNode).entity == entity }?.also { node ->
+            cache[entity]?.also { node ->
                 remove(node)
-                (node as EntityTreeNode).also { it.entity.removeEntityListener(it.entityListener) }
+                (node).also { it.entity.removeEntityListener(it.entityListener) }
             }
         }
     }

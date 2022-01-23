@@ -210,6 +210,12 @@ interface IEntity: IJsonObjectIO {
         return entity as Entity
     }
 
+    fun newEntity(name: String): Entity {
+        val entity = Entity(name)
+        addEntity(entity)
+        return entity
+    }
+
     /** Get or create entity with given name */
     fun entity(name: String, block: IEntity.() -> Unit) = entity(name).apply(block)
 
