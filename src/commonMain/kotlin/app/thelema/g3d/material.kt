@@ -44,7 +44,9 @@ interface IMaterial: IEntityComponent {
 fun IEntity.material(block: IMaterial.() -> Unit) = component(block)
 fun IEntity.material() = component<IMaterial>()
 
-/** @author zeganstyl */
+/** Material for meshes
+ *
+ * @author zeganstyl */
 class Material: IMaterial {
     override var entityOrNull: IEntity? = null
         set(value) {

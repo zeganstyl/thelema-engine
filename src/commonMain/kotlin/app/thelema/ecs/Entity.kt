@@ -222,11 +222,14 @@ class Entity() : IEntity {
 
     override fun removeComponent(typeName: String) {
         val component = componentOrNull(typeName)
-        if (component != null) removeComponent(component)
+        if (component != null) {
+            component.entityOrNull = null
+            removeComponent(component)
+        }
     }
 
     override fun removeComponent(component: IEntityComponent) {
-        componentsInternal.remove(component)
+        if (componentsInternal.remove(component)) component.entityOrNull = null
         listeners?.iterate { it.removedComponent(component) }
     }
 

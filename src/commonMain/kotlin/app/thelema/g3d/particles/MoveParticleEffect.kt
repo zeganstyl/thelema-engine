@@ -5,7 +5,7 @@ import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 
-class MoveParticleEffect: IParticleEffect, ParticleProcessingListener, IEntityComponent {
+class MoveParticleEffect: IParticleEffect, ParticleProcessingEffect, IEntityComponent {
     var speed: IVec3 = Vec3(0f, 1f, 0f)
         set(value) { field.set(value) }
 
@@ -16,11 +16,11 @@ class MoveParticleEffect: IParticleEffect, ParticleProcessingListener, IEntityCo
     override val componentName: String
         get() = "MoveParticleEffect"
 
-    override fun beginProcessParticleSystem(system: IParticleSystem, visibleParticles: Int, delta: Float) {
+    override fun beginProcessParticles(particles: IParticles, visibleParticles: Int, delta: Float) {
         tmp.set(speed).scl(delta)
     }
 
-    override fun processParticle(system: IParticleSystem, particle: Int, delta: Float) {
-        system.positions[particle].add(tmp)
+    override fun processParticle(particles: IParticles, particle: Int, delta: Float) {
+        particles.positions[particle].add(tmp)
     }
 }

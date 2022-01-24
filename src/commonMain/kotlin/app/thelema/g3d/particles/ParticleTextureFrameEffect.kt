@@ -4,7 +4,7 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec2
 
-class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionListener, IEntityComponent {
+class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionEffect, IEntityComponent {
     override var entityOrNull: IEntity? = null
 
     override val componentName: String
@@ -32,8 +32,6 @@ class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionListener, IEn
     var sizeV = 1f / framesV
         private set
 
-    lateinit var uvs: MutableList<IVec2>
-
     private var counter = 0
 
     var instanceUvStartName: String = "INSTANCE_UV_START"
@@ -43,11 +41,8 @@ class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionListener, IEn
         framesV = v
     }
 
-    override fun setupParticleData(particleSystem: IParticleSystem) {
-        uvs = particleSystem.getOrCreateDataChannel<IVec2>(2, instanceUvStartName).data
-    }
-
-    override fun emitParticle(system: IParticleSystem, emitter: IParticleEmitter, particle: Int) {
+    override fun emitParticle(particles: IParticles, emitter: IParticleEmitter, particle: Int) {
+        val uvs = particles.getOrCreateDataChannel<IVec2>(2, instanceUvStartName).data
         if (counter >= uvs.size) counter = 0
         uvs[particle].set(
             sizeU * counter % framesU,

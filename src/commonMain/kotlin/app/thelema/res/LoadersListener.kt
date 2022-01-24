@@ -16,7 +16,7 @@
 
 package app.thelema.res
 
-interface ProjectListener {
+interface LoadersListener {
     fun loaderStarted(loader: ILoader) {}
 
     fun loaderCompleted(loader: ILoader) {}

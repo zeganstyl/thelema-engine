@@ -16,6 +16,7 @@
 
 package app.thelema.res
 
+import app.thelema.ecs.ECS
 import app.thelema.ecs.EntityLoader
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
@@ -34,16 +35,16 @@ class Project: IProject {
     override val componentName: String
         get() = "Project"
 
-    private val loadersInternal = ArrayList<ILoader>()
+    private val _loaders = ArrayList<ILoader>()
     override val loaders: List<ILoader>
-        get() = loadersInternal
+        get() = _loaders
 
     private val loadingLoaders = ArrayList<ILoader>()
     private val loadingResourcesToRemove = ArrayList<ILoader>()
 
     override var loadOnSeparateThreadByDefault: Boolean = false
 
-    private val loaderListeners = ArrayList<ProjectListener>()
+    private val loadersListeners = ArrayList<LoadersListener>()
 
     override var file: IFile = DefaultProjectFile
         set(value) {
@@ -72,19 +73,19 @@ class Project: IProject {
         mainScene?.load()
     }
 
-    override fun addProjectListener(listener: ProjectListener) {
-        loaderListeners.add(listener)
+    override fun addLoadersListener(listener: LoadersListener) {
+        loadersListeners.add(listener)
     }
 
-    override fun removeLoadersListener(listener: ProjectListener) {
-        loaderListeners.remove(listener)
+    override fun removeLoadersListener(listener: LoadersListener) {
+        loadersListeners.remove(listener)
     }
 
     override fun addedComponentToBranch(component: IEntityComponent) {
         if (component is Loader) {
             val res = getLoaderOrNull(component.file?.path ?: "", component.componentName)
             if (res == null) {
-                loadersInternal.add(component)
+                _loaders.add(component)
             }
         }
     }
@@ -100,8 +101,8 @@ class Project: IProject {
                 if (loader.isLoaded) {
                     loadingResourcesToRemove.add(loader)
 
-                    for (j in loaderListeners.indices) {
-                        loaderListeners[j].loaderCompleted(loader)
+                    for (j in loadersListeners.indices) {
+                        loadersListeners[j].loaderCompleted(loader)
                     }
                 }
             }
@@ -162,14 +163,14 @@ class Project: IProject {
     override fun monitorLoading(loader: ILoader) {
         if (!loadingLoaders.contains(loader)) loadingLoaders.add(loader)
 
-        for (j in loaderListeners.indices) {
-            loaderListeners[j].loaderStarted(loader)
+        for (j in loadersListeners.indices) {
+            loadersListeners[j].loaderStarted(loader)
         }
     }
 
     override fun getLoaderOrNull(uri: String, loaderName: String): ILoader? {
-        for (i in loadersInternal.indices) {
-            val loader = loadersInternal[i]
+        for (i in _loaders.indices) {
+            val loader = _loaders[i]
             if (loader.componentName == loaderName && loader.file?.path == uri) {
                 return loader
             }
@@ -185,14 +186,14 @@ class Project: IProject {
             entity.clearChildren()
         }
         mainScene = null
-        loaderListeners.clear()
+        loadersListeners.clear()
         loadingResourcesToRemove.clear()
         loadingLoaders.clear()
-        loadersInternal.clear()
-        loaderListeners.trimToSize()
+        _loaders.clear()
+        loadersListeners.trimToSize()
         loadingResourcesToRemove.trimToSize()
         loadingLoaders.trimToSize()
-        loadersInternal.trimToSize()
+        _loaders.trimToSize()
         entity.forEachChildEntity { it.destroy() }
     }
 }
@@ -215,6 +216,7 @@ fun openThelemaApp(file: IFile) {
             RES.destroy()
             RES.getOrCreateEntity().readJson(json)
             RES.entity.name = "App"
+            ECS.addEntity(RES.entity)
         } catch (ex: Exception) {
             LOG.error("Error while loading project ${file.path}")
             ex.printStackTrace()

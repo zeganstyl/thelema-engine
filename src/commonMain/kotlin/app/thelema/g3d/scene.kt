@@ -43,8 +43,6 @@ interface IScene: IEntityComponent {
 
     val renderables: List<IRenderable>
 
-    val particleEmitters: List<IParticleEmitter>
-
     var keyboardHandler: KeyboardHandler?
     var mouseHandler: MouseHandler?
 
@@ -105,9 +103,6 @@ class Scene: IScene {
     }
 
     override val renderables = ArrayList<IRenderable>()
-
-    override val particleEmitters = ArrayList<IParticleEmitter>()
-    private val particleSystems = HashSet<IParticleSystem>()
 
     override val lights = ArrayList<ILight>()
 
@@ -193,14 +188,12 @@ class Scene: IScene {
         if (component is IRenderable) if (!renderables.contains(component)) renderables.add(component)
         if (component is ILight) if (!lights.contains(component)) lights.add(component)
         if (component is SimulationNode) simulationNodes.add(component)
-        if (component is IParticleEmitter) if (!particleEmitters.contains(component)) particleEmitters.add(component)
     }
 
     override fun removedComponentFromBranch(component: IEntityComponent) {
         if (component is IRenderable) renderables.remove(component)
         if (component is ILight) lights.remove(component)
         if (component is SimulationNode) simulationNodes.remove(component)
-        if (component is IParticleEmitter) particleEmitters.remove(component)
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
@@ -260,15 +253,6 @@ class Scene: IScene {
         if (translucent.size > 0) {
             translucent.sortWith(translucentSorter)
             translucent.iterate { it.render(this, shaderChannel) }
-        }
-
-        particleSystems.clear()
-        particleEmitters.iterate {
-            it.particleSystem?.also { system ->
-                if (particleSystems.add(system)) {
-                    system.mesh?.render(this, shaderChannel)
-                }
-            }
         }
     }
 

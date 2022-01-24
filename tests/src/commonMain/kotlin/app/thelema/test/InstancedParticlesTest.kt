@@ -25,12 +25,13 @@ class InstancedParticlesTest: Test {
                 planeMesh { setSize(10f) }
             }
 
-            val particleSystem = entity("particlesSystem") {
+            val particleMaterial = entity("particleMaterial") {
                 planeMesh {
                     normal = MATH.Z
                     setSize(1f)
+                    mesh.isVisible = false
                 }
-                component<IParticleSystem> {
+                particleMaterial {
                     lifeTimesAsAttribute = true
 
                     component<MoveParticleEffect>()
@@ -100,7 +101,7 @@ class InstancedParticlesTest: Test {
                     maxParticles = 100
                     maxParticleLifeTime = 5f
                     particleEmissionSpeed = 4f
-                    this.particleSystem = particleSystem.component()
+                    this.particleMaterial = particleMaterial.component()
                 }
             }
 
@@ -113,7 +114,7 @@ class InstancedParticlesTest: Test {
                     maxParticles = 100
                     maxParticleLifeTime = 5f
                     particleEmissionSpeed = 2f
-                    this.particleSystem = particleSystem.component()
+                    this.particleMaterial = particleMaterial.component()
                 }
             }
         }

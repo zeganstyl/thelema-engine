@@ -23,7 +23,6 @@ import app.thelema.g3d.Material
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.particles.*
 import app.thelema.g3d.terrain.Terrain
-import app.thelema.g3d.terrain.TerrainTileMesh
 import app.thelema.gl.*
 import app.thelema.gltf.GLTF
 import app.thelema.gltf.GLTFSettings
@@ -48,70 +47,64 @@ import kotlin.native.concurrent.ThreadLocal
 object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
     val allDescriptors = LinkedHashMap<String, ComponentDescriptor<IEntityComponent>>()
 
-    private val systemsInternal = ArrayList<IComponentSystem>()
+    private val _systems = ArrayList<IComponentSystem>()
     override val systems: List<IComponentSystem>
-        get() = systemsInternal
+        get() = _systems
 
-    private val entitiesInternal = ArrayList<IEntity>()
+    private val _entities = ArrayList<IEntity>()
     override val entities: List<IEntity>
-        get() = entitiesInternal
+        get() = _entities
 
     override fun getDescriptor(typeName: String): ComponentDescriptor<IEntityComponent>? =
         allDescriptors[typeName]
 
-    override var currentEntity: IEntity?
-        get() = entities.getOrNull(0)
+    override var currentEntity: IEntity? = null
         set(value) {
-            if (value != null) {
-                if (entitiesInternal.size == 0) {
-                    addEntity(value)
-                } else {
-                    removeEntity(entitiesInternal[0])
-                    addEntity(value)
-                }
-            } else if (entitiesInternal.size != 0) {
-                entitiesInternal.iterate { removeEntity(it) }
-                entitiesInternal.clear()
+            if (field != value) {
+                val oldValue = field
+                if (oldValue != null) _systems.iterate { it.removedScene(oldValue) }
+                field = value
+                if (value != null && !_entities.contains(oldValue)) _systems.iterate { it.addedScene(value) }
             }
         }
 
     override fun addEntity(entity: IEntity) {
-        entitiesInternal.add(entity)
-        systemsInternal.iterate { it.addedScene(entity) }
+        _entities.add(entity)
+        _systems.iterate { it.addedScene(entity) }
     }
 
     override fun removeEntity(entity: IEntity) {
-        entitiesInternal.remove(entity)
-        systemsInternal.iterate { it.removedScene(entity) }
+        _entities.remove(entity)
+        _systems.iterate { it.removedScene(entity) }
     }
 
     fun removeAllEntities() {
-        entitiesInternal.forEach { entity -> systemsInternal.forEach { entity.removeEntity(entity) } }
-        entitiesInternal.clear()
+        _entities.iterate { entity -> _systems.iterate { entity.removeEntity(entity) } }
+        _entities.clear()
     }
 
     override fun addSystem(system: IComponentSystem) {
-        systemsInternal.add(system)
+        _systems.add(system)
     }
 
     override fun setSystem(index: Int, system: IComponentSystem) {
-        systemsInternal[index] = system
+        _systems[index] = system
     }
 
     override fun removeSystem(system: IComponentSystem) {
-        systemsInternal.remove(system)
+        _systems.remove(system)
     }
 
     override fun removeSystem(index: Int) {
-        systemsInternal.removeAt(index)
+        _systems.removeAt(index)
     }
 
     override fun update(delta: Float) {
-        systemsInternal.iterate { it.update(delta) }
+        _systems.iterate { it.update(delta) }
     }
 
     override fun render(shaderChannel: String?) {
-        systemsInternal.iterate { it.render(shaderChannel) }
+        _systems.iterate { it.render(shaderChannel) }
     }
 
     fun setupDefaultComponents() {
@@ -208,13 +201,19 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptor { TextureCube() }
 
         descriptorI<IParticleSystem>({ ParticleSystem() }) {
-            ref(IParticleSystem::mesh)
-            string(IParticleSystem::instancePositionName, "INSTANCE_POSITION")
-            string(IParticleSystem::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
-            bool(IParticleSystem::lifeTimesAsAttribute, false)
+            int(IParticleSystem::translucencyPriority, 1)
+            bool(IParticleSystem::isVisible, true)
+            string(IParticleSystem::alphaMode, Blending.BLEND)
+
+            descriptorI<IParticleMaterial>({ ParticleMaterial() }) {
+                string(IParticleMaterial::instancePositionName, "INSTANCE_POSITION")
+                string(IParticleMaterial::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
+                bool(IParticleMaterial::lifeTimesAsAttribute, false)
+                ref(IParticleMaterial::mesh)
+            }
 
             descriptorI<IParticleEmitter>({ ParticleEmitter() }) {
-                ref(IParticleEmitter::particleSystem)
+                ref(IParticleEmitter::particleMaterial)
                 int(IParticleEmitter::maxParticles)
                 float(IParticleEmitter::particleEmissionSpeed)
                 float(IParticleEmitter::maxParticleLifeTime)

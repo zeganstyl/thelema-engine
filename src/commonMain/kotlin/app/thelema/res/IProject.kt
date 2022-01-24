@@ -37,9 +37,9 @@ interface IProject: IEntityComponent {
 
     fun runMainScene()
 
-    fun addProjectListener(listener: ProjectListener)
+    fun addLoadersListener(listener: LoadersListener)
 
-    fun removeLoadersListener(listener: ProjectListener)
+    fun removeLoadersListener(listener: LoadersListener)
 
     fun monitorLoading(loader: ILoader)
 

@@ -3,15 +3,15 @@ package app.thelema.g3d.particles
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.g3d.ITransformNode
-import app.thelema.math.IVec2
 import app.thelema.math.IVec3
 
 interface IParticleEmitter: IEntityComponent {
     override val componentName: String
         get() = "ParticleEmitter"
 
-    var particleSystem: IParticleSystem?
+    var particles: IParticles?
+
+    var particleMaterial: IParticleMaterial?
 
     var maxParticles: Int
 

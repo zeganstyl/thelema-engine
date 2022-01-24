@@ -167,9 +167,9 @@ class TabScenePanel: Table() {
     fun setActive(active: Boolean) {
         if (active) {
             ActiveCamera = editorCamera
-            ECS.addEntity(entity)
+            ECS.currentEntity = entity
         } else {
-            ECS.removeEntity(entity)
+            if (ECS.currentEntity == entity) ECS.currentEntity = null
         }
     }
 }

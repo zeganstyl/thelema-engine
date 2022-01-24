@@ -20,7 +20,6 @@ import app.thelema.action.IAction
 import app.thelema.g3d.IArmature
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.mesh.MeshBuilder
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.particles.IParticleEmitter
 import app.thelema.g3d.particles.IParticleSystem
@@ -36,9 +35,6 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
     private val physicsWorlds = ArrayList<IRigidBodyPhysicsWorld>(1)
     private val actions = ArrayList<IAction>()
     private val mainLoops = ArrayList<MainLoop>()
-    private val particleEmitters = ArrayList<IParticleEmitter>()
-    private val particleSystemsSet = HashSet<IParticleSystem>()
-    private val particleSystems = ArrayList<IParticleSystem>()
 
     private val componentsCanBeRebuild = ArrayList<ComponentCanBeRebuild>()
     private val updatableComponents = ArrayList<UpdatableComponent>()
@@ -48,6 +44,7 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
 
     private val entityListener = object : EntityListener {
         override fun addedComponent(component: IEntityComponent) {
+
             if (component is IScene) scenes.add(component)
             if (component is IRigidBodyPhysicsWorld) physicsWorlds.add(component)
             if (component is IAction) actions.add(component)
@@ -69,7 +66,6 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
             }
             if (component is UpdatableComponent) updatableComponents.add(component)
             if (component is MainLoop) mainLoops.add(component)
-            if (component is IParticleEmitter) particleEmitters.add(component)
         }
 
         override fun removedComponentFromBranch(component: IEntityComponent) {
@@ -82,12 +78,10 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
             }
             if (component is UpdatableComponent) updatableComponents.remove(component)
             if (component is MainLoop) mainLoops.remove(component)
-            if (component is IParticleEmitter) particleEmitters.remove(component)
         }
     }
 
     override fun requestRebuild(component: ComponentCanBeRebuild) {
-        println(component)
         componentsCanBeRebuild.add(component)
     }
 
@@ -99,15 +93,9 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
         entity.forEachComponent { entityListener.addedComponent(it) }
         entity.forEachComponentInBranch { entityListener.addedComponentToBranch(it) }
         entity.addEntityListener(entityListener)
-        particleEmitters.iterate {
-            if (it.entityOrNull?.getRootEntity() == entity) it.isPlaying = true
-        }
     }
 
     override fun removedScene(entity: IEntity) {
-        particleEmitters.iterate {
-            if (it.entityOrNull?.getRootEntity() == entity) it.isPlaying = false
-        }
         entity.forEachComponent { entityListener.removedComponent(it) }
         entity.forEachComponentInBranch { entityListener.removedComponentFromBranch(it) }
         entity.removeEntityListener(entityListener)
@@ -143,14 +131,6 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
         updatableComponents.iterate { it.updateComponent(delta) }
 
         if (ActiveCamera.isCameraUpdateRequested) ActiveCamera.updateCamera()
-
-        particleSystemsSet.clear()
-        particleSystems.clear()
-        particleEmitters.iterate { emitter ->
-            emitter.particleSystem?.also { if (particleSystemsSet.add(it)) particleSystems.add(it) }
-            emitter.updateParticles(delta)
-        }
-        particleSystems.iterate { it.updateParticleSystem(delta) }
 
         armatures.iterate { it.updateBoneMatrices() }
 
