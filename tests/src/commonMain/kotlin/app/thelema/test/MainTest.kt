@@ -17,13 +17,16 @@
 package app.thelema.test
 
 import app.thelema.app.APP
+import app.thelema.test.audio.Sound3DTest
 import app.thelema.test.g3d.terrain.GrassPatchMeshTest
+import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.phys.ObjectShotTest
+import app.thelema.test.ui.LabelTest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        EmitParticlesByCodeTest().testMain()
+        LabelTest().testMain()
     }
 }

@@ -17,7 +17,6 @@
 package app.thelema.ecs
 
 import app.thelema.action.*
-import app.thelema.audio.Sound3D
 import app.thelema.g3d.Blending
 import app.thelema.g3d.Material
 import app.thelema.g3d.TransformNode
@@ -237,13 +236,6 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 bool(ForwardRenderingPipeline::godRaysEnabled)
                 bool(ForwardRenderingPipeline::motionBlurEnabled)
             }
-        }
-
-        descriptor({ Sound3D() }) {
-            refAbs(Sound3D::loader)
-            float(Sound3D::volume, 1f)
-            float(Sound3D::pitch, 1f)
-            bool(Sound3D::isLooped, false)
         }
 
         descriptor({ Terrain() }) {

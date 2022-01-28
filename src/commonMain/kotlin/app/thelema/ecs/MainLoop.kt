@@ -2,7 +2,7 @@ package app.thelema.ecs
 
 import app.thelema.utils.iterate
 
-class MainLoop: IEntityComponent {
+class MainLoop: IEntityComponent, UpdatableComponent {
     override val componentName: String
         get() = "MainLoop"
 
@@ -12,7 +12,7 @@ class MainLoop: IEntityComponent {
 
     val actions = ArrayList<MainLoopFunc>(1)
 
-    fun update(delta: Float) {
+    override fun updateComponent(delta: Float) {
         actions.iterate { it(delta) }
     }
 

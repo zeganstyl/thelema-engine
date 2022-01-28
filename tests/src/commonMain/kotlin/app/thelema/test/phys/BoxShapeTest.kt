@@ -58,7 +58,7 @@ class BoxShapeTest: Test {
                 mesh { inheritedMesh = box.mesh }
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
-                    node.position.set(0f, 3f, 0f)
+                    node.setPosition(0f, 3f, 0f)
                 }
             }
 
@@ -66,7 +66,7 @@ class BoxShapeTest: Test {
                 mesh { inheritedMesh = box.mesh }
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
-                    node.position.set(1.25f, 0f, 0f)
+                    node.setPosition(1.25f, 0f, 0f)
                     isStatic = true
                     onContact { contact, body, other ->
                         LOG.info("${body.entity.name} collided with ${other.entity.name}, depth = ${contact.depth}, normal = ${contact.normal}")
@@ -78,7 +78,7 @@ class BoxShapeTest: Test {
                 mesh { inheritedMesh = box.mesh }
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
-                    node.position.set(-2.5f, 0f, 0f)
+                    node.setPosition(-2.5f, 0f, 0f)
                     isStatic = true
                 }
             }

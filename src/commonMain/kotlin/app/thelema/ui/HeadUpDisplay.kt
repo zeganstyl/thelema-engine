@@ -108,6 +108,12 @@ class HeadUpDisplay() : IKeyListener, IMouseListener {
         root.hud = this
     }
 
+    fun resizeViewport(width: Float, height: Float) {
+        camera.viewportWidth = width
+        camera.viewportHeight = height
+        camera.updateCamera()
+    }
+
     private inline fun forEachTouchFocus(pointer: Int, block: (focus: TouchFocus) -> Unit) {
         touchFocusesTemp.clear()
         touchFocusesTemp.addAll(touchFocuses)

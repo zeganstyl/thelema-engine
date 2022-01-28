@@ -19,6 +19,7 @@ package app.thelema.res
 import app.thelema.ecs.EntityLoader
 import app.thelema.ecs.IEntityComponent
 import app.thelema.fs.IFile
+import app.thelema.g3d.cam.ICamera
 
 interface IProject: IEntityComponent {
     val loaders: List<ILoader>
@@ -32,6 +33,8 @@ interface IProject: IEntityComponent {
     val absoluteDirectory: IFile
 
     var mainScene: EntityLoader?
+
+    val mainCamera: ICamera
 
     var appPackage: String
 

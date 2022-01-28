@@ -21,72 +21,66 @@ import app.thelema.g3d.IArmature
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.ITransformNode
-import app.thelema.g3d.particles.IParticleEmitter
-import app.thelema.g3d.particles.IParticleSystem
-import app.thelema.gl.IMesh
 import app.thelema.phys.IRigidBodyPhysicsWorld
 import app.thelema.utils.iterate
 
 class DefaultComponentSystem: IComponentSystem, RebuildListener {
     private val armatures = ArrayList<IArmature>()
-    private val meshes = ArrayList<IMesh>()
     private val nodes = ArrayList<ITransformNode>()
     private val scenes = ArrayList<IScene>(1)
     private val physicsWorlds = ArrayList<IRigidBodyPhysicsWorld>(1)
     private val actions = ArrayList<IAction>()
-    private val mainLoops = ArrayList<MainLoop>()
 
     private val componentsCanBeRebuild = ArrayList<ComponentCanBeRebuild>()
+    private val componentsCanBeRebuildSet = HashSet<ComponentCanBeRebuild>()
     private val updatableComponents = ArrayList<UpdatableComponent>()
+    private val updatableComponentsCached = ArrayList<UpdatableComponent>()
 
     private var idCounter = 1
     private val syncMap = HashMap<Int, Any>()
 
     private val entityListener = object : EntityListener {
         override fun addedComponent(component: IEntityComponent) {
-
             if (component is IScene) scenes.add(component)
             if (component is IRigidBodyPhysicsWorld) physicsWorlds.add(component)
             if (component is IAction) actions.add(component)
+            if (component is UpdatableComponent) updatableComponents.add(component)
         }
 
         override fun removedComponent(component: IEntityComponent) {
             if (component is IScene) scenes.remove(component)
             if (component is IRigidBodyPhysicsWorld) physicsWorlds.remove(component)
             if (component is IAction) actions.remove(component)
+            if (component is UpdatableComponent) updatableComponents.remove(component)
         }
 
         override fun addedComponentToBranch(component: IEntityComponent) {
             if (component is IArmature) armatures.add(component)
-            if (component is IMesh) meshes.add(component)
             if (component is ITransformNode) nodes.add(component)
             if (component is ComponentCanBeRebuild) {
                 if (component.rebuildComponentRequested) componentsCanBeRebuild.add(component)
                 if (component.rebuildListener == null) component.rebuildListener = this@DefaultComponentSystem
             }
             if (component is UpdatableComponent) updatableComponents.add(component)
-            if (component is MainLoop) mainLoops.add(component)
         }
 
         override fun removedComponentFromBranch(component: IEntityComponent) {
             if (component is IArmature) armatures.remove(component)
-            if (component is IMesh) meshes.remove(component)
             if (component is ITransformNode) nodes.remove(component)
             if (component is ComponentCanBeRebuild) {
                 if (component.rebuildComponentRequested) componentsCanBeRebuild.remove(component)
                 if (component.rebuildListener == this@DefaultComponentSystem) component.rebuildListener = null
             }
             if (component is UpdatableComponent) updatableComponents.remove(component)
-            if (component is MainLoop) mainLoops.remove(component)
         }
     }
 
     override fun requestRebuild(component: ComponentCanBeRebuild) {
-        componentsCanBeRebuild.add(component)
+        if (componentsCanBeRebuildSet.add(component)) componentsCanBeRebuild.add(component)
     }
 
     override fun cancelRebuild(component: ComponentCanBeRebuild) {
-        componentsCanBeRebuild.remove(component)
+        if (componentsCanBeRebuildSet.remove(component)) componentsCanBeRebuild.remove(component)
     }
 
     override fun addedScene(entity: IEntity) {
@@ -123,12 +117,13 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
         armatures.iterate { it.updatePreviousBoneMatrices() }
 
         actions.iterate { it.update(delta) }
-        mainLoops.iterate { it.update(delta) }
 
         armatures.iterate { it.preUpdateBoneMatrices() }
         nodes.iterate { if (it.isTransformUpdateRequested) it.updateTransform() }
 
-        updatableComponents.iterate { it.updateComponent(delta) }
+        updatableComponentsCached.clear()
+        updatableComponentsCached.addAll(updatableComponents)
+        updatableComponentsCached.iterate { it.updateComponent(delta) }
 
         if (ActiveCamera.isCameraUpdateRequested) ActiveCamera.updateCamera()
 
@@ -137,6 +132,7 @@ class DefaultComponentSystem: IComponentSystem, RebuildListener {
         if (componentsCanBeRebuild.isNotEmpty()) {
             componentsCanBeRebuild.iterate { it.rebuildComponent() }
             componentsCanBeRebuild.clear()
+            componentsCanBeRebuildSet.clear()
         }
 
         physicsWorlds.iterate { it.step(delta) }

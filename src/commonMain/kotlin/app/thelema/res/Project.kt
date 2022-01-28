@@ -16,11 +16,11 @@
 
 package app.thelema.res
 
-import app.thelema.ecs.ECS
-import app.thelema.ecs.EntityLoader
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.*
 import app.thelema.fs.*
+import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.cam.Camera
+import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.scene
 import app.thelema.json.JSON
 import app.thelema.utils.LOG
@@ -29,11 +29,17 @@ class Project: IProject {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            if (value != null) addedEntityToBranch(value)
+            if (value != null) {
+                ECS.addEntity(value)
+                addedEntityToBranch(value)
+            }
+            mainCamera = value?.entity("MainCamera")?.component() ?: Camera()
         }
 
     override val componentName: String
         get() = "Project"
+
+    override var mainCamera: ICamera = Camera()
 
     private val _loaders = ArrayList<ILoader>()
     override val loaders: List<ILoader>
@@ -180,6 +186,7 @@ class Project: IProject {
     }
 
     override fun destroy() {
+        ECS.removeEntity(RES.entity)
         super.destroy()
         entityOrNull?.also { entity ->
             entity.forEachChildEntity { it.destroy() }
@@ -216,7 +223,6 @@ fun openThelemaApp(file: IFile) {
             RES.destroy()
             RES.getOrCreateEntity().readJson(json)
             RES.entity.name = "App"
-            ECS.addEntity(RES.entity)
         } catch (ex: Exception) {
             LOG.error("Error while loading project ${file.path}")
             ex.printStackTrace()

@@ -357,27 +357,27 @@ class GLTF: IGLTF, LoaderAdapter() {
     override fun writeJson(json: IJsonObject) {
         super<LoaderAdapter>.writeJson(json)
 
-        if (overrideAssets && isLoaded) {
-            file?.also { file ->
-                directory.child("${file.name}_override.entity").writeText(
-                    JSON.printObject {
-                        setObj("children") {
-                            setObj(meshesEntity.name) { meshesEntity.writeJson(this) }
-                            setObj(imagesEntity.name) { imagesEntity.writeJson(this) }
-                            setObj(texturesEntity.name) { texturesEntity.writeJson(this) }
-                            setObj(materialsEntity.name) { materialsEntity.writeJson(this) }
-                            setObj(animationsEntity.name) { animationsEntity.writeJson(this) }
-                        }
-                    }
-                )
-            }
-        }
+//        if (overrideAssets && isLoaded) {
+//            file?.also { file ->
+//                directory.child("${file.name}_override.entity").writeText(
+//                    JSON.printObject {
+//                        setObj("children") {
+//                            setObj(meshesEntity.name) { meshesEntity.writeJson(this) }
+//                            setObj(imagesEntity.name) { imagesEntity.writeJson(this) }
+//                            setObj(texturesEntity.name) { texturesEntity.writeJson(this) }
+//                            setObj(materialsEntity.name) { materialsEntity.writeJson(this) }
+//                            setObj(animationsEntity.name) { animationsEntity.writeJson(this) }
+//                        }
+//                    }
+//                )
+//            }
+//        }
 
-        scenes.iterate { scene ->
-            (scene as GLTFScene).loader.also {
-                if (it.saveTargetEntityOnWrite) it.saveTargetEntity()
-            }
-        }
+//        scenes.iterate { scene ->
+//            (scene as GLTFScene).loader.also {
+//                if (it.saveTargetEntityOnWrite) it.saveTargetEntity()
+//            }
+//        }
     }
 
     override fun destroy() {

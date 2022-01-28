@@ -16,15 +16,19 @@
 
 package app.thelema.action
 
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.UpdatableComponent
+import app.thelema.ecs.component
+
 /** @author zeganstyl */
 class DelayAction: ActionAdapter() {
     override val componentName: String
         get() = "DelayAction"
 
-    var delay: Float
-        get() = actionData.getTyped(Delay)
+    var duration: Float
+        get() = actionData.getTyped(Duration)
         set(value) {
-            actionData[Delay] = value
+            actionData[Duration] = value
         }
 
     var remain: Float
@@ -39,19 +43,29 @@ class DelayAction: ActionAdapter() {
 
     override var actionData: ActionData = ActionData(0f, 0f)
 
+    var onComplete: () -> Unit = {}
+
     override fun restart() {
-        remain = delay
+        remain = duration
     }
 
     override fun update(delta: Float): Float {
+        val remainPrev = remain
         if (remain > 0f) {
             remain -= delta
         }
+        if (remain <= 0 && remainPrev > 0f) onComplete()
         return 0f
     }
 
     companion object {
-        private const val Delay = 0
+        private const val Duration = 0
         private const val Remain = 1
     }
 }
+
+fun ActionList.delay(block: DelayAction.() -> Unit) = action(block)
+fun ActionList.delay() = action<DelayAction>()
+
+fun IEntity.delayAction(block: DelayAction.() -> Unit) = component(block)
+fun IEntity.delayAction() = component<DelayAction>()

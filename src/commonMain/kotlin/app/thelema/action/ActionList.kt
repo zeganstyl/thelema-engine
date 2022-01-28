@@ -18,6 +18,8 @@ package app.thelema.action
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.component
+import app.thelema.phys.IBoxShape
 import kotlin.math.min
 
 class ActionList(): ActionAdapter() {
@@ -53,9 +55,11 @@ class ActionList(): ActionAdapter() {
     }
 
     override fun addedChildComponent(component: IEntityComponent) {
-        if (component.componentName == "Action") {
-            childActionsInternal.add(component as IAction)
-        }
+        if (component is IAction) childActionsInternal.add(component)
+    }
+
+    override fun removedChildComponent(component: IEntityComponent) {
+        if (component is IAction) childActionsInternal.remove(component)
     }
 
     override fun restart() {
@@ -117,3 +121,6 @@ class ActionList(): ActionAdapter() {
         return 0f
     }
 }
+
+fun IEntity.actionList(block: ActionList.() -> Unit) = component(block)
+fun IEntity.actionList() = component<ActionList>()

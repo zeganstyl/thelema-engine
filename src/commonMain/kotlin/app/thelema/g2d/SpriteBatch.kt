@@ -17,7 +17,6 @@
 package app.thelema.g2d
 
 import app.thelema.app.APP
-import app.thelema.data.DATA
 import app.thelema.g2d.SpriteBatch.Companion.createDefaultShader
 import app.thelema.gl.*
 import app.thelema.math.*
@@ -25,7 +24,6 @@ import app.thelema.shader.IShader
 import app.thelema.shader.Shader
 import app.thelema.img.ITexture2D
 import app.thelema.utils.Color
-import kotlin.math.min
 
 /** Draws batched quads using indices.
  *
@@ -36,45 +34,51 @@ import kotlin.math.min
  *
  * The defaultShader specifies the shader to use. Note that the names for uniforms for this default shader are different than
  * the ones expect for shaders set with [shader]. See [createDefaultShader].
- * @param size The max number of sprites in a single batch. Max of 8191.
+ * @param size The max number of sprites in a single batch. If -1 (by default), mesh will be auto resized if needed.
  * @param defaultShader The default shader to use. This is not owned by the SpriteBatch and must be disposed separately.
  *
  * @author mzechner, Nathan Sweet, zeganstyl
  */
-open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
+open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
+    var autoResize: Boolean = size == -1
+
     val verts = VertexBuffer {
         addAttribute(2, "POSITION", GL_FLOAT, false)
         addAttribute(4, "COLOR", GL_UNSIGNED_BYTE, true)
         addAttribute(2, "UV", GL_FLOAT, false)
-        initVertexBuffer(size)
+        initVertexBuffer(if (autoResize) DEFAULT_VERTICES_NUM else size)
     }
 
-    val vertices = verts.bytes.floatView()
+    var vertices = verts.bytes.floatView()
 
     override val vertexBuffer: IVertexBuffer
         get() = verts
 
     private val mesh = Mesh().apply {
         getOrCreateEntity().name = "Sprite Batch"
-        vertexBuffers.add(verts)
+        addVertexBuffer(verts)
 
-        indices = IndexBuffer(DATA.bytes(size * 6 * 2).apply {
-            shortView().apply {
-                val len = size * 6
-                var j = 0
-                var i = 0
-                while (i < len) {
-                    this[i] = j.toShort()
-                    this[i + 1] = (j + 1).toShort()
-                    this[i + 2] = (j + 2).toShort()
-                    this[i + 3] = (j + 2).toShort()
-                    this[i + 4] = (j + 3).toShort()
-                    this[i + 5] = this[i]
-                    i += 6
-                    j += 4
-                }
-            }
-        }).apply { indexType = GL_UNSIGNED_SHORT }
+        setIndexBuffer {
+            resizeIndexBuffer(this, (if (autoResize) DEFAULT_VERTICES_NUM else size) * 6)
+        }
+
+//        indices = IndexBuffer(DATA.bytes(size * 6 * 2).apply {
+//            shortView().apply {
+//                val len = size * 6
+//                var j = 0
+//                var i = 0
+//                while (i < len) {
+//                    this[i] = j.toShort()
+//                    this[i + 1] = (j + 1).toShort()
+//                    this[i + 2] = (j + 2).toShort()
+//                    this[i + 3] = (j + 2).toShort()
+//                    this[i + 4] = (j + 3).toShort()
+//                    this[i + 5] = this[i]
+//                    i += 6
+//                    j += 4
+//                }
+//            }
+//        }).apply { indexType = GL_UNSIGNED_SHORT }
     }
 
     var idx = 0
@@ -112,8 +116,23 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
     /** The maximum number of sprites rendered in one batch so far.  */
     var maxSpritesInBatch = 0
 
-    private var depthMaskTemp = false
-    private var blendingTemp = false
+    private fun resizeIndexBuffer(buffer: IIndexBuffer, spritesNum: Int) {
+        buffer.initIndexBuffer(spritesNum * 6) {
+            val len = count
+            var j = 0
+            var i = 0
+            while (i < len) {
+                putIndex(j)
+                putIndex(j + 1)
+                putIndex(j + 2)
+                putIndex(j + 2)
+                putIndex(j + 3)
+                putIndex(j)
+                i += 6
+                j += 4
+            }
+        }
+    }
 
     override fun begin() {
         check(!drawing) { "SpriteBatch.end must be called before begin." }
@@ -138,12 +157,23 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         color = Color.toIntBits(r, g, b, a)
     }
 
+    private fun resizeMesh(requiredFloats: Int = idx) {
+        if (autoResize && requiredFloats >= vertices.capacity) {
+            var floatsNum = vertices.capacity
+            while (floatsNum < requiredFloats) {
+                floatsNum *= 2
+            }
+            verts.initVertexBuffer(floatsNum / 5)
+            vertices = verts.bytes.floatView()
+            resizeIndexBuffer(mesh.indices!!, floatsNum / 20)
+        }
+    }
+
     override fun draw(texture: ITexture2D, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float, scaleX: Float,
                       scaleY: Float, rotation: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int, flipX: Boolean, flipY: Boolean) {
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else if (idx == vertices.limit) //
-            flush()
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         // bottom left and top right corner points relative to origin
         val worldOriginX = x + originX
         val worldOriginY = y + originY
@@ -248,8 +278,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
                       srcHeight: Int, flipX: Boolean, flipY: Boolean) {
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else if (idx == vertices.limit) //
-            flush()
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         var u = srcX * invTexWidth
         var v = (srcY + srcHeight) * invTexHeight
         var u2 = (srcX + srcWidth) * invTexWidth
@@ -318,7 +347,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
     ) {
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else if (idx == vertices.limit) flush()
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         val idx = idx
         val bytes = verts.bytes
         val byteOffset = idx * 4
@@ -349,33 +378,11 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         draw(texture, x, y, x + width, y + height, 0f, 1f, 1f, 0f, color)
 
     override fun draw(texture: ITexture2D, spriteVertices: FloatArray, offset: Int, count: Int) {
-        var offset2 = offset
-        var count2 = count
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val verticesLength = vertices.limit
-        var remainingVertices = verticesLength
-        if (texture !== lastTexture) switchTexture(texture) else {
-            remainingVertices -= idx
-            if (remainingVertices == 0) {
-                flush()
-                remainingVertices = verticesLength
-            }
-        }
-        var copyCount = min(remainingVertices, count2)
+        switchTexture(texture)
+        resizeMesh(idx + spriteVertices.size)
         vertices.position = idx
-        vertices.put(spriteVertices, copyCount, offset2)
-
-        idx += copyCount
-        count2 -= copyCount
-        while (count2 > 0) {
-            offset2 += copyCount
-            flush()
-            copyCount = min(verticesLength, count2)
-            vertices.position = 0
-            vertices.put(spriteVertices, copyCount, offset2)
-            idx += copyCount
-            count2 -= copyCount
-        }
+        vertices.put(spriteVertices, count, offset)
+        idx += count
     }
 
     override fun draw(region: TextureRegion, x: Float, y: Float, width: Float, height: Float) =
@@ -386,10 +393,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
         val texture = region.texture
-        if (texture !== lastTexture) {
-            switchTexture(texture)
-        } else if (idx == vertices.limit) //
-            flush()
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         // bottom left and top right corner points relative to origin
         val worldOriginX = x + originX
         val worldOriginY = y + originY
@@ -485,10 +489,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
         val texture = region.texture
-        if (texture !== lastTexture) {
-            switchTexture(texture)
-        } else if (idx == vertices.limit) //
-            flush()
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         // bottom left and top right corner points relative to origin
         val worldOriginX = x + originX
         val worldOriginY = y + originY
@@ -606,11 +607,7 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
         check(drawing) { "SpriteBatch.begin must be called before draw." }
         val vertices = vertices
         val texture = region.texture
-        if (texture !== lastTexture) {
-            switchTexture(texture)
-        } else if (idx == vertices.limit) {
-            flush()
-        }
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
         // construct corner points
         val x1 = transform.m02
         val y1 = transform.m12
@@ -705,13 +702,17 @@ open class SpriteBatch (size: Int = 1000, defaultShader: Shader = createDefaultS
     }
 
     protected fun switchTexture(texture: ITexture2D) {
-        flush()
-        lastTexture = texture
-        invTexWidth = 1.0f / texture.width
-        invTexHeight = 1.0f / texture.height
+        if (texture !== lastTexture) {
+            flush()
+            lastTexture = texture
+            invTexWidth = 1.0f / texture.width
+            invTexHeight = 1.0f / texture.height
+        }
     }
 
     companion object {
+        const val DEFAULT_VERTICES_NUM = 1000
+
         /** Returns a new instance of the default shader used by SpriteBatch for GL2 when no shader is specified.  */
         fun createDefaultShader(): Shader {
             val vertexShader = """

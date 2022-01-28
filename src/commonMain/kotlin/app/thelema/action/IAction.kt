@@ -52,6 +52,13 @@ interface IAction: IEntityComponent {
             getOrCreateEntity().entity(entityName).componentTyped<T>(actionComponentName).apply(block)
         }
     }
+
+    fun <T: IAction> action(actionComponentName: String): T {
+        val child = Entity()
+        child.name = actionComponentName
+        getOrCreateEntity().addEntity(child)
+        return child.componentTyped<T>(actionComponentName)
+    }
 }
 
 fun IEntity.action(block: IAction.() -> Unit) = component(block)

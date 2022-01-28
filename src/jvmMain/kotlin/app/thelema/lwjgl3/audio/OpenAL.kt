@@ -19,8 +19,11 @@ package app.thelema.lwjgl3.audio
 import app.thelema.audio.IAudio
 import app.thelema.audio.IAudioDevice
 import app.thelema.audio.IAudioRecorder
+import app.thelema.audio.audioListener
 import app.thelema.fs.IFile
-import app.thelema.math.MATH
+import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.math.Vec3
+import app.thelema.res.RES
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL
 import org.lwjgl.openal.AL10
@@ -39,7 +42,6 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
     private val sourceToSoundId = HashMap<Int, Int>()
     private var nextSoundId: Int = 0
     private val recentSounds = ArrayList<SoundLoader?>()
-    private var mostRecentSound = -1
     val music: ArrayList<OpenALMusic> = ArrayList()
     val device: Long = ALC10.alcOpenDevice(null as ByteBuffer?)
     var context: Long
@@ -56,33 +58,33 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
 
     fun obtainSource(isMusic: Boolean): Int {
         if (noDevice) return 0
-        var i = 0
-        val n = idleSources.size
-        while (i < n) {
-            val sourceId = idleSources[i]
-            val state = AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE)
-            if (state != AL10.AL_PLAYING && state != AL10.AL_PAUSED) {
-                if (isMusic) {
-                    idleSources.remove(i)
-                } else {
-                    if (sourceToSoundId.contains(sourceId)) {
-                        val soundId = sourceToSoundId[sourceId]
-                        sourceToSoundId.remove(sourceId)
-                        soundIdToSource.remove(soundId)
-                    }
-                    val soundId = nextSoundId++
-                    sourceToSoundId[sourceId] = soundId
-                    soundIdToSource[soundId] = sourceId
-                }
-                AL10.alSourceStop(sourceId)
-                AL10.alSourcei(sourceId, AL10.AL_BUFFER, 0)
-                AL10.alSourcef(sourceId, AL10.AL_GAIN, 1f)
-                AL10.alSourcef(sourceId, AL10.AL_PITCH, 1f)
-                AL10.alSource3f(sourceId, AL10.AL_POSITION, 0f, 0f, 1f)
-                return sourceId
-            }
-            i++
-        }
+//        var i = 0
+//        val n = idleSources.size
+//        while (i < n) {
+//            val sourceId = idleSources[i]
+//            val state = AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE)
+//            if (state != AL10.AL_PLAYING && state != AL10.AL_PAUSED) {
+//                if (isMusic) {
+//                    idleSources.remove(i)
+//                } else {
+//                    if (sourceToSoundId.contains(sourceId)) {
+//                        val soundId = sourceToSoundId[sourceId]
+//                        sourceToSoundId.remove(sourceId)
+//                        soundIdToSource.remove(soundId)
+//                    }
+//                    val soundId = nextSoundId++
+//                    sourceToSoundId[sourceId] = soundId
+//                    soundIdToSource[soundId] = sourceId
+//                }
+//                AL10.alSourceStop(sourceId)
+//                AL10.alSourcei(sourceId, AL10.AL_BUFFER, 0)
+//                AL10.alSourcef(sourceId, AL10.AL_GAIN, 1f)
+//                AL10.alSourcef(sourceId, AL10.AL_PITCH, 1f)
+//                AL10.alSource3f(sourceId, AL10.AL_POSITION, 0f, 0f, 1f)
+//                return sourceId
+//            }
+//            i++
+//        }
         return -1
     }
 
@@ -115,47 +117,6 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
         }
     }
 
-    fun stopSourcesWithBuffer(bufferID: Int) {
-        if (noDevice) return
-        var i = 0
-        val n = idleSources.size
-        while (i < n) {
-            val sourceID = idleSources[i]
-            if (AL10.alGetSourcei(sourceID, AL10.AL_BUFFER) == bufferID) {
-                if (sourceToSoundId.containsKey(sourceID)) {
-                    val soundId = sourceToSoundId.remove(sourceID)
-                    soundIdToSource.remove(soundId)
-                }
-                AL10.alSourceStop(sourceID)
-            }
-            i++
-        }
-    }
-
-    fun pauseSourcesWithBuffer(bufferID: Int) {
-        if (noDevice) return
-        var i = 0
-        val n = idleSources.size
-        while (i < n) {
-            val sourceID = idleSources[i]
-            if (AL10.alGetSourcei(sourceID, AL10.AL_BUFFER) == bufferID) AL10.alSourcePause(sourceID)
-            i++
-        }
-    }
-
-    fun resumeSourcesWithBuffer(bufferID: Int) {
-        if (noDevice) return
-        var i = 0
-        val n = idleSources.size
-        while (i < n) {
-            val sourceID = idleSources[i]
-            if (AL10.alGetSourcei(sourceID, AL10.AL_BUFFER) == bufferID) {
-                if (AL10.alGetSourcei(sourceID, AL10.AL_SOURCE_STATE) == AL10.AL_PAUSED) AL10.alSourcePlay(sourceID)
-            }
-            i++
-        }
-    }
-
     override fun update() {
         if (noDevice) return
         if (checkAndValidatePlayingMusic) {
@@ -175,54 +136,12 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
             checkAndValidatePlayingMusic = false
         }
         for (i in 0 until music.size) music[i].update()
+        RES.getOrCreateEntity().audioListener().updateListener(0f)
     }
 
-    fun getSoundId(sourceId: Int): Int {
-        return if (!sourceToSoundId.containsKey(sourceId)) -1 else sourceToSoundId[sourceId]!!
-    }
-
-    fun stopSound(soundId: Int) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]!!
-        AL10.alSourceStop(sourceId)
-    }
-
-    fun pauseSound(soundId: Int) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]!!
-        AL10.alSourcePause(sourceId)
-    }
-
-    fun resumeSound(soundId: Int) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]
-        if (AL10.alGetSourcei(sourceId!!, AL10.AL_SOURCE_STATE) == AL10.AL_PAUSED) AL10.alSourcePlay(sourceId)
-    }
-
-    fun setSoundGain(soundId: Int, volume: Float) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]
-        AL10.alSourcef(sourceId!!, AL10.AL_GAIN, volume)
-    }
-
-    fun setSoundLooping(soundId: Int, looping: Boolean) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]
-        AL10.alSourcei(sourceId!!, AL10.AL_LOOPING, if (looping) AL10.AL_TRUE else AL10.AL_FALSE)
-    }
-
-    fun setSoundPitch(soundId: Int, pitch: Float) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]
-        AL10.alSourcef(sourceId!!, AL10.AL_PITCH, pitch)
-    }
-
-    fun setSoundPan(soundId: Int, pan: Float) {
-        if (!soundIdToSource.containsKey(soundId)) return
-        val sourceId = soundIdToSource[soundId]
-        AL10.alSource3f(sourceId!!, AL10.AL_POSITION, MATH.cos((pan - 1) * MATH.PI / 2), 0f,
-                MATH.sin((pan + 1) * MATH.PI / 2))
-    }
+    val tmp = Vec3()
+    private val position = BufferUtils.createFloatBuffer(3)
+        .put(floatArrayOf(0.0f, 0.0f, 0.0f)).flip() as FloatBuffer
 
     override fun destroy() {
         if (noDevice) return
@@ -263,18 +182,6 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
 
     override fun getVersion(param: Int): String = AL10.alGetString(param) ?: ""
 
-    /** Retains a list of the most recently played sounds and stops the sound played least recently if necessary for a new sound to
-     * play  */
-    fun retain(sound: SoundLoader?, stop: Boolean) { // Move the pointer ahead and wrap
-        mostRecentSound++
-        mostRecentSound %= recentSounds.size
-        if (stop) { // Stop the least recent sound (the one we are about to bump off the buffer)
-            if (recentSounds[mostRecentSound] != null) recentSounds[mostRecentSound]!!.stopSound()
-        }
-
-        recentSounds[mostRecentSound] = sound
-    }
-
     /** Removes the disposed sound from the least recently played list  */
     fun forget(sound: SoundLoader) {
         for (i in 0 until recentSounds.size) {
@@ -296,22 +203,11 @@ class OpenAL (simultaneousSources: Int = 16, private val deviceBufferCount: Int 
             noDevice = true
         }
         AL.createCapabilities(deviceCapabilities)
-        for (i in 0 until simultaneousSources) {
-            val sourceID = AL10.alGenSources()
-            if (AL10.alGetError() != AL10.AL_NO_ERROR) break
-            allSources.add(sourceID)
-            idleSources.add(sourceID)
-        }
-        val orientation = BufferUtils.createFloatBuffer(6)
-                .put(floatArrayOf(0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f)).flip() as FloatBuffer
-        AL10.alListenerfv(AL10.AL_ORIENTATION, orientation)
-        val velocity = BufferUtils.createFloatBuffer(3).put(floatArrayOf(0.0f, 0.0f, 0.0f)).flip() as FloatBuffer
-        AL10.alListenerfv(AL10.AL_VELOCITY, velocity)
-        val position = BufferUtils.createFloatBuffer(3).put(floatArrayOf(0.0f, 0.0f, 0.0f)).flip() as FloatBuffer
-        AL10.alListenerfv(AL10.AL_POSITION, position)
-
-        for (i in 0 until 16) {
-            recentSounds.add(null)
-        }
+//        for (i in 0 until simultaneousSources) {
+//            val sourceID = AL10.alGenSources()
+//            if (AL10.alGetError() != AL10.AL_NO_ERROR) break
+//            allSources.add(sourceID)
+//            idleSources.add(sourceID)
+//        }
     }
 }

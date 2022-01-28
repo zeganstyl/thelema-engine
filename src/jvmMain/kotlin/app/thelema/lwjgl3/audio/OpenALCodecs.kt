@@ -18,14 +18,17 @@ package app.thelema.lwjgl3.audio
 
 import app.thelema.fs.IFile
 import app.thelema.jvm.JvmFile
+import app.thelema.jvm.data.JvmByteBuffer
 import de.jarnbjo.ogg.BasicStream
 import de.jarnbjo.ogg.EndOfOggStreamException
 import de.jarnbjo.ogg.LogicalOggStream
 import de.jarnbjo.ogg.PhysicalOggStream
 import de.jarnbjo.vorbis.VorbisStream
+import org.lwjgl.BufferUtils
 import org.lwjgl.system.MemoryUtil
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 object OpenALCodecs {
     /** Key - file extension in lowercase, value - sound object builder */
@@ -46,11 +49,9 @@ object OpenALCodecs {
         var input: WavInputStream? = null
         try {
             input = WavInputStream(file)
-            out.setup(
-                pcm = input.readNBytes(input.dataRemaining),
-                channels = input.channels,
-                sampleRate = input.sampleRate
-            )
+            val buffer = ByteBuffer.wrap(input.readBytes())
+            buffer.order(ByteOrder.nativeOrder())
+            out.setup(buffer, input.channels, input.sampleRate)
         } catch (ex: IOException) {
             throw RuntimeException("Error reading WAV file: $file", ex)
         } finally {
@@ -126,6 +127,7 @@ object OpenALCodecs {
             }
 
             fullBuffer.rewind()
+
             out.setup(fullBuffer, vs.identificationHeader.channels, vs.identificationHeader.sampleRate)
         }
     }

@@ -18,7 +18,6 @@ package app.thelema.ecs
 
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
-import app.thelema.gltf.GLTF
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.IProject

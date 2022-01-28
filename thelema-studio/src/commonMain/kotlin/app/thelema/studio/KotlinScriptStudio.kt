@@ -64,10 +64,10 @@ fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(name: String, 
     override fun getValue(component: T): IFile? = get(component)
     override fun default(): IFile? = null
     override fun readJson(component: T, json: IJsonObject) {
-        KotlinScripting.kotlinDirectory?.also { kotlinDirectory ->
+        KotlinScripting.kotlinDirectory?.also {
             if (json.contains("file")) {
                 val path = json.string("file")
-                set(component, JvmFile(File(kotlinDirectory.platformPath, path), path, FileLocation.Relative))
+                set(component, scriptFile(path))
             } else {
                 set(component, null)
             }
@@ -77,5 +77,15 @@ fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(name: String, 
         component.get()?.also { json["file"] = it.path }
     }
 })
+
+fun scriptFile(path: String) =
+    JvmFile(
+        File(
+            KotlinScripting.kotlinDirectory?.platformPath
+                ?: throw IllegalStateException("Kotlin sources directory is not set"), path
+        ),
+        path,
+        FileLocation.Relative
+    )
 
 val ScriptFile = PropertyType("thelema/ScriptFile")

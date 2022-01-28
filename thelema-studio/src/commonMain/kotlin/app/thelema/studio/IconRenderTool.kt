@@ -6,7 +6,6 @@ import app.thelema.img.ITexture2D
 import app.thelema.math.*
 import app.thelema.shader.Shader
 
-// TODO
 class IconRenderTool {
     private val shader = Shader(
         vertCode = """

@@ -198,6 +198,7 @@ open class Label constructor(
         }
         if (!bitmapFontCache.font.isFlipped) y += textHeight
         layout.setText(font, text, 0, text.length, -1, textWidth, lineAlign, wrap, ellipsis)
+
         bitmapFontCache.setText(layout, x, y)
         if (fontScaleChanged) font.setScale(oldScaleX, oldScaleY)
     }

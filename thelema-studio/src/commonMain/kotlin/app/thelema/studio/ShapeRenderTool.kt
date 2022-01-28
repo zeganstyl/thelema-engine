@@ -76,6 +76,9 @@ void main() {
     private val sphere = SphereMesh {
         setSize(1f)
         setDivisions(8, 8)
+        builder.normals = false
+        builder.uvs = false
+        builder.tangents = false
     }.apply {
         mesh.indices = mesh.indices?.trianglesToWireframe()
     }.mesh
@@ -85,6 +88,9 @@ void main() {
         length = 1f
         divisions = 8
         axis = Vec3(0f, 0f, 1f)
+        builder.normals = false
+        builder.uvs = false
+        builder.tangents = false
     }.apply {
         mesh.indices = mesh.indices?.trianglesToWireframe()
     }.mesh

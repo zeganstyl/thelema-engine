@@ -26,7 +26,6 @@ interface ILog {
     fun info(message: Boolean) = info(message.toString())
     fun info(message: Int) = info(message.toString())
     fun info(message: Float) = info(message.toString())
-
     fun info(message: Any?) = info(message?.toString() ?: "null")
 
     fun info(message: String, exception: Throwable?, tag: String = "Thelema")
@@ -38,6 +37,7 @@ interface ILog {
     fun info(message: String, tag: String = "Thelema") = info(message, null, tag)
     fun debug(message: String, tag: String = "Thelema") = debug(message, null, tag)
     fun error(message: String, tag: String = "Thelema") = error(message, null, tag)
+    fun error(message: Any?, tag: String = "Thelema") = error(message.toString(), null, tag)
 }
 
 lateinit var LOG: ILog

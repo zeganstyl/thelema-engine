@@ -71,6 +71,12 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
 
     val bodies = ArrayList<RigidBody>()
 
+    override var iterations: Int = 10
+        set(value) {
+            field = value
+            world?.quickStepNumIterations = value
+        }
+
     val world = OdeHelper.createWorld().apply {
         // https://ode.org/ode-latest-userguide.html#sec_3_7_0
         erp = 0.2
@@ -95,12 +101,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
     val listeners = ArrayList<IPhysicsWorldListener>()
 
     override var fixedDelta: Float = 0.02f
-
-    override var iterations: Int = 10
-        set(value) {
-            field = value
-            world?.quickStepNumIterations = value
-        }
 
     override var useQuickStep: Boolean = true
 
@@ -282,7 +282,9 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         fun initOdeComponents() {
             ECS.descriptorI<IRigidBodyPhysicsWorld>(::RigidBodyPhysicsWorld) {
                 vec3(IRigidBodyPhysicsWorld::gravity, Vec3(0f, -3f, 0f))
+                bool(IRigidBodyPhysicsWorld::useQuickStep, true)
                 float(IRigidBodyPhysicsWorld::fixedDelta, 0.02f)
+                int(IRigidBodyPhysicsWorld::iterations, 10)
                 int(IRigidBodyPhysicsWorld::maxContacts, 40)
                 bool(IRigidBodyPhysicsWorld::isSimulationRunning)
 

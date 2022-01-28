@@ -1,6 +1,7 @@
 package app.thelema.studio
 
 import app.thelema.fs.FS
+import app.thelema.fs.file
 import app.thelema.fs.projectFile
 import app.thelema.studio.widget.PlainCheckBox
 import app.thelema.ui.*
@@ -123,6 +124,7 @@ class CreateProjectWindow: Window("Create project") {
                         resources.mkdirs()
 
                         val kotlin = main.child("kotlin").also { it.mkdirs() }
+                        KotlinScripting.kotlinDirectory = kotlin
 
                         val packageDirPath = if (packageName.text.isNotEmpty()) {
                             packageName.text.replace('.', '/')
@@ -144,7 +146,7 @@ class CreateProjectWindow: Window("Create project") {
                             val script = packageDir.child(scriptName)
                             script.writeText(packageString + CreateProjectTool.defaultSceneScript)
                             scriptsKt.writeText(packageString + CreateProjectTool.defaultInitScripts)
-                            Studio.createNewApp(projectFile(if (packageDirPath.isEmpty()) scriptName else "$packageDirPath/$scriptName"))
+                            Studio.createNewApp(scriptFile(if (packageDirPath.isEmpty()) scriptName else "$packageDirPath/$scriptName"))
                         } else {
                             scriptsKt.writeText(packageString + CreateProjectTool.emptyInitScripts)
                             Studio.createNewApp()
@@ -158,6 +160,8 @@ class CreateProjectWindow: Window("Create project") {
 
                         val app = resources.child("app.thelema")
                         Studio.saveApp(app)
+
+                        hide()
                     }
                 }
             })

@@ -27,16 +27,29 @@ abstract class ActionAdapter: IAction {
 
     override var entityOrNull: IEntity? = null
         set(value) {
-            field?.componentOrNull<Action>()?.proxy = null
             field = value
-            value?.component<Action>()?.proxy = this
+            value?.componentOrNull<MainLoop>()?.also {
+                it.onUpdate { update(it) }
+            }
         }
 
     override var actionData: ActionData = ActionData()
 
+    override fun addedSiblingComponent(component: IEntityComponent) {
+        if (component is MainLoop) {
+            component.onUpdate { update(it) }
+        }
+    }
+
     inline fun <reified T: IAction> action(entityName: String? = null, block: T.() -> Unit): T {
         return action<T>(T::class.simpleName!!, entityName) {}.apply(block)
     }
+
+    inline fun <reified T: IAction> action(block: T.() -> Unit): T {
+        return action<T>(T::class.simpleName!!).apply(block)
+    }
+
+    inline fun <reified T: IAction> action(): T = action(T::class.simpleName!!)
 
     inline fun <reified T: IEntityComponent> getContextComponent(): T? =
         getContext()?.componentOrNull()
@@ -48,9 +61,5 @@ abstract class ActionAdapter: IAction {
 
     override fun resume() {
         isRunning = true
-    }
-
-    override fun destroy() {
-        entityOrNull?.componentOrNull<Action>()?.proxy = null
     }
 }

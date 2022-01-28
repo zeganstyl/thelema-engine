@@ -29,7 +29,7 @@ import java.nio.ShortBuffer
 
 /** @author Nathan Sweet, zeganstyl */
 class SoundLoader : ISoundLoader, LoaderAdapter() {
-    private var bufferID = -1
+    var bufferID = -1
     override var duration: Float = 0f
 
     private val audio: OpenAL
@@ -38,27 +38,17 @@ class SoundLoader : ISoundLoader, LoaderAdapter() {
     override val componentName: String
         get() = "SoundLoader"
 
+    var useMono: Boolean = true
+
     override fun loadBase(file: IFile) {
         val codec = OpenALCodecs.sound[file.extension.lowercase()]
         if (codec == null) {
             LOG.error("Sound file extension is unknown: ${file.path}")
+            stop(0)
             return
         }
         codec.invoke(file, this)
-    }
-
-    fun setup(pcm: ByteArray, channels: Int, sampleRate: Int) {
-        val bytesNum = pcm.size - pcm.size % if (channels > 1) 4 else 2
-        val samples = bytesNum / (2 * channels)
-        duration = samples / sampleRate.toFloat()
-        val buffer = ByteBuffer.allocateDirect(bytesNum)
-        buffer.order(ByteOrder.nativeOrder())
-        buffer.put(pcm, 0, bytesNum)
-        buffer.flip()
-        if (bufferID == -1) {
-            bufferID = AL10.alGenBuffers()
-            AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, buffer.asShortBuffer(), sampleRate)
-        }
+        stop(200)
     }
 
     fun setup(pcm: ByteBuffer, channels: Int, sampleRate: Int) {
@@ -67,7 +57,25 @@ class SoundLoader : ISoundLoader, LoaderAdapter() {
         duration = samples / sampleRate.toFloat()
         if (bufferID == -1) {
             bufferID = AL10.alGenBuffers()
-            AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, pcm, sampleRate)
+            if (useMono) {
+                if (channels > 1) {
+                    val monoBuffer = ByteBuffer.allocateDirect(samples * 2)
+                    val l = pcm.limit()
+                    var i = 0
+                    val step = channels * 2
+                    while (i < l) {
+                        monoBuffer.put(pcm.get(i))
+                        monoBuffer.put(pcm.get(i + 1))
+                        i += step
+                    }
+                    monoBuffer.rewind()
+                    AL10.alBufferData(bufferID, AL10.AL_FORMAT_MONO16, monoBuffer, sampleRate)
+                } else {
+                    AL10.alBufferData(bufferID, AL10.AL_FORMAT_MONO16, pcm, sampleRate)
+                }
+            } else {
+                AL10.alBufferData(bufferID, if (channels > 1) AL10.AL_FORMAT_STEREO16 else AL10.AL_FORMAT_MONO16, pcm, sampleRate)
+            }
         }
     }
 
@@ -82,37 +90,38 @@ class SoundLoader : ISoundLoader, LoaderAdapter() {
     }
 
     override fun play(volume: Float, pitch: Float, pan: Float, loop: Boolean): Int {
-        if (audio.noDevice) return 0
-        var sourceID = audio.obtainSource(false)
-        if (sourceID == -1) {
-            // Attempt to recover by stopping the least recently played sound
-            audio.retain(this, true)
-            sourceID = audio.obtainSource(false)
-        } else {
-            audio.retain(this, false)
-        }
-
-        // In case it still didn't work
-        if (sourceID == -1) return -1
-
-        val soundId = audio.getSoundId(sourceID)
-        AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
-        AL10.alSourcei(sourceID, AL10.AL_LOOPING, if (loop) AL10.AL_TRUE else AL10.AL_FALSE)
-        AL10.alSourcef(sourceID, AL10.AL_GAIN, volume)
-        AL10.alSourcef(sourceID, AL10.AL_PITCH, pitch)
-        AL10.alSource3f(sourceID, AL10.AL_POSITION, MATH.cos((pan - 1) * MATH.PI / 2), 0f,
-            MATH.sin((pan + 1) * MATH.PI / 2))
-        AL10.alSourcePlay(sourceID)
-        return soundId
+//        if (audio.noDevice) return 0
+//        var sourceID = audio.obtainSource(false)
+//        if (sourceID == -1) {
+//            // Attempt to recover by stopping the least recently played sound
+//            audio.retain(this, true)
+//            sourceID = audio.obtainSource(false)
+//        } else {
+//            audio.retain(this, false)
+//        }
+//
+//        // In case it still didn't work
+//        if (sourceID == -1) return -1
+//
+//        LOG.error("play $sourceID")
+//
+//        val soundId = audio.getSoundId(sourceID)
+//        AL10.alSourcei(sourceID, AL10.AL_BUFFER, bufferID)
+//        AL10.alSourcei(sourceID, AL10.AL_LOOPING, if (loop) AL10.AL_TRUE else AL10.AL_FALSE)
+//        AL10.alSourcef(sourceID, AL10.AL_GAIN, volume)
+//        AL10.alSourcef(sourceID, AL10.AL_PITCH, pitch)
+//        AL10.alSource3f(sourceID, AL10.AL_POSITION, MATH.cos((pan - 1) * MATH.PI / 2), 0f,
+//            MATH.sin((pan + 1) * MATH.PI / 2))
+//        AL10.alSourcePlay(sourceID)
+//        return soundId
+        return 0
     }
 
     override fun stopSound() {
-        if (audio.noDevice) return
-        audio.stopSourcesWithBuffer(bufferID)
+        //audio.stopSourcesWithBuffer(bufferID)
     }
 
     override fun destroy() {
-        if (audio.noDevice) return
         if (bufferID == -1) return
         audio.freeBuffer(bufferID)
         AL10.alDeleteBuffers(bufferID)
@@ -121,47 +130,38 @@ class SoundLoader : ISoundLoader, LoaderAdapter() {
     }
 
     override fun stopSound(soundId: Int) {
-        if (audio.noDevice) return
-        audio.stopSound(soundId)
+        //audio.stopSound(soundId)
     }
 
     override fun pause() {
-        if (audio.noDevice) return
-        audio.pauseSourcesWithBuffer(bufferID)
+        //audio.pauseSourcesWithBuffer(bufferID)
     }
 
     override fun pause(soundId: Int) {
-        if (audio.noDevice) return
-        audio.pauseSound(soundId)
+        //audio.pauseSound(soundId)
     }
 
     override fun resume() {
-        if (audio.noDevice) return
-        audio.resumeSourcesWithBuffer(bufferID)
+        //audio.resumeSourcesWithBuffer(bufferID)
     }
 
     override fun resume(soundId: Int) {
-        if (audio.noDevice) return
-        audio.resumeSound(soundId)
+        //audio.resumeSound(soundId)
     }
 
     override fun setPitch(soundId: Int, pitch: Float) {
-        if (audio.noDevice) return
-        audio.setSoundPitch(soundId, pitch)
+        //audio.setSoundPitch(soundId, pitch)
     }
 
     override fun setVolume(soundId: Int, volume: Float) {
-        if (audio.noDevice) return
-        audio.setSoundGain(soundId, volume)
+        //audio.setSoundGain(soundId, volume)
     }
 
     override fun setLooping(soundId: Int, looping: Boolean) {
-        if (audio.noDevice) return
-        audio.setSoundLooping(soundId, looping)
+        //audio.setSoundLooping(soundId, looping)
     }
 
     override fun setPan(soundId: Int, pan: Float) {
-        if (audio.noDevice) return
-        audio.setSoundPan(soundId, pan)
+        //audio.setSoundPan(soundId, pan)
     }
 }

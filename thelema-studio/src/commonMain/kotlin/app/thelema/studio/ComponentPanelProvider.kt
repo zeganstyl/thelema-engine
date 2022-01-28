@@ -21,7 +21,7 @@ object ComponentPanelProvider {
         addProvider { AnimationPlayerPanel() }
         addProvider { ArmaturePanel() }
         addProvider { SoundLoaderPanel() }
-        addProvider { Sound3DPanel() }
+        addProvider { SoundPanel() }
         addProvider("KotlinScript") { KotlinScriptPanel() }
     }
 

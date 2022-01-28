@@ -48,7 +48,7 @@ class ObjectShotTest: Test {
                     boxMesh { setSize(1f) }
                     boxShape { setSize(shapeSize); mass = bodyMass }
                     rigidBody {
-                        node.position.set(0f, Random.nextFloat(), Random.nextFloat())
+                        node.setPosition(0f, Random.nextFloat(), Random.nextFloat())
                         onBodyCreated = {
                             addForce(100f, 0f, 0f)
                         }
@@ -63,7 +63,7 @@ class ObjectShotTest: Test {
             val box = boxMesh { setSize(1f, 10f, 10f) }
             boxShape { setSize(box.xSize, box.ySize, box.zSize) }
             rigidBody {
-                node.position.set(100f, 0f, 0f)
+                node.setPosition(100f, 0f, 0f)
                 isStatic = true
                 onContact { contact, body, other ->
                     LOG.info("${body.entity.name} collided with ${other.entity.name}, depth = ${contact.depth}")

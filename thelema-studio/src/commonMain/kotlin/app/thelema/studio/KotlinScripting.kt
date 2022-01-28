@@ -71,10 +71,12 @@ object KotlinScripting {
         }
     }
 
-    private fun traverseKotlinScriptComponents(entity: IJsonObject, out: MutableList<IEntity>) {
+    private fun traverseKotlinScriptComponents(entity: IJsonObject, out: MutableList<KotlinScriptStudio>) {
         entity.obj("components") {
             obj("KotlinScript") {
-                out.add(Entity { readJson(entity) })
+                val script = KotlinScriptStudio()
+                script.readJson(this)
+                out.add(script)
             }
         }
         entity.forEachObject("children") {
@@ -82,7 +84,7 @@ object KotlinScripting {
         }
     }
 
-    private fun traverseEntities(file: IFile, out: MutableList<IEntity>) {
+    private fun traverseEntities(file: IFile, out: MutableList<KotlinScriptStudio>) {
         if (file.isDirectory) {
             file.list().forEach { traverseEntities(it, out) }
         } else {
@@ -95,14 +97,11 @@ object KotlinScripting {
     }
 
     fun bakeScripts() {
-        val list = ArrayList<IEntity>()
+        val list = ArrayList<KotlinScriptStudio>()
         traverseEntities(RES.absoluteDirectory, list)
         var functionMapFill = ""
         val hashSet = HashSet<KotlinScriptStudio>()
-        list.forEach { scriptEntity ->
-            val script = scriptEntity.component("KotlinScript") as KotlinScriptStudio
-            if (script.file != null) hashSet.add(script)
-        }
+        list.forEach { if (it.file != null) hashSet.add(it) }
         hashSet.forEach { script ->
             val file = script.file!!
             val scriptPackage = file.parent().path.replace('/', '.')

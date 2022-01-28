@@ -19,6 +19,7 @@ package app.thelema.font
 import app.thelema.g2d.Batch
 import app.thelema.math.IVec4
 import app.thelema.utils.Color
+import app.thelema.utils.iterate
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -314,12 +315,7 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
     private fun requireGlyphs(layout: GlyphLayout) {
         if (pageVertices.size == 1) { // Simpler counting if we just have one page.
             var newGlyphCount = 0
-            var i = 0
-            val n = layout.runs.size
-            while (i < n) {
-                newGlyphCount += layout.runs[i].glyphs.size
-                i++
-            }
+            layout.runs.iterate { newGlyphCount += it.glyphs.size }
             requirePageGlyphs(0, newGlyphCount)
         } else if (tempGlyphCount.isNotEmpty()) {
             val tempGlyphCount = tempGlyphCount
@@ -332,18 +328,9 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
                 }
             }
             // Determine # of glyphs in each page.
-            run {
-                var i = 0
-                val n = layout.runs.size
-                while (i < n) {
-                    val glyphs = layout.runs[i].glyphs
-                    var ii = 0
-                    val nn = glyphs.size
-                    while (ii < nn) {
-                        tempGlyphCount[glyphs[ii].page]++
-                        ii++
-                    }
-                    i++
+            layout.runs.iterate { run ->
+                run.glyphs.iterate { glyph ->
+                    tempGlyphCount[glyph.page]++
                 }
             }
             // Require that many for each page.
@@ -365,14 +352,10 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
         val vertices = pageVertices[page]
         if (vertices.size < vertexCount) {
             val newVertices = FloatArray(vertexCount)
-            arraycopy(vertices, 0, newVertices, 0, idx[page])
+            for (i in vertices.indices) {
+                newVertices[i] = vertices[i]
+            }
             pageVertices[page] = newVertices
-        }
-    }
-
-    private fun arraycopy(src: FloatArray, srcStart: Int, dst: FloatArray, dstStart: Int, length: Int) {
-        for (i in 0 until length) {
-            dst[i + dstStart] = src[i + srcStart]
         }
     }
 
@@ -403,27 +386,27 @@ open class BitmapFontCache constructor(val font: BitmapFont, private var integer
             pageGlyphIndices = newPageGlyphIndices
             tempGlyphCount = IntArray(pageCount)
         }
+
         layouts.add(layout)
+
         requireGlyphs(layout)
-        var i = 0
-        val n = layout.runs.size
-        while (i < n) {
-            val run = layout.runs[i]
+
+        layout.runs.iterate { run ->
             val glyphs = run.glyphs
             val xAdvances = run.xAdvances
             val color = Color.intToFloatColor(run.color)
             var gx = x + run.x
             val gy = y + run.y
-            var ii = 0
-            val nn = glyphs.size
-            while (ii < nn) {
-                val glyph = glyphs[ii]
-                gx += xAdvances[ii]
+            var i = 0
+            val n = glyphs.size
+            while (i < n) {
+                val glyph = glyphs[i]
+                gx += xAdvances[i]
                 addGlyph(glyph, gx, gy, color)
-                ii++
+                i++
             }
-            i++
         }
+
         currentTint = -1 // Cached glyphs have changed, reset the current tint.
     }
 

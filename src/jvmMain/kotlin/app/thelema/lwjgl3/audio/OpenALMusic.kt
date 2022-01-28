@@ -131,9 +131,9 @@ abstract class OpenALMusic(private val audio: OpenAL, protected val file: IFile)
         this.pan = pan
         if (audio.noDevice) return
         if (sourceId == -1) return
-        AL10.alSource3f(sourceId, AL10.AL_POSITION, cos((pan - 1) * PI.toFloat() / 2), 0f,
-                sin((pan + 1) * PI.toFloat() / 2))
-        AL10.alSourcef(sourceId, AL10.AL_GAIN, volume)
+//        AL10.alSource3f(sourceId, AL10.AL_POSITION, cos((pan - 1) * PI.toFloat() / 2), 0f,
+//                sin((pan + 1) * PI.toFloat() / 2))
+//        AL10.alSourcef(sourceId, AL10.AL_GAIN, volume)
     }
 
     override var position: Float

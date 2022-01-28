@@ -69,7 +69,7 @@ class Action: IAction {
 
                 descriptor { ActionList() }
                 descriptor({ DelayAction() }) {
-                    float("delay", { delay }) { delay = it }
+                    float("delay", { duration }) { duration = it }
                 }
                 descriptor({ MoveToTargetAction() }) {
                     float("speed", { speed }) { speed = it }

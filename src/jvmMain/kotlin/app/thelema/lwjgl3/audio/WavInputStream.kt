@@ -32,10 +32,10 @@ class WavInputStream(file: IFile) : FilterInputStream((file as JvmFile).inputStr
     @Throws(IOException::class)
     private fun seekToChunk(c1: Char, c2: Char, c3: Char, c4: Char): Int {
         while (true) {
-            var found = read() == c1.toInt()
-            found = found and (read() == c2.toInt())
-            found = found and (read() == c3.toInt())
-            found = found and (read() == c4.toInt())
+            var found = read() == c1.code
+            found = found and (read() == c2.code)
+            found = found and (read() == c3.code)
+            found = found and (read() == c4.code)
             val chunkLength = read() and 0xff or (read() and 0xff shl 8) or (read() and 0xff shl 16) or (read() and 0xff shl 24)
             if (chunkLength == -1) throw IOException("Chunk not found: $c1$c2$c3$c4")
             if (found) return chunkLength
@@ -70,9 +70,9 @@ class WavInputStream(file: IFile) : FilterInputStream((file as JvmFile).inputStr
 
     init {
         try {
-            if (read() != 'R'.toInt() || read() != 'I'.toInt() || read() != 'F'.toInt() || read() != 'F'.toInt()) throw RuntimeException("RIFF header not found: $file")
+            if (read() != 'R'.code || read() != 'I'.code || read() != 'F'.code || read() != 'F'.code) throw RuntimeException("RIFF header not found: $file")
             skipFully(4)
-            if (read() != 'W'.toInt() || read() != 'A'.toInt() || read() != 'V'.toInt() || read() != 'E'.toInt()) throw RuntimeException("Invalid wave file header: $file")
+            if (read() != 'W'.code || read() != 'A'.code || read() != 'V'.code || read() != 'E'.code) throw RuntimeException("Invalid wave file header: $file")
             val fmtChunkLength = seekToChunk('f', 'm', 't', ' ')
             val type = (read() and 0xff) or ((read() and 0xff) shl 8)
             if (type != 1) throw RuntimeException("WAV files must be PCM: $type")

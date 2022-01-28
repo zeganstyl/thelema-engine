@@ -24,8 +24,10 @@ import app.thelema.g3d.TransformNode
 import app.thelema.g3d.TransformNodeListener
 import app.thelema.math.*
 import app.thelema.phys.*
+import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 import org.ode4j.math.DMatrix3
+import org.ode4j.math.DQuaternion
 import org.ode4j.ode.*
 
 /** @author zeganstyl */
@@ -175,6 +177,8 @@ class RigidBody: IRigidBody {
 
     private fun updateStaticKinematic() {
         if (isKinematic || isStatic) {
+            val pos = node.worldPosition
+
             body?.also { body ->
                 val matrix = node.worldMatrix
                 tmpM.set00(matrix.m00.toDouble())
@@ -188,22 +192,23 @@ class RigidBody: IRigidBody {
                 tmpM.set22(matrix.m22.toDouble())
                 body.rotation = tmpM
 
-                val pos = node.worldPosition
                 body.setPosition(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                shapes.iterate { it.geom?.setPosition(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) }
             }
         }
     }
 
     fun setupShape(shape: OdeShapeAdapter<*>, dMass: DMass?) {
+        shapes.add(shape as OdeShapeAdapter<DGeom>)
         shape.body = this
         shape.setupGeom(dMass)?.also { geom ->
             geom.collideBits = collideBits
             geom.categoryBits = categoryBits
 
+            val pos = node.worldPosition
+
             if (isStatic) {
                 if (geom !is DPlane) {
-                    geom.setPosition(tmpV3.x.toDouble(), tmpV3.y.toDouble(), tmpV3.z.toDouble())
+                    geom.setPosition(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
                 }
             } else {
                 geom.body = body
@@ -216,11 +221,19 @@ class RigidBody: IRigidBody {
         if (world != null) {
             var mass: DMass? = null
 
+            node.updateTransform()
+
             if (!isStatic) {
                 val body = OdeHelper.createBody(world.world)
                 body.data = this
                 body.gravityMode = isGravityEnabled
+                val mat = node.worldMatrix
                 body.setPosition(node.worldPosition.x.toDouble(), node.worldPosition.y.toDouble(), node.worldPosition.z.toDouble())
+                body.rotation = DMatrix3(
+                    mat.m00.toDouble(), mat.m01.toDouble(), mat.m02.toDouble(),
+                    mat.m10.toDouble(), mat.m11.toDouble(), mat.m12.toDouble(),
+                    mat.m20.toDouble(), mat.m21.toDouble(), mat.m22.toDouble(),
+                )
                 mass = OdeHelper.createMass()
                 this.body = body
             }
