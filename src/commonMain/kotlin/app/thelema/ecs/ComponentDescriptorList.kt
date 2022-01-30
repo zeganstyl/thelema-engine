@@ -35,6 +35,10 @@ open class ComponentDescriptorList(override val componentName: String): ICompone
     }
 
     override fun addDescriptor(descriptor: ComponentDescriptor<IEntityComponent>) {
+        ECS.allDescriptors.remove(descriptor.componentName)?.also {
+            descriptors.remove(descriptor)
+            _listeners?.iterate { it.removedDescriptor(descriptor) }
+        }
         descriptors.add(descriptor)
         ECS.allDescriptors[descriptor.componentName] = descriptor
         _listeners?.iterate { it.addedDescriptor(descriptor) }

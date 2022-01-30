@@ -27,6 +27,6 @@ class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        LabelTest().testMain()
+        PBRShaderTest().testMain()
     }
 }

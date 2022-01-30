@@ -67,10 +67,9 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     val entityWindow = EntityWindow()
-
     val entityTreeWindow = EntityTreeWindow()
-
     val createProjectWindow = CreateProjectWindow()
+    val nameWindow = NameWindow().apply {  }
 
     val chooseComponentWindow = ChooseComponentWindow()
 
@@ -89,6 +88,8 @@ object Studio: AppListener, IJsonObjectIO {
         }
 
     var appProjectDirectory: IFile? = null
+
+    val sceneEntities = ArrayList<EntityLoader>()
 
     init {
         APP.setupPhysicsComponents()
@@ -224,10 +225,13 @@ object Studio: AppListener, IJsonObjectIO {
     fun openEntity(loader: EntityLoader) {
         loader.load()
         tabsPane.activeTab = tabsPane.tabs.firstOrNull { it.loader == loader } ?: EntityTab(loader.targetEntity).also {
-            loader.saveTargetEntityOnWrite = true
             if (loader.targetEntity.name.isEmpty()) loader.targetEntity.name = loader.entityOrNull?.name ?: ""
             it.loader = loader
             tabsPane.addTab(it, false)
+        }
+        tabsPane.activeTab?.loader?.also {
+            sceneEntities.add(it)
+            it.saveTargetEntityOnWrite = true
         }
     }
 
@@ -260,6 +264,27 @@ object Studio: AppListener, IJsonObjectIO {
         RES.file = if (file.isDirectory) file.child(APP_ROOT_FILENAME) else file
         RES.file.writeText(JSON.printObject(RES.entity))
         savePreferences()
+    }
+
+    fun saveEntity() {
+        tabsPane.activeTab?.loader?.saveTargetEntity()
+    }
+
+    fun saveAll() {
+        if (RES.file == DefaultProjectFile) {
+            fileChooser.saveProject {
+                val file = FS.absolute(it)
+                saveApp(file)
+                sceneEntities.iterate { it.saveTargetEntity() }
+                showStatus("Saved")
+            }
+        } else {
+            RES.file.writeText(JSON.printObject(RES.entity))
+            KotlinScripting.bakeScripts()
+            savePreferences()
+            sceneEntities.iterate { it.saveTargetEntity() }
+            showStatus("Saved")
+        }
     }
 
     fun saveApp() {

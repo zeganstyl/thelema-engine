@@ -1,11 +1,8 @@
 package app.thelema.g3d.particles
 
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.UpdatableComponent
 import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
-import app.thelema.gl.*
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3
 import app.thelema.math.MATH

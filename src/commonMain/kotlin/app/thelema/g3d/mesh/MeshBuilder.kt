@@ -23,6 +23,7 @@ import app.thelema.ecs.component
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
+import app.thelema.utils.LOG
 
 class MeshBuilder: IMeshBuilder {
     override val componentName: String

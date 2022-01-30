@@ -29,14 +29,11 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     /** World space vertex position */
     var vertexPosition: IShaderData by input()
 
-    val cameraPosition = output(GLSLVec3("cameraPosition"))
-    val viewProjectionMatrix = output(GLSLMat4("viewProjectionMatrix"))
-    val rotateToCameraMatrix = output(GLSLMat3("rotateToCameraMatrix"))
+    val viewProjectionMatrix = GLSLMat4("viewProjectionMatrix")
+    val rotateToCameraMatrix = GLSLMat3("rotateToCameraMatrix")
+    @Deprecated("use your own uniform")
     val previousViewProjectionMatrix = output(GLSLMat4("prevViewProjectionMatrix"))
-    val viewMatrix = output(GLSLMat4("viewMatrix"))
-    val projectionMatrix = output(GLSLMat4("projectionMatrix"))
-    val inverseViewProjectionMatrix = output(GLSLMat4("inverseViewProjectionMatrix"))
-    val normalizedViewVector = output(GLSLVec3("normalizedViewVector"))
+    val viewMatrix = GLSLMat4("viewMatrix")
 
     /** Non-normalized depth */
     val viewZDepth = output(GLSLFloat("viewZDepth"))
@@ -61,12 +58,9 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         super.prepareShaderNode(mesh, scene)
 
         val cam = ActiveCamera
-        shader[cameraPosition.ref] = cam.eye
         shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
         previousViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix }
         viewMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.viewMatrix }
-        projectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.projectionMatrix }
-        inverseViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.inverseViewProjectionMatrix }
 
         if (alwaysRotateObjectToCamera) {
             mat3Tmp.set(ActiveCamera.viewMatrix)
@@ -74,12 +68,6 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
             mat3Tmp.m11 = -mat3Tmp.m11
             mat3Tmp.m12 = -mat3Tmp.m12
             shader.set(rotateToCameraMatrix.ref, mat3Tmp, true)
-        }
-    }
-
-    override fun executionFrag(out: StringBuilder) {
-        if (normalizedViewVector.isUsed) {
-            out.append("${normalizedViewVector.ref} = normalize(${cameraPosition.asVec3()} - (${getPositionRef()}));\n")
         }
     }
 
@@ -104,9 +92,6 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     private fun getPositionRefVec4(): String = "vec4(${getPositionRef()}, 1.0)"
 
     override fun declarationVert(out: StringBuilder) {
-        if (cameraPosition.isUsed || normalizedViewVector.isUsed) {
-            out.append("uniform ${cameraPosition.typedRef};\n")
-        }
         if (clipSpacePosition.isUsed || viewProjectionMatrix.isUsed) {
             out.append("uniform ${viewProjectionMatrix.typedRef};\n")
         }
@@ -117,8 +102,6 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
             out.append("uniform ${rotateToCameraMatrix.typedRef};\n")
         }
         if (viewSpacePosition.isUsed || viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
-        if (projectionMatrix.isUsed) out.append("uniform ${projectionMatrix.typedRef};\n")
-        if (inverseViewProjectionMatrix.isUsed) out.append("uniform ${inverseViewProjectionMatrix.typedRef};\n")
         if (clipSpacePosition.isUsed || viewZDepth.isUsed) {
             out.append("$varOut ${clipSpacePosition.typedRef};\n")
             if (viewZDepth.isUsed) {
@@ -130,8 +113,6 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (cameraPosition.isUsed || normalizedViewVector.isUsed) out.append("uniform ${cameraPosition.typedRef};\n")
-        if (normalizedViewVector.isUsed) out.append("vec3 ${normalizedViewVector.ref};\n")
         if (clipSpacePosition.isUsed) out.append("$varIn ${clipSpacePosition.typedRef};\n")
         if (viewSpacePosition.isUsed) out.append("$varIn ${viewSpacePosition.typedRef};\n")
         if (viewZDepth.isUsed) out.append("$varIn ${viewZDepth.typedRef};\n")

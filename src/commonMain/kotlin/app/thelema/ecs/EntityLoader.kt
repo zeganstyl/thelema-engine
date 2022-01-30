@@ -64,14 +64,16 @@ class EntityLoader: LoaderAdapter() {
     }
 
     fun saveTargetEntity() {
-        getOrCreateFile()?.writeText(JSON.printObject(targetEntity))
-    }
-
-    override fun writeJson(json: IJsonObject) {
-        super.writeJson(json)
-        if (saveTargetEntityOnWrite) {
-            if (targetEntity.name.isEmpty()) targetEntity.name = entityOrNull?.name ?: ""
-            if (targetEntity.name.isNotEmpty()) saveTargetEntity()
+        if (targetEntity.name.isEmpty()) targetEntity.name = entityOrNull?.name ?: ""
+        if (targetEntity.name.isNotEmpty()) {
+            val file = getOrCreateFile()
+            if (file != null) {
+                file.writeText(JSON.printObject(targetEntity))
+            } else {
+                LOG.error("$path: Can't save entity, file is null")
+            }
+        } else {
+            LOG.error("$path: Can't save entity, entity name is empty")
         }
     }
 

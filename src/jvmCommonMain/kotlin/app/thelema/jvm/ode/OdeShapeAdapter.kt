@@ -18,6 +18,7 @@ package app.thelema.jvm.ode
 
 import app.thelema.ecs.*
 import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.transformNode
 import app.thelema.math.*
 import app.thelema.phys.IRigidBody
 import app.thelema.phys.IPhysicalShape
@@ -71,21 +72,15 @@ abstract class OdeShapeAdapter<T: DGeom>: IPhysicalShape {
                 setupMass(mass.toDouble(), subMass)
 
                 val node = siblingOrNull<ITransformNode>() ?: entityOrNull?.parentEntity?.componentOrNull()
-                val pos = node?.worldPosition
+                val pos = Vec3()
+                node?.worldPosition?.also { pos.set(it) }
+                pos.sub(body.entity.transformNode().worldPosition)
 
-//                if ((pos != null || positionOffset.isNotZero) && siblingOrNull<IRigidBody>() == null && body.body != null) {
-//                    var x = positionOffset.x
-//                    var y = positionOffset.y
-//                    var z = positionOffset.z
-//                    if (pos != null) {
-//                        x += pos.x
-//                        y += pos.y
-//                        z += pos.z
-//                    }
-//                    geom.setOffsetPosition(x.toDouble(), y.toDouble(), z.toDouble())
-//                    //subMass.translate(x.toDouble(), y.toDouble(), z.toDouble())
-//                }
-//
+                if (positionOffset.isNotZero) {
+                    geom.setOffsetPosition(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                    subMass.translate(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                }
+
 //                if (rotationOffset.isNotEqual(MATH.Zero3One1) && siblingOrNull<IRigidBody>() == null && body.body != null) {
 //                    val mat = Mat4().rotate(rotationOffset)
 //                    if (node != null) mat.mulLeft(node.worldMatrix)

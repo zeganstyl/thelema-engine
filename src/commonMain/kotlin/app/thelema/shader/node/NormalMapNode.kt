@@ -23,9 +23,6 @@ class NormalMapNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sha
     override val componentName: String
         get() = "NormalMapNode"
 
-    /** normalize(cameraPosition - worldPosition), for back-facing surface */
-    var normalizedViewVector by input(GLSLNode.camera.normalizedViewVector)
-
     /** World space vertex position */
     var vertexPosition by input(GLSLNode.vertex.position)
 
@@ -45,27 +42,29 @@ class NormalMapNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sha
     val biNormal = output(GLSLVec3("biNormal"))
     val normal = output(GLSLVec3("normal"))
 
+    private val camPosUniform = "camera_position${GLSL.id()}"
+
     init {
         this.vertexPosition = vertexPosition
     }
 
-    override fun executionFrag(out: StringBuilder) {
-        if (normal.isUsed || tangent.isUsed || biNormal.isUsed) {
-            out.append("normalMapMain(${normalizedViewVector.asVec3()}, ${tbn.ref}, ${vertexPosition.asVec3()}, ${uv.asVec2()}, ${normalScale.asFloat()}, ${normalColor.asVec3()});\n")
-        }
-    }
-
     override fun declarationFrag(out: StringBuilder) {
         if (normal.isUsed || tangent.isUsed || biNormal.isUsed) {
+            out.append("uniform vec3 $camPosUniform;\n")
             out.append(normalCode(tangent.ref, biNormal.ref, normal.ref))
             out.append('\n')
         }
     }
 
-    companion object {
-        // TODO https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
-        fun normalCode(outTangentName: String, outBiNormalName: String, outNormalName: String): String {
-            return """
+    override fun executionFrag(out: StringBuilder) {
+        if (normal.isUsed || tangent.isUsed || biNormal.isUsed) {
+            out.append("normalMapMain(${tbn.ref}, ${vertexPosition.asVec3()}, ${uv.asVec2()}, ${normalScale.asFloat()}, ${normalColor.asVec3()});\n")
+        }
+    }
+
+    // TODO https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
+    private fun normalCode(outTangentName: String, outBiNormalName: String, outNormalName: String): String {
+        return """
 vec3 $outTangentName = vec3(0.0);
 vec3 $outBiNormalName = vec3(0.0);
 vec3 $outNormalName = vec3(0.0);
@@ -78,10 +77,12 @@ uv - texture coordinates
 normalScale - normal texture scaling. Used if normalTexValue is not vec3(0.0, 0.0, 0.0)
 normalTexValue - RGB value from normal texture. May be vec3(0.0, 0.0, 0.0) and it will be not used.
  */
-void normalMapMain(vec3 viewVector, mat3 tbn, vec3 worldPosition, vec2 uv, float normalScale, vec3 colorValue) {
+void normalMapMain(mat3 tbn, vec3 worldPosition, vec2 uv, float normalScale, vec3 colorValue) {
     vec3 t = tbn[0];
     vec3 b = tbn[1];
     vec3 ng = tbn[2];
+    
+    vec3 viewVector = normalize($camPosUniform - worldPosition);
 
     // For a back-facing surface, the tangential basis vectors are negated.
 //    float facing = step(0.0, dot(viewVector, ng)) * 2.0 - 1.0;
@@ -104,6 +105,5 @@ void normalMapMain(vec3 viewVector, mat3 tbn, vec3 worldPosition, vec2 uv, float
     $outBiNormalName = b;
     $outNormalName = n;
 }"""
-        }
     }
 }

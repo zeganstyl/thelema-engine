@@ -5,53 +5,88 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.shader.Shader
+import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.pow
 
 class SceneGrid {
     private val gridVert = """
-attribute vec3 POSITION;
-varying vec3 vPosition;
+in vec3 POSITION;
+out vec3 vPosition;
 uniform mat4 uViewProjectionTrans;
 uniform vec4 uCameraPositionFar;
 
-varying float depthForFade;
+out float depthForFade;
+out float depth;
 
 void main() {
-vPosition = POSITION;
-vPosition *= uCameraPositionFar.w;
-vPosition.x += uCameraPositionFar.x;
-vPosition.z += uCameraPositionFar.z;
-gl_Position = uViewProjectionTrans * vec4(vPosition, 1.0);
-depthForFade = gl_Position.w;
+    vPosition = POSITION;
+    vPosition *= uCameraPositionFar.w;
+    vPosition.x += uCameraPositionFar.x;
+    vPosition.z += uCameraPositionFar.z;
+    gl_Position = uViewProjectionTrans * vec4(vPosition, 1.0);
+    depth = gl_Position.z;
+    depthForFade = gl_Position.w;
 }"""
 
     private val gridFrag = """
-varying vec3 vPosition;
+in vec3 vPosition;
 
 uniform float fadeRadius;
 uniform float fadeMul;
 uniform sampler2D cellTexture;
 uniform vec4 uCameraPositionFar;
 uniform float coordMul;
-varying float depthForFade;
+uniform float coordMulF;
+
+in float depthForFade;
+in float depth;
+
+vec4 texSample(float mul, float alpha) {
+    vec4 color = texture2D(cellTexture, vPosition.xz * mul);
+    color.a *= alpha;
+    return color;
+}
+
+const float axis_line_size = 0.01;
 
 void main() {
-// Pick a coordinate to visualize in a grid
-vec2 coord = vPosition.xz;
-
-float dist = length(vPosition - uCameraPositionFar.xyz);
-
-float redAlpha = clamp(abs(vPosition.z * 20.0) * coordMul, 0.0, 1.0);
-float blueAlpha = clamp(abs(vPosition.x * 20.0) * coordMul, 0.0, 1.0);
-
-gl_FragColor = vec4(0.0);
-gl_FragColor += texture2D(cellTexture, coord * coordMul) * clamp(1.0 - dist / (fadeRadius * 0.1 / coordMul), 0.0, 1.0);
-gl_FragColor += texture2D(cellTexture, coord * coordMul * 10.0) * clamp(1.0 - dist / (fadeRadius * 0.01 / coordMul), 0.0, 1.0);
-gl_FragColor *= 0.5;
-gl_FragColor.r *= blueAlpha;
-gl_FragColor.g *= redAlpha * blueAlpha;
-gl_FragColor.b *= redAlpha;
+    // Pick a coordinate to visualize in a grid
+    vec2 coord = vPosition.xz;
+    
+    float redAlpha = clamp(abs(vPosition.z * 20.0) * coordMul, 0.0, 1.0);
+    float blueAlpha = clamp(abs(vPosition.x * 20.0) * coordMul, 0.0, 1.0);
+    
+    float coordMul10 = coordMul * 0.1;
+    
+    gl_FragColor = vec4(0.0);
+    //gl_FragColor += texture2D(cellTexture, coord * coordMul * 10.0) * clamp(1.0 - dist / (fadeRadius * 0.01 / coordMul), 0.0, 1.0);
+    //gl_FragColor *= 0.5;
+    //gl_FragColor.r *= blueAlpha;
+    
+    float r = 1.0 - clamp(abs(vPosition.z * 50.0) * coordMul, 0.0, 1.0);
+    r += 1.0 - clamp(abs(vPosition.z * 50.0) * coordMul10, 0.0, 1.0);
+    
+    float b = 1.0 - clamp(abs(vPosition.x * 50.0) * coordMul, 0.0, 1.0);
+    b += 1.0 - clamp(abs(vPosition.x * 50.0) * coordMul10, 0.0, 1.0);
+    
+    gl_FragColor += texSample(coordMul10, coordMulF);
+    gl_FragColor += texSample(coordMul, 1.0);
+    gl_FragColor += texSample(coordMul * 10.0, 1.0);
+    
+    gl_FragColor.b - gl_FragColor.r;
+    gl_FragColor.r - gl_FragColor.b;
+    
+    gl_FragColor.r = max(gl_FragColor.r, r);
+    gl_FragColor.b = max(gl_FragColor.b, b);
+    gl_FragColor.b -= r;
+    gl_FragColor.r -= b;
+    gl_FragColor.g -= r;
+    gl_FragColor.g -= b;
+    
+    gl_FragColor.a *= max(gl_FragColor.r, gl_FragColor.b);
+    gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
+    gl_FragColor.a *= 0.5;
 }"""
 
     var fadeRadius = 0.7f
@@ -121,7 +156,10 @@ gl_FragColor.b *= redAlpha;
         gridShader["fadeMul"] = 1f / (100f * (1f - fadeRadius))
         cellTexture.bind(0)
 
-        gridShader["coordMul"] = 1f / (10f.pow(log10(ActiveCamera.eye.y).toInt()))
+        val log = log10(abs(ActiveCamera.eye.y))
+        val current = 1f / (10f.pow(log.toInt()))
+        gridShader["coordMul"] = current
+        gridShader["coordMulF"] = ((10f.pow(log) * current - 1f) * 0.1111f)
 
         val camPos = ActiveCamera.eye
         gridShader.set("uCameraPositionFar", camPos.x, camPos.y, camPos.z, ActiveCamera.far * 1.5f)

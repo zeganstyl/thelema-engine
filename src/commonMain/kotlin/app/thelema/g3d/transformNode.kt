@@ -53,6 +53,8 @@ interface ITransformNode: IEntityComponent {
 
     var isTransformUpdateRequested: Boolean
 
+    var useParentTransform: Boolean
+
     fun getDirection(out: IVec3): IVec3 = worldMatrix.getWorldForward(out).nor()
 
     fun getUpVector(out: IVec3): IVec3 = worldMatrix.getWorldUp(out).nor()
@@ -167,7 +169,7 @@ class TransformNode: ITransformNode {
 
     override var isTransformUpdateRequested: Boolean = true
 
-    var attachedTo: ITransformNode? = null
+    override var useParentTransform: Boolean = true
 
     override var position: IVec3 = Vec3(0f, 0f, 0f)
         set(value) { field.set(value) }
@@ -234,10 +236,12 @@ class TransformNode: ITransformNode {
     override fun updateTransform() {
         worldMatrix.set(position, rotation, scale)
 
-        val parent = attachedTo ?: entityOrNull?.parentEntity?.componentOrNull(componentName) as ITransformNode?
-        if (parent != null) {
-            if (parent.isTransformUpdateRequested) parent.updateTransform()
-            worldMatrix.mulLeft(parent.worldMatrix)
+        if (useParentTransform) {
+            val parent = entityOrNull?.parentEntity?.componentOrNull(componentName) as ITransformNode?
+            if (parent != null) {
+                if (parent.isTransformUpdateRequested) parent.updateTransform()
+                worldMatrix.mulLeft(parent.worldMatrix)
+            }
         }
 
         isTransformUpdateRequested = false

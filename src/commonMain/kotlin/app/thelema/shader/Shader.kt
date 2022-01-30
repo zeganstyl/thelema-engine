@@ -497,10 +497,7 @@ open class Shader(
                     bool(CameraDataNode::useInstancePosition)
                     shaderNodeInput(CameraDataNode::vertexPosition)
                     shaderNodeOutput(CameraDataNode::clipSpacePosition)
-                    shaderNodeOutput(CameraDataNode::cameraPosition)
-                    shaderNodeOutput(CameraDataNode::normalizedViewVector)
                     shaderNodeOutput(CameraDataNode::viewZDepth)
-                    shaderNodeOutput(CameraDataNode::inverseViewProjectionMatrix)
                 }
 
                 descriptor({ UVNode() }) {
@@ -560,7 +557,6 @@ open class Shader(
 
                 descriptor({ NormalMapNode() }) {
                     shaderNodeInput(NormalMapNode::vertexPosition)
-                    shaderNodeInput(NormalMapNode::normalizedViewVector)
                     shaderNodeInput(NormalMapNode::tbn)
                     shaderNodeInput(NormalMapNode::uv)
                     shaderNodeInput(NormalMapNode::normalColor)
@@ -581,7 +577,6 @@ open class Shader(
                     shaderNodeInputOrNull(PBRNode::metallic)
                     shaderNodeInputOrNull(PBRNode::roughness)
                     shaderNodeInputOrNull(PBRNode::emissive)
-                    shaderNodeInput(PBRNode::normalizedViewVector)
                     shaderNodeInput(PBRNode::worldPosition)
                     shaderNodeInput(PBRNode::clipSpacePosition)
                     shaderNodeOutput(PBRNode::result)

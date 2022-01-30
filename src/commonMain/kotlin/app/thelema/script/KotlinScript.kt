@@ -1,20 +1,21 @@
 package app.thelema.script
 
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.SimulationListener
-import app.thelema.ecs.SimulationNode
-import app.thelema.ecs.component
+import app.thelema.ecs.*
 import app.thelema.res.RES
 
 class KotlinScript: KotlinScriptAdapter() {
     val scripts = RES.entity.component<BakedKotlinScripts>()
 
     override fun execute() {
-        if (functionName.isNotEmpty()) {
-            scripts.functionsMap[functionName]?.invoke(entity)
+        if (isComponentScript) {
+            sibling(functionName)
         } else {
-            entityOrNull?.also { entity ->
-                scripts.functionsMap[entity.name]?.invoke(entity)
+            if (functionName.isNotEmpty()) {
+                scripts.functionsMap[functionName]?.invoke(entity)
+            } else {
+                entityOrNull?.also { entity ->
+                    scripts.functionsMap[entity.name]?.invoke(entity)
+                }
             }
         }
     }
@@ -34,6 +35,8 @@ abstract class KotlinScriptAdapter: IKotlinScript {
             field = value
             value?.component<SimulationNode>()?.addSimulationListener(simulationListener)
         }
+
+    override var isComponentScript: Boolean = true
 
     private val simulationListener = object : SimulationListener {
         override fun startSimulation() {

@@ -18,7 +18,6 @@ package app.thelema.res
 
 import app.thelema.ecs.*
 import app.thelema.fs.*
-import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.Camera
 import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.scene

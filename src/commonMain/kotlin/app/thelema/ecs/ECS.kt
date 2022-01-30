@@ -207,7 +207,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             descriptorI<IParticleMaterial>({ ParticleMaterial() }) {
                 string(IParticleMaterial::instancePositionName, "INSTANCE_POSITION")
                 string(IParticleMaterial::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
-                bool(IParticleMaterial::lifeTimesAsAttribute, false)
+                bool(IParticleMaterial::lifeTimesAsAttribute, true)
                 ref(IParticleMaterial::mesh)
             }
 

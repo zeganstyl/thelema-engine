@@ -134,7 +134,6 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             shader.addNode(NormalMapNode(vertexNode.position).apply {
                 uv = textureNode.uv
                 tbn = vertexNode.tbn
-                normalizedViewVector = cameraDataNode.normalizedViewVector
                 normalColor = textureNode.texColor
 
                 normalValue = normal
@@ -226,7 +225,6 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         val pbrNode = shader.addNode(PBRNode {
             normal = normalValue
             worldPosition = vertexNode.position
-            normalizedViewVector = cameraDataNode.normalizedViewVector
             baseColor = baseColorValue
             occlusion = occlusionValue
             roughness = roughnessValue

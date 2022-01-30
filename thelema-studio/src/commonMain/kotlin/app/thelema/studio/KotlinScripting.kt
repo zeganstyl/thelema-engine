@@ -1,5 +1,6 @@
 package app.thelema.studio
 
+import app.thelema.ecs.ECS
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
 import app.thelema.fs.IFile
@@ -28,13 +29,23 @@ object KotlinScripting {
         defaultDependencies.addAll(dependencies)
     }
 
-    suspend fun compile(code: SourceCode, entityPropertyName: String, imports: List<SourceCode>): CompiledScript? {
+    suspend fun compile(
+        code: SourceCode,
+        properties: Map<String, Any?>,
+        imports: List<SourceCode>
+    ): CompiledScript? {
         val result = host.compiler.invoke(
             code,
             ScriptCompilationConfiguration {
                 dependencies(defaultDependencies)
                 importScripts.put(imports)
-                providedProperties.put(mapOf(entityPropertyName to KotlinType(IEntity::class)))
+                providedProperties.put(
+                    HashMap<String, KotlinType>().apply {
+                        properties.forEach {
+                            put(it.key, KotlinType(it.value!!::class))
+                        }
+                    }
+                )
             }
         )
 
@@ -50,14 +61,14 @@ object KotlinScripting {
         return null
     }
 
-    suspend fun eval(entity: IEntity, code: SourceCode, entityPropertyName: String, imports: List<SourceCode>) {
+    suspend fun eval(properties: Map<String, Any?>, code: SourceCode, imports: List<SourceCode>) {
         var fullCode = ""
         imports.forEach { fullCode += it.text }
         fullCode += code.text
 
         var script = cachedScripts[fullCode]
         if (script == null) {
-            script = compile(code, entityPropertyName, imports)
+            script = compile(code, properties, imports)
             if (script != null) cachedScripts[fullCode] = script
         }
 
@@ -65,7 +76,7 @@ object KotlinScripting {
             host.evaluator.invoke(
                 script,
                 ScriptEvaluationConfiguration {
-                    providedProperties.put(mapOf(entityPropertyName to entity))
+                    providedProperties.put(properties)
                 }
             )
         }
@@ -102,25 +113,15 @@ object KotlinScripting {
         var functionMapFill = ""
         val hashSet = HashSet<KotlinScriptStudio>()
         list.forEach { if (it.file != null) hashSet.add(it) }
-        hashSet.forEach { script ->
-            val file = script.file!!
-            val scriptPackage = file.parent().path.replace('/', '.')
-            functionMapFill += if (scriptPackage.isNotEmpty() && scriptPackage != RES.appPackage) {
-                val functionPath = scriptPackage + '.' + script.functionName
-                "    \"${script.functionName}\" to { $functionPath(it) },\n"
-            } else {
-                val functionPath = script.functionName
-                "    \"$functionPath\" to { $functionPath(it) },\n"
-            }
-        }
+        hashSet.forEach { functionMapFill += "    descriptor({ ${it.fqn()}() }) {}\n" }
         kotlinDirectory?.also { kotlinDir ->
             val path = RES.appPackage.replace('.', '/')
             kotlinDir.child(path).child("scripts.kt").writeText(
                 (if (bakedScriptsPackage.isEmpty()) "" else "package $bakedScriptsPackage\n\n") +
-                        """${if (RES.appPackage.isEmpty()) "" else "package ${RES.appPackage}\n\n"}import app.thelema.script.setScriptMap
+                        """${if (RES.appPackage.isEmpty()) "" else "package ${RES.appPackage}\n\n"}import app.thelema.ecs.ECS
 
-fun initScripts() = setScriptMap(
-$functionMapFill)
+fun initScripts() = ECS.apply {
+$functionMapFill}
 """)
         }
     }

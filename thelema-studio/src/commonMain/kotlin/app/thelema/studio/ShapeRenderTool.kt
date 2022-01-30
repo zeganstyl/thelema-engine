@@ -112,7 +112,7 @@ void main() {
     }
 
     private fun setupShader(offset: IMat4?, component: IEntityComponent, xSize: Float, ySize: Float, zSize: Float) {
-        val node = component.siblingOrNull() ?: component.entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()
+        val node = component.entityOrNull?.componentOrNull() ?: component.entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()
         setupShader(offset, node, xSize, ySize, zSize)
     }
 

@@ -240,12 +240,20 @@ interface IEntity: IJsonObjectIO {
     /** @param correctName If there is already entity with the same name, [entity] will set a new free name. For example "Entity" will be "Entity_0" */
     fun addEntity(entity: IEntity, correctName: Boolean = true)
 
+    /** Remove child entity */
     fun removeEntity(entity: IEntity)
 
+    /** Remove child entity */
     fun removeEntity(name: String)
+
+    /** Remove this entity from parent */
+    fun removeEntity() {
+        parentEntity?.removeEntity(this)
+    }
 
     fun clearComponents()
 
+    /** Remove all children entities */
     fun clearChildren()
 
     fun forEachComponent(block: (component: IEntityComponent) -> Unit)

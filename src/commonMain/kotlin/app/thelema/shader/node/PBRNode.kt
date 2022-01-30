@@ -38,7 +38,6 @@ class PBRNode(): ShaderNode() {
         get() = "PBRNode"
 
     var worldPosition by input(GLSLNode.vertex.position)
-    var normalizedViewVector by input(GLSLNode.camera.normalizedViewVector)
     var baseColor by input(GLSL.oneFloat)
     var alpha by inputOrNull()
     var normal by input(GLSLNode.vertex.normal)
@@ -77,9 +76,10 @@ class PBRNode(): ShaderNode() {
     private var lightsNum = 0
     private var dirLightIndex = 0
 
+    private val camPosUniform = "camera_position${GLSL.id()}"
+
     init {
         worldPosition = GLSLNode.vertex.position
-        normalizedViewVector = GLSLNode.camera.normalizedViewVector
         clipSpacePosition = GLSLNode.camera.clipSpacePosition
     }
 
@@ -116,6 +116,7 @@ class PBRNode(): ShaderNode() {
 
         shader["lightsNum"] = lightsNum
         shader["uDirLightsNum"] = dirLightIndex
+        shader[camPosUniform] = ActiveCamera.node.worldPosition
 
         val world = scene?.world
         if (world != null) {
@@ -184,12 +185,14 @@ class PBRNode(): ShaderNode() {
             } else {
                 baseColor.asVec4()
             }
-            out.append("${result.ref} = pbrMain(${worldPosition.asVec3()}, ${normalizedViewVector.asVec3()}, $color, ${normal.asVec3()}, ${(occlusion ?: GLSL.oneFloat).asFloat()}, ${(roughness ?: GLSL.oneFloat).asFloat()}, ${(metallic ?: GLSL.zeroFloat).asFloat()}, ${(emissive ?: GLSL.zeroFloat).asVec3()});\n")
+            out.append("${result.ref} = pbrMain(${worldPosition.asVec3()}, $color, ${normal.asVec3()}, ${(occlusion ?: GLSL.oneFloat).asFloat()}, ${(roughness ?: GLSL.oneFloat).asFloat()}, ${(metallic ?: GLSL.zeroFloat).asFloat()}, ${(emissive ?: GLSL.zeroFloat).asVec3()});\n")
         }
     }
 
     override fun declarationFrag(out: StringBuilder) {
         if (result.isUsed) {
+            out.append("uniform vec3 $camPosUniform;\n")
+
             if (receiveShadows) {
                 val num = maxNumDirectionLights * shadowCascadesNum
                 if (GL.glesMajVer < 3 || shader.version < 130) {
@@ -772,7 +775,9 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 worldPosition - vertex position
 viewToPosition = normalize(cameraPosition - worldPosition)
 */
-vec4 pbrMain(vec3 worldPosition, vec3 viewToPosition, vec4 baseColor, vec3 Normal, float occlusion, float perceptualRoughness, float metallic, vec3 emissive) {
+vec4 pbrMain(vec3 worldPosition, vec4 baseColor, vec3 Normal, float occlusion, float perceptualRoughness, float metallic, vec3 emissive) {
+    vec3 viewToPosition = normalize($camPosUniform - worldPosition);
+
     vec3 n = Normal;
     vec3 v = viewToPosition;
 

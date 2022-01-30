@@ -312,6 +312,7 @@ class RigidBody: IRigidBody {
     override fun update() {
         val body = body
         if (isSimulationRunning && isNodeUpdateEnabled && body != null && !(isKinematic && isStatic)) {
+            node.useParentTransform = false
             tmpV3.set(node.position)
             tmpV4.set(node.rotation)
 
@@ -319,9 +320,9 @@ class RigidBody: IRigidBody {
             val parentPos = entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()?.worldPosition
             if (parentPos != null) {
                 node.position.set(
-                    pos.get0().toFloat() - parentPos.x,
-                    pos.get1().toFloat() - parentPos.y,
-                    pos.get2().toFloat() - parentPos.z
+                    pos.get0().toFloat(),
+                    pos.get1().toFloat(),
+                    pos.get2().toFloat()
                 )
             } else {
                 node.position.set(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())

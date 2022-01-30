@@ -48,12 +48,24 @@ class LoaderPanel: ComponentPanel<ILoader>(ILoader::class) {
             }).padLeft(10f).newRow()
             add(TextButton("Open") {
                 onClick {
-                    component?.file?.also { Studio.fileChooser.openInFileManager(it.platformPath) }
+                    component?.file?.also {
+                        if (it.exists()) {
+                            Studio.fileChooser.openInFileManager(it.platformPath)
+                        } else {
+                            Studio.showStatusAlert("File not exists: ${it.path}")
+                        }
+                    }
                 }
             })
             add(TextButton("Open dir") {
                 onClick {
-                    component?.file?.also { Studio.fileChooser.openInFileManager(it.parent().platformPath) }
+                    component?.file?.also {
+                        if (it.exists()) {
+                            Studio.fileChooser.openInFileManager(it.parent().platformPath)
+                        } else {
+                            Studio.showStatusAlert("File not exists: ${it.path}")
+                        }
+                    }
                 }
             }).padLeft(10f).newRow()
         })

@@ -38,8 +38,14 @@ class StudioMenuBar: Table() {
                 }
             }
             separator()
+            item("Save Entity") {
+                onClick { studio.saveEntity() }
+            }
             item("Save App") {
                 onClick { studio.saveApp() }
+            }
+            item("Save All") {
+                onClick { studio.saveAll() }
             }
             separator()
             item("Exit") {

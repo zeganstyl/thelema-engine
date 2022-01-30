@@ -36,7 +36,7 @@ class ParticleMaterial: IParticleMaterial {
     override var instancePositionName: String = "INSTANCE_POSITION"
     override var instanceLifeTimeName: String = "INSTANCE_LIFE_TIME"
 
-    override var lifeTimesAsAttribute = false
+    override var lifeTimesAsAttribute = true
 
     override fun addParticleEffect(effect: IParticleEffect) {
         if (effect is ParticleProcessingEffect) processingEffects.add(effect)

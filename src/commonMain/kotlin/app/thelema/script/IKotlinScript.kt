@@ -7,6 +7,8 @@ interface IKotlinScript: IEntityComponent {
 
     var functionName: String
 
+    var isComponentScript: Boolean
+
     fun getFuncName(): String =
         functionName.ifEmpty { entity.name.replace(Regex("[^a-zA-Z0-9]+"), "") }
 
