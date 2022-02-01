@@ -17,8 +17,10 @@
 package app.thelema.studio
 
 import app.thelema.app.APP
+import app.thelema.ecs.IEntityComponent
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
+import java.util.*
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.host.StringScriptSource
 import kotlin.script.experimental.jvm.JvmDependencyFromClassLoader
@@ -41,6 +43,8 @@ object ThelemaStudioJvm {
         )
 
         app.isEditorMode = true
+
+        IEntityComponent.propertiesLinkingMap = WeakHashMap()
 
         val host = BasicJvmScriptingHost()
 

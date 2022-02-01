@@ -26,6 +26,7 @@ import app.thelema.gl.IMesh
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
 import app.thelema.utils.iterate
+import kotlin.native.concurrent.ThreadLocal
 
 /** Spatial transform node. Node may contain children and forms a tree of nodes.
  *
@@ -172,11 +173,11 @@ class TransformNode: ITransformNode {
     override var useParentTransform: Boolean = true
 
     override var position: IVec3 = Vec3(0f, 0f, 0f)
-        set(value) { field.set(value) }
+        set(value) { field.set(value); requestTransformUpdate() }
     override var rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
-        set(value) { field.set(value) }
+        set(value) { field.set(value); requestTransformUpdate() }
     override var scale: IVec3 = Vec3(1f, 1f, 1f)
-        set(value) { field.set(value) }
+        set(value) { field.set(value); requestTransformUpdate() }
     override val worldMatrix: IMat4 = Mat4()
 
     override val worldPosition: IVec3 = Vec3Mat4Translation(worldMatrix)
@@ -201,8 +202,8 @@ class TransformNode: ITransformNode {
     override fun requestTransformUpdate(recursive: Boolean) {
         isTransformUpdateRequested = true
         if (recursive) {
-            entityOrNull?.forEachEntityInBranch {
-                it.componentOrNull<ITransformNode>()?.isTransformUpdateRequested = true
+            entityOrNull?.forEachChildEntity {
+                it.componentOrNull<ITransformNode>()?.requestTransformUpdate(recursive)
             }
         }
     }
@@ -262,6 +263,7 @@ class TransformNode: ITransformNode {
         requestTransformUpdate()
     }
 
+    @ThreadLocal
     companion object {
         /** Default value */
         var isPreviousMatrixEnabled: Boolean = true

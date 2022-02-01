@@ -19,6 +19,8 @@ package app.thelema.ecs
 import app.thelema.json.IJsonObject
 import app.thelema.json.IJsonObjectIO
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
+import kotlin.native.concurrent.ThreadLocal
 
 interface IEntityComponent: IJsonObjectIO {
     val entity: IEntity
@@ -63,6 +65,10 @@ interface IEntityComponent: IJsonObjectIO {
         return entity
     }
 
+    /** Set all properties from [other].
+     * If component is not same type (not same [componentName]), nothing will be done.
+     *
+     * @return this component */
     fun setComponent(other: IEntityComponent): IEntityComponent {
         if (isComponentNameAlias(other.componentName) && other != this) {
             componentDescriptor.properties.values.forEach { it.copy(this, other) }
@@ -73,6 +79,11 @@ interface IEntityComponent: IJsonObjectIO {
     /** Set property */
     fun setProperty(name: String, value: Any?) {
         componentDescriptor.getProperty(name).setValue(this, value)
+        propertiesLinkingMap?.get(this)?.also { listeners ->
+            listeners.iterate {
+                it.setProperty(name, value)
+            }
+        }
     }
 
     /** Get property */
@@ -122,6 +133,27 @@ interface IEntityComponent: IJsonObjectIO {
     }
 
     fun destroy() {}
+
+    @ThreadLocal
+    companion object {
+        var propertiesLinkingMap: MutableMap<IEntityComponent, MutableList<IEntityComponent>>? = null
+
+        private fun getOrCreateComponentListenersList(key: IEntityComponent): MutableList<IEntityComponent>? {
+            propertiesLinkingMap?.also {
+                var list = it[key]
+                if (list == null) {
+                    list = ArrayList()
+                    it[key] = list
+                }
+                return list
+            }
+            return null
+        }
+
+        fun linkComponentListener(key: IEntityComponent, listener: IEntityComponent) {
+            getOrCreateComponentListenersList(key)?.add(listener)
+        }
+    }
 }
 
 inline fun <reified T: IEntityComponent> IEntityComponent.sibling(block: T.() -> Unit = {}): T = entity.component<T>().apply(block)

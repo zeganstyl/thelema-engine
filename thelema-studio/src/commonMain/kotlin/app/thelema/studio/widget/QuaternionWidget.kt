@@ -38,12 +38,15 @@ class QuaternionWidget(): FloatsWidget(), PropertyProvider<IVec4> {
     init {
         addFloatField(xField, "X", Color.RED, { value.getQuaternionAngleAround(MATH.X) * MATH.radDeg }) {
             value.rotateQuaternionByX(it * MATH.degRad - value.getQuaternionAngleAround(MATH.X))
+            set(value)
         }
         addFloatField(yField, "Y", Color.GREEN, { value.getQuaternionAngleAround(MATH.Y) * MATH.radDeg }) {
             value.rotateQuaternionByY(it * MATH.degRad - value.getQuaternionAngleAround(MATH.Y))
+            set(value)
         }
         addFloatField(zField, "Z", Color.CYAN, { value.getQuaternionAngleAround(MATH.Z) * MATH.radDeg }) {
             value.rotateQuaternionByZ(it * MATH.degRad - value.getQuaternionAngleAround(MATH.Z))
+            set(value)
         }
     }
 

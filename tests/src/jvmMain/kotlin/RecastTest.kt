@@ -1,7 +1,7 @@
 import app.thelema.anim.AnimationPlayer
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
-import app.thelema.ecs.getComponent
+import app.thelema.ecs.componentOrNull
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.light.directionalLight
@@ -64,8 +64,8 @@ fun main() {
                         scale.set(0.02f, 0.02f, 0.02f)
                         requestTransformUpdate()
                     }
-                    getComponent<AnimationPlayer>().setAnimation("Dark_Knight_Bones|Dark_Knight_Walk")
-                    getComponent<AnimationPlayer>().setAnimation("Dark_Knight_Bones|Dark_Knight_Attack", loopCount = 1, speed = 2f)
+                    componentOrNull<AnimationPlayer>()?.setAnimation("Dark_Knight_Bones|Dark_Knight_Walk")
+                    componentOrNull<AnimationPlayer>()?.setAnimation("Dark_Knight_Bones|Dark_Knight_Attack", loopCount = 1, speed = 2f)
                 })
             }
         }

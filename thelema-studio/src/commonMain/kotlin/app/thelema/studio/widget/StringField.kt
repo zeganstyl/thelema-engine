@@ -20,7 +20,22 @@ class StringField: TextField(), PropertyProvider<String> {
     init {
         text = value
 
-        onChanged { set(it) }
+        addListener(object : InputListener {
+            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
+                when (keycode) {
+                    KEY.ENTER -> {
+                        set(text)
+                    }
+                    KEY.ESCAPE -> {
+                        text = value
+                    }
+                    KEY.Z -> {
+                        if (KEY.ctrlPressed) text = value
+                    }
+                }
+                return super.keyDown(event, keycode)
+            }
+        })
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {

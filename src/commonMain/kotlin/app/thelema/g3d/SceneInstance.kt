@@ -1,6 +1,7 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.*
+import app.thelema.utils.LOG
 
 class SceneInstance: ComponentAdapter(), ISceneInstance {
     override var sceneClassEntity: IEntity? = null
@@ -10,7 +11,7 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
                 field = value
                 if (enabled && value != null) {
                     value.addEntityListener(entityListener)
-                    val entity = entity.entity("Scene")
+                    val entity = sceneEntity()
                     value.copyDeep(to = entity)
                     sceneInstance = entity
                     entity.name = "Scene"
@@ -48,11 +49,30 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
         }
 
     private val entityListener = object : EntityListener {
+        override fun addedEntityToBranch(entity: IEntity) {
+            if (enabled) {
+                sceneClassEntity?.also {
+                    sceneEntity().makePath(it.getRelativePathTo(entity))
+                }
+            }
+        }
+
+        override fun removedEntityFromBranch(entity: IEntity) {
+            if (enabled) {
+                sceneClassEntity?.also {
+                    sceneEntity().getEntityByPath(it.getRelativePathTo(entity))?.removeEntity()
+                }
+            }
+        }
+
         override fun addedComponentToBranch(component: IEntityComponent) {
             if (enabled) {
                 sceneClassEntity?.also {
                     val path = it.getRelativePathTo(component.entity)
-                    entity.entity("Scene").makePath(path).component(component.componentName).setComponent(component)
+                    LOG.error("repeat component $path")
+                    val instanceComponent = sceneEntity().makePath(path).component(component.componentName)
+                    instanceComponent.setComponent(component)
+                    IEntityComponent.linkComponentListener(component, instanceComponent)
                 }
             }
         }
@@ -61,11 +81,17 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
             if (enabled) {
                 sceneClassEntity?.also { root ->
                     val path = root.getRelativePathTo(component.entity)
-                    entity.entity("Scene").getEntityByPath(path)?.removeComponent(component.componentName)
+
+                    val instanceComponent = sceneEntity().getEntityByPath(path)?.componentOrNull(component.componentName)
+                    if (instanceComponent != null) {
+                        IEntityComponent.linkComponentListener(component, instanceComponent)
+                    }
                 }
             }
         }
     }
+
+    private fun sceneEntity() = entity.entity("Scene")
 
     override fun reloadInstance() {
         sceneInstance?.also { instance ->

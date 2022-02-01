@@ -150,7 +150,7 @@ class Project: IProject {
 
         var loader: ILoader? = getLoaderOrNull(path, loaderName)
         if (loader == null) {
-            loader = entity.makePath(path).componentTyped<ILoader>(loaderName)
+            loader = entity.makePath(path).component(loaderName) as ILoader
             val file = if (AID == this) FS.internal(path) else projectFile(path)
             loader.file = file
         }

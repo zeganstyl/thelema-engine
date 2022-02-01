@@ -268,11 +268,15 @@ class Entity() : IEntity {
             }
 
             other.forEachComponent { otherComponent ->
-                component(otherComponent.componentName).setComponent(otherComponent)
+                val component = component(otherComponent.componentName)
+                component.setComponent(otherComponent)
+                IEntityComponent.linkComponentListener(otherComponent, component)
             }
         } else {
             other.forEachComponent { otherComponent ->
-                component(otherComponent.componentName).setComponent(otherComponent)
+                val component = component(otherComponent.componentName)
+                component.setComponent(otherComponent)
+                IEntityComponent.linkComponentListener(otherComponent, component)
             }
         }
 
@@ -296,7 +300,7 @@ class Entity() : IEntity {
 
             for (i in other.children.indices) {
                 val otherChild = other.children[i]
-                entity(otherChild.name).setDeep(otherChild)
+                entity(otherChild.name).setDeep(otherChild, fullReplace)
             }
         } else {
             for (i in other.children.indices) {

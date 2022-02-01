@@ -7,6 +7,8 @@ import app.thelema.studio.widget.PlainCheckBox
 import app.thelema.ui.*
 import app.thelema.utils.iterate
 
+// TODO place gradle shell scripts in project directory
+
 class CreateProjectWindow: Window("Create project") {
     val lwjglNatives = ArrayList<Pair<CheckBox, LwjglNativeDependency>>()
 

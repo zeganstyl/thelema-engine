@@ -174,10 +174,6 @@ interface IEntity: IJsonObjectIO {
 
     fun removeComponent(component: IEntityComponent)
 
-    fun getComponent(typeName: String): IEntityComponent {
-        return componentOrNull(typeName) ?: throw IllegalArgumentException("Component $typeName is not added to entity $path")
-    }
-
     /** Get or create component */
     fun component(typeName: String): IEntityComponent
 
@@ -187,9 +183,6 @@ interface IEntity: IJsonObjectIO {
         (component(typeName) as T).apply(block)
 
     fun componentOrNull(typeName: String): IEntityComponent?
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T> getComponentOrNullTyped(typeName: String): T? = componentOrNull(typeName) as T?
 
     fun getComponentsCount(): Int
 
@@ -280,6 +273,10 @@ interface IEntity: IJsonObjectIO {
     fun addedComponentNotifyAscending(component: IEntityComponent)
     fun removedComponentNotifyAscending(component: IEntityComponent)
 
+    /** Set data from components of [other] entity to components of this entity.
+     * Children entities are not affected.
+     *
+     * @param fullReplace If set to true, then components of this entity that are not presented in [other] entity, will be removed. */
     fun setEntity(other: IEntity, fullReplace: Boolean = true): IEntity
 
     fun copy(): IEntity = Entity().setEntity(this)
@@ -308,14 +305,10 @@ interface IEntity: IJsonObjectIO {
     }
 }
 
-inline fun <reified T: IEntityComponent> IEntity.component(): T {
-    return componentTyped<T>(T::class.simpleName!!)
-}
+/** Get or create component with [T] type. */
+inline fun <reified T: IEntityComponent> IEntity.component(): T = (component(T::class.simpleName!!) as T)
 
-inline fun <reified T: IEntityComponent> IEntity.component(block: T.() -> Unit): T {
-    return componentTyped<T>(T::class.simpleName!!).apply(block)
-}
-
-inline fun <reified T: IEntityComponent> IEntity.getComponent(): T = componentOrNull(T::class.simpleName!!) as T
+inline fun <reified T: IEntityComponent> IEntity.component(block: T.() -> Unit): T =
+    (component(T::class.simpleName!!) as T).apply(block)
 
 inline fun <reified T: IEntityComponent> IEntity.componentOrNull(): T? = componentOrNull(T::class.simpleName!!) as T?

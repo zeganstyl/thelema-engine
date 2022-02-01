@@ -33,7 +33,7 @@ class DirectionalLight: ILight {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            node = value?.componentTyped("TransformNode") ?: TransformNode()
+            node = value?.component() ?: TransformNode()
         }
 
     private val nodeListener = TransformNodeListener {

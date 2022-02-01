@@ -77,7 +77,7 @@ open class ComponentPanel<T: IEntityComponent>(
                 }
                 if (field != null) {
                     val provider = field as PropertyProvider<Any?>
-                    provider.get = { component?.getPropertyTyped(key) }
+                    provider.get = { component?.getProperty(key) }
                     provider.set = { component?.setProperty(key, it) }
                     val name = camelCaseToSpaces(key).lowercase()
                     when (size) {
