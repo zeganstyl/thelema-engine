@@ -29,6 +29,7 @@ import app.thelema.gltf.IGLTF
 import app.thelema.img.*
 import app.thelema.input.KeyboardHandler
 import app.thelema.input.MouseHandler
+import app.thelema.res.ILoader
 import app.thelema.res.IProject
 import app.thelema.res.Project
 import app.thelema.script.BakedKotlinScripts
@@ -130,8 +131,8 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
 
         descriptor { MainLoop() }
 
-        descriptorI<app.thelema.res.ILoader>({ app.thelema.res.Loader() }) {
-            file("file", { file }) { file = it }
+        descriptorI<ILoader>({ app.thelema.res.Loader() }) {
+            file(ILoader::file)
 
             descriptor { EntityLoader() }
             descriptorI<IGLTF>({ GLTF() }) {
@@ -162,8 +163,6 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptorI<IKotlinScript>({ KotlinScript() }) {
             string(IKotlinScript::functionName)
         }
-
-        descriptor { SimulationNode() }
 
         descriptor { KeyboardHandler() }
         descriptor { MouseHandler() }

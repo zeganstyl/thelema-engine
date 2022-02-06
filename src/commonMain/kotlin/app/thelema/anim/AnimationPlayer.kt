@@ -354,19 +354,19 @@ class AnimationPlayer: IEntityComponent {
     private fun end() {
         if (!applying) throw RuntimeException("You must call render() first")
         blendingPosition.entries.forEach {
-            it.key.position.set(it.value)
+            it.key.position = it.value
             vec3Pool.free(it.value)
         }
         blendingPosition.clear()
 
         blendingRotation.entries.forEach {
-            it.key.rotation.set(it.value)
+            it.key.setRotation(it.value.x, it.value.y, it.value.z, it.value.w)
             vec4Pool.free(it.value)
         }
         blendingRotation.clear()
 
         blendingScale.entries.forEach {
-            it.key.scale.set(it.value)
+            it.key.scale = it.value
             vec3Pool.free(it.value)
         }
         blendingScale.clear()
@@ -448,7 +448,7 @@ class AnimationPlayer: IEntityComponent {
                         blendingRotation[node] = vec4Pool.get().set(target)
                     } else {
                         val vec = vec4Pool.get()
-                        vec.set(node.rotation)
+                        vec.setQuaternion(node.rotation)
                         vec.slerp(target, alpha)
                         blendingRotation[node] = vec
                     }
@@ -484,18 +484,21 @@ class AnimationPlayer: IEntityComponent {
             for (i in translationTracks.indices) {
                 val track = translationTracks[i]
                 try {
-                    track.getValueAtTime(time, nodes[track.nodeIndex].position)
+                    track.getValueAtTime(time, tmpPosition)
+                    nodes[track.nodeIndex].position = tmpPosition
                 } catch (ex: Exception) {
                     LOG.info("expected ${track.nodeIndex}, but size ${nodes.size}")
                 }
             }
             for (i in rotationTracks.indices) {
                 val track = rotationTracks[i]
-                track.getValueAtTime(time, nodes[track.nodeIndex].rotation)
+                track.getValueAtTime(time, tmpRotation)
+                nodes[track.nodeIndex].setRotation(tmpRotation.x, tmpRotation.y, tmpRotation.z, tmpRotation.w)
             }
             for (i in scaleTracks.indices) {
                 val track = scaleTracks[i]
-                track.getValueAtTime(time, nodes[track.nodeIndex].scale)
+                track.getValueAtTime(time, tmpScale)
+                nodes[track.nodeIndex].scale = tmpScale
             }
         }
 
@@ -504,9 +507,9 @@ class AnimationPlayer: IEntityComponent {
         }
     }
 
-    private val tmpPosition = Vec3()
-    private val tmpRotation = Vec4()
-    private val tmpScale = Vec3()
+    private val tmpPosition = vec3()
+    private val tmpRotation = vec4()
+    private val tmpScale = vec3()
 }
 
 fun IEntity.animationPlayer(block: AnimationPlayer.() -> Unit) = component(block)

@@ -1,38 +1,58 @@
 package app.thelema.studio
 
 import app.thelema.ecs.Entity
+import app.thelema.ui.MenuItem
 import app.thelema.ui.PopupMenu
+import app.thelema.utils.iterate
 
 object StudioPopupMenu: PopupMenu() {
     var copied: EntityTreeNode? = null
 
-    init {
-        item("Add Entity") {
+    override var contextObject: Any?
+        get() = super.contextObject
+        set(value) {
+            super.contextObject = value
+            clearChildren()
+            if (value is EntityTreeNode) {
+                entityItems.iterate { item -> addItem(item) }
+                value.entity.forEachComponent {
+                    val items = ComponentPanelProvider.getOrCreatePanel(it).menuItems
+                    if (items.isNotEmpty()) {
+                        separator()
+                        items.iterate { item -> addItem(item) }
+                    }
+                }
+            }
+        }
+
+    private val entityItems = listOf(
+        MenuItem("Add Entity") {
             onClickWithContextTyped<EntityTreeNode> {
                 it.entity.addEntity(Entity("New Entity"))
                 it.isExpanded = true
             }
-        }
-        separator()
-        item("Edit") {
+        },
+        MenuItem("Edit") {
             onClickWithContextTyped<EntityTreeNode> { it.showEditWindow() }
-        }
-        separator()
-        item("Copy") {
+        },
+        MenuItem("Copy") {
             onClickWithContextTyped<EntityTreeNode> { copied = it }
-        }
-        item("Paste") {
+        },
+        MenuItem("Paste") {
             onClickWithContextTyped<EntityTreeNode> { parent ->
                 copied?.also { copied ->
                     parent.entity.addEntity(copied.entity.copyDeep())
                 }
             }
-        }
-        separator()
-        item("Remove") {
+        },
+        MenuItem("Remove") {
             onClickWithContextTyped<EntityTreeNode> {
                 it.entity.parentEntity?.removeEntity(it.entity)
             }
         }
+    )
+
+    init {
+        entityItems.iterate { addItem(it) }
     }
 }

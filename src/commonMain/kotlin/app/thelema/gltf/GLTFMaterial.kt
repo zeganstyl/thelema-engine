@@ -52,7 +52,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     var normalTexture: Int = -1
     var normalTextureUV: Int = 0
 
-    var emissiveFactor: IVec3 = MATH.Zero3
+    var emissiveFactor: IVec3C = MATH.Zero3
     var emissiveTexture: Int = -1
     var emissiveTextureUV: Int = 0
 
@@ -115,6 +115,8 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             tangentName = "TANGENT"
         })
 
+        var tbnValue = vertexNode.tbn
+
         val cameraDataNode = shader.addNode(CameraDataNode(vertexNode.position))
 
         var normalValue: IShaderData = vertexNode.normal
@@ -131,13 +133,20 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 sRGB = false
             })
 
-            shader.addNode(NormalMapNode(vertexNode.position).apply {
-                uv = textureNode.uv
-                tbn = vertexNode.tbn
-                normalColor = textureNode.texColor
+            if (conf.calculateTangentsForced) {
+                shader.node<NormalToTBNNode> {
+                    normal = vertexNode.normal
+                    worldPosition = vertexNode.position
+                    uv = uvNode.uv
+                    tbnValue = tbn
+                }
+            }
 
+            shader.node<NormalMapNode> {
+                tbn = tbnValue
+                color = textureNode.texColor
                 normalValue = normal
-            })
+            }
         }
 
         var baseColorValue: IShaderData = GLSL.oneFloat

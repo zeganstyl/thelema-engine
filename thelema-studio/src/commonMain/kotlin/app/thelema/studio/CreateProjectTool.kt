@@ -11,44 +11,51 @@ object CreateProjectTool {
         LwjglNativeDependency("Linux arm64", "linux-arm64"),
         LwjglNativeDependency("Linux arm32", "linux-arm32"),
         LwjglNativeDependency("macOS x64", "macos", true),
-        LwjglNativeDependency("macOS arm64", "macos-arm64"),
+        LwjglNativeDependency("macOS arm64", "macos-arm64", true),
         LwjglNativeDependency("Windows x64", "windows", true),
         LwjglNativeDependency("Windows x86", "windows-x86"),
         LwjglNativeDependency("Windows arm64", "windows-arm64")
     )
 
-    const val defaultSceneScript = """import app.thelema.ecs.IEntity
-import app.thelema.ecs.mainLoop
+    const val defaultSceneScript = """import app.thelema.ecs.Component
+import app.thelema.ecs.IEntity
+import app.thelema.ecs.UpdatableComponent
+import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.transformNode
 
-class NewScene(scene: IEntity) {
-    val box = scene.entity("Box").transformNode()
+class NewScene : Component(), UpdatableComponent {
+    override val componentName: String
+        get() = "NewScene"
 
-    init {
-        scene.mainLoop { onUpdate(::updateScene) }
+    var boxNode: ITransformNode? = null
 
+    override fun onAttachedToEntity(entity: IEntity, old: IEntity?) {
         println("Hello Script!")
+
+        boxNode = entity.entity("Box").transformNode()
     }
 
-    fun updateScene(delta: Float) {
+    override fun updateComponent(delta: Float) {
         // TODO move your box
-        // box.translateForward(delta)
+        // boxNode?.translateForward(delta)
     }
 }
 """
 
-    const val defaultInitScripts = """import app.thelema.script.setScriptMap
+    const val defaultInitScripts = """import app.thelema.ecs.ECS
 
-fun initScripts() = setScriptMap(
-    "NewScene" to { NewScene(it) }
-)
+fun initScripts() = ECS.apply {
+    descriptor({ NewScene() }) {
+        ref(NewScene::boxNode)
+    }
+}
 """
 
-    const val emptyInitScripts = """import app.thelema.script.setScriptMap
+    const val emptyInitScripts = """import app.thelema.ecs.ECS
 
-fun initScripts() = setScriptMap(
-    // TODO script bindings
-)
+fun initScripts() = ECS.apply {
+    // TODO script components
+}
 """
 
     fun jvmBuildGradle(

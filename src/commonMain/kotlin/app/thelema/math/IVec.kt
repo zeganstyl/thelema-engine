@@ -16,46 +16,15 @@
 
 package app.thelema.math
 
-import kotlin.math.abs
 import kotlin.math.sqrt
 
 /** Base vector functions
  * @author Xoppa, zeganstyl */
-interface IVec {
-    val numComponents: Int
-
-    fun getComponent(index: Int): Float
-
+interface IVec: IVecC {
     fun setComponent(index: Int, value: Float)
 
-    /** @return The euclidean length */
-    fun len(): Float {
-        var sum = 0.0
-
-        for (i in 0 until numComponents) {
-            val value = getComponent(i)
-            sum += value * value
-        }
-
-        return sqrt(sum).toFloat()
-    }
-
-    /** This method is faster than [IVec.len] because it avoids calculating a square root. It is useful for comparisons,
-     * but not for getting exact lengths, as the return value is the square of the actual length.
-     * @return The squared euclidean length
-     */
-    fun len2(): Float {
-        var sum = 0f
-
-        for (i in 0 until numComponents) {
-            sum += getComponent(i) * getComponent(i)
-        }
-
-        return sum
-    }
-
     /** Vectors must be same length */
-    fun add(other: IVec): IVec {
+    fun add(other: IVecC): IVec {
         for (i in 0 until numComponents) {
             setComponent(i, getComponent(i) + other.getComponent(i))
         }
@@ -63,33 +32,11 @@ interface IVec {
     }
 
     /** Vectors must be same length */
-    fun sub(other: IVec): IVec {
+    fun sub(other: IVecC): IVec {
         for (i in 0 until numComponents) {
             setComponent(i, getComponent(i) - other.getComponent(i))
         }
         return this
-    }
-
-    /** Squared distance to other vector. Vectors must be same length */
-    fun dst2(other: IVec): Float {
-        var sum = 0f
-
-        for (i in 0 until numComponents) {
-            sum += other.getComponent(i) - getComponent(i)
-        }
-
-        return sum
-    }
-
-    /** Vectors must be same length */
-    fun dst(other: IVec): Float {
-        var sum = 0.0
-
-        for (i in 0 until numComponents) {
-            sum += other.getComponent(i) - getComponent(i)
-        }
-
-        return sqrt(sum).toFloat()
     }
 
     fun scl(scalar: Float): IVec {
@@ -105,18 +52,7 @@ interface IVec {
         return if (len2 == 0f || len2 == 1f) this else scl(1f / sqrt(len2.toDouble()).toFloat())
     }
 
-    /** Vectors must be same length */
-    fun dot(other: IVec): Float {
-        var sum = 0f
-
-        for (i in 0 until numComponents) {
-            sum += getComponent(i) * other.getComponent(i)
-        }
-
-        return sum
-    }
-
-    fun lerp(target: IVec, alpha: Float): IVec {
+    fun lerp(target: IVecC, alpha: Float): IVec {
         for (i in 0 until numComponents) {
             val current = getComponent(i)
             setComponent(i, current + alpha * (target.getComponent(i) - current))
@@ -124,30 +60,12 @@ interface IVec {
         return this
     }
 
-    fun set(other: IVec): IVec {
+    fun set(other: IVecC): IVec {
         for (i in 0 until numComponents) {
             setComponent(i, other.getComponent(i))
         }
         return this
     }
-
-    /** @return Whether this vector is a unit length vector */
-    val isUnit: Boolean
-        get() = isUnit(0.000000001f)
-
-    /** @return Whether this vector is a unit length vector within the given margin. */
-    fun isUnit(margin: Float): Boolean {
-        return abs(len2() - 1f) < margin
-    }
-
-    /** @return Whether this vector is a zero vector */
-    val isZero: Boolean
-        get() {
-            for (i in 0 until numComponents) {
-                if (getComponent(i) != 0f) return false
-            }
-            return true
-        }
 
     /** Set all components to given value */
     fun setAll(value: Float) {
@@ -162,6 +80,4 @@ interface IVec {
             setComponent(i, 0f)
         }
     }
-
-    fun copy(): IVec
 }

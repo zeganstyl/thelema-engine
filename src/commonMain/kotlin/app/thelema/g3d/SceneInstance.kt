@@ -1,7 +1,6 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.*
-import app.thelema.utils.LOG
 
 class SceneInstance: ComponentAdapter(), ISceneInstance {
     override var sceneClassEntity: IEntity? = null
@@ -20,7 +19,7 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
             }
         }
 
-    var provider: ISceneProvider? = null
+    override var provider: ISceneProvider? = null
         set(value) {
             field?.cancelProviding(this)
             field = value
@@ -69,7 +68,6 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
             if (enabled) {
                 sceneClassEntity?.also {
                     val path = it.getRelativePathTo(component.entity)
-                    LOG.error("repeat component $path")
                     val instanceComponent = sceneEntity().makePath(path).component(component.componentName)
                     instanceComponent.setComponent(component)
                     IEntityComponent.linkComponentListener(component, instanceComponent)

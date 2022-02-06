@@ -17,11 +17,12 @@
 package app.thelema.studio.widget
 
 import app.thelema.math.IVec3
+import app.thelema.math.IVec3C
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import app.thelema.utils.Color
 
-class Vec3Widget(): FloatsWidget(), PropertyProvider<IVec3> {
+class Vec3Widget(): FloatsWidget(), PropertyProvider<IVec3C> {
     constructor(block: Vec3Widget.() -> Unit): this() {
         block(this)
     }
@@ -30,15 +31,16 @@ class Vec3Widget(): FloatsWidget(), PropertyProvider<IVec3> {
     val yField = FloatField()
     val zField = FloatField()
 
-    var value: IVec3 = defaultVec3
+    var value: IVec3C = defaultVec3
+    private val _value = Vec3()
 
-    override var set: (value: IVec3) -> Unit = {}
-    override var get: () -> IVec3 = { MATH.Zero3 }
+    override var set: (value: IVec3C) -> Unit = {}
+    override var get: () -> IVec3C = { MATH.Zero3 }
 
     init {
-        addFloatField(xField, "X", Color.RED, { value.x }) { value.x = it; set(value) }
-        addFloatField(yField, "Y", Color.GREEN, { value.y }) { value.y = it; set(value) }
-        addFloatField(zField, "Z", Color.CYAN, { value.z }) { value.z = it; set(value) }
+        addFloatField(xField, "X", Color.RED, { value.x }) { set(_value.set(it, value.y, value.z)) }
+        addFloatField(yField, "Y", Color.GREEN, { value.y }) { set(_value.set(value.x, it, value.z)) }
+        addFloatField(zField, "Z", Color.CYAN, { value.z }) { set(_value.set(value.x, value.y, it)) }
     }
 
     override fun act(delta: Float) {

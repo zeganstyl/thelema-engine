@@ -24,10 +24,8 @@ import app.thelema.g3d.TransformNode
 import app.thelema.g3d.TransformNodeListener
 import app.thelema.math.*
 import app.thelema.phys.*
-import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 import org.ode4j.math.DMatrix3
-import org.ode4j.math.DQuaternion
 import org.ode4j.ode.*
 
 /** @author zeganstyl */
@@ -135,7 +133,7 @@ class RigidBody: IRigidBody {
 
     private val tmpM = DMatrix3()
     private val tmpV3 = Vec3()
-    private val tmpV4 = Vec4()
+    private val tmpV4 = Mat3()
 
     override val spaces: List<String>
         get() = spacesInternal
@@ -319,19 +317,27 @@ class RigidBody: IRigidBody {
             val pos = body.position
             val parentPos = entityOrNull?.parentEntity?.componentOrNull<ITransformNode>()?.worldPosition
             if (parentPos != null) {
-                node.position.set(
-                    pos.get0().toFloat(),
-                    pos.get1().toFloat(),
-                    pos.get2().toFloat()
-                )
+                node.setPosition(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
             } else {
-                node.position.set(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
+                node.setPosition(pos.get0().toFloat(), pos.get1().toFloat(), pos.get2().toFloat())
             }
 
             val q = body.quaternion
-            node.rotation.set(q.get1().toFloat(), q.get2().toFloat(), q.get3().toFloat(), q.get0().toFloat())
+            node.setRotation(q.get1().toFloat(), q.get2().toFloat(), q.get3().toFloat(), q.get0().toFloat())
 
-            if (node.position.isNotEqual(tmpV3) || node.rotation.isNotEqual(tmpV4)) node.requestTransformUpdate()
+            val rs = body.rotation
+            tmpV4.m00 = rs.get00().toFloat()
+            tmpV4.m01 = rs.get01().toFloat()
+            tmpV4.m02 = rs.get02().toFloat()
+            tmpV4.m10 = rs.get10().toFloat()
+            tmpV4.m11 = rs.get11().toFloat()
+            tmpV4.m12 = rs.get12().toFloat()
+            tmpV4.m20 = rs.get20().toFloat()
+            tmpV4.m21 = rs.get21().toFloat()
+            tmpV4.m22 = rs.get22().toFloat()
+            node.rotation = tmpV4
+
+            node.requestTransformUpdate()
         }
     }
 }

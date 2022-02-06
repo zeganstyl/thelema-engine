@@ -18,10 +18,12 @@ package app.thelema.gltf
 
 import app.thelema.data.DATA
 import app.thelema.ecs.component
+import app.thelema.g3d.AABB
 import app.thelema.g3d.SphereBoundings
 import app.thelema.g3d.mesh.Mesh3DTool
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
+import app.thelema.utils.iterate
 
 /** [glTF 2.0 specification](https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-primitive)
  *
@@ -94,9 +96,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     }
 
     private fun setupBoundings() {
-        if (!mesh.containsAttribute("JOINTS_0")) {
-            mesh.boundings = SphereBoundings().apply { setVertices(mesh, "POSITION") }
-        }
+        mesh.boundings = if (mesh.containsAttribute("JOINTS_0")) SphereBoundings() else AABB()
+        mesh.boundings?.also { it.setVertices(mesh, "POSITION") }
     }
 
     fun mergeBuffers(json: IJsonObject) {
@@ -139,7 +140,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
             }
         }
 
-        if (!hasNormals) {
+        if (!hasNormals && conf.calculateNormalsCpu) {
             vertices.addAttribute(3, "NORMAL", GL_FLOAT, false)
         }
 
@@ -160,8 +161,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
             val completeCall: () -> Unit = {
                 // Implementation note: When normals are not specified, client implementations should calculate flat normals
-                if (!hasNormals) calcNormals()
-                if (!hasTangents) calcTangents()
+                if (!hasNormals && conf.calculateNormalsCpu) calcNormals()
+                if (!hasTangents && conf.calculateTangentsCpu) calcTangents()
 
                 setupBoundings()
 
@@ -221,8 +222,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         val attributes = json.obj("attributes")
 
         //if (!attributes.contains("NORMAL")) maxProgress += mesh.indices?.size ?: mesh.verticesCount
-        if (!attributes.contains("NORMAL")) maxProgress++
-        if (attributes.contains("TEXCOORD_0") && !attributes.contains("TANGENT")) {
+        if (!attributes.contains("NORMAL") && conf.calculateNormalsCpu) maxProgress++
+        if (attributes.contains("TEXCOORD_0") && !attributes.contains("TANGENT") && conf.calculateTangentsCpu) {
             maxProgress++
             maxProgress++
 //            maxProgress += (mesh.indices?.size ?: mesh.verticesCount) / 3 // each triangle
@@ -236,7 +237,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         val completeCall: () -> Unit = {
             //println("mesh $mesh completed")
             // Implementation note: When normals are not specified, client implementations should calculate flat normals
-            if (!json.obj("attributes").contains("NORMAL")) {
+            if (conf.calculateNormalsCpu && !json.obj("attributes").contains("NORMAL")) {
                 mesh.addVertexBuffer {
                     addAttribute(3, "NORMAL", GL_FLOAT, false)
                     initVertexBuffer(mesh.verticesCount)
@@ -245,7 +246,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 calcNormals()
             }
 
-            if (mesh.containsAttribute("TEXCOORD_0") && !json.obj("attributes").contains("TANGENT")) {
+            if (conf.calculateTangentsCpu && mesh.containsAttribute("TEXCOORD_0") && !json.obj("attributes").contains("TANGENT")) {
                 val positionAccessor = json.obj("attributes").int("POSITION")
                 val buffer = gltfMesh.tangentsMap[positionAccessor]
                 if (buffer != null) {
@@ -264,10 +265,10 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
             ready()
 
             gltf.runGLCall {
-                mesh.vertexBuffers.forEach { it.uploadBufferToGpu() }
+                mesh.vertexBuffers.iterate { it.uploadBufferToGpu() }
                 uploadIndices()
                 if (!gltf.conf.saveMeshesInCPUMem) {
-                    mesh.vertexBuffers.forEach { it.bytes.destroy() }
+                    mesh.vertexBuffers.iterate { it.bytes.destroy() }
                     // FIXME
                     //mesh.indices?.bytes?.destroy()
                 }

@@ -25,10 +25,10 @@ class Vec4(
 ): IVec4 {
     constructor(value: Float): this(value, value, value, value)
 
-    constructor(other: IVec3, w: Float = 1f): this(other.x, other.y, other.z, w)
+    constructor(other: IVec3C, w: Float = 1f): this(other.x, other.y, other.z, w)
 
     /** Creates a vector from the given vector */
-    constructor(other: IVec4): this(other.x, other.y, other.z)
+    constructor(other: IVec4C): this(other.x, other.y, other.z)
 
     constructor(rgba8888: Int): this(
         (rgba8888 and -0x1000000 ushr 24) * inv255,

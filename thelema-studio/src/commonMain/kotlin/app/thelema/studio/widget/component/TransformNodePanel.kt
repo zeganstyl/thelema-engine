@@ -24,22 +24,23 @@ import app.thelema.ui.TextButton
 
 class TransformNodePanel: ComponentPanel<ITransformNode>(ITransformNode::class, true) {
     init {
-        val block: (String) -> Unit = { component?.requestTransformUpdate() }
-        fieldWidget<Vec3Widget>("position") {
-            xField.onChanged(block)
-            yField.onChanged(block)
-            zField.onChanged(block)
-        }
-        fieldWidget<QuaternionWidget>("rotation") {
-            xField.onChanged(block)
-            yField.onChanged(block)
-            zField.onChanged(block)
-        }
-        fieldWidget<Vec3Widget>("scale") {
-            xField.onChanged(block)
-            yField.onChanged(block)
-            zField.onChanged(block)
-        }
+//        val block: (String) -> Unit = { component?.requestTransformUpdate() }
+//        fieldWidget<Vec3Widget>("position") {
+//            xField.onChanged(block)
+//            yField.onChanged(block)
+//            zField.onChanged(block)
+//        }
+//        fieldWidget<QuaternionWidget>("rotation") {
+//            xField.onChanged(block)
+//            yField.onChanged(block)
+//            zField.onChanged(block)
+//        }
+        // TODO
+//        fieldWidget<Vec3Widget>("scale") {
+//            xField.onChanged(block)
+//            yField.onChanged(block)
+//            zField.onChanged(block)
+//        }
 
         content.add(TextButton("Update") {
             onClick {

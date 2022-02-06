@@ -43,7 +43,7 @@ import kotlin.math.tan
  *
  * =====
  *
- * Matrix cells layout in data array:
+ * Matrix cells layout in data array (column-major order):
  *
  * m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33
  *
@@ -171,29 +171,17 @@ interface IMat4: IJsonObjectIO {
         get() = values[M33]
         set(value) { values[M33] = value }
 
-    /** Squared scale factor on the X axis */
-    val scaleXSquared: Float
-        get() = m00 * m00 + m01 * m01 + m02 * m02
-
-    /** Squared scale factor on the Y axis */
-    val scaleYSquared: Float
-        get() = m10 * m10 + m11 * m11 + m12 * m12
-
-    /** Squared scale factor on the Z axis */
-    val scaleZSquared: Float
-        get() = m20 * m20 + m21 * m21 + m22 * m22
-
     /** Scale factor on the X axis (non-negative) */
     val scaleX: Float
-        get() = if (MATH.isZero(m01) && MATH.isZero(m02)) abs(m00) else MATH.sqrt(scaleXSquared)
+        get() = if (MATH.isZero(m01) && MATH.isZero(m02)) abs(m00) else MATH.sqrt(m00 * m00 + m01 * m01 + m02 * m02)
 
     /** Scale factor on the Y axis (non-negative) */
     val scaleY: Float
-        get() = if (MATH.isZero(m10) && MATH.isZero(m12)) abs(m11) else MATH.sqrt(scaleYSquared)
+        get() = if (MATH.isZero(m10) && MATH.isZero(m12)) abs(m11) else MATH.sqrt(m10 * m10 + m11 * m11 + m12 * m12)
 
     /** Scale factor on the X axis (non-negative) */
     val scaleZ: Float
-        get() = if (MATH.isZero(m20) && MATH.isZero(m21)) abs(m22) else MATH.sqrt(scaleZSquared)
+        get() = if (MATH.isZero(m20) && MATH.isZero(m21)) abs(m22) else MATH.sqrt(m20 * m20 + m21 * m21 + m22 * m22)
 
     override fun readJson(json: IJsonObject) {
         transformDataType = json.string("transformDataType", TransformDataType.TRS)
@@ -312,7 +300,7 @@ interface IMat4: IJsonObjectIO {
      * @param quaternion The quaternion that is to be used to set this matrix.
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun setFromQuaternion(quaternion: IVec4): IMat4 =
+    fun setFromQuaternion(quaternion: IVec4C): IMat4 =
         setFromQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
 
     /** Sets the matrix to a rotation matrix representing the quaternion (qx, qy, qz, qw).
@@ -321,7 +309,7 @@ interface IMat4: IJsonObjectIO {
     fun setFromQuaternion(qx: Float, qy: Float, qz: Float, qw: Float): IMat4 =
         set(0f, 0f, 0f, qx, qy, qz, qw)
 
-    fun set(translation: IVec3, rotation: IVec4): IMat4 =
+    fun set(translation: IVec3C, rotation: IVec4C): IMat4 =
         set(translation.x, translation.y, translation.z, rotation.x, rotation.y, rotation.z, rotation.w)
 
     /** Sets the matrix to a rotation matrix representing the translation (tx, ty, tz) and quaternion (qx, qy, qz, qw). */
@@ -357,7 +345,7 @@ interface IMat4: IJsonObjectIO {
         return this
     }
 
-    fun set(translation: IVec3, rotation: IVec4, scale: IVec3): IMat4 {
+    fun set(translation: IVec3C, rotation: IVec4C, scale: IVec3C): IMat4 {
         return set(
             translation.x,
             translation.y,
@@ -429,7 +417,44 @@ interface IMat4: IJsonObjectIO {
         return this
     }
 
-    fun setRotationScale(xAxis: IVec3, yAxis: IVec3, zAxis: IVec3): IMat4 {
+    fun setRotationScale(rotation: IVec4C, scale: IVec3C): IMat4 {
+        val qx = rotation.x
+        val qy = rotation.y
+        val qz = rotation.z
+        val qw = rotation.w
+        val sx = scale.x
+        val sy = scale.y
+        val sz = scale.z
+
+        val xs = qx * 2f
+        val ys = qy * 2f
+        val zs = qz * 2f
+        val wx = qw * xs
+        val wy = qw * ys
+        val wz = qw * zs
+        val xx = qx * xs
+        val xy = qx * ys
+        val xz = qx * zs
+        val yy = qy * ys
+        val yz = qy * zs
+        val zz = qz * zs
+
+        m00 = sx * (1.0f - (yy + zz))
+        m10 = sx * (xy + wz)
+        m20 = sx * (xz - wy)
+
+        m01 = sy * (xy - wz)
+        m11 = sy * (1.0f - (xx + zz))
+        m21 = sy * (yz + wx)
+
+        m02 = sz * (xz + wy)
+        m12 = sz * (yz - wx)
+        m22 = sz * (1.0f - (xx + yy))
+
+        return this
+    }
+
+    fun setRotationScale(xAxis: IVec3C, yAxis: IVec3C, zAxis: IVec3C): IMat4 {
         m00 = xAxis.x
         m01 = xAxis.y
         m02 = xAxis.z
@@ -750,7 +775,7 @@ interface IMat4: IJsonObjectIO {
      * @param up The up vector
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun setToLookAt(direction: IVec3, up: IVec3): IMat4 {
+    fun setToLookAt(direction: IVec3C, up: IVec3C): IMat4 {
         val tmpV1 = Vec3()
         val tmpV2Right = Vec3()
         val tmpV3Forward = Vec3()
@@ -772,7 +797,7 @@ interface IMat4: IJsonObjectIO {
     }
 
     /** Sets this matrix as view matrix with the given position, target and up vector. */
-    fun setToLookAt(position: IVec3, direction: IVec3, up: IVec3): IMat4 {
+    fun setToLookAt(position: IVec3C, direction: IVec3C, up: IVec3C): IMat4 {
         setToLookAt(direction, up)
         this.mul(Mat4().setToTranslation(-position.x, -position.y, -position.z))
         return this
@@ -784,7 +809,7 @@ interface IMat4: IJsonObjectIO {
      * @param vec The translation vector
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun setToTranslation(vec: IVec3): IMat4 = setToTranslation(vec.x, vec.y, vec.z)
+    fun setToTranslation(vec: IVec3C): IMat4 = setToTranslation(vec.x, vec.y, vec.z)
 
     /** Sets this matrix to a translation matrix, overwriting it first by an identity matrix and then setting the 4th column to the
      * translation vector.
@@ -805,7 +830,7 @@ interface IMat4: IJsonObjectIO {
      * @param scaling The scaling vector
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun setToTranslationAndScaling(translation: IVec3, scaling: IVec3): IMat4 {
+    fun setToTranslationAndScaling(translation: IVec3C, scaling: IVec3C): IMat4 {
         idt()
         values[M03] = translation.x
         values[M13] = translation.y
@@ -847,7 +872,7 @@ interface IMat4: IJsonObjectIO {
     }
 
     /** Sets this matrix to a scaling matrix */
-    fun setToScaling(scale: IVec3): IMat4 {
+    fun setToScaling(scale: IVec3C): IMat4 {
         idt()
         m00 = scale.x
         m11 = scale.y
@@ -866,7 +891,7 @@ interface IMat4: IJsonObjectIO {
 
     /** Sets this matrix to look from position to target with up vector.
      * Assumes direction and up vectors are already normalized */
-    fun setToLook(position: IVec3, direction: IVec3, up: IVec3): IMat4 {
+    fun setToLook(position: IVec3C, direction: IVec3C, up: IVec3C): IMat4 {
         val fx = -direction.x
         val fy = -direction.y
         val fz = -direction.z
@@ -1011,27 +1036,108 @@ interface IMat4: IJsonObjectIO {
         return this
     }
 
-    /** Sets this matrix to the given 3x3 matrix. The third column of this matrix is set to (0,0,1,0).
-     * @param mat the matrix
+    /** Sets this matrix to the given 3x3 matrix.
+     * @param other the matrix
      */
-    fun set(mat: Mat3): IMat4 {
-        values[0] = mat.values[0]
-        values[1] = mat.values[1]
-        values[2] = mat.values[2]
-        values[3] = 0f
-        values[4] = mat.values[3]
-        values[5] = mat.values[4]
-        values[6] = mat.values[5]
-        values[7] = 0f
-        values[8] = 0f
-        values[9] = 0f
-        values[10] = 1f
-        values[11] = 0f
-        values[12] = mat.values[6]
-        values[13] = mat.values[7]
-        values[14] = 0f
-        values[15] = mat.values[8]
+    fun set(other: IMat3C): IMat4 {
+        m00 = other.m00
+        m01 = other.m01
+        m02 = other.m02
+
+        m10 = other.m10
+        m11 = other.m11
+        m12 = other.m12
+
+        m20 = other.m20
+        m21 = other.m21
+        m22 = other.m22
+
         return this
+    }
+
+    fun set(translation: IVec3C, rotation: IMat3C, scale: IVec3C): IMat4 {
+        m00 = rotation.m00
+        m01 = rotation.m01
+        m02 = rotation.m02
+
+        m10 = rotation.m10
+        m11 = rotation.m11
+        m12 = rotation.m12
+
+        m20 = rotation.m20
+        m21 = rotation.m21
+        m22 = rotation.m22
+
+        if (scale.isNotEqual(1f, 1f, 1f)) {
+            m00 *= scale.x
+            m10 *= scale.x
+            m20 *= scale.x
+
+            m01 *= scale.y
+            m11 *= scale.y
+            m21 *= scale.y
+
+            m02 *= scale.z
+            m12 *= scale.z
+            m22 *= scale.z
+        }
+
+        m03 = translation.x
+        m13 = translation.y
+        m23 = translation.z
+
+        return this
+    }
+
+    fun getTRS(translation: IVec3, rotation: IMat3, scale: IVec3) {
+        val xl2 = m00 * m00 + m10 * m10 + m20 * m20
+        var xs = xl2
+        val xsInv: Float
+        if (xl2 == 0f || xl2 == 1f) {
+            rotation.m00 = m00
+            rotation.m10 = m10
+            rotation.m20 = m20
+        } else {
+            xs = MATH.sqrt(xl2)
+            xsInv = 1f / xs
+            rotation.m00 = m00 * xsInv
+            rotation.m10 = m10 * xsInv
+            rotation.m20 = m20 * xsInv
+        }
+
+        val yl2 = m01 * m01 + m11 * m11 + m21 * m21
+        var ys = yl2
+        val ysInv: Float
+        if (yl2 == 0f || yl2 == 1f) {
+            rotation.m01 = m01
+            rotation.m11 = m11
+            rotation.m21 = m21
+        } else {
+            ys = MATH.sqrt(yl2)
+            ysInv = 1f / ys
+            rotation.m01 = m01 * ysInv
+            rotation.m11 = m11 * ysInv
+            rotation.m21 = m21 * ysInv
+        }
+
+        val zl2 = m02 * m02 + m12 * m12 + m22 * m22
+        var zs = zl2
+        val zsInv: Float
+        if (zl2 == 0f || zl2 == 1f) {
+            rotation.m02 = m02
+            rotation.m12 = m12
+            rotation.m22 = m22
+        } else {
+            zs = MATH.sqrt(zl2)
+            zsInv = 1f / zs
+            rotation.m02 = m02 * zsInv
+            rotation.m12 = m12 * zsInv
+            rotation.m22 = m22 * zsInv
+        }
+
+        scale.set(xs, ys, zs)
+
+        translation.set(m03, m13, m23)
     }
 
     /** Sets this matrix to the given affine matrix. The values are mapped as follows:
@@ -1108,7 +1214,7 @@ interface IMat4: IJsonObjectIO {
         return this
     }
 
-    fun scl(scale: IVec3): IMat4 {
+    fun scl(scale: IVec3C): IMat4 {
         values[M00] *= scale.x
         values[M11] *= scale.y
         values[M22] *= scale.z
@@ -1131,14 +1237,21 @@ interface IMat4: IJsonObjectIO {
 
     fun getTranslation(out: IVec3): IVec3 = out.set(m03, m13, m23)
     fun getRotation(out: IVec4): IVec4 = out.setQuaternion(this)
-    fun getScale(out: IVec3): IVec3 = out.set(scaleX, scaleY, scaleZ)
+    fun getScale(out: IVec3): IVec3 {
+        if (hasRotation()) {
+            out.set(scaleX, scaleY, scaleZ)
+        } else {
+            out.set(m00, m11, m22)
+        }
+        return out
+    }
 
     // @on
     /** Postmultiplies this matrix by a translation matrix.
      * @param translation
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun translate(translation: IVec3): IMat4 = translate(translation.x, translation.y, translation.z)
+    fun translate(translation: IVec3C): IMat4 = translate(translation.x, translation.y, translation.z)
 
     /** Postmultiplies this matrix by a translation matrix.
      * @param x Translation in the x-axis.
@@ -1158,13 +1271,9 @@ interface IMat4: IJsonObjectIO {
      * @param axis The vector axis to rotate around.
      * @param radians angle.
      */
-    fun rotate(axis: IVec3, radians: Float): IMat4 = rotate(axis.x, axis.y, axis.z, radians)
+    fun rotate(axis: IVec3C, radians: Float): IMat4 = rotate(axis.x, axis.y, axis.z, radians)
 
     /** Postmultiplies this matrix with a (counter-clockwise) rotation matrix.
-     * @param axisX The x-axis component of the vector to rotate around.
-     * @param axisY The y-axis component of the vector to rotate around.
-     * @param axisZ The z-axis component of the vector to rotate around.
-     * @param radians The angle in radians
      * @return This matrix for the purpose of chaining methods together.
      */
     fun rotate(axisX: Float, axisY: Float, axisZ: Float, radians: Float): IMat4 {
@@ -1173,7 +1282,7 @@ interface IMat4: IJsonObjectIO {
         var d = MATH.len(axisX, axisY, axisZ)
         if (d == 0f) return rotateByQuaternion(0f, 0f, 0f, 1f)
         d = 1f / d
-        val pi2 = 6.2831854f
+        val pi2 = 6.2831855f
         val ang = if (radians < 0) pi2 - -radians % pi2 else radians % pi2
         val sin = sin(ang * 0.5f)
         val qx = d * axisX * sin
@@ -1256,7 +1365,7 @@ interface IMat4: IJsonObjectIO {
     /** Postmultiplies this matrix with a (counter-clockwise) rotation matrix.
      * @return This matrix for the purpose of chaining methods together.
      */
-    fun rotate(quaternion: IVec4): IMat4 = rotateByQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
+    fun rotate(quaternion: IVec4C): IMat4 = rotateByQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
 
     /** Postmultiplies this matrix with a scale matrix.
      * @param scaleX The scale in the x-axis.
@@ -1298,6 +1407,9 @@ interface IMat4: IJsonObjectIO {
                 && MATH.isZero(values[M01]) && MATH.isZero(values[M02]) && MATH.isZero(values[M10]) && MATH.isZero(values[M12])
                 && MATH.isZero(values[M20]) && MATH.isZero(values[M21]))
     }
+
+    fun hasRotation(): Boolean =
+        m01 != 0f || m02 != 0f || m10 != 0f || m12 != 0f || m20 != 0f || m21 != 0f
 
     /** Left-multiplies the vector by the given matrix, assuming the fourth (w) component of the vector is 1.
      * @param mat The matrix

@@ -20,8 +20,6 @@ import app.thelema.ecs.*
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.light.ILight
-import app.thelema.g3d.particles.IParticleEmitter
-import app.thelema.g3d.particles.IParticleSystem
 import app.thelema.gl.IRenderable
 import app.thelema.input.*
 import app.thelema.shader.IRenderingPipeline
@@ -116,7 +114,7 @@ class Scene: IScene {
 
     private val renderBlock: (channel: String?) -> Unit = { render(it) }
 
-    private val simulationNodes = HashSet<SimulationNode>()
+    private val simulationNodes = HashSet<SimulationComponent>()
 
     private val mouseListener = object : IMouseListener {
         override fun buttonDown(button: Int, x: Int, y: Int, pointer: Int) {
@@ -187,13 +185,13 @@ class Scene: IScene {
     override fun addedComponentToBranch(component: IEntityComponent) {
         if (component is IRenderable) if (!renderables.contains(component)) renderables.add(component)
         if (component is ILight) if (!lights.contains(component)) lights.add(component)
-        if (component is SimulationNode) simulationNodes.add(component)
+        if (component is SimulationComponent) simulationNodes.add(component)
     }
 
     override fun removedComponentFromBranch(component: IEntityComponent) {
         if (component is IRenderable) renderables.remove(component)
         if (component is ILight) lights.remove(component)
-        if (component is SimulationNode) simulationNodes.remove(component)
+        if (component is SimulationComponent) simulationNodes.remove(component)
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
@@ -231,7 +229,7 @@ class Scene: IScene {
 
         for (i in renderables.indices) {
             val renderable = renderables[i]
-            if (frustumCulling && renderable.visibleInFrustum(ActiveCamera.frustum)) {
+            if (!frustumCulling || renderable.visibleInFrustum(ActiveCamera.frustum)) {
                 when (renderable.alphaMode) {
                     Blending.BLEND -> translucent.add(renderable)
                     Blending.MASK -> masked.add(renderable)

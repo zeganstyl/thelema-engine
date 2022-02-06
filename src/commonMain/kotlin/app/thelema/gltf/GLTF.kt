@@ -18,7 +18,6 @@ package app.thelema.gltf
 
 import app.thelema.concurrency.ATOM
 import app.thelema.ecs.*
-import app.thelema.fs.FS
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
 import app.thelema.g3d.ISceneInstance
@@ -105,9 +104,9 @@ class GLTF: IGLTF, LoaderAdapter() {
             conf = value?.componentOrNull() ?: RES.sibling()
         }
 
-    private val _instances = ArrayList<ISceneInstance>()
-    override val instances: List<ISceneInstance>
-        get() =_instances
+    private val _sceneInstances = ArrayList<ISceneInstance>()
+    override val sceneInstances: List<ISceneInstance>
+        get() =_sceneInstances
 
     override var overrideAssets: Boolean = false
 
@@ -123,7 +122,7 @@ class GLTF: IGLTF, LoaderAdapter() {
     }
 
     override fun cancelProviding(instance: ISceneInstance) {
-        _instances.remove(instance)
+        _sceneInstances.remove(instance)
     }
 
     override fun provideScene(instance: ISceneInstance) {
@@ -131,7 +130,7 @@ class GLTF: IGLTF, LoaderAdapter() {
         if (isLoaded) {
             instance.sceneClassEntity = scene
         }
-        _instances.add(instance)
+        _sceneInstances.add(instance)
     }
 
     fun iterateArrays(block: (array: IGLTFArray) -> Unit) {
@@ -185,7 +184,7 @@ class GLTF: IGLTF, LoaderAdapter() {
                     buffers.forEach { (it as GLTFBuffer).bytes.destroy() }
                 }
                 stop()
-                provider.instances.iterate { it.sceneClassEntity = scene }
+                sceneInstances.iterate { it.sceneClassEntity = scene }
             }
         }
     }

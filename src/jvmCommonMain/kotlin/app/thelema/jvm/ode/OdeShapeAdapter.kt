@@ -22,7 +22,6 @@ import app.thelema.g3d.transformNode
 import app.thelema.math.*
 import app.thelema.phys.IRigidBody
 import app.thelema.phys.IPhysicalShape
-import org.ode4j.math.DMatrix3
 import org.ode4j.ode.*
 
 abstract class OdeShapeAdapter<T: DGeom>: IPhysicalShape {
@@ -45,11 +44,13 @@ abstract class OdeShapeAdapter<T: DGeom>: IPhysicalShape {
 
     override var mass: Float = 1f
 
-    override var positionOffset: IVec3 = Vec3()
-        set(value) { field.set(value) }
+    private val _positionOffset = Vec3()
+    override var positionOffset: IVec3C = Vec3()
+        set(value) { _positionOffset.set(value) }
 
-    override var rotationOffset: IVec4 = Vec4()
-        set(value) { field.set(value) }
+    private val _rotationOffset = Vec4()
+    override var rotationOffset: IVec4C = Vec4()
+        set(value) { _rotationOffset.set(value) }
 
     fun getWorld(): RigidBodyPhysicsWorld? =
         entityOrNull?.getRootEntity()?.componentOrNull()

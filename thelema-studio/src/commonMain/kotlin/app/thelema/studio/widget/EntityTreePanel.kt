@@ -3,6 +3,7 @@ package app.thelema.studio.widget
 import app.thelema.studio.EntityTreeNode
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntity
+import app.thelema.g2d.Batch
 import app.thelema.input.BUTTON
 import app.thelema.input.KEY
 import app.thelema.studio.SKIN
@@ -54,15 +55,6 @@ class EntityTreePanel: Table() {
                 (tree.overNode as EntityTreeNode?)?.also { node ->
                     StudioPopupMenu.showMenu(event, node)
                 }
-            }
-
-            override fun keyDown(event: InputEvent, keycode: Int): Boolean {
-                when (keycode) {
-                    KEY.F2 -> {
-                        tree.selectedNodeTyped<EntityTreeNode>()?.showEditWindow()
-                    }
-                }
-                return super.keyDown(event, keycode)
             }
         })
     }

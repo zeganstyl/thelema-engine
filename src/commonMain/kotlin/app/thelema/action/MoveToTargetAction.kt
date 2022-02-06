@@ -43,9 +43,9 @@ class MoveToTargetAction: ActionAdapter() {
                 val speed = speed * delta
                 if (target.worldPosition.dst2(node.worldPosition) > speed * speed) {
                     tmp.set(target.position).sub(node.position).nor().scl(speed)
-                    node.position.add(tmp)
+                    node.translate(tmp)
                 } else {
-                    node.position.set(target.position)
+                    node.translate(target.position)
                     isRunning = false
                 }
                 node.requestTransformUpdate()

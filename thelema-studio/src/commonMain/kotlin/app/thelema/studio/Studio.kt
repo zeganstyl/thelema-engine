@@ -8,6 +8,7 @@ import app.thelema.ecs.*
 import app.thelema.fs.*
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.*
+import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.boxMesh
 import app.thelema.input.MOUSE
@@ -23,6 +24,8 @@ import app.thelema.studio.widget.component.ProjectPanel
 import app.thelema.ui.*
 import app.thelema.utils.Color
 import app.thelema.utils.iterate
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 object Studio: AppListener, IJsonObjectIO {
     lateinit var fileChooser: IFileChooser
@@ -91,13 +94,16 @@ object Studio: AppListener, IJsonObjectIO {
 
     val sceneEntities = ArrayList<EntityLoader>()
 
+    val preparingSimTabs = ArrayList<SimulationEntityTab>()
+    val preparingSimTabsToRemove = HashSet<SimulationEntityTab>()
+
     init {
         APP.setupPhysicsComponents()
 
-        ECS.replaceDescriptor(KotlinScript::class.simpleName!!, { KotlinScriptStudio() }) {
+        ECS.replaceDescriptor("KotlinScript", { KotlinScriptStudio() }) {
             setAliases(IKotlinScript::class)
             string(KotlinScriptStudio::functionName)
-            kotlinScriptFile("file", { file }) { file = it }
+            kotlinScriptFile(KotlinScriptStudio::file)
         }
 
         ComponentPanelProvider.init()
@@ -127,7 +133,7 @@ object Studio: AppListener, IJsonObjectIO {
         statusLabel.color = color
     }
 
-    fun showStatusAlert(text: String, color: Int = Color.RED) {
+    fun showStatusAlert(text: String, color: Int = Color.SCARLET) {
         statusLabel.text = text
         statusLabel.color = color
     }
@@ -158,8 +164,24 @@ object Studio: AppListener, IJsonObjectIO {
 
     fun startSimulation(source: IEntity) {
         val tab = SimulationEntityTab(source)
-        tabsPane.addTab(tab, true)
-        tab.startSimulation()
+        preparingSimTabs.add(tab)
+        tab.job = GlobalScope.launch {
+            tab.startSimulation()
+        }
+    }
+
+    override fun update(delta: Float) {
+        preparingSimTabs.iterate {
+            if (it.addTabRequest.compareAndSet(true, false)) {
+                tabsPane.addTab(it, true)
+                showStatus("")
+                preparingSimTabsToRemove.add(it)
+            }
+        }
+        if (preparingSimTabsToRemove.isNotEmpty()) {
+            preparingSimTabs.removeAll(preparingSimTabsToRemove)
+            preparingSimTabsToRemove.clear()
+        }
     }
 
     fun startSimulation() {
@@ -173,52 +195,51 @@ object Studio: AppListener, IJsonObjectIO {
         }
     }
 
-    fun createNewApp(script: IFile? = null) {
+    fun createNewApp(script: IFile? = null): EntityLoader {
         tabsPane.clearTabs()
         tabsPane.addTab(projectTab)
         RES.destroy()
         RES.file = DefaultProjectFile
-        createNewScene(script)
+        return createNewScene(script)
     }
 
     fun createNewProject() {
         createProjectWindow.show(hud)
     }
 
-    fun createNewScene(script: IFile? = null) {
+    fun createNewScene(script: IFile? = null): EntityLoader {
         val sceneName = RES.entity.makeChildName("NewScene")
         val entity = Entity(sceneName)
         RES.entity.addEntity(entity)
-        entity.apply {
-            entityLoader {
-                if (RES.mainScene == null) RES.mainScene = this
+        return entity.entityLoader {
+            if (RES.mainScene == null) RES.mainScene = this
 
-                targetEntity.apply {
-                    this.name = sceneName
-                    scene()
+            targetEntity.apply {
+                this.name = sceneName
+                scene()
+                orbitCameraControl()
 
-                    if (script != null) {
-                        component<IKotlinScript> {
-                            this as KotlinScriptStudio
-                            this.file = script
-                        }
-                    }
-
-                    entity("Light") {
-                        directionalLight {
-                            setDirectionFromPosition(1f, 1f, 1f)
-                            intensity = 5f
-                        }
-                    }
-                    entity("Box") {
-                        boxMesh()
-                        material()
-                        transformNode()
+                if (script != null) {
+                    component<IKotlinScript> {
+                        this as KotlinScriptStudio
+                        this.file = script
                     }
                 }
 
-                openEntity(this)
+                entity("Light") {
+                    directionalLight {
+                        setDirectionFromPosition(1f, 1f, 1f)
+                        intensity = 5f
+                    }
+                }
+                entity("Box") {
+                    boxMesh()
+                    material()
+                    transformNode()
+                }
             }
+
+            openEntity(this)
         }
     }
 
@@ -267,7 +288,10 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     fun saveEntity() {
-        tabsPane.activeTab?.loader?.saveTargetEntity()
+        tabsPane.activeTab?.loader?.also {
+            it.saveTargetEntity()
+            showStatus("${it.file?.name} Saved")
+        }
     }
 
     fun saveAll() {

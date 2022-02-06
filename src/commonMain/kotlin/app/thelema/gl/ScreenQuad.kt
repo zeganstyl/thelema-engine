@@ -21,6 +21,7 @@ import app.thelema.img.ITexture
 import app.thelema.img.renderNoClear
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
+import app.thelema.shader.post.PostShader
 import kotlin.native.concurrent.ThreadLocal
 
 /** Default screen quad, that may be used for post processing shaders.
@@ -50,16 +51,8 @@ object ScreenQuad {
     }
 
     val textureRenderShader: IShader by lazy {
-        Shader(
-            vertCode = """
-attribute vec2 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
-
-void main() {
-    uv = UV;
-    gl_Position = vec4(POSITION, 0.0, 1.0);
-}""",
+        PostShader(
+            flipY = false,
             fragCode = """            
 varying vec2 uv;
 uniform sampler2D tex;
@@ -71,17 +64,8 @@ void main() {
     }
 
     val flippedTextureRenderShader: IShader by lazy {
-        Shader(
-            vertCode = """
-attribute vec2 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
-
-void main() {
-    uv = UV;
-    uv.y = 1.0 - uv.y;
-    gl_Position = vec4(POSITION, 0.0, 1.0);
-}""",
+        PostShader(
+            flipY = true,
             fragCode = """            
 varying vec2 uv;
 uniform sampler2D tex;

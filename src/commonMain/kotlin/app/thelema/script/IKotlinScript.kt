@@ -1,8 +1,9 @@
 package app.thelema.script
 
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.SimulationComponent
 
-interface IKotlinScript: IEntityComponent {
+interface IKotlinScript: IEntityComponent, SimulationComponent {
     val imports: MutableList<IKotlinScript>
 
     var functionName: String

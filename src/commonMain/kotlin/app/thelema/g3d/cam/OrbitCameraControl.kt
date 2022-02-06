@@ -19,8 +19,8 @@ package app.thelema.g3d.cam
 import app.thelema.app.APP
 import app.thelema.ecs.*
 import app.thelema.input.*
-import app.thelema.math.IVec3
-import app.thelema.math.Vec3
+import app.thelema.math.IVec3C
+import app.thelema.math.vec3
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -68,20 +68,24 @@ class OrbitCameraControl(): IEntityComponent {
 
     var isEnabled: Boolean = !APP.isEditorMode
 
-    var target: IVec3 = Vec3()
+    private val _target = vec3()
+    var target: IVec3C
+        get() = _target
+        set(value) { _target.set(value) }
 
     protected var currentTargetDistance = 5f
 
     protected var startX: Float = 0f
     protected var startY: Float = 0f
 
-    protected val desiredPosNormalized = Vec3()
-    protected val camPos = Vec3()
+    protected val desiredPosNormalized = vec3()
+    protected val camPos = vec3()
 
     protected var pressedButton = 0
 
-    val left = Vec3(1f, 0f, 0f)
-    val up = Vec3(0f, 1f, 0f)
+    val position = vec3(0f, 0f, 0f)
+    val left = vec3(1f, 0f, 0f)
+    val up = vec3(0f, 1f, 0f)
 
     var isTranslationEnabled: Boolean = true
 
@@ -188,9 +192,8 @@ class OrbitCameraControl(): IEntityComponent {
 
             camPos.set(desiredPosNormalized).scl(currentTargetDistance).add(target)
 
-            camera.node.position.lerp(camPos, min(translationTransition * delta2, 1f))
-
-            camera.lookAt(camera.node.position, target)
+            position.lerp(camPos, min(translationTransition * delta2, 1f))
+            camera.lookAt(position, target)
 
             camera.viewMatrix.getRow0Vec3(left)
             camera.viewMatrix.getRow1Vec3(up)
@@ -215,12 +218,12 @@ class OrbitCameraControl(): IEntityComponent {
 
         if (dRight != 0f) {
             dRight *= translationSpeed * 0.01f * currentTargetDistance
-            target.add(left.x * dRight, left.y * dRight, left.z * dRight)
+            _target.add(left.x * dRight, left.y * dRight, left.z * dRight)
         }
 
         if (dUp != 0f) {
             dUp *= translationSpeed * 0.01f * currentTargetDistance
-            target.add(up.x * dUp, up.y * dUp, up.z * dUp)
+            _target.add(up.x * dUp, up.y * dUp, up.z * dUp)
         }
 
         if (dForward != 0f) {
@@ -264,8 +267,8 @@ class OrbitCameraControl(): IEntityComponent {
                     val deltaX = -translationSpeed * currentTargetDistance * (x - startX) / APP.width
                     val deltaY = translationSpeed * currentTargetDistance * (y - startY) / APP.height
 
-                    target.add(up.x * deltaY, up.y * deltaY, up.z * deltaY)
-                    target.add(left.x * deltaX, left.y * deltaX, left.z * deltaX)
+                    _target.add(up.x * deltaY, up.y * deltaY, up.z * deltaY)
+                    _target.add(left.x * deltaX, left.y * deltaX, left.z * deltaX)
                 }
             } else {
                 val dAzimuth = rotationSpeed * (x - startX) / APP.width

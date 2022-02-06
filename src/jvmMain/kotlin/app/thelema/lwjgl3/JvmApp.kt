@@ -43,6 +43,7 @@ import app.thelema.jvm.ode.RigidBodyPhysicsWorld
 import app.thelema.lwjgl3.audio.AudioListener
 import app.thelema.lwjgl3.audio.Sound
 import app.thelema.lwjgl3.audio.SoundLoader
+import app.thelema.utils.iterate
 import java.nio.IntBuffer
 import javax.swing.JOptionPane
 import kotlin.math.max
@@ -335,7 +336,7 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
         if (destroyBuffersOnExit) {
             val buffers = ArrayList(data.allocatedBuffers.keys)
-            buffers.forEach { it.destroy() }
+            buffers.iterate { it.destroy() }
         }
 
         running = false

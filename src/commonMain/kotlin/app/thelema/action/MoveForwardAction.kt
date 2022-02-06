@@ -44,16 +44,16 @@ class MoveForwardAction: ActionAdapter() {
             val node = getContextComponent<ITransformNode>()
             val physicsContext = getContextComponent<PhysicsProperties>()
             if (node != null && physicsContext != null) {
-                node.rotation.rotateVec3(tmp.set(0f, 0f, 1f))
+                tmp.set(0f, 0f, 1f).mul(node.rotation)
 
                 val speed = physicsContext.linearVelocity * delta
                 val diff = length - passed
                 if (abs(diff) < speed) {
-                    node.position.add(tmp.scl(diff))
+                    node.translate(tmp.scl(diff))
                     passed += diff
                     isRunning = false
                 } else {
-                    node.position.add(tmp.scl(speed))
+                    node.translate(tmp.scl(speed))
                     passed += speed
                 }
                 node.requestTransformUpdate(true)

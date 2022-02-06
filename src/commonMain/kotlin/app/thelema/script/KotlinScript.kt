@@ -30,17 +30,17 @@ abstract class KotlinScriptAdapter: IKotlinScript {
     override var functionName: String = ""
 
     override var entityOrNull: IEntity? = null
-        set(value) {
-            field?.component<SimulationNode>()?.removeSimulationListener(simulationListener)
-            field = value
-            value?.component<SimulationNode>()?.addSimulationListener(simulationListener)
-        }
 
     override var isComponentScript: Boolean = true
 
-    private val simulationListener = object : SimulationListener {
-        override fun startSimulation() {
-            execute()
-        }
+    override var isSimulationRunning: Boolean = false
+
+    override fun startSimulation() {
+        isSimulationRunning = true
+        execute()
+    }
+
+    override fun stopSimulation() {
+        isSimulationRunning = false
     }
 }

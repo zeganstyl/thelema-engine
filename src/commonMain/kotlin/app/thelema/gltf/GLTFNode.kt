@@ -31,6 +31,7 @@ class GLTFNode(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     val weights: MutableList<Float> = ArrayList()
     var matrix: IMat4? = null
     val rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
+    val rotationMatrix: IMat3 = Mat3()
     val scale: IVec3 = Vec3(1f, 1f, 1f)
     val translation: IVec3 = Vec3()
 
@@ -57,13 +58,14 @@ class GLTFNode(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                     i++
                 }
             }
-            mat.getTranslation(translation)
-            mat.getRotation(rotation)
-            mat.getScale(scale)
+            mat.getTRS(translation, rotationMatrix, scale)
         } else {
             json.array("translation") { translation.set(float(0), float(1), float(2)) }
             json.array("rotation") { rotation.set(float(0), float(1), float(2), float(3)) }
             json.array("scale") { scale.set(float(0), float(1), float(2)) }
+
+            rotationMatrix.idt()
+            rotationMatrix.rotateByQuaternion(rotation)
         }
 
         weights.clear()

@@ -4,6 +4,7 @@ import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3
+import app.thelema.math.IVec3C
 import app.thelema.shader.IShader
 
 interface IRenderable: IEntityComponent {
@@ -13,7 +14,7 @@ interface IRenderable: IEntityComponent {
 
     var translucencyPriority: Int
 
-    val worldPosition: IVec3
+    val worldPosition: IVec3C
 
     fun visibleInFrustum(frustum: Frustum): Boolean
 

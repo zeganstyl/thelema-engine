@@ -30,6 +30,7 @@ kotlin {
             dependencies {
                 implementation(project(rootProject.path))
                 implementation("org.jetbrains.kotlin:kotlin-scripting-common:$kotlin_version")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
             }
         }
 

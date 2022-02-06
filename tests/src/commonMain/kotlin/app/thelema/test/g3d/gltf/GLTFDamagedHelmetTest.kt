@@ -27,7 +27,7 @@ import app.thelema.res.load
 /** [Description](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/MultiUVTest)
  *
  * @author zeganstyl */
-class GLTFDamagedHelmetTest: GLTFTestBase("gltf/DamagedHelmet.glb") {
+class GLTFDamagedHelmetTest: GLTFTestBase("gltf/house_disaster/scene.gltf") {
     override fun loaded(mainScene: IEntity, gltf: GLTF) {
         super.loaded(mainScene, gltf)
         mainScene.orbitCameraControl()

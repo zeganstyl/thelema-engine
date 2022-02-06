@@ -5,6 +5,7 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.IScene
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3
+import app.thelema.math.IVec3C
 import app.thelema.math.MATH
 import app.thelema.shader.IShader
 import app.thelema.utils.iterate
@@ -25,7 +26,7 @@ class ParticleSystem: IParticleSystem {
 
     override var translucencyPriority: Int = 1
 
-    override val worldPosition: IVec3
+    override val worldPosition: IVec3C
         get() = MATH.Zero3
 
     override fun getOrCreateParticles(material: IParticleMaterial): IParticles {

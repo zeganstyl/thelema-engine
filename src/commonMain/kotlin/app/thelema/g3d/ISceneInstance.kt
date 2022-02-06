@@ -9,6 +9,8 @@ interface ISceneInstance: IEntityComponent {
 
     var sceneClassEntity: IEntity?
 
+    var provider: ISceneProvider?
+
     var sceneInstance: IEntity?
 
     fun reloadInstance()

@@ -34,23 +34,11 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         OdeHelper.initODE()
     }
 
-    val simulationListener = object : SimulationListener {
-        override fun startSimulation() {
-            this@RigidBodyPhysicsWorld.startSimulation()
-        }
-
-        override fun stopSimulation() {
-            this@RigidBodyPhysicsWorld.stopSimulation()
-        }
-    }
-
     override var entityOrNull: IEntity? = null
         set(value) {
-            field?.component<SimulationNode>()?.removeSimulationListener(simulationListener)
             field = value
             value?.forEachComponent { addedSiblingComponent(it) }
             value?.forEachComponentInBranch { addedComponentToBranch(it) }
-            value?.component<SimulationNode>()?.addSimulationListener(simulationListener)
         }
 
     var simulationRequest: Int = 0
@@ -170,6 +158,14 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         gravity = gravity
     }
 
+    override fun startSimulation() {
+        isSimulationRunning = true
+    }
+
+    override fun stopSimulation() {
+        isSimulationRunning = false
+    }
+
     override fun addedEntityToBranch(entity: IEntity) {
         entity.forEachChildEntity { child ->
             child.forEachComponentInBranch { addedComponentToBranch(it) }
@@ -275,7 +271,7 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
         private fun <T: IPhysicalShape> ComponentDescriptor<T>.setupShape() {
             val desc = this as ComponentDescriptor<IPhysicalShape>
             desc.float(IPhysicalShape::mass)
-            desc.vec3(IPhysicalShape::positionOffset)
+            desc.vec3C(IPhysicalShape::positionOffset)
             desc.quaternion(IPhysicalShape::rotationOffset)
         }
 
@@ -286,7 +282,6 @@ class RigidBodyPhysicsWorld: IRigidBodyPhysicsWorld {
                 float(IRigidBodyPhysicsWorld::fixedDelta, 0.02f)
                 int(IRigidBodyPhysicsWorld::iterations, 10)
                 int(IRigidBodyPhysicsWorld::maxContacts, 40)
-                bool(IRigidBodyPhysicsWorld::isSimulationRunning)
 
                 descriptorI<IPlaneShape>(::PlaneShape) {
                     setupShape()

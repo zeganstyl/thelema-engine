@@ -33,13 +33,13 @@ import kotlin.native.concurrent.ThreadLocal
  * @author zeganstyl */
 interface ITransformNode: IEntityComponent {
     /** Local translation, relative to the parent. */
-    val position: IVec3
+    var position: IVec3C
 
-    /** Local rotation, relative to the parent. It may not work, check type of this node [TransformDataType]. */
-    val rotation: IVec4
+    /** Local rotation. */
+    var rotation: IMat3C
 
-    /** Local scale, relative to the parent. It may not work, check type of this node [TransformDataType]. */
-    val scale: IVec3
+    /** Local scale. */
+    var scale: IVec3C
 
     /** Global world transform, product of multiply local and parent transform data, calculated via [updateTransform]. */
     val worldMatrix: IMat4
@@ -47,7 +47,7 @@ interface ITransformNode: IEntityComponent {
     val previousWorldMatrix: IMat4?
 
     /** Global position */
-    val worldPosition: IVec3
+    val worldPosition: IVec3C
 
     override val componentName: String
         get() = "TransformNode"
@@ -60,16 +60,7 @@ interface ITransformNode: IEntityComponent {
 
     fun getUpVector(out: IVec3): IVec3 = worldMatrix.getWorldUp(out).nor()
 
-    fun rotateAroundAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float) {
-        if (MATH.isNotZero(radians)) {
-            if (MATH.isZero(axisX) && MATH.isZero(axisZ) && MATH.isEqual(axisY, 1f)) {
-                rotation.rotateQuaternionByY(radians)
-            } else {
-                rotation.rotateQuaternionByAxis(axisX, axisY, axisZ, radians)
-            }
-            requestTransformUpdate()
-        }
-    }
+    fun rotateAroundAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float)
 
     /** Rotate around Up vector */
     fun rotateAroundUp(radians: Float) {
@@ -85,50 +76,19 @@ interface ITransformNode: IEntityComponent {
         }
     }
 
-    fun translate(x: Float, y: Float, z: Float) {
-        position.add(x, y, z)
-        requestTransformUpdate()
-    }
+    fun translate(x: Float, y: Float, z: Float)
 
-    fun translate(offset: IVec3) {
-        position.add(offset)
-        requestTransformUpdate()
-    }
+    fun translate(offset: IVec3C)
 
-    fun translateForward(distance: Float) {
-        // vector normalization
-        val x = worldMatrix.m02
-        val y = worldMatrix.m12
-        val z = worldMatrix.m22
-        val len2 = x * x + y * y + z * z
-        if (len2 == 0f || len2 == 1f) {
-            position.add(x * distance, y * distance, z * distance)
-        } else {
-            val inv = MATH.invSqrt(len2)
-            position.add(x * inv * distance, y * inv * distance, z * inv * distance)
-        }
-        requestTransformUpdate()
-    }
+    fun translateForward(distance: Float)
 
-    fun setPosition(x: Float, y: Float, z: Float) {
-        position.set(x, y, z)
-        requestTransformUpdate()
-    }
+    fun setPosition(x: Float, y: Float, z: Float)
 
-    fun setPositionUpdate(position: IVec3) {
-        position.set(position.x, position.y, position.z)
-        requestTransformUpdate()
-    }
+    fun setRotation(qx: Float, qy: Float, qz: Float, qw: Float)
 
-    fun scale(x: Float, y: Float, z: Float) {
-        scale.add(x, y, z)
-        requestTransformUpdate()
-    }
+    fun addScale(x: Float, y: Float, z: Float)
 
-    fun setScale(x: Float, y: Float, z: Float) {
-        scale.set(x, y, z)
-        requestTransformUpdate()
-    }
+    fun setScale(x: Float, y: Float, z: Float)
 
     fun addListener(listener: TransformNodeListener)
 
@@ -172,13 +132,31 @@ class TransformNode: ITransformNode {
 
     override var useParentTransform: Boolean = true
 
-    override var position: IVec3 = Vec3(0f, 0f, 0f)
-        set(value) { field.set(value); requestTransformUpdate() }
-    override var rotation: IVec4 = Vec4(0f, 0f, 0f, 1f)
-        set(value) { field.set(value); requestTransformUpdate() }
-    override var scale: IVec3 = Vec3(1f, 1f, 1f)
-        set(value) { field.set(value); requestTransformUpdate() }
     override val worldMatrix: IMat4 = Mat4()
+
+    private val _position = Vec3()
+    override var position: IVec3C
+        get() = _position
+        set(value) {
+            _position.set(value)
+            requestTransformUpdate()
+        }
+
+    private val _rotation = Mat3()
+    override var rotation: IMat3C
+        get() = _rotation
+        set(value) {
+            _rotation.set(value)
+            requestTransformUpdate()
+        }
+
+    private val _scale = Vec3(1f, 1f, 1f)
+    override var scale: IVec3C
+        get() = _scale
+        set(value) {
+            _scale.set(value)
+            requestTransformUpdate()
+        }
 
     override val worldPosition: IVec3 = Vec3Mat4Translation(worldMatrix)
 
@@ -187,6 +165,76 @@ class TransformNode: ITransformNode {
         get() = previousWorldMatrixInternal
 
     var listeners: ArrayList<TransformNodeListener>? = null
+
+    private inline fun notifyPropChanged(prop: String, value: Any?) {
+        IEntityComponent.propertiesLinkingMap?.get(this)?.also { listeners ->
+            listeners.iterate { it.setProperty(prop, value) }
+        }
+    }
+
+    override fun translateForward(distance: Float) {
+        // vector normalization
+        val x = worldMatrix.m02
+        val y = worldMatrix.m12
+        val z = worldMatrix.m22
+        val len2 = x * x + y * y + z * z
+        if (len2 == 0f || len2 == 1f) {
+            _position.add(x * distance, y * distance, z * distance)
+        } else {
+            val inv = MATH.invSqrt(len2)
+            _position.add(x * inv * distance, y * inv * distance, z * inv * distance)
+        }
+        notifyPropChanged(ITransformNode::position.name, _position)
+        requestTransformUpdate()
+    }
+
+    override fun translate(offset: IVec3C) {
+        _position.add(offset)
+        notifyPropChanged(ITransformNode::position.name, _position)
+        requestTransformUpdate()
+    }
+
+    override fun translate(x: Float, y: Float, z: Float) {
+        _position.add(x, y, z)
+        notifyPropChanged(ITransformNode::position.name, _position)
+        requestTransformUpdate()
+    }
+
+    override fun setPosition(x: Float, y: Float, z: Float) {
+        _position.set(x, y, z)
+        notifyPropChanged(ITransformNode::position.name, _position)
+        requestTransformUpdate()
+    }
+
+    override fun setRotation(qx: Float, qy: Float, qz: Float, qw: Float) {
+        _rotation.setAsRotation(qx, qy, qz, qw)
+        notifyPropChanged(ITransformNode::rotation.name, _rotation)
+        requestTransformUpdate()
+    }
+
+    override fun setScale(x: Float, y: Float, z: Float)  {
+        _scale.set(x, y, z)
+        notifyPropChanged(ITransformNode::scale.name, _scale)
+        requestTransformUpdate()
+    }
+
+    override fun addScale(x: Float, y: Float, z: Float) {
+        _scale.add(x, y, z)
+        ITransformNode::position.name
+        notifyPropChanged(ITransformNode::scale.name, _scale)
+        requestTransformUpdate()
+    }
+
+    override fun rotateAroundAxis(axisX: Float, axisY: Float, axisZ: Float, radians: Float)  {
+        if (MATH.isNotZero(radians)) {
+            if (MATH.isZero(axisX) && MATH.isZero(axisZ) && MATH.isEqual(axisY, 1f)) {
+                _rotation.rotateAroundY33(radians)
+            } else {
+                _rotation.rotateAroundAxis(axisX, axisY, axisZ, radians)
+            }
+            requestTransformUpdate()
+        }
+    }
 
     override fun addListener(listener: TransformNodeListener) {
         if (listeners == null) listeners = ArrayList(1)
@@ -235,7 +283,7 @@ class TransformNode: ITransformNode {
     }
 
     override fun updateTransform() {
-        worldMatrix.set(position, rotation, scale)
+        worldMatrix.set(_position, _rotation, _scale)
 
         if (useParentTransform) {
             val parent = entityOrNull?.parentEntity?.componentOrNull(componentName) as ITransformNode?
@@ -251,9 +299,9 @@ class TransformNode: ITransformNode {
     }
 
     override fun reset() {
-        position.set(0f, 0f, 0f)
-        rotation.set(0f, 0f, 0f, 1f)
-        scale.set(1f, 1f, 1f)
+        _position.set(0f, 0f, 0f)
+        _rotation.idt()
+        _scale.set(1f, 1f, 1f)
         worldMatrix.idt()
         updateTransform()
     }
@@ -269,27 +317,20 @@ class TransformNode: ITransformNode {
         var isPreviousMatrixEnabled: Boolean = true
 
         fun setupTransformNodeComponents() {
-            ECS.descriptor({ TransformNode() }) {
-                setAliases(ITransformNode::class)
-                vec3(TransformNode::position)
-                quaternion(TransformNode::rotation)
-                vec3(TransformNode::scale, MATH.One3)
-                mat4("worldMatrix", { worldMatrix }) { worldMatrix.set(it) }
+            ECS.descriptorI<ITransformNode>({ TransformNode() }) {
+                vec3C(ITransformNode::position)
+                mat3C(ITransformNode::rotation)
+                vec3C(ITransformNode::scale, MATH.One3)
 
-                descriptor({ Scene() }) {
-                    setAliases(IScene::class)
+                descriptorI<IScene>({ Scene() }) {
+                    refAbs(IScene::renderingPipeline)
+                    ref(IScene::activeCamera)
 
-                    refAbs(Scene::renderingPipeline)
-                    ref(Scene::activeCamera)
-
-                    descriptor({ SceneInstance() }) {
-                        setAliases(ISceneInstance::class)
-                        refAbs(SceneInstance::provider)
+                    descriptorI<ISceneInstance>({ SceneInstance() }) {
+                        refAbs(ISceneInstance::provider)
                     }
 
-                    descriptor({ SceneProvider() }) {
-                        setAliases(ISceneProvider::class)
-                    }
+                    descriptorI<ISceneProvider>({ SceneProvider() }) {}
                 }
                 descriptor { SimpleSkybox() }
                 descriptor { Skybox() }
@@ -314,7 +355,16 @@ class TransformNode: ITransformNode {
                 }
                 descriptor({ Camera() }) {
                     setAliases(ICamera::class)
-                    descriptor { OrbitCameraControl() }
+                    descriptor({ OrbitCameraControl() }) {
+                        float(OrbitCameraControl::azimuth, 0f)
+                        float(OrbitCameraControl::zenith, 1f)
+                        float(OrbitCameraControl::minTargetDistance, -1f)
+                        float(OrbitCameraControl::maxTargetDistance, -1f)
+                        float(OrbitCameraControl::targetDistance, 5f)
+                        vec3C(OrbitCameraControl::target)
+                        float(OrbitCameraControl::scrollFactor, 0.1f)
+                        float(OrbitCameraControl::scrollTransition, 0.3f)
+                    }
                 }
             }
         }

@@ -8,6 +8,7 @@ import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.RES
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.host.BasicScriptingHost
 
@@ -55,6 +56,14 @@ object KotlinScripting {
             }
             else -> {
                 result.reports.forEach { LOG.error(it.render()) }
+                val lines = code.text.split('\n')
+                val strBuild = StringBuilder()
+                var i = 1
+                lines.iterate {
+                    strBuild.append("$i   $it\n")
+                    i++
+                }
+                println(strBuild.toString())
             }
         }
 
@@ -62,12 +71,11 @@ object KotlinScripting {
     }
 
     suspend fun eval(properties: Map<String, Any?>, code: SourceCode, imports: List<SourceCode>) {
-        var fullCode = ""
-        imports.forEach { fullCode += it.text }
-        fullCode += code.text
+        val fullCode = code.text
 
         var script = cachedScripts[fullCode]
         if (script == null) {
+            Studio.showStatus("Script compilation...")
             script = compile(code, properties, imports)
             if (script != null) cachedScripts[fullCode] = script
         }
@@ -78,7 +86,16 @@ object KotlinScripting {
                 ScriptEvaluationConfiguration {
                     providedProperties.put(properties)
                 }
-            )
+            ).onFailure {
+                val lines = code.text.split('\n')
+                val strBuild = StringBuilder()
+                var i = 1
+                lines.iterate {
+                    strBuild.append("$i   $it\n")
+                    i++
+                }
+                println(strBuild.toString())
+            }
         }
     }
 

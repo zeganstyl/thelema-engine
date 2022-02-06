@@ -44,11 +44,11 @@ class RotateYAction: ActionAdapter() {
                 val speed = physicsContext.angularVelocity * (if (angleLength < 0f) -delta else delta)
                 val diff = angleLength - passed
                 if (abs(diff) < abs(speed)) {
-                    node.rotation.setQuaternionByAxis(0f, 1f, 0f, node.rotation.getQuaternionAngleAround(0f, 1f, 0f) + diff)
+                    node.rotateAroundUp(diff)
                     passed += diff
                     isRunning = false
                 } else {
-                    node.rotation.setQuaternionByAxis(0f, 1f, 0f, node.rotation.getQuaternionAngleAround(0f, 1f, 0f) + speed)
+                    node.rotateAroundUp(speed)
                     passed += speed
                 }
                 node.requestTransformUpdate()

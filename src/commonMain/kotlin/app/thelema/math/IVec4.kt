@@ -22,39 +22,31 @@ import kotlin.math.pow
 
 /** 4-dimensional vector of floats. Suitable for working with color and [quaternions](http://en.wikipedia.org/wiki/Quaternion)
  * @author badlogicgames@gmail.com, vesuvio, xoppa, zeganstyl */
-interface IVec4: IVec {
-    var x: Float
-    var y: Float
-    var z: Float
-    var w: Float
+interface IVec4: IVec4C, IVec {
+    override var x: Float
+    override var y: Float
+    override var z: Float
+    override var w: Float
 
     /** Red component */
-    var r: Float
+    override var r: Float
         get() = x
-        set(value) {
-            x = value
-        }
+        set(value) { x = value }
 
     /** Green component */
-    var g: Float
+    override var g: Float
         get() = y
-        set(value) {
-            y = value
-        }
+        set(value) { y = value }
 
     /** Blue component */
-    var b: Float
+    override var b: Float
         get() = z
-        set(value) {
-            z = value
-        }
+        set(value) { z = value }
 
     /** Transparency component */
-    var a: Float
+    override var a: Float
         get() = w
-        set(value) {
-            w = value
-        }
+        set(value) { w = value }
 
     override val numComponents: Int
         get() = 4
@@ -64,52 +56,6 @@ interface IVec4: IVec {
 
     override val isUnit: Boolean
         get() = isUnit(0.000000001f)
-
-    /** Check if vector is equals (0, 0, 0, 1) */
-    val isIdentity: Boolean
-        get() = x == 0f && y == 0f && z == 0f && w == 1f
-
-    /** Check if vector is not equals (0, 0, 0, 1) */
-    val isNotIdentity: Boolean
-        get() = x != 0f || y != 0f || z != 0f || w != 1f
-
-    /** Get the pole of the gimbal lock, if any.
-     * Positive (+1) for north pole, negative (-1) for south pole, zero (0) when no gimbal lock */
-    val gimbalPole: Int
-        get() {
-            val t = y * x + z * w
-            return if (t > 0.499f) 1 else if (t < -0.499f) -1 else 0
-        }
-
-    /** Get the roll euler angle in radians, which is the rotation around the z axis.
-     * Requires that this quaternion is normalized.
-     * Rotation around the z axis in radians (between -PI and +PI) */
-    val roll: Float
-        get() {
-            val pole = gimbalPole
-            return if (pole == 0) MATH.atan2(2f * (w * z + y * x), 1f - 2f * (x * x + z * z)) else pole * 2f * MATH.atan2(y, w)
-        }
-
-    /** Get the pitch euler angle in radians, which is the rotation around the x axis.
-     * Requires that this quaternion is normalized.
-     * Rotation around the x axis in radians (between -(PI/2) and +(PI/2)) */
-    val pitch: Float
-        get() {
-            val pole = gimbalPole
-            return if (pole == 0) MATH.asin(MATH.clamp(2f * (w * x - z * y), -1f, 1f)) else pole * MATH.PI * 0.5f
-        }
-
-    /** Get the yaw euler angle in radians, which is the rotation around the y axis. Requires that this quaternion is normalized.
-     * @return the rotation around the y axis in radians (between -PI and +PI)
-     */
-    val yaw: Float
-        get() = if (gimbalPole == 0) MATH.atan2(2f * (y * w + x * z), 1f - 2f * (y * y + x * x)) else 0f
-
-    /** Get the angle in radians of the rotation this quaternion represents. Does not normalize the quaternion.
-     * @return the angle in radians of the rotation
-     */
-    val angle: Float
-        get() = 2f * MATH.acos(if (w > 1f) (w / len()) else w)
 
     override fun isUnit(margin: Float): Boolean {
         return abs(len2() - 1f) < margin
@@ -130,6 +76,14 @@ interface IVec4: IVec {
             2 -> z = value
             3 -> w = value
         }
+    }
+
+    override fun set(other: IVecC): IVec4 {
+        x = other.getComponent(0)
+        y = other.getComponent(1)
+        z = other.getComponent(2)
+        w = other.getComponent(3)
+        return this
     }
 
     fun set(x: Float, y: Float, z: Float, w: Float): IVec4 {
@@ -161,7 +115,7 @@ interface IVec4: IVec {
 
     /** Adds the given vector to this component
      * @return This vector for chaining. */
-    fun add(other: IVec4) = add(other.x, other.y, other.z, other.w)
+    fun add(other: IVec4C) = add(other.x, other.y, other.z, other.w)
 
     /** Adds the given vector to this component
      * @return This vector for chaining. */
@@ -169,7 +123,7 @@ interface IVec4: IVec {
 
     /** Subtracts the other vector from this vector.
      * @return This vector for chaining */
-    fun sub(other: IVec4) = sub(other.x, other.y, other.z, other.w)
+    fun sub(other: IVec4C) = sub(other.x, other.y, other.z, other.w)
 
     /** Subtracts the other vector from this vector.
      * @return This vector for chaining */
@@ -181,21 +135,11 @@ interface IVec4: IVec {
 
     /** Scales this vector by the given values
      * @return This vector for chaining */
-    fun scl(other: IVec4) = set(x * other.x, y * other.y, z * other.z, w * other.w)
+    fun scl(other: IVec4C) = set(x * other.x, y * other.y, z * other.z, w * other.w)
 
     /** Scales this vector by the given values
      * @return This vector for chaining */
     fun scl(vx: Float, vy: Float, vz: Float, vw: Float) = set(x * vx, y * vy, z * vz, w * vw)
-
-    /** Returns the dot product between this and the given vector. */
-    fun dot(other: IVec4): Float = x * other.x + y * other.y + z * other.z + w * other.w
-
-    override fun len2(): Float = x * x + y * y + z * z + w * w
-
-    override fun len(): Float = MATH.sqrt(x * x + y * y + z * z + w * w)
-
-    /** Returns the dot product between this and the given vector. */
-    fun dot(x: Float, y: Float, z: Float, w: Float): Float = this.x * x + this.y * y + this.z * z + this.w * w
 
     /** Normalize to unit length
      * @return this object for chaining
@@ -212,7 +156,7 @@ interface IVec4: IVec {
         return this
     }
 
-    fun lerp(target: IVec4, alpha: Float): IVec4 {
+    fun lerp(target: IVec4C, alpha: Float): IVec4 {
         x += alpha * (target.x - x)
         y += alpha * (target.y - y)
         z += alpha * (target.z - z)
@@ -251,7 +195,7 @@ interface IVec4: IVec {
      * @param other Quaternion to multiply with
      * @return This quaternion for chaining
      */
-    fun mul(other: IVec4): IVec4 {
+    fun mul(other: IVec4C): IVec4 {
         val newX = w * other.x + x * other.w + y * other.z - z * other.y
         val newY = w * other.y + y * other.w + z * other.x - x * other.z
         val newZ = w * other.z + z * other.w + x * other.y - y * other.x
@@ -288,7 +232,7 @@ interface IVec4: IVec {
      * @param other Quaternion to multiply with
      * @return This quaternion for chaining
      */
-    fun mulLeft(other: IVec4): IVec4 {
+    fun mulLeft(other: IVec4C): IVec4 {
         val newX = other.w * x + other.x * w + other.y * z - other.z * y
         val newY = other.w * y + other.y * w + other.z * x - other.x * z
         val newZ = other.w * z + other.z * w + other.x * y - other.y * x
@@ -318,22 +262,6 @@ interface IVec4: IVec {
         this.z = newZ
         this.w = newW
         return this
-    }
-
-    /** Rotates given vector by this quaternion */
-    fun rotateVec3(vec3: IVec3): IVec3 {
-        // vec4(vec3, 0) multiply conjugate(this)
-        val newX = vec3.x * w - vec3.y * z + vec3.z * y
-        val newY = vec3.y * w - vec3.z * x + vec3.x * z
-        val newZ = vec3.z * w - vec3.x * y + vec3.y * x
-        val newW = vec3.x * x + vec3.y * y + vec3.z * z
-
-        // multiply
-        vec3.x = w * newX + x * newW + y * newZ - z * newY
-        vec3.y = w * newY + y * newW + z * newX - x * newZ
-        vec3.z = w * newZ + z * newW + x * newY - y * newX
-
-        return vec3
     }
 
     /** Sets the quaternion to an identity Quaternion. */
@@ -395,36 +323,32 @@ interface IVec4: IVec {
     }
 
     /** Sets the Quaternion from the given matrix, optionally removing any scaling.  */
-    fun setQuaternion(normalizeAxes: Boolean, mat: Mat3): IVec4 {
-        return setQuaternionByAxes(normalizeAxes, mat.values[Mat3.M00], mat.values[Mat3.M01], mat.values[Mat3.M02],
-            mat.values[Mat3.M10], mat.values[Mat3.M11], mat.values[Mat3.M12], mat.values[Mat3.M20],
-            mat.values[Mat3.M21], mat.values[Mat3.M22])
-    }
+    fun setQuaternion(normalizeAxes: Boolean, mat: IMat3C): IVec4 = setQuaternionByAxes(normalizeAxes,
+        mat.m00, mat.m01, mat.m02,
+        mat.m10, mat.m11, mat.m12,
+        mat.m20, mat.m21, mat.m22
+    )
 
     /** Sets the Quaternion from the given rotation matrix, which must not contain scaling.  */
-    fun setQuaternion(mat: Mat3): IVec4 {
-        return setQuaternion(false, mat)
-    }
+    fun setQuaternion(mat: IMat3C): IVec4 = setQuaternion(false, mat)
 
     /**
      * Sets the Quaternion from the given x-, y- and z-axis which have to be orthonormal.
      *
      * Taken from Bones framework for JPCT, see http://www.aptalkarga.com/bones/ which in turn took it from Graphics Gem code at
      * ftp://ftp.cis.upenn.edu/pub/graphics/shoemake/quatut.ps.Z.
-     *
-     * @param xx x-axis x-coordinate
-     * @param xy x-axis y-coordinate
-     * @param xz x-axis z-coordinate
-     * @param yx y-axis x-coordinate
-     * @param yy y-axis y-coordinate
-     * @param yz y-axis z-coordinate
-     * @param zx z-axis x-coordinate
-     * @param zy z-axis y-coordinate
-     * @param zz z-axis z-coordinate
      */
-    fun setQuaternionByAxes(xx: Float, xy: Float, xz: Float, yx: Float, yy: Float, yz: Float, zx: Float, zy: Float, zz: Float): IVec4 {
-        return setQuaternionByAxes(false, xx, xy, xz, yx, yy, yz, zx, zy, zz)
-    }
+    fun setQuaternionByAxes(
+        xx: Float,
+        xy: Float,
+        xz: Float,
+        yx: Float,
+        yy: Float,
+        yz: Float,
+        zx: Float,
+        zy: Float,
+        zz: Float
+    ): IVec4 = setQuaternionByAxes(false, xx, xy, xz, yx, yy, yz, zx, zy, zz)
 
     /**
      *
@@ -439,15 +363,6 @@ interface IVec4: IVec {
      *
      *
      * @param normalizeAxes whether to normalize the axes (necessary when they contain scaling)
-     * @param xx x-axis x-coordinate
-     * @param xy x-axis y-coordinate
-     * @param xz x-axis z-coordinate
-     * @param yx y-axis x-coordinate
-     * @param yy y-axis y-coordinate
-     * @param yz y-axis z-coordinate
-     * @param zx z-axis x-coordinate
-     * @param zy z-axis y-coordinate
-     * @param zz z-axis z-coordinate
      */
     fun setQuaternionByAxes(
         normalizeAxes: Boolean,
@@ -552,7 +467,7 @@ interface IVec4: IVec {
      * @param alpha alpha in the range [0,1]
      * @return this quaternion for chaining
      */
-    fun slerp(end: IVec4, alpha: Float): IVec4 {
+    fun slerp(end: IVec4C, alpha: Float): IVec4 {
         val d = x * end.x + y * end.y + z * end.z + w * end.w
         val absDot = if (d < 0f) -d else d
         // Set the first and second scale for the interpolation
@@ -666,77 +581,15 @@ interface IVec4: IVec {
         return this
     }
 
-    /** Get the swing rotation and twist rotation for the specified axis. The twist rotation represents the rotation around the
-     * specified axis. The swing rotation represents the rotation of the specified axis itself, which is the rotation around an
-     * axis perpendicular to the specified axis.  The swing and twist rotation can be used to reconstruct the original
-     * quaternion: this = swing * twist
-     *
-     * See [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
-     *
-     * @param axisX the X component of the normalized axis for which to get the swing and twist rotation
-     * @param axisY the Y component of the normalized axis for which to get the swing and twist rotation
-     * @param axisZ the Z component of the normalized axis for which to get the swing and twist rotation
-     * @param swing will receive the swing rotation: the rotation around an axis perpendicular to the specified axis
-     * @param twist will receive the twist rotation: the rotation around the specified axis
-     */
-    fun getSwingTwist(axisX: Float, axisY: Float, axisZ: Float, swing: IVec4, twist: IVec4) {
-        val d = MATH.dot(x, y, z, axisX, axisY, axisZ)
-        twist.set(axisX * d, axisY * d, axisZ * d, w).nor()
-        if (d < 0) twist.scl(-1f)
-        swing.set(twist).conjugate().mulLeft(this)
-    }
-
-    /** Get the swing rotation and twist rotation for the specified axis. The twist rotation represents the rotation around the
-     * specified axis. The swing rotation represents the rotation of the specified axis itself, which is the rotation around an
-     * axis perpendicular to the specified axis.  The swing and twist rotation can be used to reconstruct the original
-     * quaternion: this = swing * twist
-     *
-     * See [calculation](http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition)
-     *
-     * @param axis the normalized axis for which to get the swing and twist rotation
-     * @param swing will receive the swing rotation: the rotation around an axis perpendicular to the specified axis
-     * @param twist will receive the twist rotation: the rotation around the specified axis
-     */
-    fun getSwingTwist(axis: IVec3, swing: IVec4, twist: IVec4) {
-        getSwingTwist(axis.x, axis.y, axis.z, swing, twist)
-    }
-
-    /** Get the angle in radians of the rotation around the specified axis. The axis must be normalized.
-     * @param axisX the x component of the normalized axis for which to get the angle
-     * @param axisY the y component of the normalized axis for which to get the angle
-     * @param axisZ the z component of the normalized axis for which to get the angle
-     * @return the angle in radians of the rotation around the specified axis
-     */
-    fun getQuaternionAngleAround(axisX: Float, axisY: Float, axisZ: Float): Float {
-        val d = MATH.dot(x, y, z, axisX, axisY, axisZ)
-        val l2 = len2(axisX * d, axisY * d, axisZ * d, w)
-        return if (MATH.isZero(l2)) 0f else (2f * MATH.acos(MATH.clamp(((if (d < 0f) -w else w) / MATH.sqrt(l2)), -1f, 1f)))
-    }
-
-    /** Get the angle in radians of the rotation around the specified axis. The axis must be normalized. */
-    fun getQuaternionAngleAround(axis: IVec3): Float {
-        return getQuaternionAngleAround(axis.x, axis.y, axis.z)
-    }
-
     override fun copy(): IVec4 = Vec4().set(this)
 
-    fun xyz(out: IVec3): IVec3 = out.set(x, y, z)
-    fun xy(out: IVec2): IVec2 = out.set(x, y)
-    fun xz(out: IVec2): IVec2 = out.set(x, z)
-    fun yz(out: IVec2): IVec2 = out.set(y, z)
-
-    fun isEqual(other: IVec4): Boolean = x == other.x && y == other.y && z == other.z && w == other.w
-
-    fun isNotEqual(other: IVec4): Boolean = x != other.x || y != other.y || z != other.z || w != other.w
-
-    operator fun plusAssign(other: IVec4) { add(other) }
-    operator fun minusAssign(other: IVec4) { sub(other) }
-    operator fun timesAssign(other: IVec4) { scl(other) }
+    operator fun plusAssign(other: IVec4C) { add(other) }
+    operator fun minusAssign(other: IVec4C) { sub(other) }
+    operator fun timesAssign(other: IVec4C) { scl(other) }
     operator fun timesAssign(value: Float) { scl(value) }
-
-    companion object {
-        fun len2(x: Float, y: Float, z: Float, w: Float): Float {
-            return x * x + y * y + z * z + w * w
-        }
-    }
 }
+
+fun vec4() = Vec4()
+fun vec4(other: IVec4C) = Vec4(other)
+fun vec4(x: Float, y: Float, z: Float, w: Float) = Vec4(x, y, z, w)
+fun vec4(rgba8888: Int) = Vec4(rgba8888)

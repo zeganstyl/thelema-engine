@@ -28,6 +28,10 @@ import app.thelema.math.Vec2
  * @author Kotcrab
  */
 class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextButton(text, style) {
+    constructor(text: String, block: MenuItem.() -> Unit): this(text) {
+        block(this)
+    }
+
     val image: UIImage = UIImage()
     private val shortcutLabel: Label = Label("")
     var subMenu: PopupMenu? = null
@@ -46,6 +50,7 @@ class MenuItem(text: String, style: TextButtonStyle = TextButtonStyle()) : TextB
         add(image).size(22f)
         add(label).expand().fill()
         label.alignH = -1
+        label.lineAlign = -1
         add(shortcutLabel).padLeft(10f).padRight(10f).align(Align.right)
         addListener(object : InputListener {
             override fun enter(event: InputEvent, x: Float, y: Float, pointer: Int, fromActor: Actor?) {

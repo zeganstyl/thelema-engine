@@ -30,7 +30,8 @@ class StudioComponentSystem(val hud: HeadUpDisplay): IComponentSystem {
         skybox {
             //val sky = "vec4(vec3(clamp(in1.y * 0.5 + 0.5, 0.0, 1.0)), 1.0)"
             //val sky = "vec4(mix(vec3(0.03, 0.08, 0.1), vec3(1.0), clamp(asin(in1.y) * 0.318 + 0.5, 0.0, 1.0)), 1.0)"
-            val sky = "vec4(vec3(clamp(0.75 - in1.y, 0.0, 0.75)), 1.0)"
+            //val sky = "vec4(vec3(clamp(0.75 - in1.y, 0.0, 0.75)), 1.0)"
+            val sky = "vec4(vec3(0.0, clamp(0.1 - in1.y * 2.0, 0.0, 0.1), 0.0), 1.0)"
             //val sky = "vec4(vec3(0.0), 1.0)"
 
             val op = shader.addNode(

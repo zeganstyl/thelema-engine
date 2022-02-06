@@ -18,16 +18,19 @@ package app.thelema.ecs
 
 import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
+import app.thelema.g3d.ISceneInstance
+import app.thelema.g3d.ISceneProvider
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.IProject
 import app.thelema.res.LoaderAdapter
 import app.thelema.res.load
 import app.thelema.utils.LOG
+import app.thelema.utils.iterate
 
 /** Loads entity from file.
  * Loaded entity will be [targetEntity]. */
-class EntityLoader: LoaderAdapter() {
+class EntityLoader: LoaderAdapter(), ISceneProvider {
     /** Root scene entity. You can load it with [load] */
     val targetEntity: IEntity = Entity()
 
@@ -36,11 +39,27 @@ class EntityLoader: LoaderAdapter() {
 
     var saveTargetEntityOnWrite = false
 
+    private val _sceneInstances = ArrayList<ISceneInstance>()
+    override val sceneInstances: List<ISceneInstance>
+        get() =_sceneInstances
+
+    override fun cancelProviding(instance: ISceneInstance) {
+        _sceneInstances.remove(instance)
+    }
+
+    override fun provideScene(instance: ISceneInstance) {
+        if (file?.exists() == true) load()
+        if (isLoaded) instance.sceneClassEntity = targetEntity
+        _sceneInstances.add(instance)
+    }
+
     override fun loadBase(file: IFile) {
         loadEntityTo(targetEntity, file)
 
         currentProgress = 1
         stop()
+
+        sceneInstances.iterate { it.sceneClassEntity = targetEntity }
     }
 
     fun loadEntityTo(entity: IEntity, file: IFile) {

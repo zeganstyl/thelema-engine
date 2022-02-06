@@ -3,6 +3,7 @@ package app.thelema.g3d.particles
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec3
+import app.thelema.math.IVec3C
 import app.thelema.math.Vec3
 
 class MoveParticleEffect: IParticleEffect, ParticleProcessingEffect, IEntityComponent {

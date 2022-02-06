@@ -17,9 +17,7 @@
 package app.thelema.phys
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.math.IMat4
-import app.thelema.math.IVec3
-import app.thelema.math.IVec4
+import app.thelema.math.*
 
 /** @author zeganstyl */
 interface IPhysicalShape: IEntityComponent {
@@ -28,9 +26,9 @@ interface IPhysicalShape: IEntityComponent {
 
     var body: IRigidBody?
 
-    var rotationOffset: IVec4
+    var rotationOffset: IVec4C
 
-    var positionOffset: IVec3
+    var positionOffset: IVec3C
 
     var mass: Float
 }

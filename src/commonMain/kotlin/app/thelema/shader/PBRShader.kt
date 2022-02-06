@@ -57,8 +57,7 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
     val normalTextureNode: Texture2DNode by lazy {
         Texture2DNode {
             sRGB = true
-            normalMapNode.normalColor = texColor
-            normalMapNode.uv = uv
+            normalMapNode.color = texColor
         }
     }
 

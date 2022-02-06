@@ -21,20 +21,20 @@ import kotlin.math.*
 
 /** 3-dimensional vector. Suitable for 3d-positions, normals and etc
  * @author badlogicgames@gmail.com, zeganstyl */
-interface IVec3 : IVec {
-    var x: Float
-    var y: Float
-    var z: Float
+interface IVec3 : IVec3C, IVec {
+    override var x: Float
+    override var y: Float
+    override var z: Float
 
-    var r: Float
+    override var r: Float
         get() = x
         set(value) { x = value }
 
-    var g: Float
+    override var g: Float
         get() = y
         set(value) { y = value }
 
-    var b: Float
+    override var b: Float
         get() = z
         set(value) { z = value }
 
@@ -70,10 +70,16 @@ interface IVec3 : IVec {
         return this
     }
 
-    fun set(other: IVec3) = set(other.x, other.y, other.z)
+    fun set(other: IVec3C): IVec3 {
+        set(other.x, other.y, other.z)
+        return this
+    }
 
     /** Copy x, y, z components */
-    fun set(other: IVec4) = set(other.x, other.y, other.z)
+    fun set(other: IVec4): IVec3 {
+        set(other.x, other.y, other.z)
+        return this
+    }
 
     /** Sets the components of the given vector and z-component
      *
@@ -87,7 +93,7 @@ interface IVec3 : IVec {
 
     /** Adds the given vector to this component
      * @return This vector for chaining. */
-    fun add(other: IVec3) = add(other.x, other.y, other.z)
+    fun add(other: IVec3C) = add(other.x, other.y, other.z)
 
     /** Adds the given vector to this component
      * @return This vector for chaining. */
@@ -99,7 +105,7 @@ interface IVec3 : IVec {
 
     /** Subtracts the other vector from this vector.
      * @return This vector for chaining */
-    fun sub(other: IVec3) = sub(other.x, other.y, other.z)
+    fun sub(other: IVec3C) = sub(other.x, other.y, other.z)
 
     /** Subtracts the other vector from this vector.
      * @return This vector for chaining */
@@ -118,60 +124,19 @@ interface IVec3 : IVec {
 
     /** Scales this vector by the given values
      * @return This vector for chaining */
-    fun scl(other: IVec3) = set(x * other.x, y * other.y, z * other.z)
+    fun scl(other: IVec3C) = set(x * other.x, y * other.y, z * other.z)
 
     /** Scales this vector by the given values
      * @return This vector for chaining */
     fun scl(vx: Float, vy: Float, vz: Float) = set(x * vx, y * vy, z * vz)
-
-    override fun len(): Float = MATH.sqrt(x * x + y * y + z * z)
-
-    override fun len2(): Float = x * x + y * y + z * z
-
-    /** @return the distance between this point and the given point */
-    fun dst(other: IVec3): Float {
-        val a = other.x - x
-        val b = other.y - y
-        val c = other.z - z
-        return MATH.sqrt(a * a + b * b + c * c)
-    }
-
-    /** @return the distance between this point and the given point */
-    fun dst(x: Float, y: Float, z: Float): Float {
-        val a = x - this.x
-        val b = y - this.y
-        val c = z - this.z
-        return MATH.sqrt(a * a + b * b + c * c)
-    }
-
-    /** @return The squared distance between this point and the given point. It is faster than [dst] */
-    fun dst2(other: IVec3): Float {
-        val a = other.x - x
-        val b = other.y - y
-        val c = other.z - z
-        return a * a + b * b + c * c
-    }
-
-    fun dst2(x: Float, y: Float, z: Float): Float {
-        val a = x - this.x
-        val b = y - this.y
-        val c = z - this.z
-        return a * a + b * b + c * c
-    }
 
     override fun nor(): IVec3 {
         val len2 = this.len2()
         return if (len2 == 0f || len2 == 1f) this else this.scl(MATH.invSqrt(len2))
     }
 
-    /** Returns the dot product between this and the given vector. */
-    fun dot(other: IVec3): Float = x * other.x + y * other.y + z * other.z
-
-    /** Returns the dot product between this and the given vector. */
-    fun dot(x: Float, y: Float, z: Float): Float = this.x * x + this.y * y + this.z * z
-
     /** Sets this vector to the cross product between it and the other vector. */
-    fun crs(other: IVec3) = set(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x)
+    fun crs(other: IVec3C) = set(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x)
 
     /** Sets this vector to the cross product between it and the other vector. */
     fun crs(x: Float, y: Float, z: Float) =
@@ -182,13 +147,11 @@ interface IVec3 : IVec {
      * @param matrix The matrix
      * @return This vector for chaining
      */
-    fun mul4x3(matrix: FloatArray): IVec3 {
-        return set(
-            x * matrix[0] + y * matrix[3] + z * matrix[6] + matrix[9],
-            x * matrix[1] + y * matrix[4] + z * matrix[7] + matrix[10],
-            x * matrix[2] + y * matrix[5] + z * matrix[8] + matrix[11]
-        )
-    }
+    fun mul4x3(matrix: FloatArray): IVec3 = set(
+        x * matrix[0] + y * matrix[3] + z * matrix[6] + matrix[9],
+        x * matrix[1] + y * matrix[4] + z * matrix[7] + matrix[10],
+        x * matrix[2] + y * matrix[5] + z * matrix[8] + matrix[11]
+    )
 
     /** Left-multiplies the vector by the given matrix, assuming the fourth (w) component of the vector is 1.
      * @param mat The matrix
@@ -216,21 +179,21 @@ interface IVec3 : IVec {
      * @param mat The matrix
      * @return This vector for chaining
      */
-    fun mul(mat: Mat3): IVec3 {
-        val values = mat.values
-        return set(x * values[Mat3.M00] + y * values[Mat3.M01] + z * values[Mat3.M02], x * values[Mat3.M10] + (y
-                * values[Mat3.M11]) + z * values[Mat3.M12], x * values[Mat3.M20] + y * values[Mat3.M21] + z * values[Mat3.M22])
-    }
+    fun mul(mat: IMat3C): IVec3 = set(
+        x * mat.m00 + y * mat.m01 + z * mat.m02,
+        x * mat.m10 + (y * mat.m11) + z * mat.m12,
+        x * mat.m20 + y * mat.m21 + z * mat.m22
+    )
 
     /** Multiplies the vector by the transpose of the given matrix.
      * @param mat The matrix
      * @return This vector for chaining
      */
-    fun traMul(mat: Mat3): IVec3 {
-        val values = mat.values
-        return set(x * values[Mat3.M00] + y * values[Mat3.M10] + z * values[Mat3.M20], x * values[Mat3.M01] + (y
-                * values[Mat3.M11]) + z * values[Mat3.M21], x * values[Mat3.M02] + y * values[Mat3.M12] + z * values[Mat3.M22])
-    }
+    fun traMul(mat: IMat3C): IVec3 = set(
+        x * mat.m00 + y * mat.m10 + z * mat.m20,
+        x * mat.m01 + (y * mat.m11) + z * mat.m21,
+        x * mat.m02 + y * mat.m12 + z * mat.m22
+    )
 
     /** Multiplies this vector by the given matrix dividing by w, assuming the fourth (w) component of the vector is 1.
      * This is mostly used to project/unproject vectors via a perspective projection matrix.
@@ -289,23 +252,7 @@ interface IVec3 : IVec {
     override val isUnit: Boolean
         get() = isUnit(0.000000001f)
 
-    fun isZero(margin: Float): Boolean {
-        return abs(len2()) < margin
-    }
-
-    fun isEqual(x: Float, y: Float, z: Float): Boolean = x == this.x && y == this.y && z == this.z
-    fun isEqual(other: IVec3): Boolean = x == other.x && y == other.y && z == other.z
-
-    fun isNotEqual(x: Float, y: Float, z: Float): Boolean = x != this.x || y != this.y || z != this.z
-    fun isNotEqual(other: IVec3): Boolean = x != other.x || y != other.y || z != other.z
-
-    override val isZero: Boolean
-        get() = x == 0f && y == 0f && z == 0f
-
-    val isNotZero: Boolean
-        get() = x != 0f || y != 0f || z != 0f
-
-    fun lerp(target: IVec3, alpha: Float): IVec3 {
+    fun lerp(target: IVec3C, alpha: Float): IVec3 {
         x += alpha * (target.x - x)
         y += alpha * (target.y - y)
         z += alpha * (target.z - z)
@@ -319,7 +266,7 @@ interface IVec3 : IVec {
      * @param alpha The interpolation coefficient
      * @return This vector for chaining.
      */
-    fun slerp(target: IVec3, alpha: Float): IVec3 {
+    fun slerp(target: IVec3C, alpha: Float): IVec3 {
         val dot = dot(target)
         // If the inputs are too close for comfort, simply linearly interpolate.
         if (dot > 0.9995 || dot < -0.9995) return lerp(target, alpha)
@@ -334,18 +281,6 @@ interface IVec3 : IVec {
         val l2 = tx * tx + ty * ty + tz * tz
         val dl = st * if (l2 < 0.0001f) 1f else 1f / sqrt(l2.toDouble()).toFloat()
         return scl(cos(theta.toDouble()).toFloat()).add(tx * dl, ty * dl, tz * dl).nor()
-    }
-
-    fun limit(limit: Float): IVec3 {
-        return limit2(limit * limit)
-    }
-
-    fun limit2(limit2: Float): IVec3 {
-        val len2 = len2()
-        if (len2 > limit2) {
-            scl(sqrt(limit2 / len2.toDouble()).toFloat())
-        }
-        return this
     }
 
     fun setLength(len: Float): IVec3 {
@@ -366,34 +301,28 @@ interface IVec3 : IVec {
         return if (len2 < min2) scl(sqrt(min2 / len2.toDouble()).toFloat()) else this
     }
 
-    /**
-     * Returns the angle in radians between this vector and the vector
-     * parameter; the return value is constrained to the range [0,PI].
-     * @return   the angle in radians in the range [0,PI]
-     */
-    fun angle(other: IVec3): Float {
-        var vDot = this.dot(other) / (this.len() * other.len())
-        if (vDot < -1f) vDot = -1f
-        if (vDot > 1f) vDot = 1f
-        return acos(vDot)
+    fun limit(limit: Float): IVec3C {
+        return limit2(limit * limit)
     }
 
-    fun angleXZ(other: IVec3): Float =
-        atan2(x * other.z - z * other.x, x * other.x + z * other.z)
-
-    fun angleXY(other: IVec3): Float =
-        atan2(x * other.y - y * other.x, x * other.x + y * other.y)
+    fun limit2(limit2: Float): IVec3C {
+        val len2 = len2()
+        if (len2 > limit2) {
+            scl(sqrt(limit2 / len2.toDouble()).toFloat())
+        }
+        return this
+    }
 
     override fun copy(): IVec3 = Vec3().set(this)
 
-    fun xy(out: IVec2): IVec2 = out.set(x, y)
-    fun xz(out: IVec2): IVec2 = out.set(x, z)
-    fun yz(out: IVec2): IVec2 = out.set(y, z)
-
-    operator fun plusAssign(other: IVec3) { add(other) }
+    operator fun plusAssign(other: IVec3C) { add(other) }
     operator fun plusAssign(value: Float) { add(value) }
-    operator fun minusAssign(other: IVec3) { sub(other) }
+    operator fun minusAssign(other: IVec3C) { sub(other) }
     operator fun minusAssign(value: Float) { sub(value) }
-    operator fun timesAssign(other: IVec3) { scl(other) }
+    operator fun timesAssign(other: IVec3C) { scl(other) }
     operator fun timesAssign(value: Float) { scl(value) }
 }
+
+fun vec3(): IVec3 = Vec3()
+fun vec3(other: IVec3C): IVec3 = Vec3(other)
+fun vec3(x: Float, y: Float, z: Float): IVec3 = Vec3(x, y, z)

@@ -20,7 +20,6 @@ import app.thelema.app.APP
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
-import app.thelema.ecs.sibling
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.scene
@@ -34,7 +33,7 @@ import kotlin.math.abs
 interface ICamera: IEntityComponent {
     val node: ITransformNode
 
-    val eye: IVec3
+    val eye: IVec3C
         get() = node.position
 
     /** the projection matrix  */
@@ -89,7 +88,7 @@ interface ICamera: IEntityComponent {
 
     fun setNearFar(near: Float, far: Float)
 
-    fun lookAt(position: IVec3, target: IVec3, up: IVec3 = MATH.Y)
+    fun lookAt(position: IVec3C, target: IVec3C, up: IVec3C = MATH.Y)
 
     fun updatePreviousTransform()
 
@@ -231,6 +230,7 @@ class Camera(): ICamera {
         }
 
     protected val tmpM = Mat4()
+    protected val tmpM2 = Mat3()
 
     init {
         viewMatrix.setToLook(eye, forward, up)
@@ -292,13 +292,13 @@ class Camera(): ICamera {
         }
     }
 
-    override fun lookAt(position: IVec3, target: IVec3, up: IVec3) {
+    override fun lookAt(position: IVec3C, target: IVec3C, up: IVec3C) {
         forward.set(target).sub(position).nor()
-        this.eye.set(position)
+        node.position = position
         this.up.set(up)
         left.set(forward).crs(up).nor()
 
-        node.worldMatrix.apply {
+        node.rotation = tmpM2.apply {
             m00 = left.x
             m10 = left.y
             m20 = left.z
@@ -308,12 +308,6 @@ class Camera(): ICamera {
             m02 = forward.x
             m12 = forward.y
             m22 = forward.z
-            m03 = position.x
-            m13 = position.y
-            m23 = position.z
-
-            node.position.set(position)
-            getRotation(node.rotation)
         }
 
         requestCameraUpdate()
@@ -326,7 +320,7 @@ class Camera(): ICamera {
         left.set(1f, 0f, 0f)
         up.set(0f, 1f, 0f)
         forward.set(0f, 0f, 1f)
-        eye.set(0f, 0f, 0f)
+        //eye.set(0f, 0f, 0f)
         node.requestTransformUpdate()
 
         requestCameraUpdate()

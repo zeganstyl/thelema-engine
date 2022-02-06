@@ -556,14 +556,17 @@ open class Shader(
                 }
 
                 descriptor({ NormalMapNode() }) {
-                    shaderNodeInput(NormalMapNode::vertexPosition)
                     shaderNodeInput(NormalMapNode::tbn)
-                    shaderNodeInput(NormalMapNode::uv)
-                    shaderNodeInput(NormalMapNode::normalColor)
-                    shaderNodeInput(NormalMapNode::normalScale)
-                    shaderNodeOutput(NormalMapNode::tangent)
-                    shaderNodeOutput(NormalMapNode::biNormal)
+                    shaderNodeInput(NormalMapNode::color)
+                    shaderNodeInput(NormalMapNode::scale)
                     shaderNodeOutput(NormalMapNode::normal)
+                }
+
+                descriptor({ NormalToTBNNode() }) {
+                    shaderNodeInput(NormalToTBNNode::worldPosition)
+                    shaderNodeInput(NormalToTBNNode::normal)
+                    shaderNodeInput(NormalToTBNNode::uv)
+                    shaderNodeOutput(NormalToTBNNode::tbn)
                 }
 
                 descriptor({ PBRNode() }) {

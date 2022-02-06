@@ -27,10 +27,10 @@ data class Vec3(
     constructor(x: Double, y: Double, z: Double): this(x.toFloat(), y.toFloat(), z.toFloat())
 
     /** Creates a vector from the given vector */
-    constructor(other: IVec3): this(other.x, other.y, other.z)
+    constructor(other: IVec3C): this(other.x, other.y, other.z)
 
     /** Copy x, y, z components */
-    constructor(other: IVec4): this(other.x, other.y, other.z)
+    constructor(other: IVec4C): this(other.x, other.y, other.z)
 
     /** Converts this `Vector3` to a string in the format `(x,y,z)`. */
     override fun toString() = "($x,$y,$z)"

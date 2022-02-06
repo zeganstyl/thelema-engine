@@ -50,7 +50,7 @@ class TranslationGizmo {
         moveType = MOVE_NONE
     }
 
-    private fun rayTrace(ray: Ray, norm: IVec3, out: IVec3): IVec3 {
+    private fun rayTrace(ray: Ray, norm: IVec3C, out: IVec3): IVec3 {
         plane.set(worldMatrix.getTranslation(tmpVec), norm)
         plane.getIntersectionPoint(ray, tmpVec)
         out.set(tmpVec)
@@ -118,7 +118,7 @@ class TranslationGizmo {
                 }
 
                 node?.also {
-                    it.position.add(
+                    it.translate(
                         worldMatrix.m03 - it.worldMatrix.m03,
                         worldMatrix.m13 - it.worldMatrix.m13,
                         worldMatrix.m23 - it.worldMatrix.m23

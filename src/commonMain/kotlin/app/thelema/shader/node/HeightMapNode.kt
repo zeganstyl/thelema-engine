@@ -58,18 +58,18 @@ class HeightMapNode: ShaderNode() {
     override fun declarationVert(out: StringBuilder) {
         super.declarationVert(out)
         out.append(sampler.uniformRefEnd)
-        out.append(texColor.varOutRefEnd)
-        out.append(height.varOutRefEnd)
-        out.append(outputPosition.varOutRefEnd)
-        out.append(uv.varOutRefEnd)
+        out.append(texColor.outRefEnd)
+        out.append(height.outRefEnd)
+        out.append(outputPosition.outRefEnd)
+        out.append(uv.outRefEnd)
     }
 
     override fun declarationFrag(out: StringBuilder) {
         super.declarationFrag(out)
-        out.append(texColor.varInRefEnd)
-        out.append(height.varInRefEnd)
-        out.append(outputPosition.varInRefEnd)
-        out.append(uv.varInRefEnd)
+        out.append(texColor.inRefEnd)
+        out.append(height.inRefEnd)
+        out.append(outputPosition.inRefEnd)
+        out.append(uv.inRefEnd)
     }
 
     override fun executionVert(out: StringBuilder) {

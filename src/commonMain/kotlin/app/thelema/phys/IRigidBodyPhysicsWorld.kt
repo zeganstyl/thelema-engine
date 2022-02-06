@@ -18,11 +18,12 @@ package app.thelema.phys
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.SimulationComponent
 import app.thelema.ecs.component
 import app.thelema.math.IVec3
 
 /** @author zeganstyl */
-interface IRigidBodyPhysicsWorld: IEntityComponent {
+interface IRigidBodyPhysicsWorld: IEntityComponent, SimulationComponent {
     val sourceObject: Any
         get() = this
 
@@ -34,8 +35,6 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
 
     var iterations: Int
 
-    var isSimulationRunning: Boolean
-
     var maxContacts: Int
 
     var gravity: IVec3
@@ -46,14 +45,6 @@ interface IRigidBodyPhysicsWorld: IEntityComponent {
 
     fun addPhysicsWorldListener(listener: IPhysicsWorldListener)
     fun removePhysicsWorldListener(listener: IPhysicsWorldListener)
-
-    fun startSimulation() {
-        isSimulationRunning = true
-    }
-
-    fun stopSimulation() {
-        isSimulationRunning = false
-    }
 }
 
 fun IEntity.rigidBodyPhysicsWorld(block: IRigidBodyPhysicsWorld.() -> Unit) = component(block)

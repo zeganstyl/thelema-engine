@@ -61,7 +61,7 @@ fun main() {
             onLoaded {
                 addEntity(scene.copyDeep().apply {
                     transformNode {
-                        scale.set(0.02f, 0.02f, 0.02f)
+                        setScale(0.02f, 0.02f, 0.02f)
                         requestTransformUpdate()
                     }
                     componentOrNull<AnimationPlayer>()?.setAnimation("Dark_Knight_Bones|Dark_Knight_Walk")

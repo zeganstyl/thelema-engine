@@ -47,7 +47,7 @@ open class PopupMenu() : Table() {
 
     var removeRequest = false
 
-    var contextObject: Any? = null
+    open var contextObject: Any? = null
 
     constructor(block: PopupMenu.() -> Unit): this() {
         block(this)
@@ -173,14 +173,8 @@ open class PopupMenu() : Table() {
         return false
     }
 
-    fun item(name: String, style: TextButtonStyle = TextButtonStyle(), block: MenuItem.() -> Unit): MenuItem {
-        val item = MenuItem(name, style)
-        item.label.alignH = -1
-        item.label.lineAlign = -1
-        block(item)
-        addItem(item)
-        return item
-    }
+    fun item(name: String, style: TextButtonStyle = TextButtonStyle(), block: MenuItem.() -> Unit): MenuItem =
+        addItem(MenuItem(name, style).apply(block))
 
     fun menu(name: String, block: Menu.() -> Unit): Menu {
         val menu = Menu(name)
@@ -189,10 +183,11 @@ open class PopupMenu() : Table() {
         return menu
     }
 
-    open fun addItem(item: MenuItem) {
+    open fun addItem(item: MenuItem): MenuItem {
         add(item).growX().newRow()
         pack()
         item.addListener(sharedMenuItemInputListener!!)
+        return item
     }
 
     fun separator() {
@@ -233,7 +228,7 @@ open class PopupMenu() : Table() {
      * @param x stage x position
      * @param y stage y position
      */
-    fun showMenu(headUpDisplay: HeadUpDisplay, x: Float, y: Float, contextObject: Any? = null) {
+    open fun showMenu(headUpDisplay: HeadUpDisplay, x: Float, y: Float, contextObject: Any? = null) {
         headUpDisplay.removeActor(this)
         this.contextObject = contextObject
         //if (headUpDisplay.height - this.y > headUpDisplay.height) this.y = this.y + height

@@ -63,6 +63,12 @@ class GLTFSettings: IEntityComponent {
     /** Setup pipeline for deferred shading */
     var setupGBufferShader: Boolean = false
 
+    var calculateNormalsCpu: Boolean = false
+    var calculateNormalsForced: Boolean = false
+
+    var calculateTangentsCpu: Boolean = false
+    var calculateTangentsForced: Boolean = true
+
     var defaultTextureMinFilter = GL_LINEAR_MIPMAP_LINEAR
     var defaultTextureMagFilter = GL_LINEAR
 

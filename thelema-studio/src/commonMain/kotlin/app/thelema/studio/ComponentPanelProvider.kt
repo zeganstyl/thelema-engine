@@ -22,6 +22,8 @@ object ComponentPanelProvider {
         addProvider { ArmaturePanel() }
         addProvider { SoundLoaderPanel() }
         addProvider { SoundPanel() }
+        addProvider { GLTFPanel() }
+        addProvider { OrbitCameraControlPanel() }
         addProvider("KotlinScript") { KotlinScriptPanel() }
     }
 

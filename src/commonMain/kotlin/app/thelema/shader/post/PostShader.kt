@@ -16,7 +16,6 @@
 
 package app.thelema.shader.post
 
-import app.thelema.gl.GL
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
@@ -30,16 +29,25 @@ open class PostShader(
     uvName: String = "uv",
     attributeUVName: String = "UV",
     attributePositionName: String = "POSITION",
-    version: Int = 110
+    version: Int = 330,
+    flipY: Boolean = false
 ) :
     Shader(
         vertCode = """
-attribute vec2 $attributePositionName;
-attribute vec2 $attributeUVName;
-varying vec2 $uvName;
+in vec2 $attributePositionName;
+in vec2 $attributeUVName;
+out vec2 $uvName;
+
+uniform bool flipY;
 
 void main() {
-    $uvName = $attributeUVName;
+    ${
+        if (flipY) {
+            "$uvName = vec2($attributeUVName.x, 1.0 - $attributeUVName.y);"
+        } else {
+            "$uvName = $attributeUVName;"
+        }
+    }
     gl_Position = vec4($attributePositionName, 0.0, 1.0);
 }""",
         fragCode = fragCode,

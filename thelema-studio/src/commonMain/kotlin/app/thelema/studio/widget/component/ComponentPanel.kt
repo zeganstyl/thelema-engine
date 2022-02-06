@@ -33,6 +33,9 @@ open class ComponentPanel<T: IEntityComponent>(
 
     val fieldWidgets = HashMap<String, Actor>()
 
+    open val menuItems: List<MenuItem>
+        get() = emptyList()
+
     init {
         if (defaultSetup) defaultSetup(componentName)
     }

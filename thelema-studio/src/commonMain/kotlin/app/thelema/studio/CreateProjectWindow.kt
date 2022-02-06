@@ -3,6 +3,7 @@ package app.thelema.studio
 import app.thelema.fs.FS
 import app.thelema.fs.file
 import app.thelema.fs.projectFile
+import app.thelema.res.RES
 import app.thelema.studio.widget.PlainCheckBox
 import app.thelema.ui.*
 import app.thelema.utils.iterate
@@ -25,16 +26,16 @@ class CreateProjectWindow: Window("Create project") {
 
     val mainAppLauncher = PlainCheckBox().also { it.isChecked = true }
     val scriptTemplate = PlainCheckBox().also { it.isChecked = true }
-    val openIntellij = PlainCheckBox()
+    val openIntellij = PlainCheckBox().also { it.isChecked = true }
 
     init {
         kotlinVersion.text = CreateProjectTool.kotlinVersionDefault
         lwjglVersion.text = CreateProjectTool.lwjglVersionDefault
         packageName.text = "com.test.app"
-        projectName.text = "Untitled123"
 
         projectName.onChanged {
-            if (isDirectoryNameSame) directory.text = "${Studio.fileChooser.userHomeDirectory}/IdeaProjects/${projectName.text.lowercase()}"
+            val projDirName = projectName.text.lowercase().replace(' ', '-')
+            if (isDirectoryNameSame) directory.text = "${Studio.fileChooser.userHomeDirectory}/IdeaProjects/$projDirName"
         }
 
         directory.listener = object : TextField.TextFieldListener {
@@ -103,6 +104,16 @@ class CreateProjectWindow: Window("Create project") {
                         val dir = FS.absolute(directory.text)
                         dir.mkdirs()
 
+                        Studio.appProjectDirectory = dir
+
+                        FS.internal("gradlew").readText {
+                            dir.child("gradlew").writeText(it)
+                        }
+
+                        FS.internal("gradlew.bat").readText {
+                            dir.child("gradlew.bat").writeText(it)
+                        }
+
                         val mainClass = if (mainAppLauncher.isChecked) {
                             if (packageName.text.isEmpty()) "MainKt" else "${packageName.text}.MainKt"
                         } else "YourClass"
@@ -142,8 +153,9 @@ class CreateProjectWindow: Window("Create project") {
                         val scriptsKt = packageDir.child("scripts.kt")
 
                         val packageString = if (packageName.text.isNotEmpty()) "package ${packageName.text}\n\n" else ""
+                        RES.appPackage = packageName.text
 
-                        if (scriptTemplate.isChecked) {
+                        val loader = if (scriptTemplate.isChecked) {
                             val scriptName = "NewScene.kt"
                             val script = packageDir.child(scriptName)
                             script.writeText(packageString + CreateProjectTool.defaultSceneScript)
@@ -163,6 +175,16 @@ class CreateProjectWindow: Window("Create project") {
                         val app = resources.child("app.thelema")
                         Studio.saveApp(app)
 
+                        loader.file = projectFile("NewScene.entity")
+                        loader.saveTargetEntity()
+
+                        if (openIntellij.isChecked) {
+                            Studio.fileChooser.executeCommandInTerminal(
+                                FS.absolute(Studio.fileChooser.userHomeDirectory),
+                                listOf("idea", dir.platformPath)
+                            )
+                        }
+
                         hide()
                     }
                 }
@@ -177,6 +199,21 @@ class CreateProjectWindow: Window("Create project") {
 
     override fun show() {
         super.show()
-        directory.text = "${Studio.fileChooser.userHomeDirectory}/IdeaProjects/${projectName.text.lowercase()}"
+
+        var name = "App"
+        var fileName = "app"
+        val projectsDir = FS.absolute(Studio.fileChooser.ideaProjectsDirectory)
+        if (projectsDir.child(fileName).exists()) {
+            val projectDirsNames = projectsDir.list().map { it.name.lowercase() }.toSet()
+            var i = 2
+            while (projectDirsNames.contains(fileName)) {
+                fileName = "app-$i"
+                name = "App $i"
+                i++
+            }
+        }
+        projectName.text = name
+
+        directory.text = "${Studio.fileChooser.ideaProjectsDirectory}/$fileName"
     }
 }

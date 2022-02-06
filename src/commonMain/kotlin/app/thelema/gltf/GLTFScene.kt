@@ -21,6 +21,8 @@ import app.thelema.ecs.*
 import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
+import app.thelema.math.Mat3
+import app.thelema.math.Vec3
 import app.thelema.shader.findShaderNode
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
@@ -141,7 +143,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         if (loader.file?.exists() == true) {
             loader.onLoaded {
-                gltf.siblingOrNull<ISceneProvider>()?.instances?.iterate {
+                gltf.siblingOrNull<ISceneProvider>()?.sceneInstances?.iterate {
                     it.reloadInstance()
                 }
             }
@@ -166,9 +168,9 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             if (entity.name.isEmpty()) entity.name = "Node"
             newNode = entity.component()
             newNodes[gltfNode.elementIndex] = newNode
-            newNode.position.set(gltfNode.translation)
-            newNode.rotation.set(gltfNode.rotation)
-            newNode.scale.set(gltfNode.scale)
+            newNode.scale = gltfNode.scale
+            newNode.rotation = gltfNode.rotationMatrix
+            newNode.position = gltfNode.translation
             newNode.isTransformUpdateRequested = true
 
             for (i in gltfNode.children.indices) {

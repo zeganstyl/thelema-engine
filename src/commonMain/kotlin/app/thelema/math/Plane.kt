@@ -27,20 +27,20 @@ class Plane(
     var d: Float = 0f
 ) {
     /** Constructs a new plane based on the normal and a point on the plane. */
-    constructor(normal: IVec3, point: IVec3): this() {
+    constructor(normal: IVec3C, point: IVec3C): this() {
         this.normal.set(normal).nor()
         d = -this.normal.dot(point)
     }
 
     /** Constructs a new plane out of the three given points that are considered to be on the plane.
      * The normal is calculated via a cross product between (point1-point2)x(point2-point3) */
-    constructor(point1: IVec3, point2: IVec3, point3: IVec3): this() {
+    constructor(point1: IVec3C, point2: IVec3C, point3: IVec3C): this() {
         set(point1, point2, point3)
     }
 
     /** Sets the plane normal and distance to the origin based on the three given points which are considered to be on the plane.
      * The normal is calculated via a cross product between (point1-point2)x(point2-point3) */
-    fun set(point1: IVec3, point2: IVec3, point3: IVec3) {
+    fun set(point1: IVec3C, point2: IVec3C, point3: IVec3C) {
         normal.set(point1).sub(point2).crs(point2.x - point3.x, point2.y - point3.y, point2.z - point3.z).nor()
         d = -point1.dot(normal)
     }
@@ -74,7 +74,7 @@ class Plane(
     fun distance(x: Float, y: Float, z: Float): Float = normal.dot(x, y, z) + d
 
     /** Sets the plane to the given point and normal. */
-    fun set(point: IVec3, normal: IVec3) {
+    fun set(point: IVec3C, normal: IVec3C) {
         this.normal.set(normal)
         d = point.dot(normal)
     }
@@ -90,7 +90,7 @@ class Plane(
         d = plane.d
     }
 
-    fun getIntersectionPoint(rayDirection: IVec3, rayOrigin: IVec3, out: IVec3): IVec3 {
+    fun getIntersectionPoint(rayDirection: IVec3C, rayOrigin: IVec3C, out: IVec3): IVec3 {
         val diffX = rayOrigin.x - normal.x * d
         val diffY = rayOrigin.y - normal.y * d
         val diffZ = rayOrigin.z - normal.z * d

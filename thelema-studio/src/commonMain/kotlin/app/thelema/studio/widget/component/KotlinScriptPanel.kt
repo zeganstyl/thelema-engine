@@ -1,27 +1,31 @@
 package app.thelema.studio.widget.component
 
 import app.thelema.ecs.Component
+import app.thelema.fs.FS
 import app.thelema.res.RES
-import app.thelema.studio.KotlinScriptStudio
-import app.thelema.studio.KotlinScripting
-import app.thelema.studio.Studio
-import app.thelema.studio.scriptFile
+import app.thelema.studio.*
+import app.thelema.ui.InputEvent
+import app.thelema.ui.MenuItem
 import app.thelema.ui.TextButton
 
 class KotlinScriptPanel: ComponentPanel<KotlinScriptStudio>("KotlinScript") {
-    init {
-        content.add(TextButton("execute") {
-            onClick {
-                component?.execute()
-            }
-        }).newRow()
+    override val menuItems: List<MenuItem> = listOf(
+        MenuItem("Open Script in IDEA") {
+            onClick(::openInIdea)
+        }
+    )
 
-        content.add(TextButton("Open directory") {
+    init {
+        content.add(TextButton("Open Directory") {
             onClick {
                 KotlinScripting.kotlinDirectory?.also { kotlinDir ->
                     component?.file?.also { Studio.fileChooser.openInFileManager("${kotlinDir.platformPath}/${it.parent().platformPath}") }
                 }
             }
+        }).newRow()
+
+        content.add(TextButton("Open Script in IDEA") {
+            onClick(::openInIdea)
         }).newRow()
 
         content.add(TextButton("Create") {
@@ -46,6 +50,24 @@ class KotlinScriptPanel: ComponentPanel<KotlinScriptStudio>("KotlinScript") {
                 }
             }
         }).newRow()
+    }
+
+    private fun openInIdea(event: InputEvent) {
+        val component = component ?: return
+        val kotlinDir = KotlinScripting.kotlinDirectory
+        if (kotlinDir != null && kotlinDir.exists()) {
+            val file = component.file
+            if (file != null && file.exists()) {
+                Studio.fileChooser.executeCommandInTerminal(
+                    FS.absolute(Studio.fileChooser.userHomeDirectory),
+                    listOf("idea", file.platformPath)
+                )
+            } else {
+                Studio.showStatusAlert("File is not exists: ${file?.platformPath}")
+            }
+        } else {
+            Studio.showStatusAlert("Kotlin directory is not exists: ${kotlinDir?.platformPath}")
+        }
     }
 
     private fun createScript(className: String) {

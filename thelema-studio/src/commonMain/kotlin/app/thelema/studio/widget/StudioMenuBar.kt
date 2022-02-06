@@ -57,8 +57,9 @@ class StudioMenuBar: Table() {
                 onClick {
                     studio.appProjectDirectory?.also {
                         val dialog = TerminalDialog()
+                        dialog.titleLabel.text = "Build App"
                         dialog.textContent.text = "Starting build..."
-                        dialog.output = studio.fileChooser.executeCommandInTerminal(it, listOf("gradlew", "jar"))
+                        dialog.output = studio.fileChooser.executeCommandInTerminal(it, listOf("sh", "gradlew", "jar"))
                         dialog.openBuildDir = {
                             studio.fileChooser.openInFileManager(it.child("build/libs").platformPath)
                         }

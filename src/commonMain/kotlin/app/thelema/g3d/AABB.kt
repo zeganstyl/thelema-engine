@@ -27,6 +27,8 @@ class AABB: IBoundings {
     val min: IVec3 = Vec3()
     val max: IVec3 = Vec3()
 
+    val tmp = Vec3()
+
     override val boundingType: String
         get() = IBoundings.AABB
 
@@ -47,10 +49,12 @@ class AABB: IBoundings {
         return if (wordMatrix == null) {
             frustum.minMaxInFrustum(min.x, min.y, min.z, max.x, max.y, max.z)
         } else {
-            val scale = max(wordMatrix.m00, max(wordMatrix.m11, wordMatrix.m22))
+            val sx = wordMatrix.scaleX
+            val sy = wordMatrix.scaleY
+            val sz = wordMatrix.scaleZ
             frustum.minMaxInFrustum(
-                wordMatrix.m03 + min.x * scale, wordMatrix.m13 + min.y * scale, wordMatrix.m23 + min.z * scale,
-                wordMatrix.m03 + max.x * scale, wordMatrix.m13 + max.y * scale, wordMatrix.m23 + max.z * scale
+                wordMatrix.m03 + min.x * sx, wordMatrix.m13 + min.y * sy, wordMatrix.m23 + min.z * sz,
+                wordMatrix.m03 + max.x * sx, wordMatrix.m13 + max.y * sy, wordMatrix.m23 + max.z * sz
             )
         }
     }

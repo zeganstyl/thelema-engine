@@ -20,6 +20,7 @@ import app.thelema.app.APP
 import app.thelema.ecs.IEntityComponent
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
+import java.net.URLClassLoader
 import java.util.*
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.host.StringScriptSource
@@ -48,9 +49,16 @@ object ThelemaStudioJvm {
 
         val host = BasicJvmScriptingHost()
 
+        val dynamicLibraries = URLClassLoader(
+            //arrayOf<URL>(File(".jar").toURI().toURL()),
+            emptyArray(),
+            this.javaClass.classLoader
+        )
+
         KotlinScripting.init(
             host,
             JvmDependencyFromClassLoader { app::class.java.classLoader!! },
+            JvmDependencyFromClassLoader { dynamicLibraries }
         )
 
         Thread {

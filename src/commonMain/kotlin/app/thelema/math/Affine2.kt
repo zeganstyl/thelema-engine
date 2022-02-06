@@ -72,14 +72,13 @@ class Affine2 {
      * @param mat The matrix to copy, assumed to be an affine transformation.
      * @return This matrix for the purposes of chaining.
      */
-    fun set(mat: Mat3): Affine2 {
-        val other = mat.values
-        m00 = other[Mat3.M00]
-        m01 = other[Mat3.M01]
-        m02 = other[Mat3.M02]
-        m10 = other[Mat3.M10]
-        m11 = other[Mat3.M11]
-        m12 = other[Mat3.M12]
+    fun set(other: Mat3): Affine2 {
+        m00 = other.m00
+        m01 = other.m01
+        m02 = other.m02
+        m10 = other.m10
+        m11 = other.m11
+        m12 = other.m12
         return this
     }
 

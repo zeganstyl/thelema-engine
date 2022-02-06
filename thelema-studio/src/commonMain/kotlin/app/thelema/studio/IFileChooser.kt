@@ -5,6 +5,9 @@ import app.thelema.fs.IFile
 interface IFileChooser {
     val userHomeDirectory: String
 
+    val ideaProjectsDirectory: String
+        get() = "$userHomeDirectory/IdeaProjects"
+
     fun executeCommandInTerminal(directory: IFile, command: List<String>): (out: StringBuilder) -> Boolean
 
     fun openInFileManager(path: String)

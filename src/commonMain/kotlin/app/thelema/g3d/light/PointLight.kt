@@ -44,9 +44,7 @@ class PointLight: ILight {
     override var isLightEnabled: Boolean = true
     override var intensity = 1f
     override var color: IVec3 = Vec3(1f)
-        set(value) {
-            field.set(value)
-        }
+        set(value) { field.set(value) }
 
     override var range = 100f
 

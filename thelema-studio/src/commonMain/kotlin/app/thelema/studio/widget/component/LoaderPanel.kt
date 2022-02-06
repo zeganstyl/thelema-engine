@@ -18,11 +18,14 @@ package app.thelema.studio.widget.component
 
 import app.thelema.res.ILoader
 import app.thelema.studio.Studio
-import app.thelema.ui.Align
-import app.thelema.ui.Table
-import app.thelema.ui.TextButton
+import app.thelema.ui.*
 
 class LoaderPanel: ComponentPanel<ILoader>(ILoader::class) {
+    override val menuItems: List<MenuItem> = listOf(
+        MenuItem("Open File") { onClick(::openFile) },
+        MenuItem("Open Directory") { onClick(::openDir) }
+    )
+
     init {
         content.add(Table {
             align = Align.topLeft
@@ -47,27 +50,32 @@ class LoaderPanel: ComponentPanel<ILoader>(ILoader::class) {
                 }
             }).padLeft(10f).newRow()
             add(TextButton("Open") {
-                onClick {
-                    component?.file?.also {
-                        if (it.exists()) {
-                            Studio.fileChooser.openInFileManager(it.platformPath)
-                        } else {
-                            Studio.showStatusAlert("File not exists: ${it.path}")
-                        }
-                    }
-                }
+                onClick(::openFile)
             })
             add(TextButton("Open dir") {
-                onClick {
-                    component?.file?.also {
-                        if (it.exists()) {
-                            Studio.fileChooser.openInFileManager(it.parent().platformPath)
-                        } else {
-                            Studio.showStatusAlert("File not exists: ${it.path}")
-                        }
-                    }
-                }
+                onClick(::openDir)
             }).padLeft(10f).newRow()
         })
+    }
+
+    fun openFile(event: InputEvent) {
+        component?.file?.also {
+            if (it.exists()) {
+                Studio.fileChooser.openInFileManager(it.platformPath)
+            } else {
+                Studio.showStatusAlert("File not exists: ${it.path}")
+            }
+        }
+    }
+
+    fun openDir(event: InputEvent) {
+        component?.file?.also {
+            val dir = it.parent()
+            if (dir.exists()) {
+                Studio.fileChooser.openInFileManager(dir.platformPath)
+            } else {
+                Studio.showStatusAlert("Directory not exists: ${it.path}")
+            }
+        }
     }
 }

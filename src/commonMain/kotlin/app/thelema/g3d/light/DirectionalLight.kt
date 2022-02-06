@@ -131,10 +131,9 @@ class DirectionalLight: ILight {
     /** Rotate node to look from position to (0, 0, 0) */
     fun setDirectionFromPosition(x: Float, y: Float, z: Float) {
         direction.set(-x, -y, -z).nor()
-        node.position.set(x, y, z)
+        node.setPosition(x, y, z)
         node.worldMatrix.setToLook(node.position, direction, MATH.Y)
-        node.worldMatrix.getRotation(node.rotation)
-        node.requestTransformUpdate()
+        //node.worldMatrix.getRotation(node.rotation)
     }
 
     fun updateDirection() {
@@ -249,7 +248,7 @@ class DirectionalLight: ILight {
                 lightMat.mul(lightViewTmp)
 
                 tmpCam.far = far
-                tmpCam.eye.set(lightPos)
+                tmpCam.node.position = lightPos
                 tmpCam.viewProjectionMatrix.set(lightMat)
                 scene.render(ShaderChannel.Depth)
             }

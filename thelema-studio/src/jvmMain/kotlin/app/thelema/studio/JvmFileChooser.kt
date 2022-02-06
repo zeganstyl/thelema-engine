@@ -6,6 +6,9 @@ import app.thelema.jvm.JvmFile
 import app.thelema.res.APP_ROOT_FILENAME
 import app.thelema.res.RES
 import app.thelema.utils.iterate
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.awt.Component
 import java.awt.Desktop
 import java.io.BufferedReader
@@ -41,7 +44,6 @@ class JvmFileChooser: IFileChooser {
 
     override fun executeCommandInTerminal(directory: IFile, command: List<String>): (out: StringBuilder) -> Boolean {
         val args = ArrayList<String>()
-        args.add("sh")
         args.addAll(command)
         val builder = ProcessBuilder(args)
         builder.directory(File(directory.platformPath))
@@ -69,7 +71,12 @@ class JvmFileChooser: IFileChooser {
     }
 
     override fun openInFileManager(path: String) {
-        Desktop.getDesktop().open(File(path))
+        try {
+            Desktop.getDesktop().open(File(path))
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            Studio.showStatusAlert("Can't open file $path")
+        }
     }
 
     override fun openScriptFile(selectedFile: IFile?, ready: (file: IFile?) -> Unit) {

@@ -21,14 +21,11 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.IMaterial
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.math.Frustum
-import app.thelema.math.IVec3
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
 import app.thelema.gl.IRenderable
 import app.thelema.gl.Mesh
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
+import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.utils.iterate
 
@@ -204,7 +201,7 @@ class Terrain(
         }
     }
 
-    fun update(cameraPosition: IVec3) =
+    fun update(cameraPosition: IVec3C) =
         update(cameraPosition.x, cameraPosition.y, cameraPosition.z)
 
     override fun render(shader: IShader, scene: IScene?) {

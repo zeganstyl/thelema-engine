@@ -50,7 +50,8 @@ class SphereBoundings: IBoundings {
         return if (wordMatrix == null) {
             frustum.isSphereInFrustumWithoutNearFar(0f, 0f, 0f, radius)
         } else {
-            frustum.isSphereInFrustumWithoutNearFar(wordMatrix.m03, wordMatrix.m13, wordMatrix.m23, radius * max(wordMatrix.m00, max(wordMatrix.m11, wordMatrix.m22)))
+            val s = max(wordMatrix.scaleX, max(wordMatrix.scaleY, wordMatrix.scaleZ))
+            frustum.isSphereInFrustumWithoutNearFar(wordMatrix.m03, wordMatrix.m13, wordMatrix.m23, radius * s)
         }
     }
 

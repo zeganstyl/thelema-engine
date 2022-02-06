@@ -25,10 +25,10 @@ import kotlin.math.min
 object MATH {
     const val PI_HALF = 1.5707963f
     const val PI = 3.1415927f
-    const val PI2 = 6.2831854f
+    const val PI2 = 6.2831855f
 
     /** multiply by this to convert from radians to degrees  */
-    const val radDeg = 57.2957795f
+    const val radDeg = 57.29578f
     /** multiply by this to convert from degrees to radians  */
     const val degRad = 0.01745329f
 
@@ -36,19 +36,21 @@ object MATH {
     val Zero2: IVec2 = Vec2(0f, 0f)
 
     /** (0, 0, 0) */
-    val Zero3: IVec3 = Vec3(0f, 0f, 0f)
+    val Zero3: IVec3C = Vec3(0f, 0f, 0f)
     /** (1, 1, 1) */
-    val One3: IVec3 = Vec3(1f, 1f, 1f)
+    val One3: IVec3C = Vec3(1f, 1f, 1f)
     /** (1, 0, 0) */
-    val X: IVec3 = Vec3(1f, 0f, 0f)
+    val X: IVec3C = Vec3(1f, 0f, 0f)
     /** (0, 1, 0) */
-    val Y: IVec3 = Vec3(0f, 1f, 0f)
+    val Y: IVec3C = Vec3(0f, 1f, 0f)
     /** (0, 0, 1) */
-    val Z: IVec3 = Vec3(0f, 0f, 1f)
+    val Z: IVec3C = Vec3(0f, 0f, 1f)
     /** (0, 0, 0, 1) */
     val Zero3One1: IVec4 = Vec4(0f, 0f, 0f, 1f)
 
     val IdentityMat4 = Mat4()
+
+    val IdentityMat3: IMat3C = Mat3()
 
     private const val sinMask = (-1 shl 14).inv()
     private val radToIndex: Float

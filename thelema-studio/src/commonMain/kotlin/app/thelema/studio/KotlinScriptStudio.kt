@@ -5,6 +5,7 @@ import app.thelema.ecs.ComponentDescriptor
 import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.IPropertyDescriptor
 import app.thelema.ecs.PropertyType
+import app.thelema.fs.FS
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import app.thelema.json.IJsonObject
@@ -12,8 +13,9 @@ import app.thelema.jvm.JvmFile
 import app.thelema.res.RES
 import app.thelema.script.KotlinScriptAdapter
 import app.thelema.utils.iterate
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.io.File
+import kotlin.reflect.KMutableProperty1
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.host.StringScriptSource
 
@@ -89,7 +91,7 @@ class KotlinScriptStudio: KotlinScriptAdapter() {
     }
 
     companion object {
-        fun executeCurrentScripts(scripts: List<KotlinScriptStudio>) {
+        suspend fun executeCurrentScripts(scripts: List<KotlinScriptStudio>) {
             val map = HashMap<String, ExecuteScriptData>()
             val list = ArrayList<ExecuteScriptData>()
 
@@ -104,6 +106,7 @@ class KotlinScriptStudio: KotlinScriptAdapter() {
             }
 
             val import = HashSet<String>()
+            import.add("import app.thelema.ecs.ECS")
             map.values.forEach {
                 import.addAll(it.import)
             }
@@ -136,7 +139,7 @@ ${
                 }
             }
 
-            runBlocking { KotlinScripting.eval(properties, code, emptyList()) }
+            KotlinScripting.eval(properties, code, emptyList())
         }
     }
 }
@@ -150,25 +153,26 @@ class ExecuteScriptData(
 )
 
 /** Define File-property (string) */
-fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(name: String, get: T.() -> IFile?, set: T.(value: IFile?) -> Unit) = property(object :
-    IPropertyDescriptor<T, IFile?> {
-    override val name: String = name
-    override val type = ScriptFile
-    override fun setValue(component: T, value: IFile?) = set(component, value)
-    override fun getValue(component: T): IFile? = get(component)
+fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(
+    property: KMutableProperty1<T, IFile?>
+) = property(object : IPropertyDescriptor<T, IFile?> {
+    override val name: String = property.name
+    override val type = PropertyType.File
+    override fun setValue(component: T, value: IFile?) = property.set(component, value)
+    override fun getValue(component: T): IFile? = property.get(component)
     override fun default(): IFile? = null
     override fun readJson(component: T, json: IJsonObject) {
         KotlinScripting.kotlinDirectory?.also {
             if (json.contains("file")) {
                 val path = json.string("file")
-                set(component, scriptFile(path))
+                property.set(component, scriptFile(path))
             } else {
-                set(component, null)
+                property.set(component, null)
             }
         }
     }
     override fun writeJson(component: T, json: IJsonObject) {
-        component.get()?.also { json["file"] = it.path }
+        property.get(component)?.also { json["file"] = it.path }
     }
 })
 

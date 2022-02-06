@@ -24,6 +24,9 @@ interface IGLTFArrayElement {
     var elementIndex: Int
     var name: String
 
+    val conf: GLTFSettings
+        get() = array.gltf.conf
+
     val progress: Float
         get() = currentProgress.toFloat() / maxProgress
 

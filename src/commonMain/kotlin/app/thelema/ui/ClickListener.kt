@@ -49,7 +49,7 @@ open class ClickListener(
     private var over = false
     private var cancelled = false
     private var visualPressedTime: Long = 0
-    private var tapCountInterval = (0.4f * 1000000000L).toLong()
+    private var tapCountInterval: Long = 400L
     /** Returns the number of taps within the tap count interval for the most recent click event.  */
     var tapCount = 0
     private var lastTapTime: Long = 0
@@ -112,22 +112,22 @@ open class ClickListener(
 
     open fun clicked(event: InputEvent, x: Float, y: Float) {}
     /** Returns true if the specified position is over the specified actor or within the tap square.  */
-    fun isOver(actor: Actor, x: Float, y: Float): Boolean {
+    open fun isOver(actor: Actor, x: Float, y: Float): Boolean {
         val hit = actor.hit(x, y, true)
         return if (hit == null || !hit.isDescendantOf(actor)) inTapSquare(x, y) else true
     }
 
-    fun inTapSquare(x: Float, y: Float): Boolean {
+    open fun inTapSquare(x: Float, y: Float): Boolean {
         return if (touchDownX == -1f && touchDownY == -1f) false else abs(x - touchDownX) < tapSquareSize && abs(y - touchDownY) < tapSquareSize
     }
 
     /** Returns true if a touch is within the tap square.  */
-    fun inTapSquare(): Boolean {
+    open fun inTapSquare(): Boolean {
         return touchDownX != -1f
     }
 
     /** The tap square will not longer be used for the current touch.  */
-    fun invalidateTapSquare() {
+    open fun invalidateTapSquare() {
         touchDownX = -1f
         touchDownY = -1f
     }
@@ -155,7 +155,7 @@ open class ClickListener(
      * taps.
      */
     fun setTapCountInterval(tapCountInterval: Float) {
-        this.tapCountInterval = (tapCountInterval * 1000000000L).toLong()
+        this.tapCountInterval = (tapCountInterval * 1000L).toLong()
     }
 
     companion object {

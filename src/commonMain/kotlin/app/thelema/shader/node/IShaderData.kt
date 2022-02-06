@@ -92,8 +92,8 @@ interface IShaderData {
      *
      * **varying vec3 position;\n**
      * */
-    val varInRefEnd: String
-        get() = "${varIn()} $type $ref;\n"
+    val inRefEnd: String
+        get() = "in $type $ref;\n"
 
     /**
      * example:
@@ -106,11 +106,11 @@ interface IShaderData {
      *
      * **varying vec3 position;\n**
      * */
-    val varOutRefEnd: String
-        get() = "${varOut()} $type $ref;\n"
+    val outRefEnd: String
+        get() = "out $type $ref;\n"
 
-    private fun varIn(): String = if ((container?.shader?.version ?: 110) >= 130) "in" else "varying"
-    private fun varOut(): String = if ((container?.shader?.version ?: 110) >= 130) "out" else "varying"
+    private fun varIn(): String = "in"
+    private fun varOut(): String = "out"
 
     fun declaration(): String {
         return if (scope == GLSLScope.Inline) {

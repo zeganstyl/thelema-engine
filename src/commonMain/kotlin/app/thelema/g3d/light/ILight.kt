@@ -22,6 +22,7 @@ import app.thelema.g3d.ITransformNode
 import app.thelema.img.ITexture
 import app.thelema.math.IMat4
 import app.thelema.math.IVec3
+import app.thelema.math.IVec3C
 import app.thelema.math.IVec4
 
 /** @author zeganstyl */

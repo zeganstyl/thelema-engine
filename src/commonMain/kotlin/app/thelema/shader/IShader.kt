@@ -182,9 +182,9 @@ interface IShader: IEntityComponent {
 
     operator fun set(location: Int, values: IVec2) = set(location, values.x, values.y)
 
-    operator fun set(location: Int, values: IVec3) = set(location, values.x, values.y, values.z)
+    operator fun set(location: Int, values: IVec3C) = set(location, values.x, values.y, values.z)
 
-    operator fun set(location: Int, values: IVec4) = set(location, values.x, values.y, values.z, values.w)
+    operator fun set(location: Int, values: IVec4C) = set(location, values.x, values.y, values.z, values.w)
 
     operator fun set(location: Int, value: Mat3) = set(location, value, false)
 
@@ -309,9 +309,9 @@ interface IShader: IEntityComponent {
 
     operator fun set(name: String, values: IVec2) = set(name, values.x, values.y)
 
-    operator fun set(name: String, values: IVec3) = set(name, values.x, values.y, values.z)
+    operator fun set(name: String, values: IVec3C) = set(name, values.x, values.y, values.z)
 
-    operator fun set(name: String, values: IVec4) = set(name, values.x, values.y, values.z, values.w)
+    operator fun set(name: String, values: IVec4C) = set(name, values.x, values.y, values.z, values.w)
 
     operator fun set(name: String, value: Mat3) = set(name, value, false)
 

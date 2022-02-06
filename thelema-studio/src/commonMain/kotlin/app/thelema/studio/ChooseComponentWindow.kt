@@ -1,5 +1,7 @@
 package app.thelema.studio
 
+import app.thelema.ecs.ComponentDescriptor
+import app.thelema.ecs.IEntityComponent
 import app.thelema.ui.*
 import app.thelema.utils.iterate
 

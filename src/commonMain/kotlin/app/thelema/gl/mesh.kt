@@ -18,7 +18,6 @@ package app.thelema.gl
 
 import app.thelema.ecs.*
 import app.thelema.g3d.*
-import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.*
 import app.thelema.math.*
 import app.thelema.shader.IShader
