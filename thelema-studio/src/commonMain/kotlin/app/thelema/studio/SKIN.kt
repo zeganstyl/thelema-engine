@@ -41,6 +41,10 @@ object SKIN {
         background = this@SKIN.background
     }
 
+    val scrollEmpty = ScrollPaneStyle().apply {
+        background = null
+    }
+
     val list = UIListStyle().apply {
         background = this@SKIN.background
     }

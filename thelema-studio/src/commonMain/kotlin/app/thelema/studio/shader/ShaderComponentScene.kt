@@ -6,8 +6,8 @@ import app.thelema.input.KEY
 import app.thelema.input.MOUSE
 import app.thelema.math.Vec2
 import app.thelema.shader.IShader
-import app.thelema.studio.ComponentPanelProvider
-import app.thelema.studio.ComponentScenePanel
+import app.thelema.studio.component.ComponentPanelProvider
+import app.thelema.studio.component.ComponentScenePanel
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
 import app.thelema.ui.*

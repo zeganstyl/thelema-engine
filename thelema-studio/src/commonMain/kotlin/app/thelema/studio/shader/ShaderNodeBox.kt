@@ -4,7 +4,7 @@ import app.thelema.math.Vec4
 import app.thelema.shader.node.GLSLType
 import app.thelema.shader.node.IShaderNode
 import app.thelema.studio.SKIN
-import app.thelema.studio.camelCaseToSpaces
+import app.thelema.studio.tool.camelCaseToSpaces
 import app.thelema.ui.*
 import app.thelema.utils.Color
 import app.thelema.utils.LOG

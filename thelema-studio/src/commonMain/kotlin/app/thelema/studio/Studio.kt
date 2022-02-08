@@ -1,6 +1,5 @@
 package app.thelema.studio
 
-import app.thelema.studio.widget.EntityTab
 import app.thelema.studio.widget.StudioMenuBar
 import app.thelema.app.APP
 import app.thelema.app.AppListener
@@ -17,10 +16,15 @@ import app.thelema.json.IJsonObject
 import app.thelema.json.IJsonObjectIO
 import app.thelema.json.JSON
 import app.thelema.res.*
-import app.thelema.script.IKotlinScript
-import app.thelema.script.KotlinScript
-import app.thelema.studio.widget.SimulationEntityTab
-import app.thelema.studio.widget.component.ProjectPanel
+import app.thelema.ecs.IKotlinScript
+import app.thelema.studio.component.ComponentPanelProvider
+import app.thelema.studio.component.IComponentScenePanel
+import app.thelema.studio.component.ProjectPanel
+import app.thelema.studio.ecs.*
+import app.thelema.studio.platform.IFileChooser
+import app.thelema.studio.widget.TabsPane
+import app.thelema.studio.tool.*
+import app.thelema.studio.widget.StudioPopupMenu
 import app.thelema.ui.*
 import app.thelema.utils.Color
 import app.thelema.utils.iterate
@@ -71,8 +75,8 @@ object Studio: AppListener, IJsonObjectIO {
 
     val entityWindow = EntityWindow()
     val entityTreeWindow = EntityTreeWindow()
-    val createProjectWindow = CreateProjectWindow()
-    val nameWindow = NameWindow().apply {  }
+    val createProjectWindow = CreateProjectDialog()
+    val nameWindow = NameDialog().apply {  }
 
     val chooseComponentWindow = ChooseComponentWindow()
 
@@ -97,12 +101,14 @@ object Studio: AppListener, IJsonObjectIO {
     val preparingSimTabs = ArrayList<SimulationEntityTab>()
     val preparingSimTabsToRemove = HashSet<SimulationEntityTab>()
 
+    val popupMenu = StudioPopupMenu()
+
     init {
         APP.setupPhysicsComponents()
 
         ECS.replaceDescriptor("KotlinScript", { KotlinScriptStudio() }) {
             setAliases(IKotlinScript::class)
-            string(KotlinScriptStudio::functionName)
+            string(KotlinScriptStudio::scriptComponentName)
             kotlinScriptFile(KotlinScriptStudio::file)
         }
 
@@ -110,7 +116,7 @@ object Studio: AppListener, IJsonObjectIO {
 
         APP.addListener(this)
 
-        ECS.addSystem(StudioComponentSystem(hud))
+        ECS.addSystem(StudioComponentSystemLayer(hud))
 
         RES.loadOnSeparateThreadByDefault = true
 
@@ -124,7 +130,7 @@ object Studio: AppListener, IJsonObjectIO {
         }
 
         ActiveCamera {
-            setNearFar(0.01f, 1000f)
+            setNearFar(0.1f, 100f)
         }
     }
 

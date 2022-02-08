@@ -32,9 +32,6 @@ import app.thelema.input.MouseHandler
 import app.thelema.res.ILoader
 import app.thelema.res.IProject
 import app.thelema.res.Project
-import app.thelema.script.BakedKotlinScripts
-import app.thelema.script.IKotlinScript
-import app.thelema.script.KotlinScript
 import app.thelema.shader.ForwardRenderingPipeline
 import app.thelema.shader.IRenderingPipeline
 import app.thelema.shader.RenderingPipeline
@@ -47,8 +44,8 @@ import kotlin.native.concurrent.ThreadLocal
 object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
     val allDescriptors = LinkedHashMap<String, ComponentDescriptor<IEntityComponent>>()
 
-    private val _systems = ArrayList<IComponentSystem>()
-    override val systems: List<IComponentSystem>
+    private val _systems = ArrayList<IComponentSystemLayer>()
+    override val systems: List<IComponentSystemLayer>
         get() = _systems
 
     private val _entities = ArrayList<IEntity>()
@@ -83,15 +80,15 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         _entities.clear()
     }
 
-    override fun addSystem(system: IComponentSystem) {
+    override fun addSystem(system: IComponentSystemLayer) {
         _systems.add(system)
     }
 
-    override fun setSystem(index: Int, system: IComponentSystem) {
+    override fun setSystem(index: Int, system: IComponentSystemLayer) {
         _systems[index] = system
     }
 
-    override fun removeSystem(system: IComponentSystem) {
+    override fun removeSystem(system: IComponentSystemLayer) {
         _systems.remove(system)
     }
 
@@ -158,10 +155,8 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             descriptor { app.thelema.res.ResourceHolder() }
         }
 
-        descriptor { BakedKotlinScripts() }
-
         descriptorI<IKotlinScript>({ KotlinScript() }) {
-            string(IKotlinScript::functionName)
+            string(IKotlinScript::scriptComponentName)
         }
 
         descriptor { KeyboardHandler() }
@@ -251,6 +246,6 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
 
         Action.setupActionComponents()
 
-        addSystem(DefaultComponentSystem())
+        addSystem(DefaultComponentSystemLayer())
     }
 }

@@ -16,8 +16,8 @@
 
 package app.thelema.ecs
 
-interface IEntityComponentSystem: IComponentDescriptorList {
-    val systems: List<IComponentSystem>
+interface IEntityComponentSystem: IComponentDescriptor {
+    val systems: List<IComponentSystemLayer>
 
     /** These entities will be rendered and updated with ECS */
     val entities: List<IEntity>
@@ -31,9 +31,9 @@ interface IEntityComponentSystem: IComponentDescriptorList {
     /** Remove entity from rendering and updating */
     fun removeEntity(entity: IEntity)
 
-    fun addSystem(system: IComponentSystem)
-    fun setSystem(index: Int, system: IComponentSystem)
-    fun removeSystem(system: IComponentSystem)
+    fun addSystem(system: IComponentSystemLayer)
+    fun setSystem(index: Int, system: IComponentSystemLayer)
+    fun removeSystem(system: IComponentSystemLayer)
     fun removeSystem(index: Int)
 
     fun getDescriptor(typeName: String): ComponentDescriptor<IEntityComponent>?

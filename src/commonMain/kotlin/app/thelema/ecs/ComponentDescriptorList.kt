@@ -18,7 +18,7 @@ package app.thelema.ecs
 
 import app.thelema.utils.iterate
 
-open class ComponentDescriptorList(override val componentName: String): IComponentDescriptorList {
+open class ComponentDescriptorList(override val componentName: String): IComponentDescriptor {
     override val descriptors = ArrayList<ComponentDescriptor<IEntityComponent>>()
 
     private var _listeners: ArrayList<ComponentDescriptorListListener>? = null

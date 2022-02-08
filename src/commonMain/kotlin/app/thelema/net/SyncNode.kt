@@ -16,7 +16,7 @@
 
 package app.thelema.net
 
-import app.thelema.ecs.DefaultComponentSystem
+import app.thelema.ecs.DefaultComponentSystemLayer
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
@@ -30,7 +30,7 @@ class SyncNode: IEntityComponent {
 
     var mode: String = WebSocketSyncMode.All
 
-    val system = ECS.systems.first { it is DefaultComponentSystem } as DefaultComponentSystem
+    val system = ECS.systems.first { it is DefaultComponentSystemLayer } as DefaultComponentSystemLayer
 
     var id = system.newSyncId(this)
 

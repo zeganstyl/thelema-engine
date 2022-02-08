@@ -42,7 +42,7 @@ open class TreeNode(
 
     override var parent: ITreeNode? = null
 
-    override val children: MutableList<ITreeNode> = ArrayList()
+    override val children: MutableList<ITreeNode> = ArrayList(0)
 
     override var isSelectable = true
 

@@ -20,6 +20,8 @@ import app.thelema.app.APP
 import app.thelema.ecs.IEntityComponent
 import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
+import app.thelema.studio.ecs.KotlinScripting
+import app.thelema.studio.platform.JvmFileChooser
 import java.net.URLClassLoader
 import java.util.*
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
@@ -36,8 +38,8 @@ object ThelemaStudioJvm {
                 width = 1280
                 height = 720
                 iconPaths = arrayOf(
-                    "thelema-logo-32.png",
-                    "thelema-logo-64.png"
+                    "icons/thelema-logo-32.png",
+                    "icons/thelema-logo-64.png"
                 )
                 msaaSamples = 4
             }
