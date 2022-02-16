@@ -174,7 +174,8 @@ open class Selection<T>(val selected: MutableList<T> = ArrayList()): MutableList
     protected open fun lastSelectedChanged() {}
 
     private fun afterSnapshotAndClear() {
-        old.forEach {
+        val items = ArrayList(old)
+        items.iterate {
             for(i in 0 until listeners.size){
                 listeners[i].removed(it)
             }

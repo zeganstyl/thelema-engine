@@ -1,5 +1,7 @@
 package app.thelema.ecs
 
+import app.thelema.utils.LOG
+
 interface IKotlinScript: IEntityComponent, SimulationComponent {
     var scriptComponentName: String
 }
@@ -15,8 +17,12 @@ open class KotlinScript: IKotlinScript {
     override var isSimulationRunning: Boolean = false
 
     override fun startSimulation() {
-        isSimulationRunning = true
-        sibling(scriptComponentName)
+        if (scriptComponentName.isEmpty()) {
+            LOG.error("$path: scriptComponentName is Empty")
+        } else {
+            isSimulationRunning = true
+            sibling(scriptComponentName)
+        }
     }
 
     override fun stopSimulation() {
