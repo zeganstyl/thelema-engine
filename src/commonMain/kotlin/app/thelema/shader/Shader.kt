@@ -160,9 +160,6 @@ open class Shader(
         this.vertCode = vert
         this.fragCode = frag
 
-        LOG.error("======= jflksjdkfjsdlkf $this")
-        LOG.error(this.vertCode)
-
         val fullVertCode = ver + floatPrecision + vert
         val fullFragCode = ver + floatPrecision + frag
 

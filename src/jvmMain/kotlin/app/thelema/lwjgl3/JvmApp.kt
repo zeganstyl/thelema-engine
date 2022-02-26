@@ -98,6 +98,12 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
     val data = Lwjgl3Data()
     val fs = JvmFS()
 
+    val osName: String
+        get() = System.getProperty("os.name")
+
+    val isMacOs: Boolean
+        get() = osName.startsWith("Mac")
+
     init {
         ECS.setupDefaultComponents()
 
@@ -380,6 +386,98 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
         JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE)
     }
 
+    fun createGlfwWindow(config: Lwjgl3WindowConf, sharedContextWindow: Long): Long {
+        GLFW.glfwDefaultWindowHints()
+        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, 0)
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, if (config.resizable) 1 else 0)
+        GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, if (config.maximized) 1 else 0)
+        GLFW.glfwWindowHint(GLFW.GLFW_AUTO_ICONIFY, if (config.autoIconify) 1 else 0)
+        if (sharedContextWindow == 0L) {
+            GLFW.glfwWindowHint(GLFW.GLFW_RED_BITS, config.redBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_GREEN_BITS, config.greenBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_BLUE_BITS, config.blueBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_ALPHA_BITS, config.alphaBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_STENCIL_BITS, config.stencilBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_DEPTH_BITS, config.depthBits)
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, config.msaaSamples)
+        }
+//            if (config.useGL30) {
+//                GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, config.gles30ContextMajorVersion)
+//                GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, config.gles30ContextMinorVersion)
+////                if (SharedLibraryLoader.isMac) { // hints mandatory on OS X for GL 3.2+ context creation, but fail on Windows if the
+////// WGL_ARB_create_context extension is not available
+////// see: http://www.glfw.org/docs/latest/compat.html
+////                    GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE)
+////                    GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
+////                }
+//            }
+
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3)
+//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
+//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1)
+
+        if (config.transparentFramebuffer) {
+            GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, 1)
+        }
+        if (config.debug) {
+            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, 1)
+        }
+        val fullscreenMode = config.fullscreenMode
+        val windowHandle = if (fullscreenMode != null) {
+            GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, fullscreenMode.refreshRate)
+            GLFW.glfwCreateWindow(fullscreenMode.width, fullscreenMode.height, config.title, fullscreenMode.monitor, sharedContextWindow)
+        } else {
+            GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, if (config.decorated) 1 else 0)
+            GLFW.glfwCreateWindow(config.width, config.height, config.title, 0, sharedContextWindow)
+        }
+        if (windowHandle == 0L) {
+            throw RuntimeException("Couldn't create window")
+        }
+        Lwjgl3Window.setSizeLimits(windowHandle, config.minWidth, config.minHeight, config.maxWidth, config.maxHeight)
+        if (config.fullscreenMode == null && !config.maximized) {
+            if (config.x == -1 && config.y == -1) {
+                var windowWidth = max(config.width, config.minWidth)
+                var windowHeight = max(config.height, config.minHeight)
+                if (config.maxWidth > -1) windowWidth = min(windowWidth, config.maxWidth)
+                if (config.maxHeight > -1) windowHeight = min(windowHeight, config.maxHeight)
+                val vidMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())
+                GLFW.glfwSetWindowPos(windowHandle, vidMode!!.width() / 2 - windowWidth / 2, vidMode.height() / 2 - windowHeight / 2)
+            } else {
+                GLFW.glfwSetWindowPos(windowHandle, config.x, config.y)
+            }
+        } else if (config.maximized) {
+            val maximizedMonitor = config.maximizedMonitor
+            if (maximizedMonitor != null) {
+                val vidMode = GLFW.glfwGetVideoMode(maximizedMonitor.monitorHandle)
+                GLFW.glfwSetWindowPos(windowHandle, vidMode!!.width() / 2 - config.width / 2, vidMode.height() / 2 - config.height / 2)
+            } else {
+                GLFW.glfwSetWindowPos(windowHandle, config.x, config.y)
+            }
+        }
+
+        val windowIconPaths = config.iconPaths
+
+        if (windowIconPaths != null && !isMacOs) {
+            Lwjgl3Window.setIcon(windowHandle, windowIconPaths, config.iconFileLocation)
+        }
+        GLFW.glfwMakeContextCurrent(windowHandle)
+        GLFW.glfwSwapInterval(if (config.vSyncEnabled) 1 else 0)
+        org.lwjgl.opengl.GL.createCapabilities()
+//            initiateGL()
+//            if (!glVersion!!.isVersionEqualToOrHigher(2, 0)) throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+//                    + GL11.glGetString(GL11.GL_VERSION) + "\n" + glVersion!!.debugVersionString)
+//            if (!supportsFBO()) {
+//                throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+//                        + GL11.glGetString(GL11.GL_VERSION) + ", FBO extension: false\n" + glVersion!!.debugVersionString)
+//            }
+        if (config.debug) {
+            glDebugCallback = GLUtil.setupDebugMessageCallback(config.debugStream)
+            setGLDebugMessageControl(GLDebugMessageSeverity.HIGH, false)
+        }
+        return windowHandle
+    }
+
     companion object {
         private var errorCallback: GLFWErrorCallback? = null
         private var glDebugCallback: Callback? = null
@@ -392,97 +490,6 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
                     throw RuntimeException("Unable to initialize GLFW")
                 }
             }
-        }
-
-        fun createGlfwWindow(config: Lwjgl3WindowConf, sharedContextWindow: Long): Long {
-            GLFW.glfwDefaultWindowHints()
-            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, 0)
-            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, if (config.resizable) 1 else 0)
-            GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, if (config.maximized) 1 else 0)
-            GLFW.glfwWindowHint(GLFW.GLFW_AUTO_ICONIFY, if (config.autoIconify) 1 else 0)
-            if (sharedContextWindow == 0L) {
-                GLFW.glfwWindowHint(GLFW.GLFW_RED_BITS, config.redBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_GREEN_BITS, config.greenBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_BLUE_BITS, config.blueBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_ALPHA_BITS, config.alphaBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_STENCIL_BITS, config.stencilBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_DEPTH_BITS, config.depthBits)
-                GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, config.msaaSamples)
-            }
-//            if (config.useGL30) {
-//                GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, config.gles30ContextMajorVersion)
-//                GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, config.gles30ContextMinorVersion)
-////                if (SharedLibraryLoader.isMac) { // hints mandatory on OS X for GL 3.2+ context creation, but fail on Windows if the
-////// WGL_ARB_create_context extension is not available
-////// see: http://www.glfw.org/docs/latest/compat.html
-////                    GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE)
-////                    GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
-////                }
-//            }
-
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3)
-//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
-//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1)
-
-            if (config.transparentFramebuffer) {
-                GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, 1)
-            }
-            if (config.debug) {
-                GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, 1)
-            }
-            val fullscreenMode = config.fullscreenMode
-            val windowHandle = if (fullscreenMode != null) {
-                GLFW.glfwWindowHint(GLFW.GLFW_REFRESH_RATE, fullscreenMode.refreshRate)
-                GLFW.glfwCreateWindow(fullscreenMode.width, fullscreenMode.height, config.title, fullscreenMode.monitor, sharedContextWindow)
-            } else {
-                GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, if (config.decorated) 1 else 0)
-                GLFW.glfwCreateWindow(config.width, config.height, config.title, 0, sharedContextWindow)
-            }
-            if (windowHandle == 0L) {
-                throw RuntimeException("Couldn't create window")
-            }
-            Lwjgl3Window.setSizeLimits(windowHandle, config.minWidth, config.minHeight, config.maxWidth, config.maxHeight)
-            if (config.fullscreenMode == null && !config.maximized) {
-                if (config.x == -1 && config.y == -1) {
-                    var windowWidth = max(config.width, config.minWidth)
-                    var windowHeight = max(config.height, config.minHeight)
-                    if (config.maxWidth > -1) windowWidth = min(windowWidth, config.maxWidth)
-                    if (config.maxHeight > -1) windowHeight = min(windowHeight, config.maxHeight)
-                    val vidMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())
-                    GLFW.glfwSetWindowPos(windowHandle, vidMode!!.width() / 2 - windowWidth / 2, vidMode.height() / 2 - windowHeight / 2)
-                } else {
-                    GLFW.glfwSetWindowPos(windowHandle, config.x, config.y)
-                }
-            } else if (config.maximized) {
-                val maximizedMonitor = config.maximizedMonitor
-                if (maximizedMonitor != null) {
-                    val vidMode = GLFW.glfwGetVideoMode(maximizedMonitor.monitorHandle)
-                    GLFW.glfwSetWindowPos(windowHandle, vidMode!!.width() / 2 - config.width / 2, vidMode.height() / 2 - config.height / 2)
-                } else {
-                    GLFW.glfwSetWindowPos(windowHandle, config.x, config.y)
-                }
-            }
-
-            val windowIconPaths = config.iconPaths
-            if (windowIconPaths != null) {
-                Lwjgl3Window.setIcon(windowHandle, windowIconPaths, config.iconFileLocation)
-            }
-            GLFW.glfwMakeContextCurrent(windowHandle)
-            GLFW.glfwSwapInterval(if (config.vSyncEnabled) 1 else 0)
-            org.lwjgl.opengl.GL.createCapabilities()
-//            initiateGL()
-//            if (!glVersion!!.isVersionEqualToOrHigher(2, 0)) throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
-//                    + GL11.glGetString(GL11.GL_VERSION) + "\n" + glVersion!!.debugVersionString)
-//            if (!supportsFBO()) {
-//                throw RuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
-//                        + GL11.glGetString(GL11.GL_VERSION) + ", FBO extension: false\n" + glVersion!!.debugVersionString)
-//            }
-            if (config.debug) {
-                glDebugCallback = GLUtil.setupDebugMessageCallback(config.debugStream)
-                setGLDebugMessageControl(GLDebugMessageSeverity.HIGH, false)
-            }
-            return windowHandle
         }
 
 //        private fun supportsFBO(): Boolean { // FBO is in core since OpenGL 3.0, see https://www.opengl.org/wiki/Framebuffer_Object

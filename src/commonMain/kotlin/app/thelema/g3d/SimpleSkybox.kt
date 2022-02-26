@@ -31,7 +31,7 @@ import app.thelema.shader.Shader
 class SimpleSkybox(
     fragCode: String? = null,
     shaderFloatPrecision: String = "mediump",
-    shaderVersion: Int = 110,
+    shaderVersion: Int = 330,
     shaderProfile: String = "",
     var texture: TextureCube = TextureCube()
 ): IEntityComponent {
@@ -69,10 +69,10 @@ void main () {
 """,
         fragCode = fragCode ?: """
 varying vec3 vPosition;
-uniform samplerCube texture;
+uniform samplerCube tex;
 
 void main () {
-    gl_FragColor = textureCube(texture, vPosition);
+    gl_FragColor = texture(tex, vPosition);
 }""",
         floatPrecision = shaderFloatPrecision,
         version = shaderVersion,

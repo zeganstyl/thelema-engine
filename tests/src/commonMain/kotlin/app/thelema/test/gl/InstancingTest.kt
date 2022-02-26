@@ -36,12 +36,9 @@ class InstancingTest: Test {
         val simpleShader = SimpleShader3D()
         val instancedShader = Shader(
             vertCode = """
-attribute
-vec3
-POSITION
-;
-attribute vec1 TEXCOORD_0;
-attribute vec1 INSTANCE_POSITION;
+attribute vec3 POSITION;
+attribute vec2 TEXCOORD_0;
+attribute vec3 INSTANCE_POSITION;
 uniform mat4 viewProj;
 
 varying vec2 uv;
