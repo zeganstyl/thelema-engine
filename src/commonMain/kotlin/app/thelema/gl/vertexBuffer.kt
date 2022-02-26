@@ -145,26 +145,33 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
     private fun lastInputByte(): Int = vertexAttributes.lastOrNull()?.nextInputByte ?: 0
 
     override fun addAttribute(attribute: IVertexAttribute): IVertexAccessor {
-        val input = VertexAccessor(this, attribute, lastInputByte())
-        vertexAttributesInternal.add(input)
+        val accessor = VertexAccessor(this, attribute, lastInputByte())
+        vertexAttributesInternal.add(accessor)
         bytesPerVertexInternal = lastInputByte()
-        return input
+        listeners?.iterate { it.addedAccessor(accessor) }
+        return accessor
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
     override fun removeAttributeAt(index: Int) {
-        vertexAttributesInternal.removeAt(index)
+        val accessor = vertexAttributesInternal.removeAt(index)
+        listeners?.iterate { it.removedAccessor(accessor) }
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
     override fun removeAttribute(name: String) {
-        val attribute = vertexAttributesInternal.firstOrNull { it.attribute.name == name }
-        if (attribute != null) vertexAttributesInternal.remove(attribute)
+        val accessor = vertexAttributesInternal.firstOrNull { it.attribute.name == name }
+        if (accessor != null) {
+            vertexAttributesInternal.remove(accessor)
+            listeners?.iterate { it.removedAccessor(accessor) }
+        }
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
     override fun removeAttribute(attribute: IVertexAccessor) {
-        vertexAttributesInternal.remove(attribute)
+        if (vertexAttributesInternal.remove(attribute)) {
+            listeners?.iterate { it.removedAccessor(attribute) }
+        }
     }
 
     override fun initVertexBuffer(verticesCount: Int, block: IByteData.() -> Unit) {
@@ -195,7 +202,6 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
     }
 
     override fun bind(shader: IShader) {
-        GL.glBindVertexArray(0)
         bind()
 
         for (i in vertexAttributes.indices) {
@@ -220,5 +226,9 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 }
 
 interface VertexBufferListener {
+    fun addedAccessor(accessor: IVertexAccessor) {}
+
+    fun removedAccessor(accessor: IVertexAccessor) {}
+
     fun bufferUploadedToGPU(buffer: IGLBuffer) {}
 }

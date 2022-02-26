@@ -52,6 +52,16 @@ interface IVertexAttribute {
      *
      * [OpenGL API](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glVertexAttribDivisor.xhtml) */
     var divisor: Int
+
+    fun getGlslType(): String {
+        val pre: Char? = when (type) {
+            GL_BOOL -> 'b'
+            GL_INT -> 'i'
+            GL_UNSIGNED_INT -> 'u'
+            else -> null
+        }
+        return if (pre == null) "vec$size" else "${pre}vec$size"
+    }
 }
 
 interface IVertexAccessor {

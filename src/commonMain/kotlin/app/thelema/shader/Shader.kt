@@ -26,6 +26,7 @@ import app.thelema.shader.node.*
 import app.thelema.shader.post.*
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
+import kotlin.native.concurrent.ThreadLocal
 
 /** @author zeganstyl */
 open class Shader(
@@ -84,13 +85,13 @@ open class Shader(
             }
         }
 
-    override var buildRequested: Boolean = false
+    override var buildRequested: Boolean = true
 
-    init {
-        if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
-            load(vertCode, fragCode)
-        }
-    }
+//    init {
+//        if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
+//            load(vertCode, fragCode)
+//        }
+//    }
 
     override fun vertSourceCode(title: String, pad: Int): String =
         numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vertCode, pad)
@@ -110,6 +111,28 @@ open class Shader(
         }
     }
 
+    private fun refineAttributes(vert: String): String {
+        return "in\\s+\\w+\\s+\\w+\\s*;".toRegex().replace(vert) {
+            val str = it.value.substringBefore(';').trimEnd()
+            var i = str.length
+            val builder = StringBuilder(str.length)
+            while (i > 0) {
+                i--
+                val c = str[i]
+                if (c.isWhitespace()) break
+                builder.append(c)
+            }
+            builder.reverse()
+            val name = builder.toString()
+            val a = Vertex.attributes[name]
+            if (a == null) {
+                it.value
+            } else {
+                "layout (location = ${a.id}) in ${a.getGlslType()} ${a.name};"
+            }
+        }
+    }
+
     override fun load(vertCode: String, fragCode: String) {
         val ver = getVersionStr()
         val floatPrecision = getFloatPrecisionStr()
@@ -121,6 +144,8 @@ open class Shader(
                 .replace("\nattribute ", "\nin ")
                 .replace("\nvarying ", "\nout ")
 
+            vert = refineAttributes(vert)
+
             frag = fragCode
                 .replace("\nvarying ", "\nin ")
                 .replace("texture2D(", "texture(")
@@ -131,8 +156,12 @@ open class Shader(
                 frag = "out vec4 FragColor;\n$frag"
             }
         }
+
         this.vertCode = vert
         this.fragCode = frag
+
+        LOG.error("======= jflksjdkfjsdlkf $this")
+        LOG.error(this.vertCode)
 
         val fullVertCode = ver + floatPrecision + vert
         val fullFragCode = ver + floatPrecision + frag
@@ -178,7 +207,11 @@ open class Shader(
                 LOG.info(log)
                 LOG.info("=== INFO LOG END ===")
             }
-            LOG.info(printCode())
+            if (showCodeOnError) {
+                LOG.info(printCode())
+            } else {
+                LOG.info("You can set \"Shader.showCodeOnError = true\" to see shader code")
+            }
         }
     }
 
@@ -389,8 +422,13 @@ open class Shader(
         if (!isCompiled) {
             LOG.error("Errors in generated shader")
         }
-        bind()
+        GL.glUseProgram(this.programHandle)
         nodes.iterate { it.shaderCompiled() }
+    }
+
+    override fun bind() {
+        if (buildRequested) build()
+        GL.glUseProgram(this.programHandle)
     }
 
     override fun requestBuild() {
@@ -406,8 +444,10 @@ open class Shader(
         super.destroy()
     }
 
+    @ThreadLocal
     companion object {
         var refineShaderCode: Boolean = true
+        var showCodeOnError: Boolean = false
 
         /** Sort nodes with order:
          * less depth - node will be first,

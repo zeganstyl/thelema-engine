@@ -109,9 +109,7 @@ interface IShader: IEntityComponent {
     fun printCode(pad: Int = 5): String = vertSourceCode(pad = pad) + fragSourceCode(pad = pad)
 
     /** Makes this shader as current. */
-    fun bind() {
-        GL.glUseProgram(this.programHandle)
-    }
+    fun bind()
 
     fun startTextureBinding() {
         GL.resetTextureUnitCounter()

@@ -64,18 +64,14 @@ abstract class AbstractGL: IGL {
 
     override var arrayBuffer: Int = 0
         set(value) {
-            if (field != value) {
-                field = value
-                glBindBufferBase(GL_ARRAY_BUFFER, value)
-            }
+            field = value
+            glBindBufferBase(GL_ARRAY_BUFFER, value)
         }
 
     override var elementArrayBuffer: Int = 0
         set(value) {
-            if (field != value) {
-                field = value
-                glBindBufferBase(GL_ELEMENT_ARRAY_BUFFER, value)
-            }
+            field = value
+            glBindBufferBase(GL_ELEMENT_ARRAY_BUFFER, value)
         }
 
     override var vertexArray: Int = 0

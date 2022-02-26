@@ -18,9 +18,12 @@ package app.thelema.test
 
 import app.thelema.app.APP
 import app.thelema.test.audio.Sound3DTest
+import app.thelema.test.g3d.MeshCubeTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.g3d.terrain.GrassPatchMeshTest
+import app.thelema.test.gl.InstancingTest
 import app.thelema.test.gl.MeshTest
+import app.thelema.test.gl.TriangleBaseTest
 import app.thelema.test.gl.VertexArrayObjectTest
 import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.phys.ObjectShotTest
@@ -31,6 +34,6 @@ class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        VertexArrayObjectTest().testMain()
+        InstancingTest().testMain()
     }
 }

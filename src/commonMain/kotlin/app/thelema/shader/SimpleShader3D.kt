@@ -122,7 +122,7 @@ void main() {
 }
 """
 
-        load(vertCode, fragCode)
+        //load(vertCode, fragCode)
         if (colorTexture != null) set("tex", 0)
     }
 

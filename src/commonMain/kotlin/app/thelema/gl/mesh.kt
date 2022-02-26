@@ -200,6 +200,7 @@ class Mesh(): IMesh {
             if (field != value) {
                 field?.removeMeshListener(inheritedMeshListener)
                 field = value
+                updateVaoRequest = true
                 listeners?.forEach { it.inheritedMeshChanged(this, value) }
                 value?.addMeshListener(inheritedMeshListener)
             }
@@ -246,6 +247,7 @@ class Mesh(): IMesh {
         set(value) {
             if (field != value) {
                 field = value
+                updateVaoRequest = true
                 listeners?.forEach { it.indexBufferChanged(this, value) }
             }
         }
@@ -271,7 +273,7 @@ class Mesh(): IMesh {
     override val vertexBuffers: MutableList<IVertexBuffer>
         get() = _vertexBuffers
 
-    override var vaoHandle: Int = -1
+    override var vaoHandle: Int = 0
     override var instancesCountToRender: Int = -1
 
     override val componentName: String
@@ -285,14 +287,17 @@ class Mesh(): IMesh {
 
     private val inheritedMeshListener = object : MeshListener {
         override fun addedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) {
+            updateVaoRequest = true
             listeners?.forEach { it.addedVertexBuffer(mesh, newVertexBuffer) }
         }
 
         override fun removedVertexBuffer(mesh: IMesh, newVertexBuffer: IVertexBuffer) {
+            updateVaoRequest = true
             listeners?.forEach { it.removedVertexBuffer(mesh, newVertexBuffer) }
         }
 
         override fun indexBufferChanged(mesh: IMesh, newIndexBuffer: IIndexBuffer?) {
+            updateVaoRequest = true
             listeners?.forEach { it.indexBufferChanged(mesh, newIndexBuffer) }
         }
 
@@ -313,6 +318,7 @@ class Mesh(): IMesh {
         }
 
         override fun inheritedMeshChanged(mesh: IMesh, newInheritedMesh: IMesh?) {
+            updateVaoRequest = true
             listeners?.forEach { it.inheritedMeshChanged(mesh, newInheritedMesh) }
         }
 
@@ -325,7 +331,17 @@ class Mesh(): IMesh {
         override fun bufferUploadedToGPU(buffer: IGLBuffer) {
             listeners?.forEach { it.bufferUploadedToGPU(buffer) }
         }
+
+        override fun addedAccessor(accessor: IVertexAccessor) {
+            updateVaoRequest = true
+        }
+
+        override fun removedAccessor(accessor: IVertexAccessor) {
+            updateVaoRequest = true
+        }
     }
+
+    private var updateVaoRequest = true
 
     override fun setMaterialValue(name: String, value: Any) {
         _materialData[name] = value
@@ -396,19 +412,27 @@ class Mesh(): IMesh {
     }
 
     override fun bind(shader: IShader) {
-        val inheritedMesh = inheritedMesh
-        if (inheritedMesh == null) {
-            shader.disableAllAttributes()
+        if (updateVaoRequest) {
+            updateVaoRequest = false
 
-            if (vaoHandle > 0) GL.glBindVertexArray(vaoHandle)
+            //shader.disableAllAttributes()
 
-            if ((indices?.bytes?.limit ?: 0) > 0) indices?.bind()
-        } else {
-            inheritedMesh.bind(shader)
-        }
+            if (vaoHandle == 0) vaoHandle = GL.glGenVertexArrays()
 
-        for (i in vertexBuffers.indices) {
-            vertexBuffers[i].bind(shader)
+            GL.glBindVertexArray(vaoHandle)
+
+            val inheritedMesh = inheritedMesh
+            if (inheritedMesh == null) {
+                if ((indices?.bytes?.limit ?: 0) > 0) indices?.bind()
+            } else {
+                inheritedMesh.bind(shader)
+            }
+
+            for (i in vertexBuffers.indices) {
+                vertexBuffers[i].bind(shader)
+            }
+
+            GL.glBindVertexArray(0)
         }
     }
 
@@ -418,7 +442,7 @@ class Mesh(): IMesh {
             LOG.error("$path: mesh can't be rendered, verticesCount = 0")
             return
         }
-        if (shader.buildRequested) shader.build()
+        shader.bind()
         if (!shader.isCompiled) return
 
         bind(shader)
@@ -441,18 +465,26 @@ class Mesh(): IMesh {
 
             if (numInstances < 0) {
                 shader.prepareShader(this, scene)
+                GL.glBindVertexArray(vaoHandle)
                 GL.glDrawElements(primitiveType, count, indices.indexType, offset * indices.bytesPerIndex)
+                GL.glBindVertexArray(0)
             } else if (numInstances > 0) {
                 shader.prepareShader(this, scene)
+                GL.glBindVertexArray(vaoHandle)
                 GL.glDrawElementsInstanced(primitiveType, count, indices.indexType, offset * indices.bytesPerIndex, numInstances)
+                GL.glBindVertexArray(0)
             }
         } else {
             if (numInstances < 0) {
                 shader.prepareShader(this, scene)
+                GL.glBindVertexArray(vaoHandle)
                 GL.glDrawArrays(primitiveType, offset, count)
+                GL.glBindVertexArray(0)
             } else if (numInstances > 0) {
                 shader.prepareShader(this, scene)
+                GL.glBindVertexArray(vaoHandle)
                 GL.glDrawArraysInstanced(primitiveType, offset, count, numInstances)
+                GL.glBindVertexArray(0)
             }
         }
 

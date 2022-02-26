@@ -26,7 +26,8 @@ data class VertexAttribute(
     override val size: Int,
     override var name: String,
     override val type: Int,
-    override val normalized: Boolean
+    override val normalized: Boolean,
+    override val id: Int = Vertex.newId()
 ): IVertexAttribute {
     init {
         if (size < 1 || size > 4) {
@@ -34,7 +35,6 @@ data class VertexAttribute(
         }
     }
 
-    override val id: Int = Vertex.newId()
     override var divisor: Int = 0
 
     override val sizeInBytes: Int = size * when (type) {
@@ -77,12 +77,14 @@ class VertexAccessor(
     }
 
     override fun bind(shader: IShader) {
-        val attributes = shader.attributes
-        attributes[attribute.name]?.also { bind(it) }
+//        val attributes = shader.attributes
+//        attributes[attribute.name]?.also { bind(it) }
 
-        aliases?.iterate { name ->
-            attributes[name]?.also { bind(it) }
-        }
+        bind(attribute.id)
+
+//        aliases?.iterate { name ->
+//            attributes[name]?.also { bind(it) }
+//        }
     }
 
     override fun bind(location: Int) {

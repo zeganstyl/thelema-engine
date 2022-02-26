@@ -27,9 +27,17 @@ class TriangleBaseTest: Test {
         GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer)
         GL.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes.limit, indexBufferBytes, GL_STATIC_DRAW)
 
+        val vao = GL.glGenVertexArrays()
+
+        val glslVer = if (GL.isGLES) "300 es" else "330"
+
+        val positionLocation = 0
+
         val vertexShaderCode = """
-attribute vec2 POSITION;
-varying vec2 uv;
+#version $glslVer
+
+layout (location = $positionLocation) in vec2 POSITION;
+out vec2 uv;
 
 void main() {
     uv = POSITION;
@@ -38,10 +46,13 @@ void main() {
 """
 
         val fragmentShaderCode = """
-varying vec2 uv;
+#version $glslVer
+
+in vec2 uv;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(uv, 1.0, 1.0);
+    FragColor = vec4(uv, 1.0, 1.0);
 }
 """
 
@@ -61,16 +72,20 @@ void main() {
         GL.glLinkProgram(shaderProgram)
         println(GL.glGetProgramInfoLog(shaderProgram).ifEmpty { "Shader program OK" })
 
+        GL.glBindVertexArray(vao)
+        GL.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer)
+
+        GL.glEnableVertexAttribArray(positionLocation)
+        GL.glVertexAttribPointer(positionLocation, 2, GL_FLOAT, false, 2 * 4, 0)
+        GL.glBindVertexArray(0)
+
         APP.onRender = {
             GL.glUseProgram(shaderProgram)
 
-            val positionAttribute = GL.glGetAttribLocation(shaderProgram, "POSITION")
-            GL.glEnableVertexAttribArray(positionAttribute)
-            GL.glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, false, 2 * 4, 0)
-
-            GL.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer)
-            GL.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+            GL.glBindVertexArray(vao)
             GL.glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0)
+            GL.glBindVertexArray(0)
         }
     }
 }

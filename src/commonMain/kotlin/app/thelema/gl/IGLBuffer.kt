@@ -36,8 +36,9 @@ interface IGLBuffer {
     }
 
     fun bind() {
+        if (bufferHandle == 0) bufferHandle = GL.glGenBuffer()
+        GL.glBindBuffer(target, bufferHandle)
         if (gpuUploadRequested) uploadBufferToGpu()
-        if (bufferHandle > 0) GL.glBindBuffer(target, bufferHandle)
     }
 
     fun uploadBufferToGpu() {

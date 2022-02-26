@@ -422,8 +422,8 @@ class JvmApp(val conf: Lwjgl3WindowConf = Lwjgl3WindowConf()) : AbstractApp() {
 
             GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
             GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3)
-            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
-            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1)
+//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
+//            GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, 1)
 
             if (config.transparentFramebuffer) {
                 GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, 1)

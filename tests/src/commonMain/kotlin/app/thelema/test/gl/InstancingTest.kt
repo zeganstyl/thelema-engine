@@ -34,18 +34,20 @@ class InstancingTest: Test {
     override fun testMain() {
 
         val simpleShader = SimpleShader3D()
-
         val instancedShader = Shader(
             vertCode = """
-attribute vec3 POSITION;
-attribute vec2 UV;
-attribute vec3 INSTANCE_POSITION;
+attribute
+vec3
+POSITION
+;
+attribute vec1 TEXCOORD_0;
+attribute vec1 INSTANCE_POSITION;
 uniform mat4 viewProj;
 
 varying vec2 uv;
 
 void main() {
-    uv = UV;
+    uv = TEXCOORD_0;
     gl_Position = viewProj * vec4(POSITION + INSTANCE_POSITION, 1.0);
 }""",
             fragCode = """
