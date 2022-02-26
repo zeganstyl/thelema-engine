@@ -2,6 +2,7 @@ package app.thelema.g3d.particles
 
 import app.thelema.gl.IMesh
 import app.thelema.gl.IRenderable
+import app.thelema.gl.IVertexAttribute
 import app.thelema.gl.IVertexBuffer
 import app.thelema.math.IVec3
 
@@ -32,6 +33,7 @@ interface IParticles {
 
     fun addParticleLifeTime(particle: Int, time: Float)
 
+    @Suppress("UNCHECKED_CAST")
     fun <T: Any> getParticlesData(name: String): MutableList<T> = particlesData[name] as MutableList<T>
 
     fun addEmitter(emitter: IParticleEmitter)
@@ -42,7 +44,7 @@ interface IParticles {
 
     fun updateParticles(delta: Float)
 
-    fun <T> getOrCreateDataChannel(dimension: Int, name: String): IParticleDataChannel<T>
+    fun <T> getOrCreateDataChannel(attribute: IVertexAttribute): IParticleDataChannel<T>
 
     fun <T> getDataChannel(id: String): IParticleDataChannel<T>?
 

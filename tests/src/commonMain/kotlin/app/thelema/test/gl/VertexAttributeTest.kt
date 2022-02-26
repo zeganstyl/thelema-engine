@@ -30,7 +30,7 @@ class VertexAttributeTest: Test {
     override fun testMain() {
         val mesh = Mesh {
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(8) {
                     putFloats(
                         // front
@@ -74,7 +74,7 @@ class VertexAttributeTest: Test {
             }
         }
 
-        mesh.getAttribute("POSITION") {
+        mesh.getAccessor(Vertex.POSITION) {
             val x = getFloat(0)
             val y = getFloat(4)
             val z = getFloat(8)

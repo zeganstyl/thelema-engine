@@ -96,8 +96,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     }
 
     private fun setupBoundings() {
-        mesh.boundings = if (mesh.containsAttribute("JOINTS_0")) SphereBoundings() else AABB()
-        mesh.boundings?.also { it.setVertices(mesh, "POSITION") }
+        mesh.boundings = if (mesh.containsAttribute(Vertex.JOINTS_0)) SphereBoundings() else AABB()
+        mesh.boundings?.also { it.setVertices(mesh) }
     }
 
     fun mergeBuffers(json: IJsonObject) {
@@ -119,17 +119,19 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 vertices.verticesCount = accessor.count
 
                 vertices.addAttribute(
-                    size = accessor.typeSize(),
-                    name = attributeName,
-                    type = when (accessor.componentType) {
-                        GLTF.Float -> GL_FLOAT
-                        GLTF.Byte -> GL_BYTE
-                        GLTF.UByte -> GL_UNSIGNED_BYTE
-                        GLTF.Short -> GL_SHORT
-                        GLTF.UShort -> GL_UNSIGNED_SHORT
-                        else -> throw IllegalStateException("GLTF: Unknown accessor componentType: ${accessor.componentType}")
-                    },
-                    normalized = if (attributeName.startsWith("JOINTS_")) false else accessor.normalized
+                    Vertex.attributes[attributeName] ?: Vertex.define(
+                        size = accessor.typeSize(),
+                        name = attributeName,
+                        type = when (accessor.componentType) {
+                            GLTF.Float -> GL_FLOAT
+                            GLTF.Byte -> GL_BYTE
+                            GLTF.UByte -> GL_UNSIGNED_BYTE
+                            GLTF.Short -> GL_SHORT
+                            GLTF.UShort -> GL_UNSIGNED_SHORT
+                            else -> throw IllegalStateException("GLTF: Unknown accessor componentType: ${accessor.componentType}")
+                        },
+                        normalized = if (attributeName.startsWith("JOINTS_")) false else accessor.normalized
+                    )
                 )
 
                 if (attributeName == "NORMAL") {
@@ -141,11 +143,11 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         }
 
         if (!hasNormals && conf.calculateNormalsCpu) {
-            vertices.addAttribute(3, "NORMAL", GL_FLOAT, false)
+            vertices.addAttribute(Vertex.NORMAL)
         }
 
-        if (vertices.containsInput("TEXCOORD_0") && !hasTangents) {
-            vertices.addAttribute(4, "TANGENT", GL_FLOAT, false)
+        if (vertices.containsAccessor(Vertex.TEXCOORD_0) && !hasTangents) {
+            vertices.addAttribute(Vertex.TANGENT)
         }
 
         val bytesPerVertex = vertices.bytesPerVertex
@@ -157,7 +159,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
         var loadedAttributes = 0
         vertices.vertexAttributes.forEach { attribute ->
-            val attributeAccessor = gltf.accessors.getOrNull(attributesMap[attribute.name] ?: -1) as GLTFAccessor?
+            val attributeAccessor = gltf.accessors.getOrNull(attributesMap[attribute.attribute.name] ?: -1) as GLTFAccessor?
 
             val completeCall: () -> Unit = {
                 // Implementation note: When normals are not specified, client implementations should calculate flat normals
@@ -239,21 +241,21 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
             // Implementation note: When normals are not specified, client implementations should calculate flat normals
             if (conf.calculateNormalsCpu && !json.obj("attributes").contains("NORMAL")) {
                 mesh.addVertexBuffer {
-                    addAttribute(3, "NORMAL", GL_FLOAT, false)
+                    addAttribute(Vertex.NORMAL)
                     initVertexBuffer(mesh.verticesCount)
                 }
 
                 calcNormals()
             }
 
-            if (conf.calculateTangentsCpu && mesh.containsAttribute("TEXCOORD_0") && !json.obj("attributes").contains("TANGENT")) {
+            if (conf.calculateTangentsCpu && mesh.containsAttribute(Vertex.TEXCOORD_0) && !json.obj("attributes").contains("TANGENT")) {
                 val positionAccessor = json.obj("attributes").int("POSITION")
                 val buffer = gltfMesh.tangentsMap[positionAccessor]
                 if (buffer != null) {
                     mesh.addVertexBuffer(buffer)
                 } else {
                     gltfMesh.tangentsMap[positionAccessor] = mesh.addVertexBuffer {
-                        addAttribute(4, "TANGENT", GL_FLOAT, false)
+                        addAttribute(Vertex.TANGENT)
                         initVertexBuffer(mesh.verticesCount)
                     }
                 }
@@ -295,17 +297,19 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                             this.bytes = bytes.byteView().copy()
                             verticesCount = accessor.count
                             addAttribute(
-                                size = accessor.typeSize(),
-                                name = attributeName,
-                                type = when (accessor.componentType) {
-                                    GLTF.Float -> GL_FLOAT
-                                    GLTF.Byte -> GL_BYTE
-                                    GLTF.UByte -> GL_UNSIGNED_BYTE
-                                    GLTF.Short -> GL_SHORT
-                                    GLTF.UShort -> GL_UNSIGNED_SHORT
-                                    else -> throw IllegalStateException("GLTF: Unknown accessor componentType: ${accessor.componentType}")
-                                },
-                                normalized = if (attributeName.startsWith("JOINTS_")) false else accessor.normalized
+                                Vertex.attributes[attributeName] ?: VertexAttribute(
+                                    size = accessor.typeSize(),
+                                    name = attributeName,
+                                    type = when (accessor.componentType) {
+                                        GLTF.Float -> GL_FLOAT
+                                        GLTF.Byte -> GL_BYTE
+                                        GLTF.UByte -> GL_UNSIGNED_BYTE
+                                        GLTF.Short -> GL_SHORT
+                                        GLTF.UShort -> GL_UNSIGNED_SHORT
+                                        else -> throw IllegalStateException("GLTF: Unknown accessor componentType: ${accessor.componentType}")
+                                    },
+                                    normalized = if (attributeName.startsWith("JOINTS_")) false else accessor.normalized
+                                )
                             )
                         }
                     }
@@ -324,8 +328,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         if (mesh.primitiveType == GL_TRIANGLES) {
             Mesh3DTool.calculateFlatNormals(
                 mesh,
-                mesh.getAttribute("POSITION"),
-                mesh.getAttribute("NORMAL")
+                mesh.getAccessor(Vertex.POSITION),
+                mesh.getAccessor(Vertex.NORMAL)
             )
             currentProgress++
         }
@@ -334,17 +338,17 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     fun calcTangents() {
         val mesh = mesh
 
-        if (mesh.containsAttribute("TEXCOORD_0") && mesh.primitiveType == GL_TRIANGLES) {
+        if (mesh.containsAttribute(Vertex.TEXCOORD_0) && mesh.primitiveType == GL_TRIANGLES) {
             Mesh3DTool.calculateTangents(
                 mesh,
-                mesh.getAttribute("POSITION"),
-                mesh.getAttribute("TEXCOORD_0"),
-                mesh.getAttribute("TANGENT")
+                mesh.getAccessor(Vertex.POSITION),
+                mesh.getAccessor(Vertex.TEXCOORD_0),
+                mesh.getAccessor(Vertex.TANGENT)
             )
             currentProgress++
             Mesh3DTool.orthogonalizeTangents(
-                mesh.getAttribute("TANGENT"),
-                mesh.getAttribute("NORMAL")
+                mesh.getAccessor(Vertex.TANGENT),
+                mesh.getAccessor(Vertex.NORMAL)
             )
             currentProgress++
         }

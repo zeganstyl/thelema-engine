@@ -57,8 +57,8 @@ open class Shader(
     override val uniforms = HashMap<String, Int>()
     override val attributes = HashMap<String, Int>()
 
-    protected val enabledAttributesInternal = ArrayList<IVertexAttribute>()
-    override val enabledAttributes: List<IVertexAttribute>
+    protected val enabledAttributesInternal = ArrayList<IVertexAccessor>()
+    override val enabledAttributes: List<IVertexAccessor>
         get() = enabledAttributesInternal
 
     override var vertexShaderHandle: Int = 0
@@ -127,7 +127,8 @@ open class Shader(
                 .replace("textureCube(", "texture(")
 
             if (frag.contains("gl_FragColor")) {
-                frag = "out vec4 gl_FragColor;\n$frag"
+                frag = frag.replace("gl_FragColor", "FragColor")
+                frag = "out vec4 FragColor;\n$frag"
             }
         }
         this.vertCode = vert
@@ -279,33 +280,30 @@ open class Shader(
         enabledAttributesInternal.clear()
     }
 
-    override fun disableAttribute(attribute: IVertexAttribute) {
-        val location = attributes[attribute.name]
+    override fun disableAttribute(attribute: IVertexAccessor) {
+        val location = attributes[attribute.attribute.name]
         if (location != null) {
             GL.glDisableVertexAttribArray(location)
             enabledAttributesInternal.remove(attribute)
         }
     }
 
-    override fun enableAttribute(attribute: IVertexAttribute) {
-        val location = attributes[attribute.name]
+    override fun enableAttribute(accessor: IVertexAccessor) {
+        val location = attributes[accessor.attribute.name]
         if (location != null) {
             GL.glEnableVertexAttribArray(location)
             GL.glVertexAttribPointer(
                 location,
-                attribute.size,
-                attribute.type,
-                attribute.normalized,
-                attribute.stride,
-                attribute.byteOffset
+                accessor.attribute.size,
+                accessor.attribute.type,
+                accessor.attribute.normalized,
+                accessor.stride,
+                accessor.byteOffset
             )
 
-            // TODO GLFeature
-            if ((GL.isGLES && GL.glesMajVer >= 3) || !GL.isGLES) {
-                GL.glVertexAttribDivisor(location, attribute.divisor)
-            }
+            GL.glVertexAttribDivisor(location, accessor.attribute.divisor)
 
-            enabledAttributesInternal.add(attribute)
+            enabledAttributesInternal.add(accessor)
         }
     }
 
@@ -627,7 +625,6 @@ open class Shader(
                 descriptor({ ParticleUVFrameNode() }) {
                     int(ParticleUVFrameNode::framesU, 1)
                     int(ParticleUVFrameNode::framesV, 1)
-                    string(ParticleUVFrameNode::instanceUvStartName, "INSTANCE_UV_START")
                     shaderNodeInput(ParticleUVFrameNode::inputUv)
                     shaderNodeOutput(ParticleUVFrameNode::resultUv)
                 }

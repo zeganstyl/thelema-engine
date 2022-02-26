@@ -65,7 +65,6 @@ class InstancedParticlesTest: Test {
 
                         val textureFrame = ParticleUVFrameNode().apply {
                             inputUv = uvNode.uv
-                            instanceUvStartName = frame.instanceUvStartName
                             framesU = frame.framesU
                             framesV = frame.framesV
                         }
@@ -107,7 +106,7 @@ class InstancedParticlesTest: Test {
 
             entity("smoke2") {
                 transformNode {
-                    position.x = 3f
+                    setPosition(0f, 3f, 0f)
                     requestTransformUpdate()
                 }
                 particleEmitter {

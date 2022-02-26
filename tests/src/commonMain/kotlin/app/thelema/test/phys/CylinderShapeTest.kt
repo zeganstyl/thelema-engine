@@ -56,7 +56,7 @@ class CylinderShapeTest: Test {
                 length = cylinder.length
             }
             rigidBody {
-                node.position.set(0f, 3f, 0f)
+                node.setPosition(0f, 3f, 0f)
             }
         }
 
@@ -67,7 +67,7 @@ class CylinderShapeTest: Test {
                 length = cylinder.length
             }
             rigidBody {
-                node.position.set(1.25f, 0f, 0f)
+                node.setPosition(1.25f, 0f, 0f)
                 node.rotateAroundAxis(1f, 0f, 0f, MATH.PI_HALF)
                 isStatic = true
             }
@@ -80,7 +80,7 @@ class CylinderShapeTest: Test {
                 length = cylinder.length
             }
             rigidBody {
-                node.position.set(-2f, 0f, 0f)
+                node.setPosition(-2f, 0f, 0f)
                 node.rotateAroundAxis(1f, 0f, 0f, MATH.PI_HALF)
                 isStatic = true
             }

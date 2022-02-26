@@ -56,8 +56,8 @@ void main() {
     var mesh = Mesh()
 
     val buffer: IVertexBuffer = mesh.addVertexBuffer {
-        addAttribute(3, "POSITION")
-        addAttribute(3, "COLOR")
+        addAttribute(Vertex.POSITION)
+        addAttribute(Vertex.COLOR)
     }
 
     init {
@@ -75,20 +75,20 @@ void main() {
     fun reset() {
         buffer.initVertexBuffer(0)
 
-        mesh.getAttribute("POSITION").rewind()
-        mesh.getAttribute("COLOR").rewind()
+        mesh.getAccessor(Vertex.POSITION).rewind()
+        mesh.getAccessor(Vertex.COLOR).rewind()
     }
 
-    fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: Int, scale: Float = 1f) {
+    fun addVectors3D(positions: IVertexAccessor, vectors: IVertexAccessor, color: Int, scale: Float = 1f) {
         addVectors3D(positions, vectors, Color.intToVec4(color), scale)
     }
 
-    fun addVectors3D(positions: IVertexAttribute, vectors: IVertexAttribute, color: IVec4, scale: Float = 1f) {
+    fun addVectors3D(positions: IVertexAccessor, vectors: IVertexAccessor, color: IVec4, scale: Float = 1f) {
         buffer.resizeVertexBuffer(buffer.verticesCount + positions.count * 2)
         mesh.verticesCount = buffer.verticesCount
 
-        val debugPositions = mesh.getAttribute("POSITION")
-        val debugColors = mesh.getAttribute("COLOR")
+        val debugPositions = mesh.getAccessor(Vertex.POSITION)
+        val debugColors = mesh.getAccessor(Vertex.COLOR)
 
         positions.rewind()
         vectors.rewind()

@@ -1,12 +1,12 @@
 package app.thelema.test
 
-import app.thelema.app.APP
 import app.thelema.ecs.Entity
 import app.thelema.ecs.mainLoop
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
+import app.thelema.g3d.particles.Particle
 import app.thelema.g3d.scene
 import app.thelema.gl.*
 import app.thelema.img.Texture2D
@@ -73,9 +73,9 @@ void main() {
             val maxParticles = 1000
             particlesMesh.instancesCountToRender = 0
             particlesMesh.addVertexBuffer {
-                addAttribute(3, "INSTANCE_POSITION")
-                addAttribute(1, "INSTANCE_LIFE_TIME")
-                addAttribute(2, "INSTANCE_UV_START")
+                addAttribute(Vertex.INSTANCE_POSITION)
+                addAttribute(Particle.LIFE_TIME)
+                addAttribute(Particle.UV_START)
                 initVertexBuffer(maxParticles)
 
                 setDivisor()
@@ -83,9 +83,9 @@ void main() {
                 requestBufferUploading()
             }
 
-            val particlesLifeTimes = particlesMesh.getAttribute("INSTANCE_LIFE_TIME")
-            val particlesPositions = particlesMesh.getAttribute("INSTANCE_POSITION")
-            val particlesStartUvs = particlesMesh.getAttribute("INSTANCE_UV_START")
+            val particlesLifeTimes = particlesMesh.getAccessor(Particle.LIFE_TIME)
+            val particlesPositions = particlesMesh.getAccessor(Vertex.INSTANCE_POSITION)
+            val particlesStartUvs = particlesMesh.getAccessor(Particle.UV_START)
 
             val particleLifeTime = 5f
 

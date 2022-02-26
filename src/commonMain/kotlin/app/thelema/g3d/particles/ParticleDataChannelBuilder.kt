@@ -1,6 +1,6 @@
 package app.thelema.g3d.particles
 
-import app.thelema.gl.IVertexAttribute
+import app.thelema.gl.IVertexAccessor
 import app.thelema.math.*
 
 object ParticleDataChannelBuilder {
@@ -11,17 +11,17 @@ object ParticleDataChannelBuilder {
 }
 
 interface IInstanceDataChannelBuilder<T: Any?> {
-    fun build(attribute: IVertexAttribute): IParticleDataChannel<T>
+    fun build(attribute: IVertexAccessor): IParticleDataChannel<T>
 }
 
 class InstanceDataChannelBuilder<T: Any?>(
     val createElement: () -> T,
-    val setToAttributeBlock: IVertexAttribute.(value: T) -> Unit
+    val setToAttributeBlock: IVertexAccessor.(value: T) -> Unit
 ): IInstanceDataChannelBuilder<T> {
-    override fun build(attribute: IVertexAttribute) = object : IParticleDataChannel<T> {
+    override fun build(attribute: IVertexAccessor) = object : IParticleDataChannel<T> {
         override val data: MutableList<T> = ArrayList()
         override var needWriteToBuffer: Boolean = false
-        override val attribute: IVertexAttribute = attribute
+        override val accessor: IVertexAccessor = attribute
 
         override fun newDataElement(): T = createElement()
 

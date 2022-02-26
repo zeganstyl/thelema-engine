@@ -18,6 +18,8 @@ package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
+import app.thelema.gl.normals
+import app.thelema.gl.uvs
 import app.thelema.math.MATH
 import kotlin.math.abs
 
@@ -73,8 +75,8 @@ class SphereMesh(): MeshBuilderAdapter() {
             val hNum = hDivisions + 1
             val vNum = vDivisions + 1
 
-            val uvs = mesh.getAttributeOrNull(builder.uvName)
-            val normals = mesh.getAttributeOrNull(builder.normalName)
+            val uvs = mesh.uvs()
+            val normals = mesh.normals()
 
             // https://en.wikipedia.org/wiki/Spherical_coordinate_system
             for (yi in 0 until vNum) {

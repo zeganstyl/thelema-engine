@@ -30,6 +30,8 @@ import app.thelema.shader.IShader
  *
  * @author zeganstyl */
 interface IVertexAttribute {
+    val id: Int
+
     /** Number of components of this attribute, must be between 1 and 4. */
     val size: Int
 
@@ -43,14 +45,23 @@ interface IVertexAttribute {
      * converted directly as fixed-point values (false) when they are accessed. */
     val normalized: Boolean
 
-    /** The offset of this input in bytes. */
-    val byteOffset: Int
-
     /** Bytes count this input uses. */
     val sizeInBytes: Int
 
+    /** Used for instancing. Set to 1, to enable instancing
+     *
+     * [OpenGL API](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glVertexAttribDivisor.xhtml) */
+    var divisor: Int
+}
+
+interface IVertexAccessor {
+    /** The offset of this input in bytes. */
+    val byteOffset: Int
+
     /** Bytes count between elements. If not set, must be -1 by default */
     var customStride: Int
+
+    val attribute: IVertexAttribute
 
     /** Cursor byte position for put and get operations */
     val bytePosition: Int
@@ -64,7 +75,7 @@ interface IVertexAttribute {
         get() = if (customStride > 0) customStride else buffer.bytesPerVertex
 
     val nextInputByte: Int
-        get() = byteOffset + (if (customStride > 0) customStride else sizeInBytes)
+        get() = byteOffset + (if (customStride > 0) customStride else attribute.sizeInBytes)
 
     val bytes: IByteData
         get() = buffer.bytes
@@ -72,13 +83,6 @@ interface IVertexAttribute {
     /** Vertices count */
     val count: Int
         get() = buffer.bytes.limit / buffer.bytesPerVertex
-
-    /** Used for instancing. Set to 1, to enable instancing
-     *
-     * [OpenGL API](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glVertexAttribDivisor.xhtml) */
-    var divisor: Int
-
-    val aliases: List<String>
 
     fun addAlias(name: String)
 
@@ -112,14 +116,14 @@ interface IVertexAttribute {
     /** Move cursor to the begin */
     fun rewind()
 
-    fun rewind(block: IVertexAttribute.() -> Unit) {
+    fun rewind(block: IVertexAccessor.() -> Unit) {
         rewind()
         block(this)
         rewind()
     }
 
     /** Rewind buffer, and after [block], request buffer upload to GPU, and rewind again */
-    fun prepare(block: IVertexAttribute.() -> Unit)
+    fun prepare(block: IVertexAccessor.() -> Unit)
 
     /** Rewind buffer, and request buffer upload to GPU */
     fun prepare()
@@ -127,57 +131,55 @@ interface IVertexAttribute {
     /** Move cursor to vertex by index */
     fun setVertexPosition(index: Int)
 
-    fun putBytesNext(vararg values: Int): IVertexAttribute
+    fun putBytesNext(vararg values: Int)
 
-    fun putShortsNext(vararg values: Int): IVertexAttribute
+    fun putShortsNext(vararg values: Int)
 
     /** Put int at the current vertex and move cursor to next vertex */
-    fun putIntNext(x: Int): IVertexAttribute
+    fun putIntNext(x: Int)
 
     /** Put ints at the current vertex and move cursor to next vertex */
-    fun putIntsNext(vararg values: Int): IVertexAttribute
+    fun putIntsNext(vararg values: Int)
 
     /** Put float at the current vertex and move cursor to next vertex */
-    fun putFloatNext(x: Float): IVertexAttribute
+    fun putFloatNext(x: Float)
 
     /** Put float at the current vertex with offset */
-    fun setFloat(byteOffset: Int, x: Float): IVertexAttribute
+    fun setFloat(byteOffset: Int, x: Float)
 
     /** Put first float at the current vertex */
-    fun setFloat(value: Float): IVertexAttribute
+    fun setFloat(value: Float)
 
     /** Put first vec2 at the current vertex */
-    fun setVec2(value: IVec2): IVertexAttribute
+    fun setVec2(value: IVec2)
 
     /** Put first vec3 at the current vertex */
-    fun setVec3(value: IVec3): IVertexAttribute
+    fun setVec3(value: IVec3)
 
     /** Put first vec4 at the current vertex */
-    fun setVec4(value: IVec4): IVertexAttribute
+    fun setVec4(value: IVec4)
 
     /** Put floats at the current vertex */
-    fun setFloats(vararg values: Float): IVertexAttribute
+    fun setFloats(vararg values: Float)
 
     /** @param step it means, that every [step] floats, cursor will be moved to next vertex */
     fun putFloatsWithStep(step: Int, vararg values: Float)
 
-    fun putFloatsStart(index: Int, vararg values: Float): IVertexAttribute {
+    fun putFloatsStart(index: Int, vararg values: Float) {
         setVertexPosition(index)
         setFloats(*values)
-        return this
     }
 
     /** Put floats at the current vertex and move cursor to next vertex */
-    fun putFloatsNext(vararg values: Float): IVertexAttribute {
+    fun putFloatsNext(vararg values: Float) {
         setFloats(*values)
         nextVertex()
-        return this
     }
 
     fun toFloatArray(out: FloatArray? = null): FloatArray
 }
 
 /** Get float value at the current vertex with offset, convert it to another value and put in same place */
-inline fun IVertexAttribute.mapFloat(byteOffset: Int, block: (value: Float) -> Float) {
+inline fun IVertexAccessor.mapFloat(byteOffset: Int, block: (value: Float) -> Float) {
     setFloat(byteOffset, block(getFloat(byteOffset)))
 }

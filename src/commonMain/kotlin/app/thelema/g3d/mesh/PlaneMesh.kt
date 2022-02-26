@@ -18,8 +18,8 @@ package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
-import app.thelema.gl.IVertexAttribute
-import app.thelema.math.IVec3
+import app.thelema.gl.*
+import app.thelema.math.IVec3C
 import app.thelema.math.Vec3
 
 class PlaneMesh(): MeshBuilderAdapter() {
@@ -66,9 +66,11 @@ class PlaneMesh(): MeshBuilderAdapter() {
 
     var heightProvider: (hIndex: Int, vIndex: Int) -> Float = { _, _ -> 0f }
 
-    var normal: IVec3 = Vec3(0f, 1f, 0f)
+    private val _normal = Vec3(0f, 1f, 0f)
+    var normal: IVec3C
+        get() = _normal
         set(value) {
-            field.set(value)
+            _normal.set(value)
             requestMeshUpdate()
         }
 
@@ -94,13 +96,13 @@ class PlaneMesh(): MeshBuilderAdapter() {
         val xNum = hDivisions + 1
         val yNum = vDivisions + 1
 
-        val positions = mesh.getAttribute(builder.positionName)
+        val positions = mesh.positions()
         positions.rewind()
 
-        val uvs = mesh.getAttributeOrNull(builder.uvName)
+        val uvs = mesh.uvs()
         uvs?.rewind()
 
-        val normals = mesh.getAttributeOrNull(builder.normalName)
+        val normals = mesh.normals()
         normals?.rewind()
 
         val halfWidth = width * 0.5f
@@ -152,9 +154,9 @@ class PlaneMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPositionsAsNormalX(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         x: Float,
         y: Float,
         ix: Int,
@@ -168,9 +170,9 @@ class PlaneMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPositionsAsNormalY(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         x: Float,
         y: Float,
         ix: Int,
@@ -184,9 +186,9 @@ class PlaneMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPositionsAsNormalZ(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         x: Float,
         y: Float,
         ix: Int,
@@ -200,9 +202,9 @@ class PlaneMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPositionsByNormal(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         x: Float,
         y: Float,
         ix: Int,

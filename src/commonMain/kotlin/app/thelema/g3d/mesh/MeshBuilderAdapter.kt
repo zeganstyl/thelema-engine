@@ -21,8 +21,7 @@ import app.thelema.ecs.RebuildListener
 import app.thelema.ecs.component
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
-import app.thelema.gl.IVertexAttribute
-import app.thelema.json.IJsonObject
+import app.thelema.gl.IVertexAccessor
 
 abstract class MeshBuilderAdapter: IMeshBuilder {
     override var entityOrNull: IEntity? = null
@@ -49,13 +48,13 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
         get() = builder.rebuildListener
         set(value) { builder.rebuildListener = value }
 
-    override fun preparePositions(block: IVertexAttribute.() -> Unit) {
+    override fun preparePositions(block: IVertexAccessor.() -> Unit) {
         if (getVerticesCount() > 0) builder.preparePositions(block)
     }
-    override fun prepareUvs(block: IVertexAttribute.() -> Unit) {
+    override fun prepareUvs(block: IVertexAccessor.() -> Unit) {
         if (getVerticesCount() > 0) builder.prepareUvs(block)
     }
-    override fun prepareNormals(block: IVertexAttribute.() -> Unit) {
+    override fun prepareNormals(block: IVertexAccessor.() -> Unit) {
         if (getVerticesCount() > 0) builder.prepareNormals(block)
     }
 

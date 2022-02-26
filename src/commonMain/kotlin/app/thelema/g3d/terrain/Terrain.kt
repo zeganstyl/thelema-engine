@@ -32,8 +32,7 @@ import app.thelema.utils.iterate
 class Terrain(
     minTileSize: Float = 10f,
     tileDivisions: Int = 10,
-    levelsNum: Int = 10,
-    vertexPositionName: String = "POSITION"
+    levelsNum: Int = 10
 ): IEntityComponent, UpdatableComponent, IRenderable {
     constructor(block: Terrain.() -> Unit): this() {
         block()
@@ -79,7 +78,6 @@ class Terrain(
         tileSize = 1f
         builder.uvs = false
         builder.tangents = false
-        builder.positionName = vertexPositionName
     }
 
     val frame = TerrainLodFrame2to1Mesh().apply {
@@ -88,16 +86,8 @@ class Terrain(
         outerLodDivisions = tileDivisions
         builder.uvs = plane.builder.uvs
         builder.tangents = plane.builder.tangents
-        builder.positionName = plane.builder.positionName
         setSideFlags(left = false, right = false, top = false, bottom = false)
     }
-
-    var vertexPositionName: String
-        get() = plane.builder.positionName
-        set(value) {
-            plane.builder.positionName = value
-            frame.builder.positionName = value
-        }
 
     private var _levels = Array(levelsNum) { TerrainLevel(this, it, minTileSize) }
     val levels: Array<TerrainLevel>

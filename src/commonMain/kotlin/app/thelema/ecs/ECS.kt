@@ -239,7 +239,6 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             int(Terrain::levelsNum, 10)
             bool(Terrain::useCameraFrustum, true)
             string(Terrain::tilePositionScaleName, "tilePositionScale")
-            string(Terrain::vertexPositionName, "POSITION")
             float(Terrain::minY, 0f)
             float(Terrain::maxY, 100f)
         }

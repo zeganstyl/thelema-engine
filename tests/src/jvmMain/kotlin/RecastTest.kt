@@ -79,7 +79,7 @@ fun main() {
                 addEntity(scene.copyDeep().apply {
                     forEachComponentInBranch { component ->
                         if (component is IMesh) {
-                            component.inheritedMesh?.getAttribute("POSITION") {
+                            component.inheritedMesh?.getAccessor(Vertex.POSITION) {
                                 geom.addTrimesh(this, component.indices!!)
                             }
                         }
@@ -99,7 +99,7 @@ fun IEntity.createLineEntity(path: List<StraightPathItem>) {
         mesh {
             primitiveType = GL_LINE_STRIP
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(path.size) {
                     path.forEach {
                         putFloat(it.pos[0])
@@ -115,7 +115,7 @@ fun IEntity.createLineEntity(path: List<StraightPathItem>) {
     }
 }
 
-inline fun IVertexAttribute.forEachVec3f(block: (x: Float, y: Float, z: Float) -> Unit) {
+inline fun IVertexAccessor.forEachVec3f(block: (x: Float, y: Float, z: Float) -> Unit) {
     var byteOffset = this.byteOffset
     val stride = stride
     val count = count

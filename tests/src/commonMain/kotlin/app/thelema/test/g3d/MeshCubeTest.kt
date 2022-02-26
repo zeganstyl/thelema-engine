@@ -34,7 +34,7 @@ class MeshCubeTest: Test {
     override fun testMain() {
         val mesh = Mesh {
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(8) {
                     putFloats(
                         // front

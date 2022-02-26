@@ -23,7 +23,6 @@ import app.thelema.ecs.component
 import app.thelema.gl.*
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
-import app.thelema.utils.LOG
 
 class MeshBuilder: IMeshBuilder {
     override val componentName: String
@@ -38,11 +37,6 @@ class MeshBuilder: IMeshBuilder {
     var uvs = true
     var normals = true
     var tangents = true
-
-    var positionName: String = "POSITION"
-    var uvName: String = "TEXCOORD_0"
-    var normalName: String = "NORMAL"
-    var tangentName: String = "TANGENT"
 
     var calculateNormals = false
 
@@ -95,7 +89,7 @@ class MeshBuilder: IMeshBuilder {
     fun applyTransform() {
         if (rotation.isNotIdentity) {
             val mat = Mat4().set(position, rotation, scale)
-            mesh.prepareAttribute(positionName) {
+            preparePositions {
                 for (i in 0 until buffer.verticesCount) {
                     mat.mul(getFloat(0), getFloat(4), getFloat(8)) { x, y, z ->
                         setFloat(0, x)
@@ -107,7 +101,7 @@ class MeshBuilder: IMeshBuilder {
             }
         } else {
             if (position.isNotZero) {
-                mesh.prepareAttribute(positionName) {
+                preparePositions {
                     for (i in 0 until buffer.verticesCount) {
                         mapFloat(0) { it + position.x }
                         mapFloat(4) { it + position.y }
@@ -118,7 +112,7 @@ class MeshBuilder: IMeshBuilder {
             }
 
             if (scale.isNotEqual(1f, 1f, 1f)) {
-                mesh.prepareAttribute(positionName) {
+                preparePositions {
                     for (i in 0 until buffer.verticesCount) {
                         mapFloat(0) { it * scale.x }
                         mapFloat(4) { it * scale.y }
@@ -130,16 +124,16 @@ class MeshBuilder: IMeshBuilder {
         }
     }
 
-    override fun preparePositions(block: IVertexAttribute.() -> Unit) {
-        mesh.prepareAttribute(positionName, block)
+    override fun preparePositions(block: IVertexAccessor.() -> Unit) {
+        mesh.positions().prepare(block)
     }
 
-    override fun prepareUvs(block: IVertexAttribute.() -> Unit) {
-        mesh.prepareAttribute(uvName, block)
+    override fun prepareUvs(block: IVertexAccessor.() -> Unit) {
+        mesh.uvs()?.prepare(block)
     }
 
-    override fun prepareNormals(block: IVertexAttribute.() -> Unit) {
-        mesh.prepareAttribute(normalName, block)
+    override fun prepareNormals(block: IVertexAccessor.() -> Unit) {
+        mesh.normals()?.prepare(block)
     }
 
     override fun prepareIndices(block: IIndexBuffer.() -> Unit) {
@@ -159,25 +153,25 @@ class MeshBuilder: IMeshBuilder {
         mesh.verticesCount = verticesNum
         if (vertexBuffer == null) {
             vertexBuffer = mesh.addVertexBuffer {
-                addAttribute(3, positionName)
-                if (uvs) addAttribute(2, uvName)
-                if (normals) addAttribute(3, normalName)
-                if (tangents) addAttribute(4, tangentName)
+                addAttribute(Vertex.POSITION)
+                if (uvs) addAttribute(Vertex.TEXCOORD_0)
+                if (normals) addAttribute(Vertex.NORMAL)
+                if (tangents) addAttribute(Vertex.TANGENT)
                 initVertexBuffer(mesh.verticesCount)
             }
         } else {
             vertexBuffer?.apply {
-                val positions = !containsInput(positionName)
-                if (positions) addAttribute(3, positionName)
+                val positions = !containsAccessor(Vertex.POSITION)
+                if (positions) addAttribute(Vertex.POSITION)
 
-                val uvs = uvs && !containsInput(uvName)
-                if (uvs) addAttribute(2, uvName)
+                val uvs = uvs && !containsAccessor(Vertex.TEXCOORD_0)
+                if (uvs) addAttribute(Vertex.TEXCOORD_0)
 
-                val normals = normals && !containsInput(normalName)
-                if (normals) addAttribute(3, normalName)
+                val normals = normals && !containsAccessor(Vertex.NORMAL)
+                if (normals) addAttribute(Vertex.NORMAL)
 
-                val tangents = tangents && !containsInput(tangentName)
-                if (tangents) addAttribute(4, tangentName)
+                val tangents = tangents && !containsAccessor(Vertex.TANGENT)
+                if (tangents) addAttribute(Vertex.TANGENT)
 
                 if (positions || uvs || normals || tangents || verticesNum != verticesCount) {
                     initVertexBuffer(verticesNum)
@@ -200,8 +194,8 @@ class MeshBuilder: IMeshBuilder {
         if (calculateNormals) Mesh3DTool.calculateFlatNormals(mesh)
 
         if (tangents) {
-            Mesh3DTool.calculateTangents(mesh, mesh.getAttribute(positionName), mesh.getAttribute(uvName), mesh.getAttribute(tangentName))
-            Mesh3DTool.orthogonalizeTangents(mesh.getAttribute(tangentName), mesh.getAttribute(normalName))
+            Mesh3DTool.calculateTangents(mesh, mesh.positions(), mesh.uvs()!!, mesh.tangents()!!)
+            Mesh3DTool.orthogonalizeTangents(mesh.tangents()!!, mesh.normals()!!)
         }
 
         mesh.vertexBuffers.forEach { buffer ->

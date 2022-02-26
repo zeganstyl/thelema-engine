@@ -20,6 +20,8 @@ import app.thelema.app.APP
 import app.thelema.test.audio.Sound3DTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.g3d.terrain.GrassPatchMeshTest
+import app.thelema.test.gl.MeshTest
+import app.thelema.test.gl.VertexArrayObjectTest
 import app.thelema.test.phys.BoxShapeTest
 import app.thelema.test.phys.ObjectShotTest
 import app.thelema.test.shader.HeightMapToNormalMapTest
@@ -29,6 +31,6 @@ class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        GLTFDamagedHelmetTest().testMain()
+        VertexArrayObjectTest().testMain()
     }
 }

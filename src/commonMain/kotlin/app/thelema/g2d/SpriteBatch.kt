@@ -42,12 +42,10 @@ import app.thelema.utils.Color
 open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultShader(), var ownsShader: Boolean = true) : Batch {
     var autoResize: Boolean = size == -1
 
-    val verts = VertexBuffer {
-        addAttribute(2, "POSITION", GL_FLOAT, false)
-        addAttribute(4, "COLOR", GL_UNSIGNED_BYTE, true)
-        addAttribute(2, "UV", GL_FLOAT, false)
-        initVertexBuffer(if (autoResize) DEFAULT_VERTICES_NUM else size)
-    }
+    val verts = VertexBuffer(
+        if (autoResize) DEFAULT_VERTICES_NUM else size,
+        Vertex.POSITION2D, Vertex.COLOR, Vertex.TEXCOORD_0
+    )
 
     var vertices = verts.bytes.floatView()
 
@@ -718,14 +716,14 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
             val vertexShader = """
 attribute vec2 POSITION;
 attribute vec4 COLOR;
-attribute vec2 UV;
+attribute vec2 TEXCOORD_0;
 uniform mat4 u_projTrans;
 varying vec4 v_color;
 varying vec2 uv;
 
 void main() {
     v_color = COLOR;
-    uv = UV;
+    uv = TEXCOORD_0;
     gl_Position =  u_projTrans * vec4(POSITION, 0.0, 1.0);
 }"""
 

@@ -17,9 +17,7 @@
 package app.thelema.g3d.terrain
 
 import app.thelema.g3d.mesh.MeshBuilderAdapter
-import app.thelema.gl.IIndexBuffer
-import app.thelema.gl.IVertexAttribute
-import app.thelema.gl.IndexBuffer
+import app.thelema.gl.*
 
 /** Frame with LOD transition from 2 vertices to 1. You can use it in conjunction with [TerrainTileMesh] */
 class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
@@ -82,8 +80,8 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
 
     override fun applyVertices() {
         preparePositions {
-            val uvs = mesh.getAttributeOrNull(builder.uvName)
-            val normals = mesh.getAttributeOrNull(builder.normalName)
+            val uvs = mesh.uvs()
+            val normals = mesh.normals()
             val verticesPerLine = outerLodDivisions * 2
             val quadSize = frameSize * 0.5f / outerLodDivisions
 
@@ -133,9 +131,9 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
     }
 
     private fun hLine(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         verticesNum: Int,
         step: Float,
         xOffset: Float,
@@ -162,9 +160,9 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
     }
 
     private fun vLine(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         verticesNum: Int,
         step: Float,
         xOffset: Float,
@@ -191,9 +189,9 @@ class TerrainLodFrame2to1Mesh(): MeshBuilderAdapter() {
     }
 
     private fun corner(
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute?,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor?,
+        normals: IVertexAccessor?,
         x: Float,
         z: Float
     ): Int {

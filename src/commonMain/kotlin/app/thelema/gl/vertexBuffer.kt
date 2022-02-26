@@ -19,14 +19,15 @@ package app.thelema.gl
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.shader.IShader
+import app.thelema.utils.iterate
 import kotlin.math.min
 
 /** VBO interface */
 interface IVertexBuffer: IGLBuffer {
     var verticesCount: Int
 
-    /** @return the [IVertexAttribute] as specified during construction. */
-    val vertexAttributes: List<IVertexAttribute>
+    /** @return the [IVertexAccessor] as specified during construction. */
+    val vertexAttributes: List<IVertexAccessor>
 
     /** The size of a single vertex in bytes. It is updated only when any vertex input added or removed */
     val bytesPerVertex: Int
@@ -36,9 +37,8 @@ interface IVertexBuffer: IGLBuffer {
     fun removeBufferListener(listener: VertexBufferListener)
 
     /** Set divisor for all attributes */
-    fun setDivisor(divisor: Int = 1) {
-        vertexAttributes.forEach { it.divisor = divisor }
-    }
+    @Deprecated("")
+    fun setDivisor(divisor: Int = 1) {}
 
     /** You can use this after adding all vertex inputs */
     fun initVertexBuffer(verticesCount: Int, block: IByteData.() -> Unit = {})
@@ -46,31 +46,33 @@ interface IVertexBuffer: IGLBuffer {
     /** Set capacity and keep old data */
     fun resizeVertexBuffer(newVerticesCount: Int)
 
-    fun addAttribute(
-        size: Int,
-        name: String,
-        type: Int,
-        normalized: Boolean
-    ): IVertexAttribute
+    fun addAttribute(attribute: IVertexAttribute): IVertexAccessor
 
-    /** By default used float type, not normalized */
-    fun addAttribute(size: Int, name: String) = addAttribute(size, name, GL_FLOAT, false)
+    fun addAttributes(vararg attributes: IVertexAttribute) {
+        attributes.iterate { addAttribute(it) }
+    }
+
+    fun getOrAddAttribute(attribute: IVertexAttribute): IVertexAccessor {
+        val accessor = getAttributeOrNull(attribute)
+        if (accessor != null) return accessor
+
+        return addAttribute(
+            Vertex.attributes[attribute.name] ?:
+            throw IllegalStateException("Vertex attribute ${attribute.name} must be defined in Vertex")
+        )
+    }
 
     fun removeAttributeAt(index: Int)
 
     fun removeAttribute(name: String)
 
-    fun removeAttribute(attribute: IVertexAttribute)
+    fun removeAttribute(attribute: IVertexAccessor)
 
-    fun getAttribute(name: String): IVertexAttribute = getAttributeOrNull(name)!!
+    fun getAttribute(attribute: IVertexAttribute): IVertexAccessor = getAttributeOrNull(attribute)!!
 
-    fun getAttributeOrNull(name: String): IVertexAttribute?
+    fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor?
 
-    fun getOrCreateAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute
-
-    fun getOrCreateAttribute(size: Int, name: String): IVertexAttribute
-
-    fun containsInput(name: String): Boolean = getAttributeOrNull(name) != null
+    fun containsAccessor(attribute: IVertexAttribute): Boolean = getAttributeOrNull(attribute) != null
 
     fun bind(shader: IShader)
 
@@ -82,8 +84,17 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         block(this)
     }
 
-    private val vertexAttributesInternal = ArrayList<IVertexAttribute>()
-    override val vertexAttributes: List<IVertexAttribute>
+    constructor(
+        verticesCount: Int,
+        vararg attributes: IVertexAttribute,
+        block: IByteData.() -> Unit = {}
+    ): this() {
+        addAttributes(*attributes)
+        initVertexBuffer(verticesCount, block)
+    }
+
+    private val vertexAttributesInternal = ArrayList<IVertexAccessor>()
+    override val vertexAttributes: List<IVertexAccessor>
         get() = vertexAttributesInternal
 
     override var verticesCount: Int = 0
@@ -120,7 +131,8 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         listeners?.remove(listener)
     }
 
-    override fun getAttributeOrNull(name: String): IVertexAttribute? = vertexAttributesInternal.firstOrNull { it.name == name }
+    override fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor? =
+        vertexAttributesInternal.firstOrNull { it.attribute == attribute }
 
     fun updateVertexInputOffsets() {
         vertexAttributes.forEach {
@@ -132,14 +144,8 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 
     private fun lastInputByte(): Int = vertexAttributes.lastOrNull()?.nextInputByte ?: 0
 
-    override fun getOrCreateAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute =
-        getAttributeOrNull(name) ?: addAttribute(size, name, type, normalized)
-
-    override fun getOrCreateAttribute(size: Int, name: String): IVertexAttribute =
-        getAttributeOrNull(name) ?: addAttribute(size, name)
-
-    override fun addAttribute(size: Int, name: String, type: Int, normalized: Boolean): IVertexAttribute {
-        val input = VertexAttribute(this, size, name, type, normalized, lastInputByte())
+    override fun addAttribute(attribute: IVertexAttribute): IVertexAccessor {
+        val input = VertexAccessor(this, attribute, lastInputByte())
         vertexAttributesInternal.add(input)
         bytesPerVertexInternal = lastInputByte()
         return input
@@ -152,12 +158,12 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
     override fun removeAttribute(name: String) {
-        val attribute = vertexAttributesInternal.firstOrNull { it.name == name }
+        val attribute = vertexAttributesInternal.firstOrNull { it.attribute.name == name }
         if (attribute != null) vertexAttributesInternal.remove(attribute)
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
-    override fun removeAttribute(attribute: IVertexAttribute) {
+    override fun removeAttribute(attribute: IVertexAccessor) {
         vertexAttributesInternal.remove(attribute)
     }
 

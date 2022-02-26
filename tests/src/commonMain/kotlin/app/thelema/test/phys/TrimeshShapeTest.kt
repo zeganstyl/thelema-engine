@@ -55,7 +55,7 @@ class TrimeshShapeTest: Test {
                 mesh { inheritedMesh = sphere.mesh }
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
-                    node.position.set(0f, 5f, 0f)
+                    node.setPosition(0f, 5f, 0f)
                 }
             }
 
@@ -68,7 +68,7 @@ class TrimeshShapeTest: Test {
                 }
                 trimeshShape() // will automatically take sibling mesh component
                 rigidBody {
-                    node.position.set(0f, 0f, 0f)
+                    node.setPosition(0f, 0f, 0f)
                     isStatic = true
                 }
             }

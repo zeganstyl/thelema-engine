@@ -121,7 +121,7 @@ void main() {
         val grassInstances = Mesh()
         grassInstances.inheritedMesh = grassPatch.mesh
         val grassInstancesBuffer = grassInstances.addVertexBuffer {
-            addAttribute(3, "instancePos")
+            addAttribute(Vertex.INSTANCE_POSITION)
             initVertexBuffer(100 * 100)
         }
         val instancesFloatView = grassInstancesBuffer.bytes.floatView()

@@ -16,13 +16,11 @@
 
 package app.thelema.g3d.mesh
 
-import app.thelema.gl.IMesh
-import app.thelema.gl.IVertexAttribute
-import app.thelema.gl.forEachTriangle
+import app.thelema.gl.*
 import app.thelema.math.MATH
 
 object Mesh3DTool {
-    fun calculateFlatNormals(mesh: IMesh, positions: IVertexAttribute, normals: IVertexAttribute) {
+    fun calculateFlatNormals(mesh: IMesh, positions: IVertexAccessor, normals: IVertexAccessor) {
         positions.rewind()
         normals.rewind()
 
@@ -34,17 +32,17 @@ object Mesh3DTool {
 
     fun calculateFlatNormals(mesh: IMesh) = calculateFlatNormals(
         mesh,
-        mesh.getAttribute(mesh.positionsName),
-        mesh.getAttribute(mesh.normalsName)
+        mesh.positions(),
+        mesh.normals()!!
     )
 
     /** After calculate tangent, it is recommended to use [orthogonalizeTangents] */
     inline fun calculateTangents(
         mesh: IMesh,
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute,
-        tangents: IVertexAttribute,
-        biTangents: IVertexAttribute? = null,
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor,
+        tangents: IVertexAccessor,
+        biTangents: IVertexAccessor? = null,
         afterEachTriangle: () -> Unit = {}
     ) {
         positions.rewind()
@@ -61,7 +59,7 @@ object Mesh3DTool {
         tangents.rewind()
     }
 
-    inline fun orthogonalizeTangents(tangents: IVertexAttribute, normals: IVertexAttribute, afterEachVertex: () -> Unit = {}) {
+    inline fun orthogonalizeTangents(tangents: IVertexAccessor, normals: IVertexAccessor, afterEachVertex: () -> Unit = {}) {
         tangents.rewind()
         normals.rewind()
 
@@ -106,8 +104,8 @@ object Mesh3DTool {
         v1: Int,
         v2: Int,
         v3: Int,
-        positions: IVertexAttribute,
-        normals: IVertexAttribute
+        positions: IVertexAccessor,
+        normals: IVertexAccessor
     ) {
         positions.setVertexPosition(v1)
         val ax = positions.getFloat(0)
@@ -154,10 +152,10 @@ object Mesh3DTool {
         v1: Int,
         v2: Int,
         v3: Int,
-        positions: IVertexAttribute,
-        uvs: IVertexAttribute,
-        tangents: IVertexAttribute,
-        bitangents: IVertexAttribute? = null
+        positions: IVertexAccessor,
+        uvs: IVertexAccessor,
+        tangents: IVertexAccessor,
+        bitangents: IVertexAccessor? = null
     ) {
         // http://www.opengl-tutorial.org/ru/intermediate-tutorials/tutorial-13-normal-mapping/
 
@@ -203,7 +201,7 @@ object Mesh3DTool {
             z *= invSqrt
         }
 
-        when (tangents.size) {
+        when (tangents.attribute.size) {
             4 -> {
                 tangents.putFloatsStart(v1, x, y, z, 1f)
                 tangents.putFloatsStart(v2, x, y, z, 1f)
@@ -230,7 +228,7 @@ object Mesh3DTool {
                 z *= invSqrt
             }
 
-            when (bitangents.size) {
+            when (bitangents.attribute.size) {
                 4 -> {
                     bitangents.putFloatsStart(v1, x, y, z, 1f)
                     bitangents.putFloatsStart(v2, x, y, z, 1f)

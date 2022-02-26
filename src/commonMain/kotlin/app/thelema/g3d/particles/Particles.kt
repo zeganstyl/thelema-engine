@@ -1,9 +1,6 @@
 package app.thelema.g3d.particles
 
-import app.thelema.gl.IMesh
-import app.thelema.gl.IVertexBuffer
-import app.thelema.gl.Mesh
-import app.thelema.gl.VertexBuffer
+import app.thelema.gl.*
 import app.thelema.math.IVec3
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
@@ -12,15 +9,12 @@ import app.thelema.utils.iterate
 class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     private var updateParticleSystemRequested = false
 
-    var instancePositionName: String = "INSTANCE_POSITION"
-    var instanceLifeTimeName: String = "INSTANCE_LIFE_TIME"
-
     private var lifeTimesAsAttribute = false
         set(value) {
             if (field != value) {
                 field = value
                 if (value) {
-                    _lifeTimes = getOrCreateDataChannel<Float>(1, instanceLifeTimeName).data
+                    _lifeTimes = getOrCreateDataChannel<Float>(Particle.LIFE_TIME).data
                 } else {
                     _lifeTimes = ArrayList()
                 }
@@ -59,7 +53,7 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     val particlesDataChannels = ArrayList<IParticleDataChannel<Any?>>()
     val particlesDataChannelsMap = HashMap<String, IParticleDataChannel<Any?>>()
 
-    private val _positions: MutableList<IVec3> = getOrCreateDataChannel<IVec3>(3, instancePositionName).data
+    private val _positions: MutableList<IVec3> = getOrCreateDataChannel<IVec3>(Vertex.INSTANCE_POSITION).data
     override val positions: List<IVec3>
         get() = _positions
 
@@ -112,23 +106,22 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
             if (vertexBuffer.verticesCount < visibleParticles || rebuildDataRequested) {
                 rebuildDataRequested = false
                 vertexBuffer.initVertexBuffer((visibleParticles * bufferReserve).toInt())
-                vertexBuffer.setDivisor()
             }
 
             particlesDataChannels.iterate { channel ->
-                val attribute = channel.attribute
-                attribute.rewind()
+                val accessor = channel.accessor
+                accessor.rewind()
 
                 val channelData = channel.data
 
                 emitters.iterate { emitter ->
                     emitter.visibleParticles.iterate { particle ->
                         channel.setToAttribute(channelData[particle])
-                        attribute.nextVertex()
+                        accessor.nextVertex()
                     }
                 }
 
-                attribute.buffer.requestBufferUploading()
+                accessor.buffer.requestBufferUploading()
             }
 
             vertexBuffer.gpuUploadRequested = visibleParticles > 0
@@ -166,19 +159,19 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T> getOrCreateDataChannel(dimension: Int, name: String): IParticleDataChannel<T> {
-        val attribute = vertexBuffer.getOrCreateAttribute(dimension, name)
+    override fun <T> getOrCreateDataChannel(attribute: IVertexAttribute): IParticleDataChannel<T> {
+        val accessor = vertexBuffer.getOrAddAttribute(attribute)
 
-        var channel = particlesDataChannelsMap[name] as IParticleDataChannel<T>?
+        var channel = particlesDataChannelsMap[attribute.name] as IParticleDataChannel<T>?
         if (channel == null) {
-            channel = when (dimension) {
+            channel = when (attribute.size) {
                 1 -> ParticleDataChannelBuilder.float
                 2 -> ParticleDataChannelBuilder.vec2
                 3 -> ParticleDataChannelBuilder.vec3
                 4 -> ParticleDataChannelBuilder.vec4
                 else -> throw IllegalStateException()
-            }.build(attribute) as IParticleDataChannel<T>
-            particlesDataChannelsMap[name] = channel as IParticleDataChannel<Any?>
+            }.build(accessor) as IParticleDataChannel<T>
+            particlesDataChannelsMap[attribute.name] = channel as IParticleDataChannel<Any?>
             particlesDataChannels.add(channel)
             rebuildDataRequested = true
             _aliveParticles.iterate { channel.data.add(channel.newDataElement()) }

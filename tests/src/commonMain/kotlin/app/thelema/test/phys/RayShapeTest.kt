@@ -8,10 +8,7 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.boxMesh
 import app.thelema.g3d.mesh.sphereMesh
 import app.thelema.g3d.transformNode
-import app.thelema.gl.GL
-import app.thelema.gl.GL_LINES
-import app.thelema.gl.mesh
-import app.thelema.gl.positions
+import app.thelema.gl.*
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
 import app.thelema.phys.*
@@ -65,7 +62,7 @@ class RayShapeTest: Test {
                     }
 
                     override fun contactUpdated(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
-                        intersectionNode.position.set(contact.position)
+                        intersectionNode.position = contact.position
                         intersectionNode.updateTransform()
                     }
 
@@ -85,7 +82,7 @@ class RayShapeTest: Test {
                 worldMatrix = Mat4()
                 primitiveType = GL_LINES
                 addVertexBuffer {
-                    addAttribute(3, "POSITION")
+                    addAttribute(Vertex.POSITION)
                     initVertexBuffer(2)
                 }
             }

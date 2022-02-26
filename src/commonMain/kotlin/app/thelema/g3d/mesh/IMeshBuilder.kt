@@ -20,6 +20,7 @@ import app.thelema.ecs.ComponentCanBeRebuild
 import app.thelema.ecs.IEntityComponent
 import app.thelema.gl.IIndexBuffer
 import app.thelema.gl.IMesh
+import app.thelema.gl.IVertexAccessor
 import app.thelema.gl.IVertexAttribute
 import app.thelema.shader.IShader
 
@@ -34,9 +35,9 @@ interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
 
     fun applyIndices()
 
-    fun preparePositions(block: IVertexAttribute.() -> Unit)
-    fun prepareUvs(block: IVertexAttribute.() -> Unit)
-    fun prepareNormals(block: IVertexAttribute.() -> Unit)
+    fun preparePositions(block: IVertexAccessor.() -> Unit)
+    fun prepareUvs(block: IVertexAccessor.() -> Unit)
+    fun prepareNormals(block: IVertexAccessor.() -> Unit)
 
     fun prepareIndices(block: IIndexBuffer.() -> Unit)
 

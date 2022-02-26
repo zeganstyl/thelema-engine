@@ -18,6 +18,7 @@ package app.thelema.g3d
 
 import app.thelema.math.IVec3
 import app.thelema.gl.IMesh
+import app.thelema.gl.positions
 import app.thelema.math.Frustum
 import app.thelema.math.IMat4
 
@@ -30,8 +31,8 @@ interface IBoundings {
 
     fun addPoint(x: Float, y: Float, z: Float)
 
-    fun addVertices(vertices: IMesh, positionName: String = "POSITION") {
-        val positions = (vertices.getAttributeOrNull(positionName) ?: throw IllegalArgumentException("Can't find position input: $positionName"))
+    fun addVertices(vertices: IMesh) {
+        val positions = vertices.positions()
         positions.rewind()
 
         for (i in 0 until positions.count) {
@@ -46,16 +47,16 @@ interface IBoundings {
 
     fun checkPointIn(point: IVec3) = checkPointIn(point.x, point.y, point.z)
 
-    fun setVertices(mesh: IMesh, positionName: String = "POSITION") {
+    fun setVertices(mesh: IMesh) {
         reset()
-        addVertices(mesh, positionName)
+        addVertices(mesh)
     }
 
-    fun setVertices(meshes: List<IMesh>, positionName: String = "POSITION") {
+    fun setVertices(meshes: List<IMesh>) {
         reset()
 
         for (i in meshes.indices) {
-            addVertices(meshes[i], positionName)
+            addVertices(meshes[i])
         }
     }
 

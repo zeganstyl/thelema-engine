@@ -58,7 +58,7 @@ class SphereShapeTest: Test {
                 mesh { inheritedMesh = sphere.mesh }
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
-                    node.position.set(0f, 3f, 0f)
+                    node.setPosition(0f, 3f, 0f)
                 }
             }
 
@@ -66,7 +66,7 @@ class SphereShapeTest: Test {
                 mesh { inheritedMesh = sphere.mesh }
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
-                    node.position.set(1.25f, 0f, 0f)
+                    node.setPosition(1.25f, 0f, 0f)
                     isStatic = true
                 }
             }
@@ -75,7 +75,7 @@ class SphereShapeTest: Test {
                 mesh { inheritedMesh = sphere.mesh }
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
-                    node.position.set(-2.5f, 0f, 0f)
+                    node.setPosition(-2.5f, 0f, 0f)
                     isStatic = true
                 }
             }

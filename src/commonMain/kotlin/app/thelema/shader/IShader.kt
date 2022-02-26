@@ -24,6 +24,7 @@ import app.thelema.gl.GL
 import app.thelema.gl.IVertexAttribute
 import app.thelema.math.*
 import app.thelema.gl.IMesh
+import app.thelema.gl.IVertexAccessor
 import app.thelema.shader.node.IRootShaderNode
 import app.thelema.shader.node.IShaderNode
 
@@ -61,7 +62,7 @@ interface IShader: IEntityComponent {
     /** Attribute lookup. Key - vertex attribute name, value - location */
     val attributes: MutableMap<String, Int>
 
-    val enabledAttributes: List<IVertexAttribute>
+    val enabledAttributes: List<IVertexAccessor>
 
     val nodes: Array<IShaderNode>
 
@@ -80,19 +81,9 @@ interface IShader: IEntityComponent {
 
     fun prepareShader(mesh: IMesh, scene: IScene?)
 
-    fun setVertexAttributes(attributes: List<IVertexAttribute>) {
-        attributes.forEach {
-            val location = this.attributes[it.name]
-            if (location != null) {
-                GL.glEnableVertexAttribArray(location)
-                GL.glVertexAttribPointer(location, it.size, it.type, it.normalized, it.stride, it.byteOffset)
-            }
-        }
-    }
+    fun enableAttribute(attribute: IVertexAccessor)
 
-    fun enableAttribute(attribute: IVertexAttribute)
-
-    fun disableAttribute(attribute: IVertexAttribute)
+    fun disableAttribute(attribute: IVertexAccessor)
 
     fun disableAllAttributes()
 

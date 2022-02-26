@@ -30,8 +30,8 @@ class MeshTest: Test {
     override fun testMain() {
         val mesh = Mesh {
             addVertexBuffer {
-                addAttribute(3, "POSITION")
-                addAttribute(2, "UV")
+                addAttribute(Vertex.POSITION)
+                addAttribute(Vertex.TEXCOORD_0)
                 initVertexBuffer(4) {
                     putFloats(
                         // x, y, z    u, v

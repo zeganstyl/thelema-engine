@@ -34,15 +34,13 @@ class ParticleTextureFrameEffect: IParticleEffect, ParticleEmissionEffect, IEnti
 
     private var counter = 0
 
-    var instanceUvStartName: String = "INSTANCE_UV_START"
-
     fun setupFrames(u: Int, v: Int) {
         framesU = u
         framesV = v
     }
 
     override fun emitParticle(particles: IParticles, emitter: IParticleEmitter, particle: Int) {
-        val uvs = particles.getOrCreateDataChannel<IVec2>(2, instanceUvStartName).data
+        val uvs = particles.getOrCreateDataChannel<IVec2>(Particle.UV_START).data
         if (counter >= uvs.size) counter = 0
         uvs[particle].set(
             sizeU * counter % framesU,

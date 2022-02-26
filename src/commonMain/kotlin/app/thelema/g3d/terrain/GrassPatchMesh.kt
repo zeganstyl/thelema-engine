@@ -17,6 +17,8 @@
 package app.thelema.g3d.terrain
 
 import app.thelema.g3d.mesh.MeshBuilderAdapter
+import app.thelema.gl.normals
+import app.thelema.gl.uvs
 import app.thelema.math.IVec3
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
@@ -42,8 +44,8 @@ class GrassPatchMesh(var width: Float = 1f, var height: Float = 1f): MeshBuilder
 
     override fun applyVertices() {
         preparePositions {
-            val uvs = mesh.getAttributeOrNull(builder.uvName)
-            val normals = mesh.getAttributeOrNull(builder.normalName)
+            val uvs = mesh.uvs()
+            val normals = mesh.normals()
 
             val halfWidth = width * 0.5f
             val angleStep = MATH.PI / polygonsNum

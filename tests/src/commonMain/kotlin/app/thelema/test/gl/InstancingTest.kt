@@ -21,6 +21,7 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.mesh.PlaneMesh
+import app.thelema.gl.Vertex
 import app.thelema.shader.Shader
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -70,7 +71,7 @@ void main() {
 
         cubes.mesh.instancesCountToRender = numX * numZ
         cubes.mesh.addVertexBuffer {
-            addAttribute(3, "INSTANCE_POSITION")
+            addAttribute(Vertex.INSTANCE_POSITION)
             initVertexBuffer(numX * numZ) {
                 // fill buffer with positions
                 var xi = startX

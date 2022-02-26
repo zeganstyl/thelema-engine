@@ -20,7 +20,6 @@ import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.img.renderNoClear
 import app.thelema.shader.IShader
-import app.thelema.shader.Shader
 import app.thelema.shader.post.PostShader
 import kotlin.native.concurrent.ThreadLocal
 
@@ -38,8 +37,8 @@ object ScreenQuad {
             primitiveType = GL_TRIANGLE_FAN
 
             addVertexBuffer {
-                addAttribute(2, "POSITION")
-                addAttribute(2, "UV")
+                addAttribute(Vertex.POSITION)
+                addAttribute(Vertex.TEXCOORD_0)
                 initVertexBuffer(4) {
                     putFloats(-1f, -1f,  0f, 0f)
                     putFloats(1f, -1f,  1f, 0f)

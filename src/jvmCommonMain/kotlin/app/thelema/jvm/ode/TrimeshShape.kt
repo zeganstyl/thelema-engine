@@ -74,11 +74,7 @@ class TrimeshShape: OdeShapeAdapter<DTriMesh>(), ITrimeshShape {
     override fun createGeom(): DTriMesh? {
         if (mesh == null) LOG.error("$path: Mesh is null")
         mesh?.also { mesh ->
-            val positions = mesh.getAttributeOrNull(mesh.positionsName)
-            if (positions == null) {
-                LOG.error("$path: Positions attribute \"${mesh.positionsName}\" is not found in ${mesh.path}")
-                return null
-            }
+            val positions = mesh.positions()
 
             val verticesCount = positions.count
 

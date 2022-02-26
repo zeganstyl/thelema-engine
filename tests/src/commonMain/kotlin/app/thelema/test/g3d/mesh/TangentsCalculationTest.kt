@@ -21,6 +21,7 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.*
 import app.thelema.gl.GL
+import app.thelema.gl.Vertex
 import app.thelema.math.Vec4
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -37,9 +38,9 @@ class TangentsCalculationTest: Test {
 
         val shader = SimpleShader3D()
 
-        val positions = cylinder.mesh.getAttribute("POSITION")
-        val normals = cylinder.mesh.getAttribute("NORMAL")
-        val tangents = cylinder.mesh.getAttribute("TANGENT")
+        val positions = cylinder.mesh.getAccessor(Vertex.POSITION)
+        val normals = cylinder.mesh.getAccessor(Vertex.NORMAL)
+        val tangents = cylinder.mesh.getAccessor(Vertex.TANGENT)
 
         val debugMesh = MeshVisualizer {
             addVectors3D(positions, normals, Vec4(0f, 0f, 1f, 1f), 0.5f)

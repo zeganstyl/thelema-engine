@@ -36,8 +36,8 @@ class TextureRenderer(
             primitiveType = GL_TRIANGLE_FAN
 
             addVertexBuffer {
-                addAttribute(2, positionName)
-                addAttribute(2, uvName)
+                addAttribute(Vertex.POSITION)
+                addAttribute(Vertex.TEXCOORD_0)
                 initVertexBuffer(4) {
                     putFloats(x - width, y - height,  0f, 0f)
                     putFloats(x + width, y - height,  1f, 0f)

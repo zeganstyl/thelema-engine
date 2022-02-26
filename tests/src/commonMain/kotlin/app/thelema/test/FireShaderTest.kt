@@ -101,7 +101,7 @@ void main() {
                     setSize(1f)
                 }
                 transformNode {
-                    position.y += 0.6f
+                    translate(0f, 0.6f, 0f)
                     requestTransformUpdate()
                 }
                 material { shader = s }.alphaMode = Blending.BLEND

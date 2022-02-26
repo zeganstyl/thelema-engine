@@ -17,6 +17,8 @@
 package app.thelema.g3d.terrain
 
 import app.thelema.g3d.mesh.MeshBuilderAdapter
+import app.thelema.gl.normals
+import app.thelema.gl.uvs
 
 /** Like plain, but starts from (0, 0, 0) to (size, 0 , size) and doesn't have normal */
 class TerrainTileMesh(): MeshBuilderAdapter() {
@@ -45,8 +47,8 @@ class TerrainTileMesh(): MeshBuilderAdapter() {
 
     override fun applyVertices() {
         preparePositions {
-            val uvs = mesh.getAttributeOrNull(builder.uvName)
-            val normals = mesh.getAttributeOrNull(builder.normalName)
+            val uvs = mesh.uvs()
+            val normals = mesh.normals()
             val verticesPerLine = divisions - padding * 2 + 1
 
             val step = tileSize / divisions

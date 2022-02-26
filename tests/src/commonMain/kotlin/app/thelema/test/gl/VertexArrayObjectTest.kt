@@ -16,6 +16,7 @@
 
 package app.thelema.test.gl
 
+import app.thelema.app.APP
 import app.thelema.gl.*
 import app.thelema.gl.Mesh
 import app.thelema.shader.Shader
@@ -30,7 +31,7 @@ class VertexArrayObjectTest: Test {
             vaoHandle = 0
 
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(4) {
                     // x, y, z
                     putFloats(-1f, -1f, 0f)
@@ -41,7 +42,7 @@ class VertexArrayObjectTest: Test {
             }
 
             addVertexBuffer {
-                addAttribute(2, "UV")
+                addAttribute(Vertex.TEXCOORD_0)
                 initVertexBuffer(4) {
                     // u, v
                     putFloats(0f, 0f)
@@ -80,7 +81,7 @@ void main() {
     gl_FragColor = vec4(uv, 1.0, 1.0);
 }""")
 
-        GL.render {
+        APP.onRender = {
             shader.bind()
             mesh.render(shader)
         }

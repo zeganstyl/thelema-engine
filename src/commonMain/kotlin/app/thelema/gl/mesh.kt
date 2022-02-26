@@ -61,14 +61,6 @@ interface IMesh: IRenderable {
      * If zero, nothing will be drawn. */
     var instancesCountToRender: Int
 
-    var positionsName: String
-    var uvsName: String
-    var normalsName: String
-    var tangentsName: String
-    var boneWeightsName: String
-    var boneIndicesName: String
-    var instancesPositionsName: String
-
     override var translucencyPriority: Int
         get() = material?.translucentPriority ?: 0
         set(_) {}
@@ -101,32 +93,32 @@ interface IMesh: IRenderable {
 
     fun setIndexBuffer(block: IIndexBuffer.() -> Unit): IIndexBuffer
 
-    fun getAttribute(name: String): IVertexAttribute = getAttributeOrNull(name) ?:
-    throw IllegalArgumentException("Mesh: mesh doesn't contain vertex attribute with name \"$name\"")
+    fun getAccessor(attribute: IVertexAttribute): IVertexAccessor = getAttributeOrNull(attribute) ?:
+    throw IllegalArgumentException("Mesh: mesh doesn't contain vertex attribute with name \"${attribute.name}\"")
 
-    fun getAttribute(name: String, block: IVertexAttribute.() -> Unit) {
-        getAttributeOrNull(name)?.apply(block)
+    fun getAccessor(attribute: IVertexAttribute, block: IVertexAccessor.() -> Unit) {
+        getAttributeOrNull(attribute)?.apply(block)
     }
 
-    fun prepareAttribute(name: String, block: IVertexAttribute.() -> Unit) {
-        getAttributeOrNull(name)?.prepare(block)
+    fun prepareAttribute(attribute: IVertexAttribute, block: IVertexAccessor.() -> Unit) {
+        getAttributeOrNull(attribute)?.prepare(block)
     }
 
-    fun getAttributeOrNull(name: String): IVertexAttribute? {
+    fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor? {
         for (i in vertexBuffers.indices) {
             val buffer = vertexBuffers[i]
-            val input = buffer.getAttributeOrNull(name)
+            val input = buffer.getAttributeOrNull(attribute)
             if (input != null) {
                 return input
             }
         }
-        return inheritedMesh?.getAttribute(name)
+        return inheritedMesh?.getAccessor(attribute)
     }
 
-    fun containsAttribute(name: String): Boolean {
+    fun containsAttribute(attribute: IVertexAttribute): Boolean {
         for (i in vertexBuffers.indices) {
             val buffer = vertexBuffers[i]
-            if (buffer.containsInput(name)) {
+            if (buffer.containsAccessor(attribute)) {
                 return true
             }
         }
@@ -200,14 +192,6 @@ class Mesh(): IMesh {
             field = value
             if (material == null) material = value?.componentOrNull()
         }
-
-    override var positionsName: String = "POSITION"
-    override var uvsName: String = "TEXCOORD_0"
-    override var normalsName: String = "NORMAL"
-    override var tangentsName: String = "TANGENT"
-    override var boneWeightsName: String = "WEIGHTS_0"
-    override var boneIndicesName: String = "JOINTS_0"
-    override var instancesPositionsName: String = "INSTANCE_POSITION"
     
     override var node: ITransformNode? = null
 
@@ -518,10 +502,6 @@ class Mesh(): IMesh {
                     bool(MeshBuilder::uvs, true)
                     bool(MeshBuilder::normals, true)
                     bool(MeshBuilder::tangents, true)
-                    string(MeshBuilder::positionName, "POSITION")
-                    string(MeshBuilder::uvName, "TEXCOORD_0")
-                    string(MeshBuilder::normalName, "NORMAL")
-                    string(MeshBuilder::tangentName, "TANGENT")
                     bool(MeshBuilder::calculateNormals)
                     vec3(MeshBuilder::position)
                     vec4(MeshBuilder::rotation)
@@ -549,7 +529,7 @@ class Mesh(): IMesh {
                     }
 
                     descriptor({ PlaneMesh() }) {
-                        vec3(PlaneMesh::normal)
+                        vec3C(PlaneMesh::normal)
                         float(PlaneMesh::width)
                         float(PlaneMesh::height)
                         int("xDivisions", { hDivisions }) { hDivisions = it }
@@ -585,9 +565,8 @@ interface MeshListener: VertexBufferListener {
     fun verticesCountChanged(mesh: IMesh, newCount: Int) {}
 }
 
-fun IMesh.positionsOrNull(): IVertexAttribute? = getAttributeOrNull(positionsName)
 /** Get vertex positions attribute */
-fun IMesh.positions(): IVertexAttribute = getAttribute(positionsName)
-fun IMesh.uvs(): IVertexAttribute? = getAttributeOrNull(uvsName)
-fun IMesh.normals(): IVertexAttribute? = getAttributeOrNull(normalsName)
-fun IMesh.tangents(): IVertexAttribute? = getAttributeOrNull(tangentsName)
+fun IMesh.positions(): IVertexAccessor = getAccessor(Vertex.POSITION)
+fun IMesh.uvs(): IVertexAccessor? = getAttributeOrNull(Vertex.TEXCOORD_0)
+fun IMesh.normals(): IVertexAccessor? = getAttributeOrNull(Vertex.NORMAL)
+fun IMesh.tangents(): IVertexAccessor? = getAttributeOrNull(Vertex.TANGENT)

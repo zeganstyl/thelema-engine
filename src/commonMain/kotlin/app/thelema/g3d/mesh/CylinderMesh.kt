@@ -18,7 +18,7 @@ package app.thelema.g3d.mesh
 
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
-import app.thelema.gl.IVertexAttribute
+import app.thelema.gl.*
 import app.thelema.math.IVec3
 import app.thelema.math.MATH
 import app.thelema.math.Vec2
@@ -51,8 +51,8 @@ class CylinderMesh(): MeshBuilderAdapter() {
 
     override fun applyVertices() {
         preparePositions {
-            val uvs = mesh.getAttributeOrNull(builder.uvName)
-            val normals = mesh.getAttributeOrNull(builder.normalName)
+            val uvs = mesh.uvs()
+            val normals = mesh.normals()
 
             val y2 = length * 0.5f
             val y1 = -y2
@@ -104,8 +104,8 @@ class CylinderMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPosAlongX(
-        positions: IVertexAttribute,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        normals: IVertexAccessor?,
         x: Float,
         y1: Float,
         y2: Float,
@@ -124,8 +124,8 @@ class CylinderMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPosAlongY(
-        positions: IVertexAttribute,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        normals: IVertexAccessor?,
         x: Float,
         y1: Float,
         y2: Float,
@@ -144,8 +144,8 @@ class CylinderMesh(): MeshBuilderAdapter() {
     }
 
     private fun putPosAlongZ(
-        positions: IVertexAttribute,
-        normals: IVertexAttribute?,
+        positions: IVertexAccessor,
+        normals: IVertexAccessor?,
         x: Float,
         y1: Float,
         y2: Float,

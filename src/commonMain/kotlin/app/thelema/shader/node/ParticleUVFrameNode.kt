@@ -1,5 +1,7 @@
 package app.thelema.shader.node
 
+import app.thelema.g3d.particles.Particle
+
 class ParticleUVFrameNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleUVFrameNode"
@@ -26,14 +28,12 @@ class ParticleUVFrameNode: ShaderNode() {
     var sizeV = 1f / framesV
         private set
 
-    var instanceUvStartName = "INSTANCE_UV_START"
-
     var inputUv by input(GLSLNode.uv.uv)
     val resultUv = output(GLSLVec2("resultUv"))
 
     override fun declarationVert(out: StringBuilder) {
         if (resultUv.isUsed) {
-            out.append("$attribute vec2 $instanceUvStartName;\n")
+            out.append("$attribute vec2 ${Particle.UV_START.name};\n")
             out.append("$varOut ${resultUv.typedRef};\n")
         }
     }
@@ -46,7 +46,7 @@ class ParticleUVFrameNode: ShaderNode() {
 
     override fun executionVert(out: StringBuilder) {
         if (resultUv.isUsed) {
-            out.append("${resultUv.ref} = ${inputUv.ref} * vec2($sizeU, $sizeV) + $instanceUvStartName;\n")
+            out.append("${resultUv.ref} = ${inputUv.ref} * vec2($sizeU, $sizeV) + ${Particle.UV_START.name};\n")
         }
     }
 }

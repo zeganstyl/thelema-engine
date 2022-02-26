@@ -1,5 +1,5 @@
 import app.thelema.gl.IIndexBuffer
-import app.thelema.gl.IVertexAttribute
+import app.thelema.gl.IVertexAccessor
 import org.recast4j.recast.ConvexVolume
 import org.recast4j.recast.geom.InputGeomProvider
 import org.recast4j.recast.geom.TriMesh
@@ -11,7 +11,7 @@ class GeomProvider : InputGeomProvider {
 
     val trimeshes = ArrayList<TriMesh>()
 
-    fun addTrimesh(vertices: IVertexAttribute, indices: IIndexBuffer): InputGeomProvider {
+    fun addTrimesh(vertices: IVertexAccessor, indices: IIndexBuffer): InputGeomProvider {
         val positionsArray = FloatArray(vertices.count * 3)
         val indicesArray = IntArray(indices.count)
         var i = 0

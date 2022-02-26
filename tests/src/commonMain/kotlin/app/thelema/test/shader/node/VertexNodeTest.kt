@@ -41,7 +41,7 @@ class VertexNodeTest: Test {
             component<IScene>()
             component<BoxMesh> { setSize(2f) }
             component<ITransformNode> {
-                position.set(-2f, 0f, 0f)
+                setPosition(-2f, 0f, 0f)
                 requestTransformUpdate()
             }
             component<IMaterial> {
