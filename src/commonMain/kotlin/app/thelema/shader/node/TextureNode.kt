@@ -16,9 +16,8 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.img.ITexture
-import app.thelema.gl.IMesh
 import app.thelema.img.ITexture2D
 import app.thelema.img.TextureCube
 
@@ -40,8 +39,8 @@ abstract class TextureNode(textureType: String): ShaderNode() {
         texAlpha.inlineCode = "${texColor.ref}.a"
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         val unit = shader.getNextTextureUnit()
         shader[sampler.ref] = unit

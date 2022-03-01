@@ -17,13 +17,12 @@
 package app.thelema.shader.node
 
 import app.thelema.app.APP
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.ILight
 import app.thelema.g3d.light.LightType
 import app.thelema.gl.GL
-import app.thelema.gl.IMesh
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import kotlin.random.Random
@@ -95,12 +94,13 @@ class PBRNode(): ShaderNode() {
         }
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         dirLightIndex = 0
         lightsNum = 0
 
+        val scene = uniforms.scene
         if (scene != null) {
             val lights = scene.lights
             for (i in lights.indices) {

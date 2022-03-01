@@ -1,10 +1,7 @@
 package app.thelema.studio.g3d
 
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.gl.GL
-import app.thelema.gl.GL_LINES
-import app.thelema.gl.IMesh
-import app.thelema.gl.Mesh
+import app.thelema.gl.*
 import app.thelema.math.IMat4
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
@@ -12,14 +9,14 @@ import app.thelema.shader.Shader
 class TransformBasisView {
     val shader: IShader = Shader(
         vertCode = """
-attribute vec3 POSITION;
-attribute vec3 COLOR;
+in vec3 POSITION;
+in vec4 COLOR;
+
+out vec4 color;
 
 uniform mat4 viewProj;
 uniform mat4 worldMatrix;
 uniform float scale;
-
-varying vec3 color;
 
 void main() {
     mat4 matrix = worldMatrix;
@@ -31,10 +28,11 @@ void main() {
 }
 """,
         fragCode = """
-varying vec3 color;
+in vec4 color;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(color, 1.0);
+    FragColor = color;
 }
 """
     )
@@ -42,17 +40,17 @@ void main() {
     val mesh: IMesh = Mesh {
         primitiveType = GL_LINES
         addVertexBuffer {
-            addAttribute(3, "POSITION")
-            addAttribute(3, "COLOR")
+            addAttribute(Vertex.POSITION)
+            addAttribute(Vertex.COLOR)
             initVertexBuffer(6) {
-                putFloats(0f, 0f, 0f,   1f, 0f, 0f)
-                putFloats(1f, 0f, 0f,   1f, 0f, 0f)
+                putFloats(0f, 0f, 0f,   1f, 0f, 0f, 1f)
+                putFloats(1f, 0f, 0f,   1f, 0f, 0f, 1f)
 
-                putFloats(0f, 0f, 0f,   0f, 1f, 0f)
-                putFloats(0f, 1f, 0f,   0f, 1f, 0f)
+                putFloats(0f, 0f, 0f,   0f, 1f, 0f, 1f)
+                putFloats(0f, 1f, 0f,   0f, 1f, 0f, 1f)
 
-                putFloats(0f, 0f, 0f,   0f, 0f, 1f)
-                putFloats(0f, 0f, 1f,   0f, 0f, 1f)
+                putFloats(0f, 0f, 0f,   0f, 0f, 1f, 1f)
+                putFloats(0f, 0f, 1f,   0f, 0f, 1f, 1f)
             }
         }
     }

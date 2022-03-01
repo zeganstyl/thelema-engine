@@ -17,12 +17,14 @@
 package app.thelema.g2d
 
 import app.thelema.app.APP
+import app.thelema.data.IFloatData
 import app.thelema.g2d.SpriteBatch.Companion.createDefaultShader
 import app.thelema.gl.*
 import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
 import app.thelema.img.ITexture2D
+import app.thelema.shader.useShader
 import app.thelema.utils.Color
 
 /** Draws batched quads using indices.
@@ -44,7 +46,7 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
 
     val verts = VertexBuffer(
         if (autoResize) DEFAULT_VERTICES_NUM else size,
-        Vertex.POSITION2D, Vertex.COLOR, Vertex.TEXCOORD_0
+        POSITION, COLOR, UV
     )
 
     var vertices = verts.bytes.floatView()
@@ -53,6 +55,8 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         get() = verts
 
     private val mesh = Mesh().apply {
+        vertexLayout = Layout
+
         getOrCreateEntity().name = "Sprite Batch"
         addVertexBuffer(verts)
 
@@ -169,9 +173,7 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
 
     override fun draw(texture: ITexture2D, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float, scaleX: Float,
                       scaleY: Float, rotation: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int, flipX: Boolean, flipY: Boolean) {
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
+        switchTextureOrResizeMesh(texture)
         // bottom left and top right corner points relative to origin
         val worldOriginX = x + originX
         val worldOriginY = y + originY
@@ -247,36 +249,110 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
             v = v2
             v2 = tmp
         }
-        val color = this.packedColor
-        val idx = idx
+        setupVertices(x1, y1, x2, y2, x3, y3, x4, y4, u, v, u2, v2, packedColor)
+    }
+
+    private fun setupVerticesPositionsUvs(
+        vertices: IFloatData,
+        idx: Int,
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        x4: Float,
+        y4: Float,
+        u: Float,
+        v: Float,
+        u2: Float,
+        v2: Float
+    ) {
         vertices[idx] = x1
         vertices[idx + 1] = y1
-        vertices[idx + 2] = color
         vertices[idx + 3] = u
         vertices[idx + 4] = v
         vertices[idx + 5] = x2
         vertices[idx + 6] = y2
-        vertices[idx + 7] = color
         vertices[idx + 8] = u
         vertices[idx + 9] = v2
         vertices[idx + 10] = x3
         vertices[idx + 11] = y3
-        vertices[idx + 12] = color
         vertices[idx + 13] = u2
         vertices[idx + 14] = v2
         vertices[idx + 15] = x4
         vertices[idx + 16] = y4
-        vertices[idx + 17] = color
         vertices[idx + 18] = u2
         vertices[idx + 19] = v
-        this.idx = idx + 20
+    }
+
+    private fun setupVertices(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        x4: Float,
+        y4: Float,
+        u: Float,
+        v: Float,
+        u2: Float,
+        v2: Float,
+        color: Float
+    ) {
+        setupVerticesPositionsUvs(vertices, idx, x1, y1, x2, y2, x3, y3, x4, y4, u, v, u2, v2)
+        setupVerticesColors(vertices, idx, color)
+        idx += 20
+    }
+
+    private fun setupVerticesColors(vertices: IFloatData, idx: Int, color: Float) {
+        vertices[idx + 2] = color
+        vertices[idx + 7] = color
+        vertices[idx + 12] = color
+        vertices[idx + 17] = color
+    }
+
+    private fun setupVerticesColors(idx: Int, color: Int) {
+        val bytes = verts.bytes
+        val byteOffset = idx * 4
+        bytes.putRGBA(byteOffset + 8, color)
+        bytes.putRGBA(byteOffset + 28, color)
+        bytes.putRGBA(byteOffset + 48, color)
+        bytes.putRGBA(byteOffset + 68, color)
+    }
+
+    private fun setupVertices(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        u: Float,
+        v: Float,
+        u2: Float,
+        v2: Float,
+        color: Float
+    ) = setupVertices(x1, y1, x1, y2, x2, y2, x2, y1, u, v, u2, v2, color)
+
+    private fun setupVertices(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        u: Float,
+        v: Float,
+        u2: Float,
+        v2: Float,
+        color: Int
+    ) {
+        setupVerticesPositionsUvs(vertices, idx, x1, y1, x1, y2, x2, y2, x2, y1, u, v, u2, v2)
+        setupVerticesColors(idx, color)
+        idx += 20
     }
 
     override fun draw(texture: ITexture2D, x: Float, y: Float, width: Float, height: Float, srcX: Int, srcY: Int, srcWidth: Int,
                       srcHeight: Int, flipX: Boolean, flipY: Boolean) {
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
+        switchTextureOrResizeMesh(texture)
         var u = srcX * invTexWidth
         var v = (srcY + srcHeight) * invTexHeight
         var u2 = (srcX + srcWidth) * invTexWidth
@@ -293,29 +369,7 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
             v = v2
             v2 = tmp
         }
-        val color = this.packedColor
-        val idx = idx
-        vertices[idx] = x
-        vertices[idx + 1] = y
-        vertices[idx + 2] = color
-        vertices[idx + 3] = u
-        vertices[idx + 4] = v
-        vertices[idx + 5] = x
-        vertices[idx + 6] = fy2
-        vertices[idx + 7] = color
-        vertices[idx + 8] = u
-        vertices[idx + 9] = v2
-        vertices[idx + 10] = fx2
-        vertices[idx + 11] = fy2
-        vertices[idx + 12] = color
-        vertices[idx + 13] = u2
-        vertices[idx + 14] = v2
-        vertices[idx + 15] = fx2
-        vertices[idx + 16] = y
-        vertices[idx + 17] = color
-        vertices[idx + 18] = u2
-        vertices[idx + 19] = v
-        this.idx = idx + 20
+        setupVertices(x, y, fx2, fy2, u, v, u2, v2, packedColor)
     }
 
     override fun draw(texture: ITexture2D, x: Float, y: Float, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int) {
@@ -343,33 +397,8 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         v2: Float,
         color: Int
     ) {
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val vertices = vertices
-        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
-        val idx = idx
-        val bytes = verts.bytes
-        val byteOffset = idx * 4
-        vertices[idx] = x
-        vertices[idx + 1] = y
-        bytes.putRGBA(byteOffset + 8, color)
-        vertices[idx + 3] = u
-        vertices[idx + 4] = v
-        vertices[idx + 5] = x
-        vertices[idx + 6] = y2
-        bytes.putRGBA(byteOffset + 28, color)
-        vertices[idx + 8] = u
-        vertices[idx + 9] = v2
-        vertices[idx + 10] = x2
-        vertices[idx + 11] = y2
-        bytes.putRGBA(byteOffset + 48, color)
-        vertices[idx + 13] = u2
-        vertices[idx + 14] = v2
-        vertices[idx + 15] = x2
-        vertices[idx + 16] = y
-        bytes.putRGBA(byteOffset + 68, color)
-        vertices[idx + 18] = u2
-        vertices[idx + 19] = v
-        this.idx += 20
+        switchTextureOrResizeMesh(texture)
+        setupVertices(x, y, x2, y2, u, v, u2, v2, color)
     }
 
     override fun draw(texture: ITexture2D, x: Float, y: Float, width: Float, height: Float) =
@@ -388,10 +417,7 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
 
     override fun draw(region: TextureRegion, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float,
                       scaleX: Float, scaleY: Float, rotation: Float) {
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val vertices = vertices
-        val texture = region.texture
-        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
+        switchTextureOrResizeMesh(region.texture)
         // bottom left and top right corner points relative to origin
         val worldOriginX = x + originX
         val worldOriginY = y + originY
@@ -457,29 +483,7 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         val v = region.v2
         val u2 = region.u2
         val v2 = region.v
-        val color = this.packedColor
-        val idx = idx
-        vertices[idx] = x1
-        vertices[idx + 1] = y1
-        vertices[idx + 2] = color
-        vertices[idx + 3] = u
-        vertices[idx + 4] = v
-        vertices[idx + 5] = x2
-        vertices[idx + 6] = y2
-        vertices[idx + 7] = color
-        vertices[idx + 8] = u
-        vertices[idx + 9] = v2
-        vertices[idx + 10] = x3
-        vertices[idx + 11] = y3
-        vertices[idx + 12] = color
-        vertices[idx + 13] = u2
-        vertices[idx + 14] = v2
-        vertices[idx + 15] = x4
-        vertices[idx + 16] = y4
-        vertices[idx + 17] = color
-        vertices[idx + 18] = u2
-        vertices[idx + 19] = v
-        this.idx = idx + 20
+        setupVertices(x1, y1, x2, y2, x3, y3, x4, y4, u, v, u2, v2, packedColor)
     }
 
     override fun draw(region: TextureRegion, x: Float, y: Float, originX: Float, originY: Float, width: Float, height: Float,
@@ -602,47 +606,22 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
     }
 
     override fun draw(region: TextureRegion, width: Float, height: Float, transform: Affine2) {
-        check(drawing) { "SpriteBatch.begin must be called before draw." }
-        val vertices = vertices
-        val texture = region.texture
-        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
-        // construct corner points
-        val x1 = transform.m02
-        val y1 = transform.m12
-        val x2 = transform.m01 * height + transform.m02
-        val y2 = transform.m11 * height + transform.m12
-        val x3 = transform.m00 * width + transform.m01 * height + transform.m02
-        val y3 = transform.m10 * width + transform.m11 * height + transform.m12
-        val x4 = transform.m00 * width + transform.m02
-        val y4 = transform.m10 * width + transform.m12
-        val u = region.u
-        val v = region.v2
-        val u2 = region.u2
-        val v2 = region.v
-        val color = this.packedColor
-        val idx = idx
-
-        vertices[idx] = x1
-        vertices[idx + 1] = y1
-        vertices[idx + 2] = color
-        vertices[idx + 3] = u
-        vertices[idx + 4] = v
-        vertices[idx + 5] = x2
-        vertices[idx + 6] = y2
-        vertices[idx + 7] = color
-        vertices[idx + 8] = u
-        vertices[idx + 9] = v2
-        vertices[idx + 10] = x3
-        vertices[idx + 11] = y3
-        vertices[idx + 12] = color
-        vertices[idx + 13] = u2
-        vertices[idx + 14] = v2
-        vertices[idx + 15] = x4
-        vertices[idx + 16] = y4
-        vertices[idx + 17] = color
-        vertices[idx + 18] = u2
-        vertices[idx + 19] = v
-        this.idx = idx + 20
+        switchTextureOrResizeMesh(region.texture)
+        setupVertices(
+            transform.m02,
+            transform.m12,
+            transform.m01 * height + transform.m02,
+            transform.m11 * height + transform.m12,
+            transform.m00 * width + transform.m01 * height + transform.m02,
+            transform.m10 * width + transform.m11 * height + transform.m12,
+            transform.m00 * width + transform.m02,
+            transform.m10 * width + transform.m12,
+            region.u,
+            region.v2,
+            region.u2,
+            region.v,
+            packedColor
+        )
     }
 
     override fun flush() {
@@ -656,10 +635,10 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         val mesh = mesh
         verts.bytes.limit = idx * 4
         vertices.limit = idx
-        verts.gpuUploadRequested = true
+        verts.requestBufferUploading()
 
         GL.isCullFaceEnabled = false
-        GL.isDepthMaskEnabled = true
+        //GL.isDepthMaskEnabled = true
 
         if (blendingDisabled) {
             GL.isBlendingEnabled = false
@@ -669,7 +648,10 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         }
 
         mesh.verticesCount = spritesInBatch * 4
-        mesh.render(shader, null,0, count)
+        shader.useShader {
+            shader.listener?.draw(shader)
+            mesh.render(0, count)
+        }
         idx = 0
 
         verts.bytes.limit = verts.bytes.capacity
@@ -699,6 +681,10 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         shader.setUniformi("u_texture", 0)
     }
 
+    private fun switchTextureOrResizeMesh(texture: ITexture2D) {
+        if (texture !== lastTexture) switchTexture(texture) else resizeMesh()
+    }
+
     protected fun switchTexture(texture: ITexture2D) {
         if (texture !== lastTexture) {
             flush()
@@ -711,19 +697,25 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
     companion object {
         const val DEFAULT_VERTICES_NUM = 1000
 
+        val Layout = VertexLayout()
+
+        val POSITION = Layout.define("POSITION", 2)
+        val COLOR = Layout.define("COLOR", 4, GL_UNSIGNED_BYTE, true)
+        val UV = Layout.define("UV", 2)
+
         /** Returns a new instance of the default shader used by SpriteBatch for GL2 when no shader is specified.  */
         fun createDefaultShader(): Shader {
             val vertexShader = """
-attribute vec2 POSITION;
-attribute vec4 COLOR;
-attribute vec2 TEXCOORD_0;
+in vec2 POSITION;
+in vec4 COLOR;
+in vec2 UV;
 uniform mat4 u_projTrans;
-varying vec4 v_color;
-varying vec2 uv;
+out vec4 v_color;
+out vec2 uv;
 
 void main() {
     v_color = COLOR;
-    uv = TEXCOORD_0;
+    uv = UV;
     gl_Position =  u_projTrans * vec4(POSITION, 0.0, 1.0);
 }"""
 
@@ -735,14 +727,18 @@ void main() {
     #define LOWP
 #endif
 
-varying LOWP vec4 v_color;
-varying vec2 uv;
+in LOWP vec4 v_color;
+in vec2 uv;
+out vec4 FragColor;
 uniform sampler2D u_texture;
 
 void main() {
-    gl_FragColor = v_color * texture2D(u_texture, uv);
+    FragColor = v_color * texture(u_texture, uv);
 }"""
-            return Shader(vertexShader, fragmentShader).apply { depthMask = false }
+            return Shader(vertexShader, fragmentShader).apply {
+                depthMask = false
+                vertexLayout = Layout
+            }
         }
     }
 }

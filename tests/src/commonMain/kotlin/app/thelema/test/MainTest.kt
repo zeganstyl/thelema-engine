@@ -17,25 +17,24 @@
 package app.thelema.test
 
 import app.thelema.app.APP
-import app.thelema.test.audio.Sound3DTest
-import app.thelema.test.g3d.MeshCubeTest
-import app.thelema.test.g3d.SimpleSkyboxTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
-import app.thelema.test.g3d.terrain.GrassPatchMeshTest
+import app.thelema.test.g3d.terrain.TerrainLodFrame2to1MeshTest
+import app.thelema.test.g3d.terrain.TerrainMeshWithLoDTest
+import app.thelema.test.gl.AlphaBlendingTest
 import app.thelema.test.gl.InstancingTest
-import app.thelema.test.gl.MeshTest
-import app.thelema.test.gl.TriangleBaseTest
-import app.thelema.test.gl.VertexArrayObjectTest
-import app.thelema.test.phys.BoxShapeTest
+import app.thelema.test.img.*
 import app.thelema.test.phys.ObjectShotTest
-import app.thelema.test.shader.HeightMapToNormalMapTest
-import app.thelema.test.shader.SimpleShader3DTest
-import app.thelema.test.ui.LabelTest
+import app.thelema.test.phys.RayShapeTest
+import app.thelema.test.phys.TrimeshShapeTest
+import app.thelema.test.shader.IBLTest
+import app.thelema.test.shader.LogarithmicDepthBufferTest
+import app.thelema.test.shader.node.SkyboxShaderNodeTest
+import app.thelema.test.ui.*
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        SimpleSkyboxTest().testMain()
+        SkyboxShaderNodeTest().testMain()
     }
 }

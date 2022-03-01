@@ -18,7 +18,6 @@ package app.thelema.gl
 
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
-import app.thelema.shader.IShader
 import app.thelema.utils.iterate
 import kotlin.math.min
 
@@ -56,10 +55,7 @@ interface IVertexBuffer: IGLBuffer {
         val accessor = getAttributeOrNull(attribute)
         if (accessor != null) return accessor
 
-        return addAttribute(
-            Vertex.attributes[attribute.name] ?:
-            throw IllegalStateException("Vertex attribute ${attribute.name} must be defined in Vertex")
-        )
+        return addAttribute(attribute)
     }
 
     fun removeAttributeAt(index: Int)
@@ -73,8 +69,6 @@ interface IVertexBuffer: IGLBuffer {
     fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor?
 
     fun containsAccessor(attribute: IVertexAttribute): Boolean = getAttributeOrNull(attribute) != null
-
-    fun bind(shader: IShader)
 
     fun printVertexAttributes(): String
 }
@@ -201,12 +195,9 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         }
     }
 
-    override fun bind(shader: IShader) {
-        bind()
-
-        for (i in vertexAttributes.indices) {
-            vertexAttributes[i].bind(shader)
-        }
+    override fun bind() {
+        super.bind()
+        vertexAttributes.iterate { it.bind() }
     }
 
     override fun toString(): String {

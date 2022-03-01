@@ -22,6 +22,7 @@ class RayShapeTest: Test {
 
         entity("box") {
             boxMesh { setSize(5f) }
+            meshInstance()
             boxShape { setSize(5f) }
             rigidBody {
                 isStatic = true
@@ -31,6 +32,7 @@ class RayShapeTest: Test {
 
         entity("sphere") {
             sphereMesh { setSize(5f) }
+            meshInstance()
             sphereShape { setSize(5f) }
             rigidBody {
                 isStatic = true
@@ -40,6 +42,7 @@ class RayShapeTest: Test {
 
         val intersection = entity("intersection") {
             sphereMesh { setSize(0.1f) }
+            meshInstance()
             material {
                 shader = SimpleShader3D {
                     setupOnlyColor(0x00FF00FF)
@@ -47,13 +50,13 @@ class RayShapeTest: Test {
             }
         }
         val intersectionNode = intersection.transformNode()
-        val intersectionMesh = intersection.mesh()
+        val intersectionMesh = intersection.meshInstance()
 
         entity("ray") {
             val rayNode = transformNode()
             rigidBody {
                 isStatic = true
-                node.setPosition(0f, 0f, -2f)
+                node.setPosition(0f, 0f, 0f)
 
                 addListener(object : RigidBodyListener {
                     override fun contactBegin(contact: IBodyContact, body: IRigidBody, other: IRigidBody) {
@@ -79,7 +82,6 @@ class RayShapeTest: Test {
             GL.glLineWidth(2f)
 
             val mesh = mesh {
-                worldMatrix = Mat4()
                 primitiveType = GL_LINES
                 addVertexBuffer {
                     addAttribute(Vertex.POSITION)
@@ -105,11 +107,13 @@ class RayShapeTest: Test {
                 }
             }
 
-            material {
+            val m = material {
                 shader = SimpleShader3D {
                     setupOnlyColor(0xFF0000FF.toInt())
                 }
             }
+
+            meshInstance { material = m }
         }
 
         rigidBodyPhysicsWorld {

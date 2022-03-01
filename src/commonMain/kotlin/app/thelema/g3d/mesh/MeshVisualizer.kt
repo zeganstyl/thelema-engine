@@ -54,6 +54,7 @@ void main() {
     }
 
     var mesh = Mesh()
+    val instance = MeshInstance().apply { mesh = this@MeshVisualizer.mesh }
 
     val buffer: IVertexBuffer = mesh.addVertexBuffer {
         addAttribute(Vertex.POSITION)
@@ -68,8 +69,8 @@ void main() {
     fun render() {
         shader.bind()
         shader["viewProj"] = ActiveCamera.viewProjectionMatrix
-        mesh.worldMatrix?.also { shader["worldMat"] = it }
-        mesh.render()
+        instance.worldMatrix?.also { shader["worldMat"] = it }
+        instance.render()
     }
 
     fun reset() {

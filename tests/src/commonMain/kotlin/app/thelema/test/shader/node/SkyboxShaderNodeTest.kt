@@ -20,6 +20,7 @@ import app.thelema.ecs.Entity
 import app.thelema.g3d.*
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.mesh.skyboxMesh
+import app.thelema.gl.meshInstance
 import app.thelema.img.TextureCube
 import app.thelema.shader.Shader
 import app.thelema.shader.node.*
@@ -36,6 +37,7 @@ class SkyboxShaderNodeTest: Test {
 
             entity("skybox") {
                 skyboxMesh()
+                meshInstance()
                 material {
                     shader = Shader {
                         val vertexNode = SkyboxVertexNode()

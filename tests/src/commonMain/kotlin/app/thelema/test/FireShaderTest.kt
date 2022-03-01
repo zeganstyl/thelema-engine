@@ -9,6 +9,7 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
+import app.thelema.gl.meshInstance
 import app.thelema.img.Texture2D
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
@@ -22,7 +23,8 @@ class FireShaderTest: Test {
 
         val s = SimpleShader3D {
             fragCode = """
-varying vec2 uv;
+in vec2 uv;
+out vec4 FragColor;
 
 uniform sampler2D noise_tex;
 uniform sampler2D mask_tex;
@@ -66,7 +68,7 @@ void main() {
     float mask = texture2D(mask_tex, uv).x;
 
     float f = noise_sample * noise_sample2 * mask;
-    gl_FragColor = vec4(4.0, 2.0, 1.0, clamp(f, 0.0, 1.0));
+    FragColor = vec4(4.0, 2.0, 1.0, clamp(f, 0.0, 1.0));
 }
 """
         }
@@ -77,7 +79,7 @@ void main() {
 
         var time = 0f
 
-        s.onPrepareShader = { mesh, scene ->
+        s.onBind {
             s["time"] = time
             noiseTex.bind(0)
             maskTex.bind(1)
@@ -100,6 +102,7 @@ void main() {
                     normal = MATH.Z
                     setSize(1f)
                 }
+                meshInstance()
                 transformNode {
                     translate(0f, 0.6f, 0f)
                     requestTransformUpdate()
@@ -111,6 +114,7 @@ void main() {
 
             entity("plane2") {
                 planeMesh { setSize(10f) }
+                meshInstance()
                 material()
             }
 

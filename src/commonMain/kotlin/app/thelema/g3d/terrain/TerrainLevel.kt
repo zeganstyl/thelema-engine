@@ -16,9 +16,9 @@
 
 package app.thelema.g3d.terrain
 
-import app.thelema.g3d.IScene
 import app.thelema.math.Vec3
 import app.thelema.shader.IShader
+import app.thelema.shader.useShader
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
@@ -54,8 +54,6 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
     val tmp = Vec3()
 
     fun renderTiles(
-        shader: IShader,
-        scene: IScene?,
         startX: Float,
         startZ: Float,
         camX: Float,
@@ -77,12 +75,12 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
 //                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
 //                        }
                         tmp.set(tileX, tileZ, tileSize)
-                        terrain.plane.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
-                        terrain.frame.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+                        terrain.planeInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
+                        terrain.frameInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
 
-                        terrain.plane.mesh.render(shader, scene)
+                        terrain.plane.mesh.render()
                         terrain.frameMesh.indices = terrain.frameIndexBufferMap6x6[tileIndexZ + zi][tileIndexX + xi]
-                        terrain.frameMesh.render(shader, scene)
+                        terrain.frameMesh.render()
                     }
                 }
                 tileZ += tileSize
@@ -127,7 +125,7 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
 //        }
 //    }
 
-    fun render(shader: IShader, scene: IScene?) {
+    fun render(shader: IShader) {
         var tileX = centerTileX - tileSize
         var tileCenterX = centerTileX - tileSizeHalf
         var nextTileX = tileX + tileSize
@@ -141,24 +139,26 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
             var jInstancesIndex = 0
             while (zi < 6) {
                 if (terrain.frustum?.minMaxInFrustum(tileX, terrain.minY - tileSize, tileZ, nextTileX, terrain.maxY + tileSize, nextTileZ) != false) {
-                    if (levelIndex != 0) {
-                        terrain.levels[levelIndex - 1].renderTiles(shader, scene, tileX, tileZ, camX, camZ, xi, zi)
-                    } else {
+                    shader.useShader {
+                        if (levelIndex != 0) {
+                            terrain.levels[levelIndex - 1].renderTiles(tileX, tileZ, camX, camZ, xi, zi)
+                        } else {
 //                        for (i in terrain.listeners.indices) {
 //                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
 //                        }
-                        tmp.set(tileX, tileZ, tileSize)
-                        terrain.plane.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
-                        terrain.frame.mesh.setMaterialValue(terrain.tilePositionScaleName, tmp)
+                            tmp.set(tileX, tileZ, tileSize)
+                            terrain.planeInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
+                            terrain.frameInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
 
-                        terrain.plane.mesh.render(shader, scene)
-                        terrain.frame.mesh.indices = terrain.frameIndexBuffers[4] // center
-                        terrain.frame.mesh.render(shader, scene)
-                    }
+                            terrain.plane.mesh.render()
+                            terrain.frame.mesh.indices = terrain.frameIndexBuffers[4] // center
+                            terrain.frame.mesh.render()
+                        }
 
 //                    for (i in instances.indices) {
 //                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = true
 //                    }
+                    }
                 } else {
 //                    for (i in instances.indices) {
 //                        instances[i].renderFlags[iInstancesIndex][jInstancesIndex] = false

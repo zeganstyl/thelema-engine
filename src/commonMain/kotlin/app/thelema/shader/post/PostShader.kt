@@ -16,6 +16,7 @@
 
 package app.thelema.shader.post
 
+import app.thelema.gl.IVertexLayout
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
@@ -24,18 +25,15 @@ import app.thelema.shader.Shader
 /** @author zeganstyl */
 open class PostShader(
     fragCode: String,
-    compile: Boolean = true,
     defaultPrecision: String = "mediump",
     uvName: String = "uv",
-    attributeUVName: String = "UV",
-    attributePositionName: String = "POSITION",
     version: Int = 330,
     flipY: Boolean = false
 ) :
     Shader(
         vertCode = """
-in vec2 $attributePositionName;
-in vec2 $attributeUVName;
+in vec2 POSITION;
+in vec2 UV;
 out vec2 $uvName;
 
 uniform bool flipY;
@@ -43,19 +41,20 @@ uniform bool flipY;
 void main() {
     ${
         if (flipY) {
-            "$uvName = vec2($attributeUVName.x, 1.0 - $attributeUVName.y);"
+            "$uvName = vec2(UV.x, 1.0 - UV.y);"
         } else {
-            "$uvName = $attributeUVName;"
+            "$uvName = UV;"
         }
     }
-    gl_Position = vec4($attributePositionName, 0.0, 1.0);
+    gl_Position = vec4(POSITION, 0.0, 1.0);
 }""",
         fragCode = fragCode,
-        compile = compile,
         floatPrecision = defaultPrecision,
         version = version
     ), IPostEffect
 {
+    override var vertexLayout: IVertexLayout = ScreenQuad.Layout
+
     override fun render(inputMap: ITexture, out: IFrameBuffer?) {
         bind()
         inputMap.bind(0)

@@ -19,12 +19,11 @@ package app.thelema.shader.node
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.gl.GL
 import app.thelema.gl.GL_BACK
 import app.thelema.img.GBuffer
 import app.thelema.json.IJsonObject
-import app.thelema.gl.IMesh
 
 /** For using with [GBuffer]
  * @author zeganstyl */
@@ -83,8 +82,8 @@ class GBufferOutputNode(): ShaderNode() {
         out.append("layout (location = 2) out vec4 gPosition;\n")
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         GL.isBlendingEnabled = alphaMode == Blending.BLEND
         if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()

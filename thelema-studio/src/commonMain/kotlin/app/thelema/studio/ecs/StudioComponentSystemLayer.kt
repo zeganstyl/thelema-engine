@@ -7,6 +7,7 @@ import app.thelema.g3d.mesh.MeshBuilder
 import app.thelema.g3d.mesh.MeshVisualizer
 import app.thelema.gl.GL
 import app.thelema.gl.IMesh
+import app.thelema.gl.IMeshInstance
 import app.thelema.img.texture2D
 import app.thelema.math.Vec3
 import app.thelema.phys.IBoxShape
@@ -117,7 +118,7 @@ class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer 
             } else {
                 selection.iterate {
                     val matrix = it.componentOrNull<ITransformNode>()?.worldMatrix
-                        ?: it.componentOrNull<IMesh>()?.worldMatrix
+                        ?: it.componentOrNull<IMeshInstance>()?.worldMatrix
 
                     matrix?.also { basis.render(it) }
                 }

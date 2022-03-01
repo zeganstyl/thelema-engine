@@ -22,6 +22,8 @@ import app.thelema.g3d.cam.Camera
 import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.scene
 import app.thelema.json.JSON
+import app.thelema.math.MATH
+import app.thelema.math.Vec3
 import app.thelema.utils.LOG
 
 class Project: IProject {
@@ -32,13 +34,19 @@ class Project: IProject {
                 ECS.addEntity(value)
                 addedEntityToBranch(value)
             }
-            mainCamera = value?.entity("MainCamera")?.component() ?: Camera()
+            mainCamera = (value?.entity("MainCamera")?.component() ?: Camera()).apply {
+                lookAt(Vec3(3f, 3f, 3f), MATH.Zero3)
+                updateCamera()
+            }
         }
 
     override val componentName: String
         get() = "Project"
 
-    override var mainCamera: ICamera = Camera()
+    override var mainCamera: ICamera = Camera().apply {
+        lookAt(Vec3(3f, 3f, 3f), MATH.Zero3)
+        updateCamera()
+    }
 
     private val _loaders = ArrayList<ILoader>()
     override val loaders: List<ILoader>

@@ -119,7 +119,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 vertices.verticesCount = accessor.count
 
                 vertices.addAttribute(
-                    Vertex.attributes[attributeName] ?: Vertex.define(
+                    Vertex.Layout.getAttributeByNameOrNull(attributeName) ?: Vertex.Layout.define(
                         size = accessor.typeSize(),
                         name = attributeName,
                         type = when (accessor.componentType) {
@@ -296,8 +296,9 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                         gltfMesh.buffersMap[accessorIndex] = mesh.addVertexBuffer {
                             this.bytes = bytes.byteView().copy()
                             verticesCount = accessor.count
+
                             addAttribute(
-                                Vertex.attributes[attributeName] ?: VertexAttribute(
+                                Vertex.Layout.getAttributeByNameOrNull(attributeName) ?: Vertex.Layout.define(
                                     size = accessor.typeSize(),
                                     name = attributeName,
                                     type = when (accessor.componentType) {

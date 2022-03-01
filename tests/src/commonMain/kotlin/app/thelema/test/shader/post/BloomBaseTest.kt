@@ -40,7 +40,7 @@ class BloomBaseTest: Test {
 
     override fun testMain() {
         val cubeShader = SimpleShader3D {
-            renderAttributeName = positionsName
+            renderAttributeName = "POSITION"
         }
 
         val blurDownShader = PostShader(

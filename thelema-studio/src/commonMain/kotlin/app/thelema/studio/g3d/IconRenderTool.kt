@@ -41,7 +41,7 @@ void main() {
 
     private val quad = PlaneMesh {
         setSize(0.05f)
-        normal.set(0f, 0f, 1f)
+        normal = Vec3(0f, 0f, 1f)
     }
 
     val mat = Mat3()

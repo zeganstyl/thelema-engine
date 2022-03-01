@@ -9,6 +9,7 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.particles.*
 import app.thelema.g3d.scene
+import app.thelema.gl.meshInstance
 import app.thelema.img.Texture2D
 import app.thelema.math.MATH
 import app.thelema.shader.Shader
@@ -30,7 +31,6 @@ class EmitParticlesByCodeTest: Test {
                 planeMesh {
                     normal = MATH.Z
                     setSize(1f)
-                    mesh.isVisible = false
                 }
                 particleMaterial {
                     lifeTimesAsAttribute = true

@@ -16,8 +16,10 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
-import app.thelema.gl.IMesh
+import app.thelema.g3d.IArmature
+import app.thelema.g3d.IUniforms
+import app.thelema.gl.Uniform
+import app.thelema.gl.Vertex
 import app.thelema.math.TransformDataType
 import app.thelema.math.MATH
 
@@ -36,11 +38,14 @@ class VertexNode(
     override val componentName: String
         get() = "VertexNode"
 
-    var positionName = "POSITION"
-    var normalName = "NORMAL"
-    var tangentName = "TANGENT"
-    var bonesName = "JOINTS_"
-    var boneWeightsName = "WEIGHTS_"
+    private val positionName: String
+        get() = Vertex.POSITION.name
+
+    private val normalName: String
+        get() = Vertex.NORMAL.name
+
+    private val tangentName: String
+        get() = Vertex.TANGENT.name
 
     val position = output(GLSLVec3("position"))
     val normal = output(GLSLVec3("normal"))
@@ -74,17 +79,18 @@ class VertexNode(
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
-        shader[uWorldMatrix] = mesh.worldMatrix ?: MATH.IdentityMat4
-        shader[uUseBones] = mesh.armature?.boneMatrices?.isNotEmpty() == true
+        shader[uWorldMatrix] = uniforms.worldMatrix ?: MATH.IdentityMat4
 
-        val armature = mesh.armature
+        val armature = uniforms.get<IArmature>(Uniform.Armature)
+        shader[uUseBones] = armature?.boneMatrices?.isNotEmpty() == true
+
         if (armature != null) {
             val matrices = armature.boneMatrices
             if (matrices.isNotEmpty()) {
-                shader.setMatrix4(uBoneMatricesName, matrices, length = matrices.size)
+                shader.setMatrix4(uBoneMatricesName, matrices, 0, armature.bones.size)
             }
         }
     }
@@ -111,8 +117,8 @@ class VertexNode(
 
             if (hasBones) {
                 out.append("if ($uUseBones) {\n")
-                val aBonesName = bonesName
-                val aBoneWeightsName = boneWeightsName
+                val aBonesName = "JOINTS_"
+                val aBoneWeightsName = "WEIGHTS_"
                 for (i in 0 until bonesSetsNum) {
                     //val index = if (i == 0) "" else "$i"
                     val index = i.toString()
@@ -167,15 +173,15 @@ class VertexNode(
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (position.isUsed) out.append("$varIn vec3 ${position.ref};\n")
-        if (normal.isUsed) out.append("$varIn vec3 ${normal.ref};\n")
-        if (tbn.isUsed) out.append("$varIn mat3 ${tbn.ref};\n")
+        if (position.isUsed) out.append("in vec3 ${position.ref};\n")
+        if (normal.isUsed) out.append("in vec3 ${normal.ref};\n")
+        if (tbn.isUsed) out.append("in mat3 ${tbn.ref};\n")
     }
 
     override fun declarationVert(out: StringBuilder) {
         if (position.isUsed) {
-            out.append("$attribute vec3 $positionName;\n")
-            out.append("$varOut vec3 ${position.ref};\n")
+            out.append("in vec3 $positionName;\n")
+            out.append("out vec3 ${position.ref};\n")
 
             when (worldTransformType) {
                 TransformDataType.TRS -> out.append("uniform mat4 $uWorldMatrix;\n")
@@ -200,19 +206,19 @@ class VertexNode(
                 out.append("mat4 skinning = mat4(0.0);\n")
 
                 for (i in 0 until bonesSetsNum) {
-                    out.append("$attribute vec4 ${bonesName}$i;\n")
-                    out.append("$attribute vec4 ${boneWeightsName}$i;\n")
+                    out.append("in vec4 JOINTS_$i;\n")
+                    out.append("in vec4 WEIGHTS_$i;\n")
                 }
             }
 
             if (normal.isUsed || tbn.isUsed) {
-                out.append("$attribute vec3 $normalName;\n")
-                out.append("$varOut vec3 ${normal.ref};\n")
+                out.append("in vec3 $normalName;\n")
+                out.append("out vec3 ${normal.ref};\n")
                 out.append("uniform mat3 uNormalMatrix;\n")
 
                 if (tbn.isUsed) {
-                    out.append("$attribute vec4 $tangentName;\n")
-                    out.append("$varOut mat3 ${tbn.ref};\n")
+                    out.append("in vec4 $tangentName;\n")
+                    out.append("out mat3 ${tbn.ref};\n")
                 }
             }
         }

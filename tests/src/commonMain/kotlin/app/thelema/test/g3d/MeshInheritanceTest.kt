@@ -22,6 +22,7 @@ import app.thelema.g3d.*
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.mesh
+import app.thelema.gl.meshInstance
 import app.thelema.test.Test
 import app.thelema.shader.SimpleShader3D
 
@@ -35,7 +36,7 @@ class MeshInheritanceTest: Test {
             component<OrbitCameraControl>()
 
             entity {
-                mesh { inheritedMesh = box.mesh }
+                meshInstance { mesh = box.mesh }
                 material { shader = SimpleShader3D() }
             }
         }

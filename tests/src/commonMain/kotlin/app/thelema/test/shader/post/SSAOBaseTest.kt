@@ -16,17 +16,16 @@
 
 package app.thelema.test.shader.post
 
-
 import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.mesh.PlaneMesh
-import app.thelema.gl.GL
 import app.thelema.img.GBuffer
 import app.thelema.img.render
 import app.thelema.math.Mat4
 import app.thelema.shader.Shader
 import app.thelema.shader.post.SSAO
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 
 /** @author zeganstyl */
@@ -85,15 +84,16 @@ gPosition = vec4(vViewSpacePosition, 1.0);
             cubeMatrix.rotate(0f, 1f, 0f, APP.deltaTime)
 
             gBuffer.render {
-                sceneShader.bind()
-                sceneShader["view"] = ActiveCamera.viewMatrix
-                sceneShader["viewProj"] = ActiveCamera.viewProjectionMatrix
+                sceneShader.useShader {
+                    sceneShader["view"] = ActiveCamera.viewMatrix
+                    sceneShader["viewProj"] = ActiveCamera.viewProjectionMatrix
 
-                sceneShader["world"] = cubeMatrix
-                cube.mesh.render(sceneShader)
+                    sceneShader["world"] = cubeMatrix
+                    cube.mesh.render()
 
-                sceneShader["world"] = planeMatrix
-                plane.mesh.render(sceneShader)
+                    sceneShader["world"] = planeMatrix
+                    plane.mesh.render()
+                }
             }
 
             ssao.render(null)

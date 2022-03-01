@@ -29,6 +29,7 @@ import app.thelema.input.MOUSE
 import app.thelema.input.BUTTON
 import app.thelema.math.Vec4
 import app.thelema.shader.SimpleShader3D
+import app.thelema.shader.useShader
 import app.thelema.utils.Color
 import app.thelema.utils.LOG
 
@@ -75,21 +76,21 @@ class SelectionByColorTest: Test {
             control.update()
             ActiveCamera.updateCamera()
 
-            selectionRenderShader.bind()
-
             if (selectRequest) {
                 selectRequest = false
 
                 // render to main frame buffer and read pixels from it
                 var color = 0x000001FFL
                 var j = 1
-                for (i in meshes.indices) {
-                    val mesh = meshes[i]
-                    colorMap[j] = mesh
-                    selectionRenderShader.color?.also { Color.rgba8888ToColor(it, color.toInt()) }
-                    mesh.render(selectionRenderShader)
-                    color += 256
-                    j++
+                selectionRenderShader.useShader {
+                    for (i in meshes.indices) {
+                        val mesh = meshes[i]
+                        colorMap[j] = mesh
+                        selectionRenderShader.color?.also { Color.rgba8888ToColor(it, color.toInt()) }
+                        mesh.render()
+                        color += 256
+                        j++
+                    }
                 }
                 GL.glReadPixels(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
                 GL.glClearColor(Color.BLACK)
@@ -103,10 +104,12 @@ class SelectionByColorTest: Test {
             val defaultColor = Vec4(0.75f, 0.75f, 0.75f, 1f)
 
             // render scene
-            for (i in meshes.indices) {
-                val mesh = meshes[i]
-                sceneShader.color?.set(if (selected == mesh) highlightColor else defaultColor)
-                mesh.render(sceneShader)
+            sceneShader.useShader {
+                for (i in meshes.indices) {
+                    val mesh = meshes[i]
+                    sceneShader.color?.set(if (selected == mesh) highlightColor else defaultColor)
+                    mesh.render()
+                }
             }
         }
     }

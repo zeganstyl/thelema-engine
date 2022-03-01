@@ -82,7 +82,7 @@ class Loader: ILoader {
             isLoadedInternal.value = false
             runOnGLThreadRequest = false
             initProgress()
-            entity.getRootEntity().componentOrNull<IProject>()?.monitorLoading(this)
+            (entityOrNull?.getRootEntity()?.componentOrNull() ?: RES).monitorLoading(this)
 
             file?.also { file ->
                 if (file.path.isEmpty()) {

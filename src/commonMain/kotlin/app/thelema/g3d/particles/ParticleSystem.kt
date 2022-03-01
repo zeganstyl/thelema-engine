@@ -2,9 +2,9 @@ package app.thelema.g3d.particles
 
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
+import app.thelema.g3d.Uniforms
 import app.thelema.math.Frustum
-import app.thelema.math.IVec3
 import app.thelema.math.IVec3C
 import app.thelema.math.MATH
 import app.thelema.shader.IShader
@@ -29,6 +29,8 @@ class ParticleSystem: IParticleSystem {
     override val worldPosition: IVec3C
         get() = MATH.Zero3
 
+    override val uniforms: IUniforms = Uniforms()
+
     override fun getOrCreateParticles(material: IParticleMaterial): IParticles {
         var particlesData = particlesMap[material]
         if (particlesData == null) {
@@ -48,12 +50,12 @@ class ParticleSystem: IParticleSystem {
 
     override fun visibleInFrustum(frustum: Frustum): Boolean = true
 
-    override fun render(scene: IScene?, shaderChannel: String?) {
-        particles.iterate { it.mesh.render(scene, shaderChannel) }
+    override fun render(shaderChannel: String?) {
+        particles.iterate { it.render(shaderChannel) }
     }
 
-    override fun render(shader: IShader, scene: IScene?) {
-        particles.iterate { it.mesh.render(shader, scene) }
+    override fun render(shader: IShader) {
+        particles.iterate { it.render(shader) }
     }
 
     override fun updateComponent(delta: Float) {

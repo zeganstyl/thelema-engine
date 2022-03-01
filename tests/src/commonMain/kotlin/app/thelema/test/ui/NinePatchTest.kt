@@ -19,6 +19,7 @@ package app.thelema.test.ui
 import app.thelema.app.APP
 import app.thelema.g2d.NinePatch
 import app.thelema.g2d.SpriteBatch
+import app.thelema.gl.GL
 import app.thelema.img.Texture2D
 import app.thelema.test.Test
 import app.thelema.utils.Color
@@ -30,13 +31,14 @@ class NinePatchTest: Test {
         val patch = NinePatch(Texture2D("frame.png"), 50, 50, 50, 50)
 
         val patch2 = NinePatch(Texture2D {
-            load(3, 3) {
+            load(4, 4) {
                 val w = Color.WHITE
                 val b = Color.BLACK
                 putRGBAs(
-                    w, w, w,
-                    w, b, w,
-                    w, w, w
+                    w, w, w, w,
+                    w, b, b, w,
+                    w, b, b, w,
+                    w, w, w, w
                 )
             }
         }, 1, 1, 1, 1)

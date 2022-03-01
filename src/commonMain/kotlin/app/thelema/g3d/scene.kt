@@ -230,6 +230,7 @@ class Scene: IScene {
         for (i in renderables.indices) {
             val renderable = renderables[i]
             if (!frustumCulling || renderable.visibleInFrustum(ActiveCamera.frustum)) {
+                renderable.uniforms.scene = this
                 when (renderable.alphaMode) {
                     Blending.BLEND -> translucent.add(renderable)
                     Blending.MASK -> masked.add(renderable)
@@ -241,16 +242,16 @@ class Scene: IScene {
         if (opaque.size > 0) {
             // render near objects first, so that far objects can discarded with depth test
             opaque.sortedWith(frontToBackSorter)
-            opaque.iterate { it.render(this, shaderChannel) }
+            opaque.iterate { it.render(shaderChannel) }
         }
 
         if (masked.size > 0) {
-            masked.iterate { it.render(this, shaderChannel) }
+            masked.iterate { it.render(shaderChannel) }
         }
 
         if (translucent.size > 0) {
             translucent.sortWith(translucentSorter)
-            translucent.iterate { it.render(this, shaderChannel) }
+            translucent.iterate { it.render(shaderChannel) }
         }
     }
 

@@ -16,9 +16,9 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.gl.IMesh
+import app.thelema.gl.Vertex
 
 /** Vertex node for skyboxes. Supports velocity.
  *
@@ -29,7 +29,8 @@ class SkyboxVertexNode(): ShaderNode() {
     override val componentName: String
         get() = "SkyboxVertexNode"
 
-    var positionsName = "POSITION"
+    private val positionsName: String
+        get() = Vertex.POSITION.name
 
     val clipSpacePosition = output(GLSLVec4("clipSpacePosition"))
 
@@ -49,8 +50,8 @@ class SkyboxVertexNode(): ShaderNode() {
     val uPreviousViewProjectionMatrix
         get() = "uPreviousViewProjectionMatrix"
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         val pos = ActiveCamera.eye
         shader.depthMask = false

@@ -44,7 +44,8 @@ class RaycastingByDepthTest: Test {
         val plane = PlaneMesh { setSize(10f) }
         val box = BoxMesh { setSize(2f) }
         val boxSmall = BoxMesh { setSize(0.2f) }
-        boxSmall.mesh.worldMatrix = Mat4()
+        val boxSmall1 = MeshInstance(boxSmall.mesh)
+        boxSmall1.worldMatrix = Mat4()
 
         val sceneShader = SimpleShader3D()
 
@@ -111,7 +112,7 @@ void main() {
                     pos.prj(ActiveCamera.inverseViewProjectionMatrix)
 
                     // apply position
-                    boxSmall.mesh.worldMatrix?.setToTranslation(pos)
+                    boxSmall1.worldMatrix?.setToTranslation(pos)
                 }
             }
         })

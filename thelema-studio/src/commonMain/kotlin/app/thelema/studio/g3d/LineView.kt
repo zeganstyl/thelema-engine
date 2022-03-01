@@ -33,7 +33,7 @@ void main() {
     val mesh: IMesh = Mesh {
         primitiveType = GL_LINES
         addVertexBuffer {
-            addAttribute(3, "POSITION")
+            addAttribute(Vertex.POSITION)
             initVertexBuffer(6) {}
         }
     }

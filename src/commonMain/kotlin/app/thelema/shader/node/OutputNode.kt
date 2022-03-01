@@ -19,10 +19,9 @@ package app.thelema.shader.node
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
-import app.thelema.json.IJsonObject
 
 /**
  * @param vertPosition screen space vertex position (clip space)
@@ -70,8 +69,8 @@ class OutputNode(
         this.fragColor = fragColor
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         if (fadeStart in 0f..1f) {
             if (cameraFarCached != ActiveCamera.far) {
@@ -81,7 +80,7 @@ class OutputNode(
             }
         }
 
-        val alphaMode = mesh.material?.alphaMode ?: alphaMode
+        val alphaMode = uniforms.get(Uniform.AlphaMode) ?: alphaMode
         GL.isBlendingEnabled = alphaMode == Blending.BLEND || fadeStart in 0f..1f
         if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
 

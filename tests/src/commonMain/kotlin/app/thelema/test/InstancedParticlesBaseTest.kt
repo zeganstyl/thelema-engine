@@ -100,7 +100,7 @@ void main() {
             particlesShader.set("texSize", smokeSizeU, smokeSizeV)
             particlesShader["maxLife"] = particleLifeTime
             particlesShader.depthMask = false
-            particlesShader.onPrepareShader = { mesh, scene ->
+            particlesShader.onBind {
                 smokeTexture.bind(0)
                 particlesShader["viewProj"] = ActiveCamera.viewProjectionMatrix
 

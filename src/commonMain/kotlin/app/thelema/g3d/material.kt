@@ -21,7 +21,7 @@ import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.ecs.componentOrNull
 import app.thelema.gl.GL
-import app.thelema.gl.IMesh
+import app.thelema.gl.IRenderable
 import app.thelema.math.Vec4
 import app.thelema.shader.IShader
 import app.thelema.shader.SimpleShader3D
@@ -39,6 +39,11 @@ interface IMaterial: IEntityComponent {
 
     /** Channels may be used to store additional shaders, like velocity and etc */
     val shaderChannels: MutableMap<String, IShader>
+
+    fun render(shaderChannel: String?, renderable: IRenderable) {
+        val shader = if (shaderChannel != null) shaderChannels[shaderChannel] else shader
+        if (shader != null) renderable.render(shader)
+    }
 }
 
 fun IEntity.material(block: IMaterial.() -> Unit) = component(block)
@@ -85,7 +90,7 @@ class Material: IMaterial {
 var DEFAULT_SHADER: IShader? = null
     get() {
         if (field == null)
-            field = SimpleShader3D(false).also {
+            field = SimpleShader3D().also {
                 it.renderAttributeName = ""
                 it.color = Vec4(0.5f, 0.5f, 0.5f, 1f)
                 GL.call { it.initShader() }

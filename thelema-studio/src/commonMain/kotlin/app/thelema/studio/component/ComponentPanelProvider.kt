@@ -16,7 +16,7 @@ object ComponentPanelProvider {
         addProvider { ShaderPanel() }
         addProvider { Texture2DPanel() }
         addProvider { MaterialPanel() }
-        addProvider { MeshPanel() }
+        addProvider { MeshInstancePanel() }
         addProvider { AnimationPlayerPanel() }
         addProvider { ArmaturePanel() }
         addProvider { SoundLoaderPanel() }

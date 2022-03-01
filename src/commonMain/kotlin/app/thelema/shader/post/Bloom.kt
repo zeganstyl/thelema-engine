@@ -34,7 +34,7 @@ class Bloom(
     height: Int,
     iterations: Int = 5,
     stepOffset: Int = 2,
-    intensity: Float = 1.25f,
+    intensity: Float = 1.05f,
     pixelFormat: Int = GL_RGBA,
     internalFormat: Int = GL_RGBA,
     pixelChannelType: Int = GL_UNSIGNED_BYTE

@@ -75,6 +75,7 @@ interface ITexture2D: ITexture {
     ): ITexture2D {
         val bytes = DATA.bytes(width * height * 4, block)
         val tex = load(width, height, bytes, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, mipmapLevel)
+        generateMipmapsGPU()
         bytes.destroy()
         return tex
     }

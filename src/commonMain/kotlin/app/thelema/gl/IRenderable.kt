@@ -2,6 +2,8 @@ package app.thelema.gl
 
 import app.thelema.ecs.IEntityComponent
 import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
+import app.thelema.g3d.Uniforms
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3
 import app.thelema.math.IVec3C
@@ -16,9 +18,11 @@ interface IRenderable: IEntityComponent {
 
     val worldPosition: IVec3C
 
+    val uniforms: IUniforms
+
     fun visibleInFrustum(frustum: Frustum): Boolean
 
-    fun render(scene: IScene?, shaderChannel: String?)
+    fun render(shaderChannel: String?)
 
-    fun render(shader: IShader, scene: IScene? = null)
+    fun render(shader: IShader)
 }

@@ -21,30 +21,21 @@ import app.thelema.app.APP
 import app.thelema.gl.GL
 import app.thelema.gl.ScreenQuad
 import app.thelema.shader.Shader
+import app.thelema.shader.post.PostShader
 import app.thelema.test.Test
 
 /** @author zeganstyl */
 class ScreenQuadTest: Test {
-    override val name: String
-        get() = "Screen Quad"
-
     override fun testMain() {
-        val shader = Shader(
-                vertCode = """
-attribute vec2 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
-
-void main() {
-    uv = UV;
-    gl_Position = vec4(POSITION, 0.0, 1.0);
-}""",
+        val shader = PostShader(
                 fragCode = """
-varying vec2 uv;
+in vec2 uv;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(uv, 1.0, 1.0);
-}""")
+    FragColor = vec4(uv, 1.0, 1.0);
+}
+""")
 
         APP.onRender = {
             ScreenQuad.render(shader)

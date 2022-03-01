@@ -272,9 +272,7 @@ class NinePatch(): Drawable {
 
     override fun draw(batch: Batch, x: Float, y: Float, width: Float, height: Float) {
         prepareVertices(x, y, width, height)
-        for (i in patches.indices) {
-            patches[i]?.draw(batch)
-        }
+        patches.iterate { it?.draw(batch) }
     }
 
     val totalWidth: Float

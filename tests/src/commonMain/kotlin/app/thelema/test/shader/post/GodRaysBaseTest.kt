@@ -30,6 +30,7 @@ import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.shader.post.PostShader
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 
 class GodRaysBaseTest: Test {
@@ -152,40 +153,41 @@ void main() {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
-            meshShader.bind()
-            meshShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            meshShader["useColor"] = true
+            meshShader.useShader {
+                meshShader["viewProj"] = ActiveCamera.viewProjectionMatrix
+                meshShader["useColor"] = true
 
-            occlusionTextureBuffer.render {
-                GL.glClear()
+                occlusionTextureBuffer.render {
+                    GL.glClear()
 
-                meshShader["color"] = lightColor
-                meshShader["pos"] = lightPos
-                sphere.mesh.render(meshShader)
+                    meshShader["color"] = lightColor
+                    meshShader["pos"] = lightPos
+                    sphere.mesh.render()
 
-                meshShader["color"] = blackColor
+                    meshShader["color"] = blackColor
 
-                meshShader["pos"] = spherePos
-                sphere.mesh.render(meshShader)
+                    meshShader["pos"] = spherePos
+                    sphere.mesh.render()
 
-                meshShader["pos"] = boxPos
-                box.mesh.render(meshShader)
-            }
+                    meshShader["pos"] = boxPos
+                    box.mesh.render()
+                }
 
-            sceneTextureBuffer.render {
-                GL.glClear()
+                sceneTextureBuffer.render {
+                    GL.glClear()
 
-                meshShader["color"] = lightColor
-                meshShader["pos"] = lightPos
-                sphere.mesh.render(meshShader)
+                    meshShader["color"] = lightColor
+                    meshShader["pos"] = lightPos
+                    sphere.mesh.render()
 
-                meshShader["useColor"] = false
+                    meshShader["useColor"] = false
 
-                meshShader["pos"] = spherePos
-                sphere.mesh.render(meshShader)
+                    meshShader["pos"] = spherePos
+                    sphere.mesh.render()
 
-                meshShader["pos"] = boxPos
-                box.mesh.render(meshShader)
+                    meshShader["pos"] = boxPos
+                    box.mesh.render()
+                }
             }
 
             screenSpaceLightPos.set(lightPos)

@@ -8,6 +8,7 @@ import app.thelema.ecs.sibling
 import app.thelema.g3d.IScene
 import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ITransformNode
+import app.thelema.g3d.IUniforms
 import app.thelema.gl.*
 import app.thelema.img.*
 import app.thelema.math.IMat4
@@ -148,7 +149,7 @@ void main() {
                 frameBuffer.render {
                     colorUniform.color.set(1f, 1f, 1f, 1f)
                     selected.iterate { selected ->
-                        selected.componentOrNull<IMesh>()?.also {
+                        selected.componentOrNull<IMeshInstance>()?.also {
                             worldMatrix = it.worldMatrix
                             it.render(selectionRenderShader)
                             selection = true
@@ -197,7 +198,7 @@ class StudioColorUniformNode: ShaderNode() {
         out.append("uniform ${uniform.typedRef};\n")
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+    override fun bind(uniforms: IUniforms) {
         shader[uniform.ref] = color
     }
 }

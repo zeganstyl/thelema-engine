@@ -21,6 +21,7 @@ import app.thelema.ecs.*
 import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
+import app.thelema.gl.IMeshInstance
 import app.thelema.math.Mat3
 import app.thelema.math.Vec3
 import app.thelema.shader.findShaderNode
@@ -84,14 +85,14 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 if (!preparedMeshInstances.contains(pair.second.entity)) {
                     var meshPrepared = false
                     pair.second.entity.forEachChildEntity {
-                        val instance = it.component<IMesh>()
+                        val instance = it.component<IMeshInstance>()
                         val skin = skinEntity.component<IArmature>()
                         instance.armature = skin
 
                         if (!meshPrepared) {
                             meshPrepared = true
-                            instance.inheritedMesh?.apply {
-                                armature = skin
+                            instance.mesh?.apply {
+                                instance.armature = skin
                                 material?.shader?.findShaderNode<VertexNode> {
                                     maxBones = max(skin.bones.size, maxBones)
                                 }

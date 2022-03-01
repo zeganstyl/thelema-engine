@@ -16,10 +16,9 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.math.IVec3
 import app.thelema.math.Vec3
-import app.thelema.gl.IMesh
 import app.thelema.img.ITexture2D
 
 /** @author zeganstyl */
@@ -47,8 +46,8 @@ class HeightMapNode: ShaderNode() {
     val outputPosition = output(GLSLVec3("outputPosition"))
     val uv = output(GLSLVec2("uv"))
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         val unit = shader.getNextTextureUnit()
         shader[sampler.ref] = unit

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="thelema-vulkan-jvm">
+    <output-path>$PROJECT_DIR$/thelema-vulkan/build/libs</output-path>
+    <root id="archive" name="thelema-vulkan-jvm.jar">
+      <element id="module-output" name="thelema.thelema-vulkan.jvmMain" />
+    </root>
+  </artifact>
+</component>

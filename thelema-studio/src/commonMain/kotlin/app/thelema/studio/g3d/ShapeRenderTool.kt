@@ -9,6 +9,7 @@ import app.thelema.g3d.mesh.SphereMesh
 import app.thelema.gl.GL_LINES
 import app.thelema.gl.IMesh
 import app.thelema.gl.Mesh
+import app.thelema.gl.Vertex
 import app.thelema.math.*
 import app.thelema.phys.IBoxShape
 import app.thelema.phys.ICylinderShape
@@ -19,7 +20,7 @@ import app.thelema.shader.Shader
 class ShapeRenderTool {
     private val shader = Shader(
         vertCode = """
-attribute vec3 POSITION;
+in vec3 POSITION;
 
 uniform mat4 viewProj;
 uniform mat4 worldMatrix;
@@ -32,9 +33,10 @@ void main() {
 """,
         fragCode = """
 uniform vec4 color;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = color;
+    FragColor = color;
 }
 """
     )
@@ -43,7 +45,7 @@ void main() {
 
     private val box = Mesh {
         addVertexBuffer {
-            addAttribute(3, "POSITION")
+            addAttribute(Vertex.POSITION)
             initVertexBuffer(8) {
                 val ns = -0.5f
                 val ps = 0.5f

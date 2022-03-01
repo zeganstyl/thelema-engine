@@ -18,6 +18,7 @@ package app.thelema.shader.node
 
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.gl.IMesh
 import app.thelema.shader.IShader
 
@@ -60,7 +61,7 @@ abstract class GLSLLiteralBase: IShaderData, IShaderNode {
 
     override fun prepareToBuild() {}
     override fun shaderCompiled() {}
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {}
+    override fun bind(uniforms: IUniforms) {}
     override fun executionVert(out: StringBuilder) {}
     override fun executionFrag(out: StringBuilder) {}
     override fun declarationVert(out: StringBuilder) {}

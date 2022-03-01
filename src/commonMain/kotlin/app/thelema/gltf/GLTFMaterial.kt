@@ -107,13 +107,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         doubleSided = json.bool("doubleSided", false)
         val cullFaceMode = if (doubleSided) 0 else GL_BACK
 
-        val vertexNode = shader.addNode(VertexNode {
-            bonesName = "JOINTS_"
-            boneWeightsName = "WEIGHTS_"
-            positionName = "POSITION"
-            normalName = "NORMAL"
-            tangentName = "TANGENT"
-        })
+        val vertexNode = shader.addNode(VertexNode())
 
         var tbnValue = vertexNode.tbn
 

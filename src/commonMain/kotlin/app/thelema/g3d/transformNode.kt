@@ -264,12 +264,6 @@ class TransformNode: ITransformNode {
         entity.forEachComponent { addedChildComponent(it) }
     }
 
-    override fun addedChildComponent(component: IEntityComponent) {
-        if (component is IMesh) {
-            if (component.node == null) component.node = this
-        }
-    }
-
     override fun enablePreviousMatrix(enable: Boolean) {
         if (enable) {
             if (previousWorldMatrixInternal == null) previousWorldMatrixInternal = Mat4()

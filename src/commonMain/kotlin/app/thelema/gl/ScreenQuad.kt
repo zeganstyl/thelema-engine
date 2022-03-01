@@ -21,6 +21,7 @@ import app.thelema.img.ITexture
 import app.thelema.img.renderNoClear
 import app.thelema.shader.IShader
 import app.thelema.shader.post.PostShader
+import app.thelema.shader.useShader
 import kotlin.native.concurrent.ThreadLocal
 
 /** Default screen quad, that may be used for post processing shaders.
@@ -32,13 +33,19 @@ import kotlin.native.concurrent.ThreadLocal
 object ScreenQuad {
     var defaultClearMask: Int? = GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT
 
+    val Layout = VertexLayout()
+
+    val POSITION = Layout.define("POSITION", 2)
+    val UV = Layout.define("UV", 2)
+
     val mesh: IMesh by lazy {
         Mesh {
             primitiveType = GL_TRIANGLE_FAN
+            vertexLayout = Layout
 
             addVertexBuffer {
-                addAttribute(Vertex.POSITION)
-                addAttribute(Vertex.TEXCOORD_0)
+                addAttribute(POSITION)
+                addAttribute(UV)
                 initVertexBuffer(4) {
                     putFloats(-1f, -1f,  0f, 0f)
                     putFloats(1f, -1f,  1f, 0f)
@@ -107,14 +114,16 @@ void main() {
         out: IFrameBuffer? = null,
         clearMask: Int? = defaultClearMask
     ) {
-        if (out != null) {
-            out.renderNoClear {
+        shader.useShader {
+            if (out != null) {
+                out.renderNoClear {
+                    if (clearMask != null) GL.glClear(clearMask)
+                    mesh.render()
+                }
+            } else {
                 if (clearMask != null) GL.glClear(clearMask)
-                mesh.render(shader)
+                mesh.render()
             }
-        } else {
-            if (clearMask != null) GL.glClear(clearMask)
-            mesh.render(shader)
         }
     }
 }

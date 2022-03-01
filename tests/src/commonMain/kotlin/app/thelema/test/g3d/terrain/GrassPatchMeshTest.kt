@@ -22,11 +22,10 @@ import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.PlaneMesh
 import app.thelema.g3d.terrain.GrassPatchMesh
 import app.thelema.gl.GL
-import app.thelema.gl.GL_LINEAR
-import app.thelema.gl.GL_LINEAR_MIPMAP_LINEAR
 import app.thelema.img.Texture2D
 import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 import kotlin.random.Random
 
@@ -93,17 +92,21 @@ class GrassPatchMeshTest: Test {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 
-            plane.mesh.render(groundShader)
+            groundShader.useShader {
+                plane.mesh.render()
+            }
 
             GL.isCullFaceEnabled = false
 
-            plantShader.colorTexture = grassTexture
-            grassPatch.render(plantShader)
-            grassPatchLarge.render(plantShader)
+            plantShader.useShader {
+                plantShader.colorTexture = grassTexture
+                grassPatch.mesh.render()
+                grassPatchLarge.mesh.render()
 
-            plantShader.colorTexture = treeTexture
-            treePatch.render(plantShader)
-            treePatchLarge.render(plantShader)
+                plantShader.colorTexture = treeTexture
+                treePatch.mesh.render()
+                treePatchLarge.mesh.render()
+            }
         }
     }
 }

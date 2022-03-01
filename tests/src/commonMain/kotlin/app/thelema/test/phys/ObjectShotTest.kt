@@ -4,6 +4,7 @@ import app.thelema.ecs.*
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.mesh.boxMesh
 import app.thelema.g3d.scene
+import app.thelema.gl.meshInstance
 import app.thelema.math.Vec3
 import app.thelema.phys.*
 import app.thelema.test.Test
@@ -46,6 +47,7 @@ class ObjectShotTest: Test {
 
                 entity("object$emittedObjectsNum") {
                     boxMesh { setSize(1f) }
+                    meshInstance()
                     boxShape { setSize(shapeSize); mass = bodyMass }
                     rigidBody {
                         node.setPosition(0f, Random.nextFloat(), Random.nextFloat())
@@ -61,6 +63,7 @@ class ObjectShotTest: Test {
 
         entity("static") {
             val box = boxMesh { setSize(1f, 10f, 10f) }
+            meshInstance()
             boxShape { setSize(box.xSize, box.ySize, box.zSize) }
             rigidBody {
                 node.setPosition(100f, 0f, 0f)

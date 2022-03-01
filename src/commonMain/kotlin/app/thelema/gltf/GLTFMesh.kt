@@ -21,6 +21,7 @@ import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.ITransformNode
 import app.thelema.gl.IMesh
+import app.thelema.gl.IMeshInstance
 import app.thelema.gl.IVertexBuffer
 import app.thelema.json.IJsonObject
 
@@ -54,7 +55,7 @@ class GLTFMesh(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             val primitive = primitives[i] as GLTFPrimitive
             entity.addEntity(Entity {
                 name = primitive.name
-                component<IMesh>().inheritedMesh = primitive.mesh
+                component<IMeshInstance>().mesh = primitive.mesh
             })
         }
     }

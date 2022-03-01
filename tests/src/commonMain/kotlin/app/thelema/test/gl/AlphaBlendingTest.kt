@@ -17,14 +17,20 @@
 package app.thelema.test.gl
 
 import app.thelema.app.APP
-import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.ecs.mainEntity
 import app.thelema.g3d.cam.OrbitCameraControl
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.material
 import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.mesh.boxMesh
+import app.thelema.g3d.transformNode
 import app.thelema.gl.GL
+import app.thelema.gl.MeshInstance
+import app.thelema.gl.meshInstance
 import app.thelema.img.Texture2D
 import app.thelema.math.Mat4
-import app.thelema.math.Vec4
 import app.thelema.shader.SimpleShader3D
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 
 class AlphaBlendingTest: Test {
@@ -32,31 +38,34 @@ class AlphaBlendingTest: Test {
         get() = "Alpha blending test"
 
     override fun testMain() {
-        val box = BoxMesh { setSize(2f) }
-        box.mesh.worldMatrix = Mat4()
+        mainEntity {
+            val box = boxMesh(2f)
+            material {
+                shader = SimpleShader3D {
+                    setupOnlyTexture(Texture2D("thelema-logo-alpha.png"))
+                    alphaCutoff = 0f
+                }
+            }
 
-        val shader = SimpleShader3D {
-            setupOnlyTexture(Texture2D("thelema-logo-alpha.png"))
-            alphaCutoff = 0f
-        }
+            orbitCameraControl()
 
-        val control = OrbitCameraControl()
+            GL.setupSimpleAlphaBlending()
+            GL.isBlendingEnabled = true
+            GL.isDepthTestEnabled = false
+            GL.glClearColor(0.2f, 0.2f, 0.2f, 1f)
 
-        GL.setupSimpleAlphaBlending()
-        GL.isBlendingEnabled = true
-        GL.isDepthTestEnabled = false
-        GL.glClearColor(0.2f, 0.2f, 0.2f, 1f)
-        APP.onRender = {
-            control.updateNow()
-
-            box.mesh.worldMatrix?.setToTranslation(-1.5f, 0f, 0f)
-            shader.render(box.mesh)
-
-            box.mesh.worldMatrix?.setToTranslation(0f, 0f, 0f)
-            shader.render(box.mesh)
-
-            box.mesh.worldMatrix?.setToTranslation(1.5f, 0f, 0f)
-            shader.render(box.mesh)
+            entity("box1") {
+                meshInstance(box.mesh)
+                transformNode { setPosition(-1.5f, 0f, 0f) }
+            }
+            entity("box2") {
+                meshInstance(box.mesh)
+                transformNode { setPosition(0f, 0f, 0f) }
+            }
+            entity("box3") {
+                meshInstance(box.mesh)
+                transformNode { setPosition(1.5f, 0f, 0f) }
+            }
         }
     }
 }

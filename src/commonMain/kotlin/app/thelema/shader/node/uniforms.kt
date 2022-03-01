@@ -1,8 +1,8 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.IScene
-import app.thelema.gl.IMesh
-import app.thelema.json.IJsonObject
+import app.thelema.g3d.IUniforms
+import app.thelema.g3d.Uniforms
 import app.thelema.math.*
 
 abstract class UniformNodeBase<T>(type: String): ShaderNode() {
@@ -24,9 +24,9 @@ abstract class UniformNodeBase<T>(type: String): ShaderNode() {
 
     protected abstract fun setupShader(value: T)
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
+    override fun bind(uniforms: IUniforms) {
         try {
-            setupShader(mesh.getMaterialValue(uniformName) ?: defaultValue)
+            setupShader(uniforms.get(uniformName) ?: defaultValue)
         } catch (e: Exception) {
             e.printStackTrace()
         }

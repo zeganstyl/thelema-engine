@@ -21,7 +21,7 @@ import app.thelema.ecs.mainEntity
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.cylinderMesh
-import app.thelema.gl.mesh
+import app.thelema.gl.meshInstance
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import app.thelema.phys.*
@@ -41,7 +41,6 @@ class CylinderShapeTest: Test {
             length = 1f
             divisions = 32
             axis = Vec3(0f, 0f, 1f)
-            mesh.isVisible = false
         }
 
         // material will be set to box mesh automatically
@@ -50,7 +49,7 @@ class CylinderShapeTest: Test {
         }
 
         entity("dynamic") {
-            mesh { inheritedMesh = cylinder.mesh }
+            meshInstance(cylinder.mesh)
             cylinderShape {
                 radius = cylinder.radius
                 length = cylinder.length
@@ -61,7 +60,7 @@ class CylinderShapeTest: Test {
         }
 
         entity("static1") {
-            mesh { inheritedMesh = cylinder.mesh }
+            meshInstance(cylinder.mesh)
             cylinderShape {
                 radius = cylinder.radius
                 length = cylinder.length
@@ -74,7 +73,7 @@ class CylinderShapeTest: Test {
         }
 
         entity("static2") {
-            mesh { inheritedMesh = cylinder.mesh }
+            meshInstance(cylinder.mesh)
             cylinderShape {
                 radius = cylinder.radius
                 length = cylinder.length

@@ -31,7 +31,7 @@ class MeshBuilder: IMeshBuilder {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            meshInternal = value?.component() ?: Mesh()
+            _mesh = value?.component() ?: Mesh()
         }
 
     var uvs = true
@@ -42,14 +42,14 @@ class MeshBuilder: IMeshBuilder {
 
     var indexType: Int = GL_UNSIGNED_SHORT
 
-    var meshInternal: IMesh = Mesh()
+    private var _mesh: IMesh = Mesh()
         set(value) {
             field = value
             requestMeshUpdate()
         }
 
     override val mesh: IMesh
-        get() = meshInternal
+        get() = _mesh
 
     private val _rebuildComponentRequested = ATOM.bool(false)
     override var rebuildComponentRequested: Boolean

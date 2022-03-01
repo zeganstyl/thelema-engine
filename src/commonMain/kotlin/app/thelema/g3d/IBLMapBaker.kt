@@ -37,8 +37,8 @@ class IBLMapBaker(
 
     val irradianceSkybox = SimpleSkybox(
         """
-varying vec3 vPosition;
-uniform samplerCube texture;
+in vec3 vPosition;
+uniform samplerCube tex;
 
 const float PI = 3.14159265359;
 
@@ -61,7 +61,7 @@ void main () {
             // tangent space to world
             vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
 
-            irradiance += textureCube(texture, sampleVec).rgb * cos(theta) * sin(theta);
+            irradiance += texture(tex, sampleVec).rgb * cos(theta) * sin(theta);
             nrSamples++;
         }
     }
@@ -72,9 +72,8 @@ void main () {
     )
 
     val prefilterSkybox = SimpleSkybox(
-        shaderVersion = 130,
         fragCode = """
-varying vec3 vPosition;
+in vec3 vPosition;
 
 uniform samplerCube environmentMap;
 uniform float roughness;
@@ -97,7 +96,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 // ----------------------------------------------------------------------------
 // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
 // efficient VanDerCorpus calculation.
-float RadicalInverse_VdC(int bits) 
+float RadicalInverse_VdC(uint bits) 
 {
      bits = (bits << 16) | (bits >> 16);
      bits = ((bits & 0x55555555u) << 1) | ((bits & 0xAAAAAAAAu) >> 1);
@@ -109,7 +108,7 @@ float RadicalInverse_VdC(int bits)
 // ----------------------------------------------------------------------------
 vec2 Hammersley(int i, int N)
 {
-	return vec2(float(i)/float(N), RadicalInverse_VdC(i));
+	return vec2(float(i)/float(N), RadicalInverse_VdC(uint(i)));
 }
 // ----------------------------------------------------------------------------
 vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
@@ -196,7 +195,7 @@ void main()
     init {
         GL.glEnable(0x884F) // GL_TEXTURE_CUBE_MAP_SEAMLESS
 
-        irradianceSkybox.shader["texture"] = 0
+        irradianceSkybox.shader["tex"] = 0
         prefilterSkybox.shader["environmentMap"] = 0
 
         irradianceSkybox.texture = environment

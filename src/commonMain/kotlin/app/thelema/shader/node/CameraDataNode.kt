@@ -16,9 +16,9 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.gl.IMesh
+import app.thelema.gl.Vertex
 import app.thelema.math.Mat3
 
 /** @author zeganstyl */
@@ -44,7 +44,9 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     /** Position after multiply View * vertex */
     val viewSpacePosition = output(GLSLVec4("viewSpacePosition"))
 
-    var instancePositionName = "INSTANCE_POSITION"
+    val instancePositionName: String
+        get() = Vertex.INSTANCE_POSITION.name
+
     var useInstancePosition = false
     var alwaysRotateObjectToCamera = false
 
@@ -54,8 +56,8 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         this.vertexPosition = vertexPosition
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
         val cam = ActiveCamera
         shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
@@ -103,19 +105,19 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         }
         if (viewSpacePosition.isUsed || viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
         if (clipSpacePosition.isUsed || viewZDepth.isUsed) {
-            out.append("$varOut ${clipSpacePosition.typedRef};\n")
+            out.append("out ${clipSpacePosition.typedRef};\n")
             if (viewZDepth.isUsed) {
-                out.append("$varOut ${viewZDepth.typedRef};\n")
+                out.append("out ${viewZDepth.typedRef};\n")
             }
         }
-        if (viewSpacePosition.isUsed) out.append("$varOut ${viewSpacePosition.typedRef};\n")
-        if (instancePositionName.isNotEmpty()) out.append("$attribute vec3 $instancePositionName;\n")
+        if (viewSpacePosition.isUsed) out.append("out ${viewSpacePosition.typedRef};\n")
+        if (useInstancePosition) out.append("in vec3 $instancePositionName;\n")
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (clipSpacePosition.isUsed) out.append("$varIn ${clipSpacePosition.typedRef};\n")
-        if (viewSpacePosition.isUsed) out.append("$varIn ${viewSpacePosition.typedRef};\n")
-        if (viewZDepth.isUsed) out.append("$varIn ${viewZDepth.typedRef};\n")
+        if (clipSpacePosition.isUsed) out.append("in ${clipSpacePosition.typedRef};\n")
+        if (viewSpacePosition.isUsed) out.append("in ${viewSpacePosition.typedRef};\n")
+        if (viewZDepth.isUsed) out.append("in ${viewZDepth.typedRef};\n")
         if (viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
     }
 }

@@ -93,7 +93,7 @@ class VertexAttributeTest: Test {
         }
 
         val shader = SimpleShader3D {
-            renderAttributeName = positionsName
+            renderAttributeName = "POSITION"
         }
 
         val control = OrbitCameraControl()

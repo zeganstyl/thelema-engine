@@ -23,6 +23,7 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.sphereMesh
 import app.thelema.g3d.scene
 import app.thelema.gl.mesh
+import app.thelema.gl.meshInstance
 import app.thelema.phys.*
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -44,10 +45,7 @@ class SphereShapeTest: Test {
                 targetDistance = 10f
             }
 
-            val sphere = sphereMesh {
-                setSize(1f)
-                mesh.isVisible = false
-            }
+            val sphere = sphereMesh { setSize(1f) }
 
             // material will be set to box mesh automatically
             material {
@@ -55,7 +53,7 @@ class SphereShapeTest: Test {
             }
 
             entity("dynamic") {
-                mesh { inheritedMesh = sphere.mesh }
+                meshInstance(sphere.mesh)
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
                     node.setPosition(0f, 3f, 0f)
@@ -63,7 +61,7 @@ class SphereShapeTest: Test {
             }
 
             entity("static1") {
-                mesh { inheritedMesh = sphere.mesh }
+                meshInstance(sphere.mesh)
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
                     node.setPosition(1.25f, 0f, 0f)
@@ -72,7 +70,7 @@ class SphereShapeTest: Test {
             }
 
             entity("static2") {
-                mesh { inheritedMesh = sphere.mesh }
+                meshInstance(sphere.mesh)
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
                     node.setPosition(-2.5f, 0f, 0f)

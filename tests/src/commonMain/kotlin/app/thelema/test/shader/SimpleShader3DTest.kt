@@ -21,9 +21,11 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.g3d.mesh.SphereMesh
+import app.thelema.gl.MeshInstance
 import app.thelema.img.Texture2D
 import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 import app.thelema.utils.Color
 import app.thelema.utils.LOG
@@ -34,9 +36,11 @@ class SimpleShader3DTest: Test {
 
     override fun testMain() {
         val box = BoxMesh { setSize(2f) }
+        val box1 = MeshInstance(box.mesh)
 
         val shader = SimpleShader3D()
 
+        shader.build()
         LOG.info(shader.printCode())
 
         val orbitCameraControl = OrbitCameraControl()
@@ -45,7 +49,9 @@ class SimpleShader3DTest: Test {
             orbitCameraControl.update()
             ActiveCamera.updateCamera()
 
-            box.render(shader)
+            shader.useShader {
+                box1.render(shader)
+            }
         }
     }
 }

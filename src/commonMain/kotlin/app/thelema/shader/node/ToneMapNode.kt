@@ -16,8 +16,7 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IScene
-import app.thelema.gl.IMesh
+import app.thelema.g3d.IUniforms
 import app.thelema.json.IJsonObject
 
 /** For tone mapping, implied that [TextureNode.sRGB] is enabled.
@@ -64,10 +63,10 @@ class ToneMapNode(
         }
     }
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {
-        super.prepareShaderNode(mesh, scene)
+    override fun bind(uniforms: IUniforms) {
+        super.bind(uniforms)
 
-        shader["uExposure"] = scene?.world?.exposure ?: 1f
+        shader["uExposure"] = uniforms.scene?.world?.exposure ?: 1f
     }
 
     override fun declarationFrag(out: StringBuilder) {
@@ -123,8 +122,6 @@ class ToneMapNode(
 
         const val Gamma: Float = 2.2f
         const val InvGamma: Float = 1f / Gamma
-
-        const val InputColor = "inputColor"
 
         private const val A = 0.15f
         private const val B = 0.50f

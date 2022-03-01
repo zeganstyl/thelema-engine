@@ -17,8 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.ecs.IEntity
-import app.thelema.g3d.IScene
-import app.thelema.gl.IMesh
+import app.thelema.g3d.IUniforms
 import app.thelema.shader.IShader
 import app.thelema.utils.iterate
 
@@ -35,13 +34,13 @@ abstract class ShaderNode: IShaderNode {
     protected open val _output: MutableList<IShaderData> = ArrayList(0)
 
     val attribute: String
-        get() = if (shader.version >= 130) "in" else "attribute"
+        get() = "in"
 
     val varOut: String
-        get() = if (shader.version >= 130) "out" else "varying"
+        get() = "out"
 
     val varIn: String
-        get() = if (shader.version >= 130) "in" else "varying"
+        get() = "in"
 
     override fun forEachOutput(block: (output: IShaderData) -> Unit) {
         _output.iterate(block)
@@ -57,7 +56,7 @@ abstract class ShaderNode: IShaderNode {
 
     override fun shaderCompiled() {}
 
-    override fun prepareShaderNode(mesh: IMesh, scene: IScene?) {}
+    override fun bind(uniforms: IUniforms) {}
 
     override fun executionFrag(out: StringBuilder) = Unit
     override fun executionVert(out: StringBuilder) = Unit

@@ -17,8 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.IScene
-import app.thelema.gl.IMesh
+import app.thelema.g3d.IUniforms
 import app.thelema.shader.IShader
 
 /** @author zeganstyl */
@@ -39,7 +38,7 @@ interface IShaderNode: IEntityComponent {
     fun shaderCompiled()
 
     /** Set some uniforms, like transformations, lights, textures and etc */
-    fun prepareShaderNode(mesh: IMesh, scene: IScene?)
+    fun bind(uniforms: IUniforms)
 
     /** Vertex shader code, that will be executed in main */
     fun executionVert(out: StringBuilder)

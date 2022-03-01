@@ -1,10 +1,7 @@
 package app.thelema.studio.component
 
 import app.thelema.g3d.mesh.MeshVisualizer
-import app.thelema.gl.IMesh
-import app.thelema.gl.normals
-import app.thelema.gl.positions
-import app.thelema.gl.tangents
+import app.thelema.gl.*
 import app.thelema.studio.ecs.StudioComponentSystemLayer
 import app.thelema.studio.widget.PlainCheckBox
 import app.thelema.studio.widget.Section
@@ -13,7 +10,7 @@ import app.thelema.ui.Label
 import app.thelema.ui.TextButton
 import app.thelema.utils.Color
 
-class MeshPanel: ComponentPanel<IMesh>(IMesh::class) {
+class MeshInstancePanel: ComponentPanel<IMeshInstance>(IMeshInstance::class) {
     val debug = MeshVisualizer()
 
     val normals = PlainCheckBox()
@@ -35,7 +32,7 @@ class MeshPanel: ComponentPanel<IMesh>(IMesh::class) {
         onClick {
             debugMode = !debugMode
             debug.reset()
-            component?.also { mesh ->
+            component?.mesh?.also { mesh ->
                 if (normals.isChecked) debug.addVectors3D(mesh.positions(), mesh.normals()!!, Color.BLUE)
                 if (tangents.isChecked) {
                     mesh.tangents()?.also { debug.addVectors3D(mesh.positions(), it, Color.RED) }
@@ -44,11 +41,11 @@ class MeshPanel: ComponentPanel<IMesh>(IMesh::class) {
         }
     }
 
-    override var component: IMesh?
+    override var component: IMeshInstance?
         get() = super.component
         set(value) {
             super.component = value
-            debug.mesh.node = value?.node
+            debug.instance.node = value?.node
             debugMode = false
         }
 

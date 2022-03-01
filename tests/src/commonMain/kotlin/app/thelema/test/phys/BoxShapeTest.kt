@@ -22,7 +22,7 @@ import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.boxMesh
 import app.thelema.g3d.scene
-import app.thelema.gl.mesh
+import app.thelema.gl.meshInstance
 import app.thelema.phys.*
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
@@ -44,10 +44,7 @@ class BoxShapeTest: Test {
                 targetDistance = 10f
             }
 
-            val box = boxMesh {
-                setSize(2f)
-                mesh.isVisible = false
-            }
+            val box = boxMesh { setSize(2f) }
 
             // material will be set to box mesh automatically
             material {
@@ -55,7 +52,7 @@ class BoxShapeTest: Test {
             }
 
             entity("dynamic") {
-                mesh { inheritedMesh = box.mesh }
+                meshInstance(box.mesh)
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
                     node.setPosition(0f, 3f, 0f)
@@ -63,7 +60,7 @@ class BoxShapeTest: Test {
             }
 
             entity("static1") {
-                mesh { inheritedMesh = box.mesh }
+                meshInstance(box.mesh)
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
                     node.setPosition(1.25f, 0f, 0f)
@@ -75,7 +72,7 @@ class BoxShapeTest: Test {
             }
 
             entity("static2") {
-                mesh { inheritedMesh = box.mesh }
+                meshInstance(box.mesh)
                 boxShape { setSize(box.xSize, box.ySize, box.zSize) }
                 rigidBody {
                     node.setPosition(-2.5f, 0f, 0f)

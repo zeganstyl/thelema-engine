@@ -20,7 +20,7 @@ import app.thelema.app.APP
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IScene
+import app.thelema.g3d.IUniforms
 import app.thelema.gl.*
 import app.thelema.shader.node.*
 import app.thelema.shader.post.*
@@ -32,7 +32,6 @@ import kotlin.native.concurrent.ThreadLocal
 open class Shader(
     vertCode: String = "",
     fragCode: String = "",
-    compile: Boolean = true,
 
     /** Precision will be added as first line */
     override var floatPrecision: String = "highp",
@@ -62,13 +61,13 @@ open class Shader(
     override val enabledAttributes: List<IVertexAccessor>
         get() = enabledAttributesInternal
 
-    override var vertexShaderHandle: Int = 0
-    override var fragmentShaderHandle: Int = 0
-    override var programHandle: Int = 0
+    var vertexShaderHandle: Int = 0
+    var fragmentShaderHandle: Int = 0
+    var programHandle: Int = 0
 
     override var nodes: Array<IShaderNode> = emptyArray()
 
-    override var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit = { _, _ -> }
+    override var listener: ShaderRenderListener? = null
 
     override var depthMask: Boolean = true
 
@@ -87,11 +86,43 @@ open class Shader(
 
     override var buildRequested: Boolean = true
 
+    override var vertexLayout: IVertexLayout = Vertex.Layout
+        set(value) {
+            if (field != value) {
+                field = value
+                buildRequested = true
+            }
+        }
+
+    override var uniformArgs: IUniforms? = null
+
 //    init {
 //        if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
 //            load(vertCode, fragCode)
 //        }
 //    }
+
+    override fun get(uniformName: String): Int = GL.glGetUniformLocation(programHandle, uniformName)
+
+    override fun getUniformLocation(name: String, pedantic: Boolean): Int {
+        // -1 == not found
+        var location = uniforms[name]
+        if (location == null) {
+            location = GL.glGetUniformLocation(this.programHandle, name)
+            require(!(location == -1 && pedantic)) { "no uniform with name '$name' in shader" }
+            uniforms[name] = location
+        }
+        return location
+    }
+
+    override fun hasUniform(name: String): Boolean {
+        var location = uniforms[name]
+        if (location == null) {
+            location = GL.glGetUniformLocation(this.programHandle, name)
+            uniforms[name] = location
+        }
+        return location >= 0
+    }
 
     override fun vertSourceCode(title: String, pad: Int): String =
         numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vertCode, pad)
@@ -124,7 +155,7 @@ open class Shader(
             }
             builder.reverse()
             val name = builder.toString()
-            val a = Vertex.attributes[name]
+            val a = vertexLayout.getAttributeByNameOrNull(name)
             if (a == null) {
                 it.value
             } else {
@@ -290,51 +321,11 @@ open class Shader(
         return program
     }
 
-    override fun prepareShader(mesh: IMesh, scene: IScene?) {
-        GL.resetTextureUnitCounter()
-        bind()
-
-        onPrepareShader(mesh, scene)
-
-        for (i in nodes.indices) {
-            val node = nodes[i]
-            node.shaderOrNull = this
-            node.prepareShaderNode(mesh, scene)
-        }
-    }
-
     override fun disableAllAttributes() {
         attributes.values.forEach {
             GL.glDisableVertexAttribArray(it)
         }
         enabledAttributesInternal.clear()
-    }
-
-    override fun disableAttribute(attribute: IVertexAccessor) {
-        val location = attributes[attribute.attribute.name]
-        if (location != null) {
-            GL.glDisableVertexAttribArray(location)
-            enabledAttributesInternal.remove(attribute)
-        }
-    }
-
-    override fun enableAttribute(accessor: IVertexAccessor) {
-        val location = attributes[accessor.attribute.name]
-        if (location != null) {
-            GL.glEnableVertexAttribArray(location)
-            GL.glVertexAttribPointer(
-                location,
-                accessor.attribute.size,
-                accessor.attribute.type,
-                accessor.attribute.normalized,
-                accessor.stride,
-                accessor.byteOffset
-            )
-
-            GL.glVertexAttribDivisor(location, accessor.attribute.divisor)
-
-            enabledAttributesInternal.add(accessor)
-        }
     }
 
     private fun collectNodes(root: IShaderNode, out: MutableSet<IShaderNode>) {
@@ -426,6 +417,16 @@ open class Shader(
     override fun bind() {
         if (buildRequested) build()
         GL.glUseProgram(this.programHandle)
+
+        GL.resetTextureUnitCounter()
+
+        for (i in nodes.indices) {
+            val node = nodes[i]
+            node.shaderOrNull = this
+            uniformArgs?.also { node.bind(it) }
+        }
+
+        listener?.bind(this)
     }
 
     override fun requestBuild() {
@@ -433,18 +434,27 @@ open class Shader(
     }
 
     override fun destroy() {
+        super.destroy()
+
+        GL.glUseProgram(0)
+        GL.glDeleteShader(vertexShaderHandle)
+        GL.glDeleteShader(fragmentShaderHandle)
+        GL.glDeleteProgram(this.programHandle)
+
+        attributes.clear()
+        uniforms.clear()
+
         _isCompiled = false
         _log = ""
         vertexShaderHandle = 0
         fragmentShaderHandle = 0
         programHandle = 0
-        super.destroy()
     }
 
     @ThreadLocal
     companion object {
         var refineShaderCode: Boolean = true
-        var showCodeOnError: Boolean = false
+        var showCodeOnError: Boolean = true
 
         /** Sort nodes with order:
          * less depth - node will be first,
@@ -515,19 +525,13 @@ open class Shader(
                 descriptor({ VertexNode() }) {
                     int(VertexNode::maxBones)
                     int(VertexNode::bonesSetsNum)
-                    string(VertexNode::positionName)
-                    string(VertexNode::normalName)
-                    string(VertexNode::tangentName)
                     string(VertexNode::worldTransformType)
-                    string(VertexNode::bonesName)
-                    string(VertexNode::boneWeightsName)
                     shaderNodeOutput(VertexNode::position)
                     shaderNodeOutput(VertexNode::normal)
                     shaderNodeOutput(VertexNode::tbn)
                 }
 
                 descriptor({ CameraDataNode() }) {
-                    string(CameraDataNode::instancePositionName)
                     bool(CameraDataNode::alwaysRotateObjectToCamera)
                     bool(CameraDataNode::useInstancePosition)
                     shaderNodeInput(CameraDataNode::vertexPosition)
@@ -723,7 +727,6 @@ open class Shader(
                 }
 
                 descriptor({ SkyboxVertexNode() }) {
-                    string(SkyboxVertexNode::positionsName, "POSITION")
                     shaderNodeOutput(SkyboxVertexNode::clipSpacePosition)
                     shaderNodeOutput(SkyboxVertexNode::worldSpacePosition)
                     shaderNodeOutput(SkyboxVertexNode::textureCoordinates)

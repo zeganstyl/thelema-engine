@@ -19,6 +19,7 @@ package app.thelema.test.gl
 import app.thelema.app.APP
 import app.thelema.gl.*
 import app.thelema.shader.Shader
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 import app.thelema.utils.Color
 
@@ -55,25 +56,23 @@ class MeshTest: Test {
 
         val shader = Shader(
                 vertCode = """          
-attribute vec4 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
+in vec3 POSITION;
+in vec2 UV;
+out vec2 uv;
 
 void main() {
     uv = UV;
-    gl_Position = POSITION;
+    gl_Position = vec4(POSITION, 1.0);
 }""",
                 fragCode = """                
-varying vec2 uv;
+in vec2 uv;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(uv, 1.0, 1.0);
+    FragColor = vec4(uv, 1.0, 1.0);
 }""")
 
-        GL.glClearColor(Color.GRAY)
         APP.onRender = {
-            GL.glClear()
-            shader.bind()
             mesh.render(shader)
         }
     }

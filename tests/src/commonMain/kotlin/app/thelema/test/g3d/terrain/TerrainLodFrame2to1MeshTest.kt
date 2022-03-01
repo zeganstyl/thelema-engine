@@ -41,7 +41,7 @@ class TerrainLodFrame2to1MeshTest: Test {
             left = false
         }
 
-        //frame.mesh.indices = frame.mesh.indices!!.trianglesToWireframe()
+        frame.mesh.indices = frame.mesh.indices!!.trianglesToWireframe()
 
         ActiveCamera {
             lookAt(Vec3(0f, 10f, 0.001f), MATH.Zero3)

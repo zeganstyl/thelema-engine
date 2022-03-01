@@ -20,7 +20,7 @@ import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 
 /** @author zeganstyl */
-class Threshold(cutoff: Float = 1f): PostShader(thresholdCode) {
+class Threshold(cutoff: Float = 3f): PostShader(thresholdCode) {
     override val componentName: String
         get() = "Threshold"
 

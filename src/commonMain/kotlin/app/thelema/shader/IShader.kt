@@ -19,12 +19,9 @@ package app.thelema.shader
 import app.thelema.data.IFloatData
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.IScene
-import app.thelema.gl.GL
-import app.thelema.gl.IVertexAttribute
+import app.thelema.g3d.IUniforms
+import app.thelema.gl.*
 import app.thelema.math.*
-import app.thelema.gl.IMesh
-import app.thelema.gl.IVertexAccessor
 import app.thelema.shader.node.IRootShaderNode
 import app.thelema.shader.node.IShaderNode
 
@@ -46,12 +43,7 @@ interface IShader: IEntityComponent {
     /** User's fragment shader code. It must not include version directive #version. */
     val fragCode: String
 
-    var vertexShaderHandle: Int
-    var fragmentShaderHandle: Int
-    var programHandle: Int
-
-    val log
-        get() = if (isCompiled) GL.glGetProgramInfoLog(this.programHandle) else ""
+    val log: String
 
     /** whether this program compiled successfully  */
     val isCompiled: Boolean
@@ -66,24 +58,30 @@ interface IShader: IEntityComponent {
 
     val nodes: Array<IShaderNode>
 
-    /** Sometimes may be useful for custom shaders. For example, to bind textures before render mesh */
-    var onPrepareShader: IShader.(mesh: IMesh, scene: IScene?) -> Unit
-
     var depthMask: Boolean
 
     var rootNode: IRootShaderNode?
 
     var buildRequested: Boolean
 
+    var vertexLayout: IVertexLayout
+
+    var uniformArgs: IUniforms?
+
+    var listener: ShaderRenderListener?
+
+    fun onBind(block: IShader.() -> Unit): ShaderRenderListener {
+        listener = object : ShaderRenderListener {
+            override fun bind(shader: IShader) {
+                block(shader)
+            }
+        }
+        return listener!!
+    }
+
     fun findShaderNode(componentName: String): IShaderNode?
 
     fun load(vertCode: String, fragCode: String)
-
-    fun prepareShader(mesh: IMesh, scene: IScene?)
-
-    fun enableAttribute(attribute: IVertexAccessor)
-
-    fun disableAttribute(attribute: IVertexAccessor)
 
     fun disableAllAttributes()
 
@@ -117,7 +115,7 @@ interface IShader: IEntityComponent {
 
     fun getNextTextureUnit(): Int = GL.getNextTextureUnit()
 
-    operator fun get(uniformName: String) = GL.glGetUniformLocation(programHandle, uniformName)
+    operator fun get(uniformName: String): Int
 
     fun set(location: Int, value1: Int, value2: Int) = GL.glUniform2i(location, value1, value2)
 
@@ -152,12 +150,14 @@ interface IShader: IEntityComponent {
     fun set(location: Int, mat: Mat3, transpose: Boolean) =
         GL.glUniformMatrix3fv(location, 1, transpose, mat.values, 0)
 
-    fun setMatrix3(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) {
-        GL.glUniformMatrix3fv(location, length / 9, transpose, values, offset)
+    /** @param count matrices count */
+    fun setMatrix3(location: Int, values: FloatArray, offset: Int, count: Int, transpose: Boolean = false) {
+        GL.glUniformMatrix3fv(location, count, transpose, values, offset)
     }
 
-    fun setMatrix4(location: Int, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) {
-        GL.glUniformMatrix4fv(location, length / 16, transpose, values, offset)
+    /** @param count matrices count */
+    fun setMatrix4(location: Int, values: FloatArray, offset: Int, count: Int, transpose: Boolean = false) {
+        GL.glUniformMatrix4fv(location, count, transpose, values, offset)
     }
 
     operator fun set(location: Int, value: Boolean) = GL.glUniform1i(location, if (value) 1 else 0)
@@ -182,25 +182,9 @@ interface IShader: IEntityComponent {
 
 
     /** @param pedantic flag indicating whether attributes & uniforms must be present at all times */
-    fun getUniformLocation(name: String, pedantic: Boolean = false): Int {
-        // -1 == not found
-        var location = uniforms[name]
-        if (location == null) {
-            location = GL.glGetUniformLocation(this.programHandle, name)
-            require(!(location == -1 && pedantic)) { "no uniform with name '$name' in shader" }
-            uniforms[name] = location
-        }
-        return location
-    }
+    fun getUniformLocation(name: String, pedantic: Boolean = false): Int
 
-    fun hasUniform(name: String): Boolean {
-        var location = uniforms[name]
-        if (location == null) {
-            location = GL.glGetUniformLocation(this.programHandle, name)
-            uniforms[name] = location
-        }
-        return location >= 0
-    }
+    fun hasUniform(name: String): Boolean
 
     /** Sets the uniform with the given name. Shader must be bound. */
     fun setUniformi(name: String, value: Int) {
@@ -273,11 +257,11 @@ interface IShader: IEntityComponent {
         GL.glUniformMatrix4fv(location, count, transpose, buffer)
     }
 
-    fun setMatrix3(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) =
-        setMatrix3(getUniformLocation(name), values, offset, length, transpose)
+    fun setMatrix3(name: String, values: FloatArray, offset: Int, count: Int, transpose: Boolean = false) =
+        setMatrix3(getUniformLocation(name), values, offset, count, transpose)
 
-    fun setMatrix4(name: String, values: FloatArray, offset: Int = 0, length: Int = values.size, transpose: Boolean = false) =
-        setMatrix4(getUniformLocation(name), values, offset, length, transpose)
+    fun setMatrix4(name: String, values: FloatArray, offset: Int, count: Int, transpose: Boolean = false) =
+        setMatrix4(getUniformLocation(name), values, offset, count, transpose)
 
     operator fun set(name: String, value: Boolean) = setUniformi(name, if (value) 1 else 0)
 
@@ -325,22 +309,14 @@ interface IShader: IEntityComponent {
 
     fun requestBuild()
 
+    fun useShader() {
+        bind()
+        GL.isDepthMaskEnabled = depthMask
+    }
+
     fun <T: IShaderNode> addNode(node: T): T {
         entityOrNull?.addEntity(Entity(node.componentName) { addComponent(node) })
         return node
-    }
-
-    /** Disposes all resources associated with this shader. Must be called when the shader is no longer used.  */
-    override fun destroy() {
-        super.destroy()
-
-        GL.glUseProgram(0)
-        GL.glDeleteShader(vertexShaderHandle)
-        GL.glDeleteShader(fragmentShaderHandle)
-        GL.glDeleteProgram(this.programHandle)
-
-        attributes.clear()
-        uniforms.clear()
     }
 
     companion object {
@@ -361,4 +337,13 @@ inline fun <reified T: IShaderNode> IShader.node(block: T.() -> Unit): T {
     val component = entity.addComponent(componentName) as T
     block(component)
     return component
+}
+
+inline fun IShader.useShader(block: IShader.() -> Unit) {
+    val isDepthMaskEnabled = GL.isDepthMaskEnabled
+
+    useShader()
+    block()
+
+    GL.isDepthMaskEnabled = isDepthMaskEnabled
 }

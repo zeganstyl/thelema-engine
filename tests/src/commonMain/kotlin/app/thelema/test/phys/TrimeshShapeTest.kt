@@ -19,13 +19,11 @@ package app.thelema.test.phys
 import app.thelema.app.APP
 import app.thelema.ecs.Entity
 import app.thelema.g3d.cam.orbitCameraControl
-import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.mesh.sphereMesh
 import app.thelema.g3d.scene
-import app.thelema.gl.mesh
+import app.thelema.gl.meshInstance
 import app.thelema.phys.*
-import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 import app.thelema.utils.LOG
 import kotlin.random.Random
@@ -46,13 +44,10 @@ class TrimeshShapeTest: Test {
                 targetDistance = 10f
             }
 
-            val sphere = sphereMesh {
-                setSize(1f)
-                mesh.isVisible = false
-            }
+            val sphere = sphereMesh { setSize(1f) }
 
             entity("dynamic") {
-                mesh { inheritedMesh = sphere.mesh }
+                meshInstance(sphere.mesh)
                 sphereShape { setSize(sphere.radius) }
                 rigidBody {
                     node.setPosition(0f, 5f, 0f)
@@ -66,6 +61,7 @@ class TrimeshShapeTest: Test {
                     setDivisions(5)
                     heightProvider = { _, _ -> Random.nextFloat() * 5f }
                 }
+                meshInstance()
                 trimeshShape() // will automatically take sibling mesh component
                 rigidBody {
                     node.setPosition(0f, 0f, 0f)

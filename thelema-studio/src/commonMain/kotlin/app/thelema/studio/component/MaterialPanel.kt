@@ -84,7 +84,6 @@ object MaterialPreview {
         builder.normals = true
         builder.uvs = true
         builder.tangents = true
-        builder.uvName = "TEXCOORD_0"
         setSize(1f)
     }
     val defaultSkyboxTexture = TextureCube()

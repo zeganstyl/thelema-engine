@@ -78,9 +78,9 @@ fun main() {
             onLoaded {
                 addEntity(scene.copyDeep().apply {
                     forEachComponentInBranch { component ->
-                        if (component is IMesh) {
-                            component.inheritedMesh?.getAccessor(Vertex.POSITION) {
-                                geom.addTrimesh(this, component.indices!!)
+                        if (component is IMeshInstance) {
+                            component.mesh?.also { mesh ->
+                                geom.addTrimesh(mesh.getAccessor(Vertex.POSITION), mesh.indices!!)
                             }
                         }
                     }

@@ -17,12 +17,7 @@
 package app.thelema.test.g3d
 
 import app.thelema.app.APP
-import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.BoxMesh
-import app.thelema.gl.GL
-import app.thelema.math.MATH
-import app.thelema.math.Mat4
-import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 

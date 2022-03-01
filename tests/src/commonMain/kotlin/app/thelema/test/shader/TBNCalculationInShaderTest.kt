@@ -52,10 +52,10 @@ void main() {
     gl_FragColor = vec4(color, 1.0);
 }
 """
-                ).also {
-                    it.onPrepareShader = { _, _ ->
-                        it["viewProj"] = ActiveCamera.viewProjectionMatrix
-                        it["lightDirection"] = tmp.set(ActiveCamera.node.worldPosition).nor()
+                ).also { shader ->
+                    shader.onBind {
+                        shader["viewProj"] = ActiveCamera.viewProjectionMatrix
+                        shader["lightDirection"] = tmp.set(ActiveCamera.node.worldPosition).nor()
                     }
                 }
             }

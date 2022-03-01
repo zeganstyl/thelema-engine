@@ -17,14 +17,9 @@
 package app.thelema.g3d.terrain
 
 import app.thelema.ecs.*
-import app.thelema.g3d.Blending
-import app.thelema.g3d.IMaterial
-import app.thelema.g3d.IScene
+import app.thelema.g3d.*
 import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.gl.IIndexBuffer
-import app.thelema.gl.IMesh
-import app.thelema.gl.IRenderable
-import app.thelema.gl.Mesh
+import app.thelema.gl.*
 import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.utils.iterate
@@ -79,6 +74,7 @@ class Terrain(
         builder.uvs = false
         builder.tangents = false
     }
+    val planeInstance: IMeshInstance = plane.mesh.sibling()
 
     val frame = TerrainLodFrame2to1Mesh().apply {
         getOrCreateEntity()
@@ -88,6 +84,7 @@ class Terrain(
         builder.tangents = plane.builder.tangents
         setSideFlags(left = false, right = false, top = false, bottom = false)
     }
+    val frameInstance: IMeshInstance = frame.mesh.sibling()
 
     private var _levels = Array(levelsNum) { TerrainLevel(this, it, minTileSize) }
     val levels: Array<TerrainLevel>
@@ -134,6 +131,8 @@ class Terrain(
     override val worldPosition: IVec3 = Vec3(0f)
 
     var tilePositionScaleName: String = "tilePositionScale"
+
+    override val uniforms: IUniforms = Uniforms()
 
     override fun visibleInFrustum(frustum: Frustum): Boolean = true
 
@@ -194,18 +193,13 @@ class Terrain(
     fun update(cameraPosition: IVec3C) =
         update(cameraPosition.x, cameraPosition.y, cameraPosition.z)
 
-    override fun render(shader: IShader, scene: IScene?) {
+    override fun render(shader: IShader) {
         for (i in levels.indices) {
-            levels[i].render(shader, scene)
+            levels[i].render(shader)
         }
     }
 
-    override fun render(scene: IScene?, shaderChannel: String?) {
-        material?.also { material ->
-            val shader = if (shaderChannel != null) material.shaderChannels[shaderChannel] else material.shader
-            if (shader != null) {
-                render(shader, scene)
-            }
-        }
+    override fun render(shaderChannel: String?) {
+        material?.render(shaderChannel, this)
     }
 }

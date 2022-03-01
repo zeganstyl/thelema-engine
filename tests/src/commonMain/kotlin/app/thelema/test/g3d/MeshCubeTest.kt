@@ -81,8 +81,8 @@ class MeshCubeTest: Test {
 
         val shader = Shader(
                 vertCode = """
-attribute vec3 POSITION;
-varying vec3 position;
+in vec3 POSITION;
+out vec3 position;
 uniform mat4 projViewModelTrans;
 
 void main() {
@@ -90,10 +90,11 @@ void main() {
     gl_Position = projViewModelTrans * vec4(POSITION, 1.0);
 }""",
                 fragCode = """
-varying vec3 position;
+in vec3 position;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vec4(position, 1.0);
+    FragColor = vec4(position, 1.0);
 }""")
 
         ActiveCamera {
@@ -109,7 +110,7 @@ void main() {
 
             shader.bind()
             shader["projViewModelTrans"] = temp.set(cubeMatrix4).mulLeft(ActiveCamera.viewProjectionMatrix)
-            mesh.render(shader)
+            mesh.render()
         }
     }
 }

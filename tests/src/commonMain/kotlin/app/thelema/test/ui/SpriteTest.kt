@@ -27,7 +27,6 @@ class SpriteTest: Test {
         val batch = SpriteBatch()
 
         val sprite = Sprite(Texture2D("thelema-logo-256.png"))
-        sprite.flip(false, true)
 
         APP.onRender = {
             batch.begin()

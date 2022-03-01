@@ -23,6 +23,7 @@ import app.thelema.gl.IMesh
 import app.thelema.gl.IVertexAccessor
 import app.thelema.gl.IVertexAttribute
 import app.thelema.shader.IShader
+import app.thelema.shader.useShader
 
 interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
     val mesh: IMesh
@@ -42,7 +43,7 @@ interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
     fun prepareIndices(block: IIndexBuffer.() -> Unit)
 
     fun render(shader: IShader) {
-        mesh.render(shader)
+        shader.useShader { mesh.render() }
     }
 
     override fun rebuildComponent() {

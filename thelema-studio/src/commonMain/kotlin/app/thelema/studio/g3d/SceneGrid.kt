@@ -94,7 +94,7 @@ void main() {
     private val gridShader = Shader(gridVert, gridFrag)
     private val axisMesh = Mesh {
         addVertexBuffer {
-            addAttribute(3, "POSITION")
+            addAttribute(Vertex.POSITION)
             initVertexBuffer(4) {
                 val size = 1f
                 putFloats(-size, 0f, -size)

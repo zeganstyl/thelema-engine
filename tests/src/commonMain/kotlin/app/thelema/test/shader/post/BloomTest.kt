@@ -34,7 +34,7 @@ class BloomTest: Test {
     override fun testMain() {
         val box = BoxMesh { setSize(2f) }
         val boxShader = SimpleShader3D {
-            renderAttributeName = positionsName
+            renderAttributeName = "POSITION"
         }
 
         val frameBuffer = SimpleFrameBuffer(hasDepth = true)

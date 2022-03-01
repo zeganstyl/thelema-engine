@@ -245,7 +245,7 @@ void main() {
         private fun axisMesh(vararg positions: Float) = Mesh {
             primitiveType = GL_LINES
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(2) { putFloats(*positions) }
             }
         }
@@ -253,7 +253,7 @@ void main() {
         private fun quadMesh(vararg positions: Float) = Mesh {
             primitiveType = GL_TRIANGLE_FAN
             addVertexBuffer {
-                addAttribute(3, "POSITION")
+                addAttribute(Vertex.POSITION)
                 initVertexBuffer(4) { putFloats(*positions) }
             }
         }

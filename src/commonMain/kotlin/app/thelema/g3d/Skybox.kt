@@ -21,10 +21,12 @@ import app.thelema.ecs.IEntityComponent
 import app.thelema.ecs.component
 import app.thelema.ecs.sibling
 import app.thelema.g3d.mesh.SkyboxMesh
+import app.thelema.gl.meshInstance
 import app.thelema.img.TextureCube
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
 import app.thelema.shader.node.*
+import app.thelema.shader.useShader
 
 /** Skybox with shader nodes. Supports velocity rendering (for motion blur) */
 class Skybox: IEntityComponent {
@@ -39,6 +41,7 @@ class Skybox: IEntityComponent {
             box.mesh.material = sibling<Material>().apply {
                 this.shader = this@Skybox.shader
             }
+            value?.meshInstance()
         }
 
     val shader = Shader()
@@ -95,7 +98,7 @@ class Skybox: IEntityComponent {
     }
 
     fun render() {
-        box.mesh.render(shader)
+        shader.useShader { box.mesh.render() }
     }
 }
 

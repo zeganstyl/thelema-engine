@@ -28,8 +28,6 @@ class VertexArrayObjectTest: Test {
 
     override fun testMain() {
         val mesh = Mesh {
-            vaoHandle = 0
-
             addVertexBuffer {
                 addAttribute(Vertex.POSITION)
                 initVertexBuffer(4) {

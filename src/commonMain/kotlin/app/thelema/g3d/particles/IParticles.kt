@@ -1,10 +1,12 @@
 package app.thelema.g3d.particles
 
+import app.thelema.g3d.IUniforms
 import app.thelema.gl.IMesh
-import app.thelema.gl.IRenderable
 import app.thelema.gl.IVertexAttribute
 import app.thelema.gl.IVertexBuffer
 import app.thelema.math.IVec3
+import app.thelema.shader.IShader
+import app.thelema.shader.useShader
 
 /** Particles with same particle material */
 interface IParticles {
@@ -13,6 +15,8 @@ interface IParticles {
     val emitters: List<IParticleEmitter>
 
     val particlesData: MutableMap<String, MutableList<Any>>
+
+    val uniforms: IUniforms
 
     var bufferReserve: Float
 
@@ -24,6 +28,19 @@ interface IParticles {
     val vertexBuffer: IVertexBuffer
 
     val mesh: IMesh
+
+    fun render(shader: IShader) {
+        shader.useShader {
+            shader.listener?.draw(shader)
+            mesh.render()
+        }
+    }
+
+    fun render(shaderChannel: String?) {
+        val material = particleMaterial.meshMaterial
+        val shader = if (shaderChannel == null) material.shader else material.shaderChannels[shaderChannel]
+        if (shader != null) render(shader)
+    }
 
     fun emitParticle(emitter: IParticleEmitter, maxLifeTime: Float, initialLifeTime: Float): Int
 

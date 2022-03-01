@@ -1,5 +1,7 @@
 package app.thelema.g3d.particles
 
+import app.thelema.g3d.IUniforms
+import app.thelema.g3d.Uniforms
 import app.thelema.gl.*
 import app.thelema.math.IVec3
 import app.thelema.utils.LOG
@@ -13,11 +15,7 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
         set(value) {
             if (field != value) {
                 field = value
-                if (value) {
-                    _lifeTimes = getOrCreateDataChannel<Float>(Particle.LIFE_TIME).data
-                } else {
-                    _lifeTimes = ArrayList()
-                }
+                _lifeTimes = if (value) getOrCreateDataChannel<Float>(Particle.LIFE_TIME).data else ArrayList()
                 rebuildDataRequested = true
             }
         }
@@ -57,6 +55,8 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     override val positions: List<IVec3>
         get() = _positions
 
+    override val uniforms: IUniforms = Uniforms()
+
     override fun setParticleLifeTime(particle: Int, time: Float) {
         _lifeTimes[particle] = time
     }
@@ -81,7 +81,6 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
         if (updateParticleSystemRequested) {
             updateParticleSystemRequested = false
 
-            mesh.inheritedMesh = particleMaterial.mesh
             mesh.material = particleMaterial.meshMaterial
 
             lifeTimesAsAttribute = particleMaterial.lifeTimesAsAttribute

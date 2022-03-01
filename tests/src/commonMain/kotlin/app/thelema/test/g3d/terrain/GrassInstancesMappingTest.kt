@@ -29,6 +29,7 @@ import app.thelema.math.Perlin
 import app.thelema.math.Vec3
 import app.thelema.res.RES
 import app.thelema.shader.Shader
+import app.thelema.shader.useShader
 import app.thelema.test.Test
 import kotlin.math.floor
 
@@ -118,9 +119,7 @@ void main() {
             )
         }
 
-        val grassInstances = Mesh()
-        grassInstances.inheritedMesh = grassPatch.mesh
-        val grassInstancesBuffer = grassInstances.addVertexBuffer {
+        val grassInstancesBuffer = grassPatch.mesh.addVertexBuffer {
             addAttribute(Vertex.INSTANCE_POSITION)
             initVertexBuffer(100 * 100)
         }
@@ -179,15 +178,17 @@ void main() {
                 //grass.instances?.instancesToRender = instancesNum
             }
 
-            planeShader.bind()
-            planeShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            splatMapTexture.bind(0)
-            plane.mesh.render(planeShader)
+            planeShader.useShader {
+                planeShader["viewProj"] = ActiveCamera.viewProjectionMatrix
+                splatMapTexture.bind(0)
+                plane.mesh.render()
+            }
 
-            grassShader.bind()
-            grassShader["viewProj"] = ActiveCamera.viewProjectionMatrix
-            grassTexture.bind(0)
-            grassInstances.render(grassShader)
+            grassShader.useShader {
+                grassShader["viewProj"] = ActiveCamera.viewProjectionMatrix
+                grassTexture.bind(0)
+                grassPatch.mesh.render()
+            }
         }
     }
 }

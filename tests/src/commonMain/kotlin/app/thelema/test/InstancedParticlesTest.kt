@@ -29,7 +29,6 @@ class InstancedParticlesTest: Test {
                 planeMesh {
                     normal = MATH.Z
                     setSize(1f)
-                    mesh.isVisible = false
                 }
                 particleMaterial {
                     lifeTimesAsAttribute = true

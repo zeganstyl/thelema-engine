@@ -24,8 +24,10 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.SkyboxMesh
 import app.thelema.gl.GL
 import app.thelema.gl.GL_BACK
+import app.thelema.gl.meshInstance
 import app.thelema.img.TextureCube
 import app.thelema.shader.Shader
+import app.thelema.shader.useShader
 
 /** Simple skybox */
 class SimpleSkybox(
@@ -45,6 +47,7 @@ class SimpleSkybox(
             box.mesh.material = sibling<IMaterial>().apply {
                 this.shader = this@SimpleSkybox.shader
             }
+            value?.meshInstance()
         }
 
     var box = SkyboxMesh {
@@ -81,7 +84,7 @@ void main () {
 
     init {
         shader.depthMask = false
-        shader.onPrepareShader = { _, _ ->
+        shader.onBind {
             shader["viewProj"] = ActiveCamera.viewProjectionMatrix
             shader["camFar"] = ActiveCamera.far
             shader["camPos"] = ActiveCamera.eye
@@ -91,7 +94,7 @@ void main () {
     }
 
     fun render() {
-        box.mesh.render(shader)
+        shader.useShader { box.mesh.render() }
     }
 }
 
