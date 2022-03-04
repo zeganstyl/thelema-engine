@@ -672,7 +672,6 @@ open class Shader(
                 }
 
                 descriptor({ ParticleDataNode() }) {
-                    string(ParticleDataNode::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
                     float(ParticleDataNode::maxLifeTime, 1f)
                     shaderNodeInput(ParticleDataNode::inputUv)
                     shaderNodeOutput(ParticleDataNode::lifeTime)

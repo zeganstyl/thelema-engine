@@ -2,6 +2,7 @@ package app.thelema.studio.shader
 
 import app.thelema.ecs.Entity
 import app.thelema.ecs.component
+import app.thelema.ecs.forEachChildEntity
 import app.thelema.g2d.Batch
 import app.thelema.math.IVec2
 import app.thelema.math.Vec2

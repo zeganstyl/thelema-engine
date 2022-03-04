@@ -96,7 +96,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     }
 
     private fun setupBoundings() {
-        mesh.boundings = if (mesh.containsAccessor("JOINTS_0")) SphereBoundings() else AABB()
+        mesh.boundings = if (mesh.containsAccessor("JOINTS_0")) null else AABB()
         mesh.boundings?.also { it.setVertices(mesh) }
     }
 

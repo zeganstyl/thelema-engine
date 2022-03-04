@@ -19,6 +19,7 @@ package app.thelema.test
 import app.thelema.app.APP
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.gl.InstancedMeshTest
+import app.thelema.test.shader.ForwardRenderingPipelineTest
 import app.thelema.test.shader.IBLTest
 import app.thelema.test.ui.UITest
 
@@ -26,6 +27,6 @@ class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        InstancedParticlesTest().testMain()
+        ForwardRenderingPipelineTest().testMain()
     }
 }

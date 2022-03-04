@@ -13,6 +13,7 @@ import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
 import app.thelema.gl.ScreenQuad
+import app.thelema.gl.meshInstance
 import app.thelema.gltf.GLTFSettings
 import app.thelema.gltf.gltf
 import app.thelema.res.RES
@@ -34,14 +35,14 @@ class ForwardRenderingPipelineTest: Test {
             }
 
             scene()
-//                .renderingPipeline = component<ForwardRenderingPipeline> {
-//                motionBlurEnabled = true
-//                bloomEnabled = true
-//                vignetteEnabled = false
-//                fxaaEnabled = true
-//                godRaysEnabled = false
-//                bloomThreshold.cutoff = 1.5f
-//            }
+                .renderingPipeline = component<ForwardRenderingPipeline> {
+                motionBlurEnabled = true
+                bloomEnabled = true
+                vignetteEnabled = false
+                fxaaEnabled = true
+                godRaysEnabled = false
+                bloomThreshold.cutoff = 1.5f
+            }
 
             orbitCameraControl()
 
@@ -61,6 +62,7 @@ class ForwardRenderingPipelineTest: Test {
                 planeMesh {
                     setSize(100f)
                 }
+                meshInstance()
             }
 
             entity("model") {

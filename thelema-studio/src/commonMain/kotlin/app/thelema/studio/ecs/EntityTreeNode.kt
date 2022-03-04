@@ -2,6 +2,7 @@ package app.thelema.studio.ecs
 
 import app.thelema.ecs.EntityListener
 import app.thelema.ecs.IEntity
+import app.thelema.ecs.forEachChildEntity
 import app.thelema.studio.Studio
 import app.thelema.ui.Label
 import app.thelema.ui.TreeNode

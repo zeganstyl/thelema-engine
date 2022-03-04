@@ -4,6 +4,7 @@ import app.thelema.data.DATA
 import app.thelema.data.IByteData
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
+import app.thelema.ecs.forEachChildEntity
 import app.thelema.ecs.sibling
 import app.thelema.g3d.IScene
 import app.thelema.g3d.ISceneInstance

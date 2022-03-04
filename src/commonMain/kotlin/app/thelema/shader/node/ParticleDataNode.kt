@@ -1,5 +1,7 @@
 package app.thelema.shader.node
 
+import app.thelema.g3d.particles.Particle
+
 class ParticleDataNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleDataNode"
@@ -7,7 +9,8 @@ class ParticleDataNode: ShaderNode() {
     //var frameSizeU = 1f
     //var frameSizeV = 1f
 
-    var instanceLifeTimeName = "PARTICLE_LIFE_TIME"
+    private val instanceLifeTimeName
+        get() = Particle.LIFE_TIME.name
     //var instanceUvStartName = "PARTICLE_UV_START"
 
     var maxLifeTime = 1f
