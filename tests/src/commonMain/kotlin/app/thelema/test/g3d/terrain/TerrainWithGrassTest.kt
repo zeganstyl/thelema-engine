@@ -391,7 +391,7 @@ void main () {
         GL.setupSimpleAlphaBlending()
         GL.glClearColor(fogColor.x, fogColor.y, fogColor.z, 1f)
         GL.render {
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            GL.glClear()
 
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()

@@ -70,7 +70,10 @@ class GLTFSettings: IEntityComponent {
     var calculateTangentsForced: Boolean = true
 
     var defaultTextureMinFilter = GL_LINEAR_MIPMAP_LINEAR
+    var textureMinFilterForced = true
+
     var defaultTextureMagFilter = GL_LINEAR
+    var textureMagFilterForced = false
 
     /** You can make some changes to shader graph, before shaders will be compiled */
     var configureMaterials: (material: GLTFMaterial) -> Unit = {}

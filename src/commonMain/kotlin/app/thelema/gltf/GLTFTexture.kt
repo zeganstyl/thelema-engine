@@ -36,16 +36,16 @@ class GLTFTexture(override val array: IGLTFArray): GLTFArrayElementAdapter(array
     override fun readJson() {
         super.readJson()
 
-        var minFilter = gltf.conf.defaultTextureMinFilter
-        var magFilter = gltf.conf.defaultTextureMagFilter
+        var minFilter = conf.defaultTextureMinFilter
+        var magFilter = conf.defaultTextureMagFilter
         var sWrap = GL_REPEAT
         var tWrap = GL_REPEAT
 
         json.int("sampler") {
             sampler = it
             val sampler = gltf.samplers[it] as GLTFSampler
-            minFilter = sampler.minFilter
-            magFilter = sampler.magFilter
+            if (!conf.textureMinFilterForced) minFilter = sampler.minFilter
+            if (!conf.textureMagFilterForced) magFilter = sampler.magFilter
             sWrap = sampler.wrapS
             tWrap = sampler.wrapT
         }

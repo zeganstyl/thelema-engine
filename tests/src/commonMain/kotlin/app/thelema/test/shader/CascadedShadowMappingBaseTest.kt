@@ -269,7 +269,7 @@ void main() {
             // render to depth maps
             for (i in 0 until numCascades) {
                 depthBuffers[i].render {
-                    GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+                    GL.glClear()
                     GL.cullFaceMode = GL_FRONT
 
                     val shader = depthRenderShader

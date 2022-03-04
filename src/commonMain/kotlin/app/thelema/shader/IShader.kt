@@ -335,10 +335,6 @@ inline fun <reified T: IShaderNode> IShader.node(block: T.() -> Unit): T {
 }
 
 inline fun IShader.useShader(block: IShader.() -> Unit) {
-    val isDepthMaskEnabled = GL.isDepthMaskEnabled
-
     bind()
     block()
-
-    GL.isDepthMaskEnabled = isDepthMaskEnabled
 }

@@ -139,7 +139,7 @@ void main() {
 
             // draw scene to buffer
             sceneColorBuffer.render {
-                GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+                GL.glClear()
 
                 cubeShader.bind()
                 cubeShader["viewProj"] = ActiveCamera.viewProjectionMatrix

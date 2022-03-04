@@ -168,7 +168,14 @@ interface IGL {
     fun glClear(color: Boolean = true, depth: Boolean = true) {
         var clear = 0
         if (color) clear = GL_COLOR_BUFFER_BIT
-        if (depth) clear = clear or GL_DEPTH_BUFFER_BIT
+        
+        if (depth) {
+            clear = clear or GL_DEPTH_BUFFER_BIT
+
+            // https://stackoverflow.com/questions/5161784/gldepthmaskgl-false-trashes-the-frame-buffer-on-some-gpus
+            GL.isDepthMaskEnabled = true
+        }
+
         glClear(clear)
     }
 

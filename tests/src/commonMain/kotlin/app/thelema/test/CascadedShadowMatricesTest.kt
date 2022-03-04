@@ -199,7 +199,7 @@ void main () {
 
         APP.onRender = {
             GL.glClearColor(0f, 0f, 0f, 1f)
-            GL.glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+            GL.glClear()
 
             val delta = APP.deltaTime
 
