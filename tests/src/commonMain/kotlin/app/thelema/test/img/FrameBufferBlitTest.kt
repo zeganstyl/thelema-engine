@@ -46,11 +46,10 @@ class FrameBufferBlitTest: Test {
         GL.glClearColor(0.5f, 0.5f, 0.5f, 1f)
 
         APP.onRender = {
-            fb.render {
-                box.render(shader)
-            }
+            box.render(shader)
 
-            fb.bindRead()
+            GL.glBindFramebuffer(GL_READ_FRAMEBUFFER, GL.mainFrameBufferHandle)
+            //fb.bindRead()
             fb2.bindDraw()
             GL.glBlitFramebuffer(
                 0,
@@ -65,6 +64,8 @@ class FrameBufferBlitTest: Test {
                 GL_NEAREST
             )
             fb.unbind()
+
+            GL.printLastError()
 
             ScreenQuad.render(fb2.getTexture(0))
         }

@@ -37,12 +37,12 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             value?.also {
                 fxaa = value.component()
                 bloom = value.entity("Bloom").component()
-                bloom.apply { brightnessMap = buffer3.texture }
+                bloom.apply { brightnessMap = buffer3.getTexture(0) }
                 bloomThreshold = value.entity("Bloom").component()
                 motionBlur = value.component()
-                motionBlur.apply { velocityMap = buffer3.texture }
+                motionBlur.apply { velocityMap = buffer3.getTexture(0) }
                 godRays = value.entity("GodRays").component()
-                godRays.apply { occlusionMap = buffer3.texture }
+                godRays.apply { occlusionMap = buffer3.getTexture(0) }
                 godRaysThreshold = value.entity("GodRays").component()
                 vignette = value.component()
             }
@@ -51,30 +51,21 @@ class ForwardRenderingPipeline: IRenderingPipeline {
     var height: Int = APP.height
     var width: Int = APP.width
 
-    val buffer1: SimpleFrameBuffer by lazy { SimpleFrameBuffer(
-        width,
-        height,
-        GL_RGBA16F,
-        GL_RGBA,
-        GL_FLOAT,
-        hasDepth = true
-    ) }
-    val buffer2: SimpleFrameBuffer by lazy { SimpleFrameBuffer(
-        width,
-        height,
-        GL_RGBA16F,
-        GL_RGBA,
-        GL_FLOAT,
-        hasDepth = true
-    ) }
-    val buffer3: SimpleFrameBuffer by lazy { SimpleFrameBuffer(
-        width,
-        height,
-        GL_RGBA16F,
-        GL_RGBA,
-        GL_FLOAT,
-        hasDepth = true
-    ) }
+    val buffer1 = FrameBuffer {
+        addAttachment(Attachments.color(0, GL_RGBA, GL_RGBA16F, GL_FLOAT))
+        addAttachment(Attachments.depthRenderBuffer())
+        buildAttachments()
+    }
+    val buffer2 = FrameBuffer {
+        addAttachment(Attachments.color(0, GL_RGBA, GL_RGBA16F, GL_FLOAT))
+        addAttachment(Attachments.depthRenderBuffer())
+        buildAttachments()
+    }
+    val buffer3 = FrameBuffer {
+        addAttachment(Attachments.color(0, GL_RGBA, GL_RGBA16F, GL_FLOAT))
+        addAttachment(Attachments.depthRenderBuffer())
+        buildAttachments()
+    }
 
     val swapper: FrameBufferSwapper by lazy { FrameBufferSwapper(buffer1, buffer2) }
 
@@ -102,19 +93,19 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             field = value
         }
 
-    var bloom = Bloom(width, height).apply { brightnessMap = buffer3.texture }
+    var bloom = Bloom(width, height).apply { brightnessMap = buffer3.getTexture(0) }
         set(value) {
             field.destroy()
             field = value
         }
 
-    var motionBlur = MotionBlur(numSamples = 16).apply { velocityMap = buffer3.texture }
+    var motionBlur = MotionBlur(numSamples = 16).apply { velocityMap = buffer3.getTexture(0) }
         set(value) {
             field.destroy()
             field = value
         }
 
-    var godRays = GodRays().apply { occlusionMap = buffer3.texture }
+    var godRays = GodRays().apply { occlusionMap = buffer3.getTexture(0) }
         set(value) {
             field.destroy()
             field = value
@@ -147,7 +138,7 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             GL.glClear()
             block(null)
 
-            GL.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
+            GL.glBindFramebuffer(GL_READ_FRAMEBUFFER, GL.mainFrameBufferHandle)
             swapper.current.bindDraw()
             GL.glBlitFramebuffer(
                 0,
