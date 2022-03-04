@@ -37,21 +37,22 @@ dependencies {
 
 [![youtube](images/youtube.png)](https://www.youtube.com/playlist?list=PLS4PI9m5p5MmodmfBNVft1_mUges3x35O)
 
+Thelema uses entities and components to work with scenes.
+
 #### Features
 * Shaders
-  * Autogenerating shaders by shader nodes
+  * Shader nodes (shader graph)
   * Deferred shading
   * Physicaly based rendering (PBR)
-  * Emissive materials
-  * Tonemapping
-  * Bloom
+  * Bloom, Emissive materials
   * SSAO
-  * Cascaded shadow mapping
+  * Cascaded shadow mapping, Soft shadows
   * Motion blur
   * IBL
 * 3D graphics
   * VBO, VAO, Instancing buffers
   * Skinned meshes
+  * Particle system
   * Lights: directional, point
   * glTF 2.0 loading
 * Audio
@@ -63,13 +64,12 @@ dependencies {
 * ODE physics
 * Platforms: Desktop JVM, HTML5, Android
 
-#### Work in progress
-* 3D Editor
-* HTML5 rigid body physics
-* GUI (redesign)
-* Audio API (redesign)
+![logo](images/screenshot.png)
+Thelema Studio - 3D Editor
 
-#### Things that may be implemented in future
-* Vulkan API
-* Kotlin/Native
+#### Work in progress
+* GUI (redesign)
+* 3D Audio API (redesign)
 * Navigation mesh
+* Vulkan API
+* Terrain rendering

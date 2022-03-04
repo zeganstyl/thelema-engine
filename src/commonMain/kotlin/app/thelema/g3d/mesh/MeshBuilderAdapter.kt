@@ -40,14 +40,6 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
     override val mesh: IMesh
         get() = builder.mesh
 
-    override var rebuildComponentRequested: Boolean
-        get() = builder.rebuildComponentRequested
-        set(value) { builder.rebuildComponentRequested = value }
-
-    override var rebuildListener: RebuildListener?
-        get() = builder.rebuildListener
-        set(value) { builder.rebuildListener = value }
-
     override fun preparePositions(block: IVertexAccessor.() -> Unit) {
         if (getVerticesCount() > 0) builder.preparePositions(block)
     }
@@ -64,5 +56,9 @@ abstract class MeshBuilderAdapter: IMeshBuilder {
 
     override fun updateMesh() {
         builder.updateMesh()
+    }
+
+    override fun requestMeshUpdate() {
+        builder.requestRebuild()
     }
 }

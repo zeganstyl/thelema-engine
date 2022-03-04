@@ -25,7 +25,7 @@ import app.thelema.gl.IVertexAttribute
 import app.thelema.shader.IShader
 import app.thelema.shader.useShader
 
-interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
+interface IMeshBuilder: IEntityComponent {
     val mesh: IMesh
 
     fun getVerticesCount(): Int
@@ -46,13 +46,7 @@ interface IMeshBuilder: IEntityComponent, ComponentCanBeRebuild {
         shader.useShader { mesh.render() }
     }
 
-    override fun rebuildComponent() {
-        updateMesh()
-    }
+    fun requestMeshUpdate()
 
     fun updateMesh()
-
-    fun requestMeshUpdate() {
-        requestRebuild()
-    }
 }

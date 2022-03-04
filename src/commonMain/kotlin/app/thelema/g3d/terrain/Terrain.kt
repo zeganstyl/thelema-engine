@@ -146,8 +146,8 @@ class Terrain(
         plane.divisions = tileDivisions * 2
         frame.outerLodDivisions = tileDivisions
 
-        plane.rebuildComponent()
-        frame.rebuildComponent()
+        plane.updateMesh()
+        frame.updateMesh()
 
         _frameMesh = frame.mesh
 

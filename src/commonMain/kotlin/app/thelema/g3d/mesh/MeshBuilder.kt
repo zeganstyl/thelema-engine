@@ -17,6 +17,7 @@
 package app.thelema.g3d.mesh
 
 import app.thelema.concurrency.ATOM
+import app.thelema.ecs.ComponentCanBeRebuild
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.RebuildListener
 import app.thelema.ecs.component
@@ -24,7 +25,7 @@ import app.thelema.gl.*
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
 
-class MeshBuilder: IMeshBuilder {
+class MeshBuilder: IMeshBuilder, ComponentCanBeRebuild {
     override val componentName: String
         get() = "MeshBuilder"
 
@@ -68,6 +69,14 @@ class MeshBuilder: IMeshBuilder {
     override var rebuildListener: RebuildListener? = null
 
     var vertexBuffer: IVertexBuffer? = null
+
+    override fun requestMeshUpdate() {
+        requestRebuild()
+    }
+
+    override fun rebuildComponent() {
+        updateMesh()
+    }
 
     override fun readJson(json: IJsonObject) {
         super.readJson(json)
@@ -143,6 +152,8 @@ class MeshBuilder: IMeshBuilder {
     override fun updateMesh() {
         if (tangents && !uvs) throw IllegalStateException("MeshBuilder: tangents attribute enabled, but uvs not")
 
+        rebuildComponentRequested = false
+
         mesh.vertexBuffers.forEach { buffer ->
             buffer.vertexAttributes.forEach { it.rewind() }
             buffer.bytes.rewind()
@@ -189,6 +200,7 @@ class MeshBuilder: IMeshBuilder {
                 initIndexBuffer(indicesNum)
             }
         }
+        mesh.indices?.rewind()
         applyIndices()
 
         if (calculateNormals) Mesh3DTool.calculateFlatNormals(mesh)
@@ -205,7 +217,5 @@ class MeshBuilder: IMeshBuilder {
         }
         mesh.indices?.rewind()
         mesh.indices?.requestBufferUploading()
-
-        rebuildComponentRequested = false
     }
 }

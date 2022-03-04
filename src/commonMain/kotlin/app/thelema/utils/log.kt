@@ -23,6 +23,8 @@ interface ILog {
     var errorEnabled: Boolean
     var throwExceptionOnError: Boolean
 
+    fun info(vararg args: Any?) = info(args.joinToString(", "))
+
     fun info(message: Boolean) = info(message.toString())
     fun info(message: Int) = info(message.toString())
     fun info(message: Float) = info(message.toString())

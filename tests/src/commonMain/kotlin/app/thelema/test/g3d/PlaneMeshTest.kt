@@ -16,9 +16,8 @@
 
 package app.thelema.test.g3d
 
-import app.thelema.app.APP
-import app.thelema.g3d.mesh.PlaneMesh
-import app.thelema.shader.SimpleShader3D
+import app.thelema.g3d.mesh.planeMesh
+import app.thelema.gl.meshInstance
 import app.thelema.test.Test
 
 /** @author zeganstyl */
@@ -26,14 +25,8 @@ class PlaneMeshTest: Test {
     override val name: String
         get() = "Plane mesh"
 
-    override fun testMain() {
-        val plane = PlaneMesh {
-            setSize(4f)
-            setDivisions(5)
-        }
-
-        val shader = SimpleShader3D()
-
-        APP.onRender = { shader.render(plane.mesh) }
+    override fun testMain() = testEntity {
+        planeMesh()
+        meshInstance()
     }
 }

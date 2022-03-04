@@ -26,25 +26,25 @@ class FXAA: PostShader(fxaaCode) {
     override val componentName: String
         get() = "FXAA"
 
-    var lumaThreshold = 0.7f
+    var lumaThreshold = 0.25f
         set(value) {
             field = value
             updateUniforms()
         }
 
-    var spanMax = 8f
+    var spanMax = 16f
         set(value) {
             field = value
             updateUniforms()
         }
 
-    var reduceMin = 8f
+    var reduceMin = 16f
         set(value) {
             field = value
             updateUniforms()
         }
 
-    var reduceMul = 2f
+    var reduceMul = 16f
         set(value) {
             field = value
             updateUniforms()

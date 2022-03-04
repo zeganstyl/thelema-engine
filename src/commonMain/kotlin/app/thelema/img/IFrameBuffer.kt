@@ -121,6 +121,16 @@ interface IFrameBuffer {
         GL.glBindFramebuffer(GL_FRAMEBUFFER, frameBufferHandle)
     }
 
+    fun bindRead() {
+        isBound = true
+        GL.glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBufferHandle)
+    }
+
+    fun bindDraw() {
+        isBound = true
+        GL.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferHandle)
+    }
+
     fun unbind() {
         GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         isBound = false

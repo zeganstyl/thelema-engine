@@ -49,4 +49,7 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContext {
     fun drawElementsInstancedANGLE(mode: Int, count: Int, type: Int, offset: Int, primcount: Int)
     /** [vertexAttribDivisorANGLE](https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays/vertexAttribDivisorANGLE) */
     fun vertexAttribDivisorANGLE(index: Int, divisor: Int)
+
+    /** [blitFramebuffer](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/blitFramebuffer) */
+    fun blitFramebuffer(srcX0: Int, srcY0: Int, srcX1: Int, srcY1: Int, dstX0: Int, dstY0: Int, dstX1: Int, dstY1: Int, mask: Int, filter: Int)
 }

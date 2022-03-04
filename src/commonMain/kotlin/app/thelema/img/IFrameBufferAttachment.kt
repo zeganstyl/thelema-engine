@@ -16,8 +16,6 @@
 
 package app.thelema.img
 
-import app.thelema.gl.GL_RENDERBUFFER
-
 /** @author zeganstyl */
 interface IFrameBufferAttachment {
     /** Texture or render buffer handle */
@@ -31,9 +29,6 @@ interface IFrameBufferAttachment {
     /** Specifies the number of color components in the texture.
      * [OpenGL documentation](https://www.khronos.org/registry/OpenGL-Refpages/es3/html/glTexImage2D.xhtml) */
     val internalFormat: Int
-
-    val isRenderBuffer
-        get() = target == GL_RENDERBUFFER
 
     var texture: ITexture?
 

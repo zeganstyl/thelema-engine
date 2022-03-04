@@ -20,7 +20,7 @@ class SpriteXYZPlanes(): MeshBuilderAdapter() {
     constructor(block: SpriteXYZPlanes.() -> Unit): this() {
         getOrCreateEntity()
         block(this)
-        if (rebuildComponentRequested) updateMesh()
+        if (builder.rebuildComponentRequested) updateMesh()
     }
 
     override val componentName: String

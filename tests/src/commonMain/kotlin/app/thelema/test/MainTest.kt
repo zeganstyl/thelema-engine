@@ -17,10 +17,13 @@
 package app.thelema.test
 
 import app.thelema.app.APP
+import app.thelema.test.g3d.PlaneMeshTest
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
 import app.thelema.test.gl.InstancedMeshTest
+import app.thelema.test.img.FrameBufferBlitTest
 import app.thelema.test.shader.ForwardRenderingPipelineTest
 import app.thelema.test.shader.IBLTest
+import app.thelema.test.shader.post.FXAATest
 import app.thelema.test.ui.UITest
 
 class MainTest {

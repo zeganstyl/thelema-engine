@@ -139,10 +139,29 @@ class ForwardRenderingPipeline: IRenderingPipeline {
         GL.glClearColor(Color.BLACK)
 
         swapper.reset()
-        swapper.current.render { block(null) }
 
-        if (fxaaEnabled) {
-            swapper.render(fxaa)
+        if (APP.isWeb) {
+            swapper.current.render { block(null) }
+        } else {
+            GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
+            GL.glClear()
+            block(null)
+
+            GL.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
+            swapper.current.bindDraw()
+            GL.glBlitFramebuffer(
+                0,
+                0,
+                GL.mainFrameBufferWidth,
+                GL.mainFrameBufferHeight,
+                0,
+                0,
+                swapper.current.width,
+                swapper.current.height,
+                GL_COLOR_BUFFER_BIT,
+                GL_NEAREST
+            )
+            GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         }
 
         if (bloomEnabled) {
@@ -168,9 +187,10 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             swapper.render(vignette)
         }
 
-        val depthTest = GL.isDepthTestEnabled
-        GL.isDepthTestEnabled = false
-        ScreenQuad.render(swapper.currentTexture, false)
-        GL.isDepthTestEnabled = depthTest
+        if (fxaaEnabled) {
+            swapper.render(fxaa)
+        }
+
+        ScreenQuad.render(swapper.currentTexture, false, clearMask = null)
     }
 }

@@ -3,6 +3,7 @@ package app.thelema.studio.widget
 import app.thelema.studio.*
 import app.thelema.studio.SKIN
 import app.thelema.app.APP
+import app.thelema.g2d.Batch
 import app.thelema.studio.tool.TerminalDialog
 import app.thelema.ui.*
 
@@ -69,6 +70,8 @@ class StudioMenuBar: Table() {
         }
     }
 
+    val fps = Label()
+
     init {
         add(bar)
 
@@ -82,5 +85,13 @@ class StudioMenuBar: Table() {
                 }
             })
         }).growX()
+
+        add(fps)
+    }
+
+    override fun draw(batch: Batch, parentAlpha: Float) {
+        fps.text = APP.fps.toString()
+
+        super.draw(batch, parentAlpha)
     }
 }

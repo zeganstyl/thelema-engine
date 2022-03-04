@@ -17,6 +17,10 @@
 package app.thelema.test
 
 import app.thelema.app.IApp
+import app.thelema.ecs.Entity
+import app.thelema.ecs.IEntity
+import app.thelema.g3d.cam.orbitCameraControl
+import app.thelema.g3d.scene
 import kotlin.math.abs
 
 /** @author zeganstyl */
@@ -26,6 +30,15 @@ interface Test {
 
     /** Here must be code that will be executed after application created [IApp] */
     fun testMain()
+
+    fun testEntity(block: IEntity.() -> Unit) {
+        Entity {
+            makeCurrent()
+            scene()
+            orbitCameraControl()
+            block()
+        }
+    }
 
     fun check(name: String, isOK: Boolean, mode: Int = PRINT_ALL): Boolean {
         if (mode != NO_PRINT) {

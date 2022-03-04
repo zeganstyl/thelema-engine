@@ -28,9 +28,6 @@ class RenderBufferAttachment(
     override val target: Int
         get() = GL_RENDERBUFFER
 
-    override val isRenderBuffer: Boolean
-        get() = true
-
     override var texture: ITexture?
         get() = null
         set(_) {}
