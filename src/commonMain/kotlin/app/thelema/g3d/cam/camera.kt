@@ -367,7 +367,10 @@ internal var ActiveCameraVar: ICamera? = null
 var ActiveCamera: ICamera
     get() {
         if (ActiveCameraVar == null) {
-            ActiveCameraVar = RES.mainCamera
+            ActiveCameraVar = Camera().apply {
+                lookAt(Vec3(3f, 3f, 3f), MATH.Zero3)
+                updateCamera()
+            }
         }
         return ActiveCameraVar!!
     }

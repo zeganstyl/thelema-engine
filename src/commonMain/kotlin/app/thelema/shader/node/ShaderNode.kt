@@ -17,7 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.ecs.IEntity
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.shader.IShader
 import app.thelema.utils.iterate
 
@@ -56,7 +56,7 @@ abstract class ShaderNode: IShaderNode {
 
     override fun shaderCompiled() {}
 
-    override fun bind(uniforms: IUniforms) {}
+    override fun bind(uniforms: IUniformArgs) {}
 
     override fun executionFrag(out: StringBuilder) = Unit
     override fun executionVert(out: StringBuilder) = Unit

@@ -34,19 +34,10 @@ class Project: IProject {
                 ECS.addEntity(value)
                 addedEntityToBranch(value)
             }
-            mainCamera = (value?.entity("MainCamera")?.component() ?: Camera()).apply {
-                lookAt(Vec3(3f, 3f, 3f), MATH.Zero3)
-                updateCamera()
-            }
         }
 
     override val componentName: String
         get() = "Project"
-
-    override var mainCamera: ICamera = Camera().apply {
-        lookAt(Vec3(3f, 3f, 3f), MATH.Zero3)
-        updateCamera()
-    }
 
     private val _loaders = ArrayList<ILoader>()
     override val loaders: List<ILoader>

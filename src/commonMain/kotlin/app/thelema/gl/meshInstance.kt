@@ -26,8 +26,8 @@ interface IMeshInstance: IRenderable {
 
     var armature: IArmature?
 
-    override var translucencyPriority: Int
-        get() = material?.translucentPriority ?: 0
+    override var renderingOrder: Int
+        get() = material?.renderingOrder ?: 0
         set(_) {}
 
     override var alphaMode: String
@@ -36,8 +36,6 @@ interface IMeshInstance: IRenderable {
 
     override fun visibleInFrustum(frustum: Frustum): Boolean =
         mesh?.boundings?.intersectsWith(worldMatrix, frustum) != false
-
-    fun render() = render(null)
 
     override fun addedSiblingComponent(component: IEntityComponent) {
         if (component is IMesh && mesh == null) mesh = component
@@ -63,7 +61,7 @@ class MeshInstance(): IMeshInstance {
     override var material: IMaterial? = null
         get() = field ?: mesh?.material
 
-    override val uniforms: IUniforms = Uniforms()
+    override val uniformArgs: IUniformArgs = UniformArgs(this)
 
     override var previousWorldMatrix: IMat4? = null
         get() = field ?: node?.previousWorldMatrix
@@ -72,13 +70,13 @@ class MeshInstance(): IMeshInstance {
         get() = field ?: node?.worldMatrix
 
     private val _worldPosition = Vec3Mat4Translation(MATH.IdentityMat4)
-    override val worldPosition: IVec3
+    override val worldPosition: IVec3C
         get() = _worldPosition.also { it.mat = worldMatrix ?: MATH.IdentityMat4 }
 
     override var armature: IArmature? = null
         set(value) {
             field = value
-            uniforms[Uniform.Armature] = value
+            uniformArgs[Uniforms.Armature] = value
         }
 
     override var isVisible: Boolean = true
@@ -89,9 +87,9 @@ class MeshInstance(): IMeshInstance {
 
     override fun render(shader: IShader) {
         if (isVisible) {
-            this@MeshInstance.uniforms.worldMatrix = worldMatrix
-            this@MeshInstance.uniforms.renderable = this
-            shader.uniformArgs = this@MeshInstance.uniforms
+            uniformArgs.worldMatrix = worldMatrix
+            uniformArgs[Uniforms.PreviousWorldMatrix] = previousWorldMatrix
+            shader.uniformArgs = uniformArgs
 
             shader.useShader {
                 shader.listener?.draw(shader)
@@ -103,7 +101,7 @@ class MeshInstance(): IMeshInstance {
     override fun render(shaderChannel: String?) {
         if (isVisible) {
             val material = material ?: DEFAULT_MATERIAL
-            val shader = if (shaderChannel == null) material?.shader else material?.shaderChannels?.get(shaderChannel)
+            val shader = if (shaderChannel == null) material?.shader else material?.channels?.get(shaderChannel)
             if (shader != null) {
                 render(shader)
             }

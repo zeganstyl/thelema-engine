@@ -46,7 +46,7 @@ void main() {
     gl_FragColor = vec4(color, 1.0);
 }
 """
-        )
+        ).also { it.vertexLayout = Layout }
     )
 
     constructor(block: MeshVisualizer.() -> Unit): this() {
@@ -57,8 +57,8 @@ void main() {
     val instance = MeshInstance().apply { mesh = this@MeshVisualizer.mesh }
 
     val buffer: IVertexBuffer = mesh.addVertexBuffer {
-        addAttribute(Vertex.POSITION)
-        addAttribute(Vertex.COLOR)
+        addAttribute(POSITION)
+        addAttribute(COLOR)
     }
 
     init {
@@ -76,8 +76,8 @@ void main() {
     fun reset() {
         buffer.initVertexBuffer(0)
 
-        mesh.getAccessor(Vertex.POSITION).rewind()
-        mesh.getAccessor(Vertex.COLOR).rewind()
+        mesh.getAccessor(POSITION).rewind()
+        mesh.getAccessor(COLOR).rewind()
     }
 
     fun addVectors3D(positions: IVertexAccessor, vectors: IVertexAccessor, color: Int, scale: Float = 1f) {
@@ -88,8 +88,8 @@ void main() {
         buffer.resizeVertexBuffer(buffer.verticesCount + positions.count * 2)
         mesh.verticesCount = buffer.verticesCount
 
-        val debugPositions = mesh.getAccessor(Vertex.POSITION)
-        val debugColors = mesh.getAccessor(Vertex.COLOR)
+        val debugPositions = mesh.getAccessor(POSITION)
+        val debugColors = mesh.getAccessor(COLOR)
 
         positions.rewind()
         vectors.rewind()
@@ -123,5 +123,12 @@ void main() {
 
         positions.rewind()
         vectors.rewind()
+    }
+
+    companion object {
+        val Layout = VertexLayout()
+
+        val POSITION = Layout.define("POSITION", 3)
+        val COLOR = Layout.define("COLOR", 4)
     }
 }

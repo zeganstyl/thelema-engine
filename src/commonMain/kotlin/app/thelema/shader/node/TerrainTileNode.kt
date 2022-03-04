@@ -16,7 +16,7 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.math.IVec3
 import app.thelema.math.MATH
 
@@ -35,7 +35,7 @@ class TerrainTileNode: ShaderNode() {
 
     var uvScale = 10f
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         shader[tilePositionScale.ref] = uniforms.get<IVec3>(tilePositionScaleName) ?: MATH.Zero3
     }
 

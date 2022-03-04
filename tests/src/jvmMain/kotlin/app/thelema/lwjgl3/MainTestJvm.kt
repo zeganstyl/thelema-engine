@@ -26,7 +26,11 @@ object MainTestJvm {
             height = 720
             msaaSamples = 4
             title = "Thelema Tests"
-            iconPaths = arrayOf("thelema-logo.png")
+            iconPaths = arrayOf(
+                "thelema-logo-24.png",
+                "thelema-logo-32.png",
+                "thelema-logo-48.png"
+            )
         }
 
         MainTest()

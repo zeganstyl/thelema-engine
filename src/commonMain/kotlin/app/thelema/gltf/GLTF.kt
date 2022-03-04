@@ -23,6 +23,7 @@ import app.thelema.fs.projectFile
 import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ISceneProvider
 import app.thelema.g3d.SceneProvider
+import app.thelema.gl.IVertexLayout
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.IProject
@@ -109,6 +110,8 @@ class GLTF: IGLTF, LoaderAdapter() {
         get() =_sceneInstances
 
     override var overrideAssets: Boolean = false
+
+    override val vertexLayouts = HashMap<Int, IVertexLayout>()
 
     /** Create local glTF settings */
     fun gltfSettings(block: GLTFSettings.() -> Unit) = sibling(block)

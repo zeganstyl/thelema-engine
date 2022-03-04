@@ -18,6 +18,7 @@ package app.thelema.ecs
 
 import app.thelema.json.IJsonObjectIO
 import app.thelema.res.RES
+import app.thelema.utils.iterate
 
 // TODO add entity descriptors and add "type" to entity, so entity can be implemented in different class
 
@@ -251,12 +252,6 @@ interface IEntity: IJsonObjectIO {
 
     fun forEachComponent(block: (component: IEntityComponent) -> Unit)
 
-    fun forEachChildEntity(block: (entity: IEntity) -> Unit) {
-        for (i in children.indices) {
-            block(children[i])
-        }
-    }
-
     fun forEachEntityInBranch(block: (entity: IEntity) -> Unit) {
         block(this)
         forEachChildEntity { it.forEachEntityInBranch(block) }
@@ -303,6 +298,10 @@ interface IEntity: IJsonObjectIO {
         const val upDelimiter = toParent + delimiter
         const val resPath = "RES:"
     }
+}
+
+inline fun IEntity.forEachChildEntity(block: (entity: IEntity) -> Unit) {
+    children.iterate(block)
 }
 
 /** Get or create component with [T] type. */

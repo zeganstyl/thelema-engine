@@ -2,8 +2,8 @@ package app.thelema.g3d.particles
 
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IUniforms
-import app.thelema.g3d.Uniforms
+import app.thelema.g3d.IUniformArgs
+import app.thelema.g3d.UniformArgs
 import app.thelema.math.Frustum
 import app.thelema.math.IVec3C
 import app.thelema.math.MATH
@@ -22,14 +22,14 @@ class ParticleSystem: IParticleSystem {
 
     override var isVisible: Boolean = true
 
-    override var alphaMode: String = Blending.OPAQUE
+    override var alphaMode: String = Blending.BLEND
 
-    override var translucencyPriority: Int = 1
+    override var renderingOrder: Int = 1
 
     override val worldPosition: IVec3C
         get() = MATH.Zero3
 
-    override val uniforms: IUniforms = Uniforms()
+    override val uniformArgs: IUniformArgs = UniformArgs()
 
     override fun getOrCreateParticles(material: IParticleMaterial): IParticles {
         var particlesData = particlesMap[material]

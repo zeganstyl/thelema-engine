@@ -17,8 +17,8 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.IArmature
-import app.thelema.g3d.IUniforms
-import app.thelema.gl.Uniform
+import app.thelema.g3d.IUniformArgs
+import app.thelema.gl.Uniforms
 import app.thelema.gl.Vertex
 import app.thelema.math.TransformDataType
 import app.thelema.math.MATH
@@ -79,12 +79,12 @@ class VertexNode(
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         shader[uWorldMatrix] = uniforms.worldMatrix ?: MATH.IdentityMat4
 
-        val armature = uniforms.get<IArmature>(Uniform.Armature)
+        val armature = uniforms.get<IArmature>(Uniforms.Armature)
         shader[uUseBones] = armature?.boneMatrices?.isNotEmpty() == true
 
         if (armature != null) {

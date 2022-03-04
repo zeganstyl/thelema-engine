@@ -19,6 +19,8 @@ package app.thelema.gltf
 import app.thelema.ecs.IEntity
 import app.thelema.fs.IFile
 import app.thelema.g3d.ISceneProvider
+import app.thelema.gl.IVertexLayout
+import app.thelema.gl.VertexLayout
 import app.thelema.res.ILoader
 
 /** @author zeganstyl */
@@ -67,6 +69,17 @@ interface IGLTF: ILoader, ISceneProvider {
 
     val chunks: MutableList<GLBChunk>
     val binChunks: MutableList<GLBChunk>
+
+    val vertexLayouts: MutableMap<Int, IVertexLayout>
+
+    fun getOrCreateVertexLayout(id: Int): IVertexLayout {
+        var vertexLayout = vertexLayouts[id]
+        if (vertexLayout == null) {
+            vertexLayout = VertexLayout()
+            vertexLayouts[id] = vertexLayout
+        }
+        return vertexLayout
+    }
 
     fun getArray(name: String): IGLTFArray
 

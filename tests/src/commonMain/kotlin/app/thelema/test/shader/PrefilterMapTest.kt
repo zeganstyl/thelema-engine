@@ -33,7 +33,6 @@ class PrefilterMapTest: Test {
         GL.glEnable(0x884F) // GL_TEXTURE_CUBE_MAP_SEAMLESS
 
         val prefilterSkybox = SimpleSkybox(
-            shaderVersion = 130,
             fragCode = """
 varying vec3 vPosition;
 

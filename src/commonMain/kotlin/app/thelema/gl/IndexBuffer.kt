@@ -65,6 +65,8 @@ class IndexBuffer(override var bytes: IByteData = DATA.nullBuffer): IIndexBuffer
 
     override var primitiveType: Int = GL_TRIANGLES
 
+    override var customCount: Int = -1
+
     override fun initIndexBuffer(indicesNum: Int, block: IIndexBuffer.() -> Unit) {
         indexType = if (indicesNum > 65535) GL_UNSIGNED_INT else GL_UNSIGNED_SHORT
         bytes.destroy()

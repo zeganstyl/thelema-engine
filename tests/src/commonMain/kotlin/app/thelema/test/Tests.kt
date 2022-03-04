@@ -98,7 +98,7 @@ open class Tests: TestGroup("Core") {
             PlaneMeshTest(),
             BoxMeshTest(),
             FrustumMeshTest(),
-            InstancingTest()
+            InstancedMeshTest()
         )
 
         group(

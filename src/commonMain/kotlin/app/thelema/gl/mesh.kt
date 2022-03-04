@@ -16,6 +16,7 @@
 
 package app.thelema.gl
 
+import app.thelema.data.IByteData
 import app.thelema.ecs.*
 import app.thelema.g3d.*
 import app.thelema.g3d.mesh.*
@@ -42,14 +43,6 @@ interface IMesh: IEntityComponent {
 
     val vertexBuffers: List<IVertexBuffer>
 
-    /** Instances count, that must be rendered.
-     * To enable instancing see [IVertexAttribute.divisor] or [IVertexBuffer.setDivisor].
-     * If -1, buffers will be drawn normally, without instances mode.
-     * If zero, nothing will be drawn. */
-    var instancesCountToRender: Int
-
-    var vertexLayout: IVertexLayout
-
     fun addMeshListener(listener: MeshListener)
 
     fun removeMeshListener(listener: MeshListener)
@@ -60,25 +53,30 @@ interface IMesh: IEntityComponent {
 
     fun addVertexBuffer(block: IVertexBuffer.() -> Unit): IVertexBuffer
 
+    fun addVertexBuffer(count: Int, vararg attributes: IVertexAttribute, block: IByteData.() -> Unit = {}): IVertexBuffer
+
     fun destroyVertexBuffers()
 
     fun setIndexBuffer(block: IIndexBuffer.() -> Unit): IIndexBuffer
 
-    fun getAccessor(attribute: IVertexAttribute): IVertexAccessor = getAttributeOrNull(attribute) ?:
+    fun getAccessor(attribute: IVertexAttribute): IVertexAccessor = getAccessorOrNull(attribute) ?:
     throw IllegalArgumentException("Mesh: mesh doesn't contain vertex attribute with name \"${attribute.name}\"")
 
+    fun getAccessor(name: String): IVertexAccessor = getAccessorOrNull(name) ?:
+    throw IllegalArgumentException("Mesh: mesh doesn't contain vertex attribute with name \"$name\"")
+
     fun getAccessor(attribute: IVertexAttribute, block: IVertexAccessor.() -> Unit) {
-        getAttributeOrNull(attribute)?.apply(block)
+        getAccessorOrNull(attribute)?.apply(block)
     }
 
     fun prepareAttribute(attribute: IVertexAttribute, block: IVertexAccessor.() -> Unit) {
-        getAttributeOrNull(attribute)?.prepare(block)
+        getAccessorOrNull(attribute)?.prepare(block)
     }
 
-    fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor? {
+    fun getAccessorOrNull(attribute: IVertexAttribute): IVertexAccessor? {
         for (i in vertexBuffers.indices) {
             val buffer = vertexBuffers[i]
-            val input = buffer.getAttributeOrNull(attribute)
+            val input = buffer.getAccessorOrNull(attribute)
             if (input != null) {
                 return input
             }
@@ -86,7 +84,18 @@ interface IMesh: IEntityComponent {
         return null
     }
 
-    fun containsAttribute(attribute: IVertexAttribute): Boolean {
+    fun getAccessorOrNull(name: String): IVertexAccessor? {
+        for (i in vertexBuffers.indices) {
+            val buffer = vertexBuffers[i]
+            val input = buffer.getAccessorOrNull(name)
+            if (input != null) {
+                return input
+            }
+        }
+        return null
+    }
+
+    fun containsAccessor(attribute: IVertexAttribute): Boolean {
         for (i in vertexBuffers.indices) {
             val buffer = vertexBuffers[i]
             if (buffer.containsAccessor(attribute)) {
@@ -96,11 +105,21 @@ interface IMesh: IEntityComponent {
         return false
     }
 
+    fun containsAccessor(name: String): Boolean {
+        for (i in vertexBuffers.indices) {
+            val buffer = vertexBuffers[i]
+            if (buffer.containsAccessor(name)) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun bind()
 
-    fun render(offset: Int, count: Int)
+    fun renderInstances(instances: Int)
 
-    fun render() = render(0, indices?.count ?: verticesCount)
+    fun render()
 
     fun render(shader: IShader) {
         shader.useShader { render() }
@@ -177,12 +196,8 @@ class Mesh(): IMesh {
     override var primitiveType: Int = GL_TRIANGLES
 
     private val _vertexBuffers = ArrayList<IVertexBuffer>(0)
-    override val vertexBuffers: MutableList<IVertexBuffer>
+    override val vertexBuffers: List<IVertexBuffer>
         get() = _vertexBuffers
-
-    override var vertexLayout: IVertexLayout = Vertex.Layout
-
-    override var instancesCountToRender: Int = -1
 
     override val componentName: String
         get() = "Mesh"
@@ -203,9 +218,8 @@ class Mesh(): IMesh {
         }
     }
 
+    private var vao = 0
     private var updateVaoRequest = true
-
-    private var vaoHandle = 0
 
     override fun addMeshListener(listener: MeshListener) {
         if (listeners == null) listeners = ArrayList()
@@ -235,6 +249,18 @@ class Mesh(): IMesh {
         return buffer
     }
 
+    override fun addVertexBuffer(
+        count: Int,
+        vararg attributes: IVertexAttribute,
+        block: IByteData.() -> Unit
+    ): IVertexBuffer {
+        val buffer = VertexBuffer()
+        buffer.addAttributes(*attributes)
+        buffer.initVertexBuffer(count, block)
+        addVertexBuffer(buffer)
+        return buffer
+    }
+
     override fun destroyVertexBuffers() {
         _vertexBuffers.iterate { it.destroy() }
         _vertexBuffers.clear()
@@ -256,13 +282,16 @@ class Mesh(): IMesh {
             updateVaoRequest = false
 
             if (vertexBuffers.isNotEmpty()) {
-                if (vaoHandle == 0) vaoHandle = GL.glGenVertexArrays()
+                if (vao == 0) vao = GL.glGenVertexArrays()
 
-                GL.glBindVertexArray(vaoHandle)
+                GL.glBindVertexArray(vao)
 
                 if ((indices?.bytes?.limit ?: 0) > 0) indices?.bind()
 
-                vertexBuffers.iterate { it.bind() }
+                vertexBuffers.iterate { buffer ->
+                    buffer.bind()
+                    buffer.vertexAttributes.iterate { it.bind() }
+                }
 
                 GL.glBindVertexArray(0)
             }
@@ -273,7 +302,9 @@ class Mesh(): IMesh {
         }
     }
 
-    override fun render(offset: Int, count: Int) {
+    override fun renderInstances(instances: Int) {
+        val count = indices?.count ?: verticesCount
+
         if (count == 0) return
         if (verticesCount == 0) {
             LOG.error("$path: mesh can't be rendered, verticesCount = 0")
@@ -282,34 +313,49 @@ class Mesh(): IMesh {
 
         bind()
 
-        val numInstances = instancesCountToRender
+        val indices = indices
+        val primitiveType = indices?.primitiveType ?: primitiveType
+
+        GL.glBindVertexArray(vao)
+
+        if (indices != null && indices.bytes.limit > 0) {
+            GL.glDrawElementsInstanced(primitiveType, count, indices.indexType, 0, instances)
+        } else {
+            GL.glDrawArraysInstanced(primitiveType, 0, count, instances)
+        }
+
+        GL.glBindVertexArray(0)
+    }
+
+    override fun render() {
+        val count = indices?.count ?: verticesCount
+
+        if (count == 0) return
+        if (verticesCount == 0) {
+            LOG.error("$path: mesh can't be rendered, verticesCount = 0")
+            return
+        }
+
+        bind()
 
         val indices = indices
         val primitiveType = indices?.primitiveType ?: primitiveType
 
-        GL.glBindVertexArray(vaoHandle)
+        GL.glBindVertexArray(vao)
 
         if (indices != null && indices.bytes.limit > 0) {
-            if (numInstances < 0) {
-                GL.glDrawElements(primitiveType, count, indices.indexType, offset * indices.bytesPerIndex)
-            } else if (numInstances > 0) {
-                GL.glDrawElementsInstanced(primitiveType, count, indices.indexType, offset * indices.bytesPerIndex, numInstances)
-            }
+            GL.glDrawElements(primitiveType, count, indices.indexType, 0)
         } else {
-            if (numInstances < 0) {
-                GL.glDrawArrays(primitiveType, offset, count)
-            } else if (numInstances > 0) {
-                GL.glDrawArraysInstanced(primitiveType, offset, count, numInstances)
-            }
+            GL.glDrawArrays(primitiveType, 0, count)
         }
 
         GL.glBindVertexArray(0)
     }
 
     override fun destroy() {
-        if (vaoHandle > 0) {
-            GL.glDeleteVertexArrays(vaoHandle)
-            vaoHandle = 0
+        if (vao > 0) {
+            GL.glDeleteVertexArrays(vao)
+            vao = 0
         }
 
         destroyVertexBuffers()
@@ -340,6 +386,11 @@ class Mesh(): IMesh {
                     ref(IMeshInstance::armature)
                     ref(IMeshInstance::material)
                     bool(IMeshInstance::isVisible)
+                }
+
+                descriptorI<IInstancedMesh>({ InstancedMesh() }) {
+                    ref(IInstancedMesh::mesh)
+                    bool(IInstancedMesh::isVisible)
                 }
 
                 descriptor({ MeshBuilder() }) {
@@ -406,17 +457,13 @@ interface MeshListener: VertexBufferListener {
 
     fun materialChanged(mesh: IMesh, newMaterial: IMaterial?) {}
 
-    fun armatureChanged(mesh: IMesh, newArmature: IArmature?) {}
-
     fun primitiveTypeChanged(mesh: IMesh, newPrimitiveType: Int) {}
-
-    fun inheritedMeshChanged(mesh: IMesh, newInheritedMesh: IMesh?) {}
 
     fun verticesCountChanged(mesh: IMesh, newCount: Int) {}
 }
 
 /** Get vertex positions attribute */
-fun IMesh.positions(): IVertexAccessor = getAccessor(Vertex.POSITION)
-fun IMesh.uvs(): IVertexAccessor? = getAttributeOrNull(Vertex.TEXCOORD_0)
-fun IMesh.normals(): IVertexAccessor? = getAttributeOrNull(Vertex.NORMAL)
-fun IMesh.tangents(): IVertexAccessor? = getAttributeOrNull(Vertex.TANGENT)
+fun IMesh.positions(): IVertexAccessor = getAccessor("POSITION")
+fun IMesh.uvs(): IVertexAccessor? = getAccessorOrNull("TEXCOORD_0")
+fun IMesh.normals(): IVertexAccessor? = getAccessorOrNull("NORMAL")
+fun IMesh.tangents(): IVertexAccessor? = getAccessorOrNull("TANGENT")

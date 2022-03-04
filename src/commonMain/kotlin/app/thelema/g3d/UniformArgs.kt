@@ -3,7 +3,7 @@ package app.thelema.g3d
 import app.thelema.gl.IRenderable
 import app.thelema.math.IMat4
 
-interface IUniforms {
+interface IUniformArgs {
     val values: MutableMap<String, Any>
 
     var worldMatrix: IMat4?
@@ -24,12 +24,10 @@ interface IUniforms {
     fun <T> get(name: String) = values[name] as T?
 }
 
-class Uniforms: IUniforms {
+class UniformArgs(override var renderable: IRenderable? = null): IUniformArgs {
     override val values: MutableMap<String, Any> = HashMap()
 
     override var worldMatrix: IMat4? = null
-
-    override var renderable: IRenderable? = null
 
     override var scene: IScene? = null
 }

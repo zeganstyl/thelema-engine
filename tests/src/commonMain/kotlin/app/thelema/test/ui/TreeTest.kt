@@ -36,7 +36,7 @@ class TreeTest: Test {
         KB.addListener(stage)
         MOUSE.addListener(stage)
 
-        val drawable = Sprite(Texture2D("thelema-logo.png"))
+        val drawable = Sprite(Texture2D("thelema-logo-64.png"))
         drawable.minWidth = 16f
         drawable.minHeight = 16f
 

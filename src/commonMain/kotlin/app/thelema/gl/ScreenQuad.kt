@@ -41,7 +41,6 @@ object ScreenQuad {
     val mesh: IMesh by lazy {
         Mesh {
             primitiveType = GL_TRIANGLE_FAN
-            vertexLayout = Layout
 
             addVertexBuffer {
                 addAttribute(POSITION)

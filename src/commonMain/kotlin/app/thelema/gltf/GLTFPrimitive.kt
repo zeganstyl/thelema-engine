@@ -96,7 +96,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     }
 
     private fun setupBoundings() {
-        mesh.boundings = if (mesh.containsAttribute(Vertex.JOINTS_0)) SphereBoundings() else AABB()
+        mesh.boundings = if (mesh.containsAccessor("JOINTS_0")) SphereBoundings() else AABB()
         mesh.boundings?.also { it.setVertices(mesh) }
     }
 
@@ -109,6 +109,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         var hasNormals = false
         var hasTangents = false
 
+        val layout = gltf.getOrCreateVertexLayout(material)
+
         json.get("attributes") {
             forEachInt { attributeName, accessorIndex ->
                 val accessor = gltf.accessors[accessorIndex] as GLTFAccessor
@@ -119,7 +121,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 vertices.verticesCount = accessor.count
 
                 vertices.addAttribute(
-                    Vertex.Layout.getAttributeByNameOrNull(attributeName) ?: Vertex.Layout.define(
+                    layout.getAttributeByNameOrNull(attributeName) ?: layout.define(
                         size = accessor.typeSize(),
                         name = attributeName,
                         type = when (accessor.componentType) {
@@ -248,7 +250,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                 calcNormals()
             }
 
-            if (conf.calculateTangentsCpu && mesh.containsAttribute(Vertex.TEXCOORD_0) && !json.obj("attributes").contains("TANGENT")) {
+            if (conf.calculateTangentsCpu && mesh.containsAccessor(Vertex.TEXCOORD_0) && !json.obj("attributes").contains("TANGENT")) {
                 val positionAccessor = json.obj("attributes").int("POSITION")
                 val buffer = gltfMesh.tangentsMap[positionAccessor]
                 if (buffer != null) {
@@ -282,6 +284,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
 
             val attributesCount = size
 
+            val layout = gltf.getOrCreateVertexLayout(material)
+
             forEachInt { attributeName, accessorIndex ->
                 val accessor = gltf.accessors[accessorIndex] as GLTFAccessor
 
@@ -298,7 +302,7 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
                             verticesCount = accessor.count
 
                             addAttribute(
-                                Vertex.Layout.getAttributeByNameOrNull(attributeName) ?: Vertex.Layout.define(
+                                layout.getAttributeByNameOrNull(attributeName) ?: layout.define(
                                     size = accessor.typeSize(),
                                     name = attributeName,
                                     type = when (accessor.componentType) {
@@ -329,8 +333,8 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
         if (mesh.primitiveType == GL_TRIANGLES) {
             Mesh3DTool.calculateFlatNormals(
                 mesh,
-                mesh.getAccessor(Vertex.POSITION),
-                mesh.getAccessor(Vertex.NORMAL)
+                mesh.getAccessor("POSITION"),
+                mesh.getAccessor("NORMAL")
             )
             currentProgress++
         }
@@ -339,17 +343,17 @@ class GLTFPrimitive(val gltfMesh: GLTFMesh): GLTFArrayElementAdapter(gltfMesh.pr
     fun calcTangents() {
         val mesh = mesh
 
-        if (mesh.containsAttribute(Vertex.TEXCOORD_0) && mesh.primitiveType == GL_TRIANGLES) {
+        if (mesh.containsAccessor("TEXCOORD_0") && mesh.primitiveType == GL_TRIANGLES) {
             Mesh3DTool.calculateTangents(
                 mesh,
-                mesh.getAccessor(Vertex.POSITION),
-                mesh.getAccessor(Vertex.TEXCOORD_0),
-                mesh.getAccessor(Vertex.TANGENT)
+                mesh.getAccessor("POSITION"),
+                mesh.getAccessor("TEXCOORD_0"),
+                mesh.getAccessor("TANGENT")
             )
             currentProgress++
             Mesh3DTool.orthogonalizeTangents(
-                mesh.getAccessor(Vertex.TANGENT),
-                mesh.getAccessor(Vertex.NORMAL)
+                mesh.getAccessor("TANGENT"),
+                mesh.getAccessor("NORMAL")
             )
             currentProgress++
         }

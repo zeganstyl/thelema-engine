@@ -54,7 +54,7 @@ class GLTFSettings: IEntityComponent {
     var loadAnimations: Boolean = true
     var generateShaders: Boolean = true
 
-    var ibl: Boolean = true
+    var ibl: Boolean = false
     var iblMaxMipLevels: Int = 5
 
     /** If not null, will be created shader for solid color rendering channel */

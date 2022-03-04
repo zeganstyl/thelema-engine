@@ -16,7 +16,7 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.json.IJsonObject
 
 /** For tone mapping, implied that [TextureNode.sRGB] is enabled.
@@ -63,7 +63,7 @@ class ToneMapNode(
         }
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         shader["uExposure"] = uniforms.scene?.world?.exposure ?: 1f

@@ -26,9 +26,9 @@ import app.thelema.img.SimpleFrameBuffer
  *
  * [Source](https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/6.pbr/2.2.2.ibl_specular_textured/2.2.2.brdf.fs) */
 class BrdfLutShader: PostShader(
-    version = 130,
     fragCode = """
-varying vec2 uv;
+in vec2 uv;
+out vec4 FragColor;
 
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
@@ -137,7 +137,7 @@ vec2 IntegrateBRDF(float NdotV, float roughness)
 void main() 
 {
     vec2 integratedBRDF = IntegrateBRDF(uv.x, uv.y);
-    gl_FragColor = vec4(integratedBRDF, 0.0, 1.0);
+    FragColor = vec4(integratedBRDF, 0.0, 1.0);
 }
 """
 ) {

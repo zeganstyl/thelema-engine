@@ -39,8 +39,9 @@ interface IVertexBuffer: IGLBuffer {
     @Deprecated("")
     fun setDivisor(divisor: Int = 1) {}
 
-    /** You can use this after adding all vertex inputs */
-    fun initVertexBuffer(verticesCount: Int, block: IByteData.() -> Unit = {})
+    /** You can use this after adding all vertex inputs
+     * @param count vertices count */
+    fun initVertexBuffer(count: Int, block: IByteData.() -> Unit = {})
 
     /** Set capacity and keep old data */
     fun resizeVertexBuffer(newVerticesCount: Int)
@@ -51,24 +52,30 @@ interface IVertexBuffer: IGLBuffer {
         attributes.iterate { addAttribute(it) }
     }
 
-    fun getOrAddAttribute(attribute: IVertexAttribute): IVertexAccessor {
-        val accessor = getAttributeOrNull(attribute)
+    fun getOrAddAccessor(attribute: IVertexAttribute): IVertexAccessor {
+        val accessor = getAccessorOrNull(attribute)
         if (accessor != null) return accessor
 
         return addAttribute(attribute)
     }
 
-    fun removeAttributeAt(index: Int)
+    fun removeAccessorAt(index: Int)
 
-    fun removeAttribute(name: String)
+    fun removeAccessor(name: String)
 
-    fun removeAttribute(attribute: IVertexAccessor)
+    fun removeAccessor(attribute: IVertexAccessor)
 
-    fun getAttribute(attribute: IVertexAttribute): IVertexAccessor = getAttributeOrNull(attribute)!!
+    fun getAccessor(attribute: IVertexAttribute): IVertexAccessor = getAccessorOrNull(attribute)!!
 
-    fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor?
+    fun getAccessor(name: String): IVertexAccessor = getAccessorOrNull(name)!!
 
-    fun containsAccessor(attribute: IVertexAttribute): Boolean = getAttributeOrNull(attribute) != null
+    fun getAccessorOrNull(attribute: IVertexAttribute): IVertexAccessor?
+
+    fun getAccessorOrNull(name: String): IVertexAccessor?
+
+    fun containsAccessor(attribute: IVertexAttribute): Boolean = getAccessorOrNull(attribute) != null
+
+    fun containsAccessor(name: String): Boolean = getAccessorOrNull(name) != null
 
     fun printVertexAttributes(): String
 }
@@ -125,8 +132,11 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         listeners?.remove(listener)
     }
 
-    override fun getAttributeOrNull(attribute: IVertexAttribute): IVertexAccessor? =
+    override fun getAccessorOrNull(attribute: IVertexAttribute): IVertexAccessor? =
         vertexAttributesInternal.firstOrNull { it.attribute == attribute }
+
+    override fun getAccessorOrNull(name: String): IVertexAccessor? =
+        vertexAttributesInternal.firstOrNull { it.attribute.name == name }
 
     fun updateVertexInputOffsets() {
         vertexAttributes.forEach {
@@ -147,13 +157,13 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
-    override fun removeAttributeAt(index: Int) {
+    override fun removeAccessorAt(index: Int) {
         val accessor = vertexAttributesInternal.removeAt(index)
         listeners?.iterate { it.removedAccessor(accessor) }
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
-    override fun removeAttribute(name: String) {
+    override fun removeAccessor(name: String) {
         val accessor = vertexAttributesInternal.firstOrNull { it.attribute.name == name }
         if (accessor != null) {
             vertexAttributesInternal.remove(accessor)
@@ -162,16 +172,16 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
     }
 
     /** After removing, you must call [updateVertexInputOffsets] manually */
-    override fun removeAttribute(attribute: IVertexAccessor) {
+    override fun removeAccessor(attribute: IVertexAccessor) {
         if (vertexAttributesInternal.remove(attribute)) {
             listeners?.iterate { it.removedAccessor(attribute) }
         }
     }
 
-    override fun initVertexBuffer(verticesCount: Int, block: IByteData.() -> Unit) {
-        this.verticesCount = verticesCount
+    override fun initVertexBuffer(count: Int, block: IByteData.() -> Unit) {
+        this.verticesCount = count
         bytes.destroy()
-        bytes = DATA.bytes(verticesCount * bytesPerVertex)
+        bytes = DATA.bytes(count * bytesPerVertex)
         block(bytes)
         bytes.rewind()
     }
@@ -193,11 +203,6 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 
             oldBytes.destroy()
         }
-    }
-
-    override fun bind() {
-        super.bind()
-        vertexAttributes.iterate { it.bind() }
     }
 
     override fun toString(): String {

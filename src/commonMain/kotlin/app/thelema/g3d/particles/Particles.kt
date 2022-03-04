@@ -1,7 +1,7 @@
 package app.thelema.g3d.particles
 
-import app.thelema.g3d.IUniforms
-import app.thelema.g3d.Uniforms
+import app.thelema.g3d.IUniformArgs
+import app.thelema.g3d.UniformArgs
 import app.thelema.gl.*
 import app.thelema.math.IVec3
 import app.thelema.utils.LOG
@@ -9,7 +9,7 @@ import app.thelema.utils.iterate
 
 /** See [IParticles] */
 class Particles(override val particleMaterial: IParticleMaterial): IParticles {
-    private var updateParticleSystemRequested = false
+    private var updateParticlesRequested = false
 
     private var lifeTimesAsAttribute = false
         set(value) {
@@ -36,9 +36,8 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
 
     override val vertexBuffer: IVertexBuffer = VertexBuffer()
 
-    override val mesh: IMesh = Mesh().apply {
+    override val mesh: IInstancedMesh = InstancedMesh().apply {
         addVertexBuffer(vertexBuffer)
-        verticesCount = -1
     }
 
     private var rebuildDataRequested = false
@@ -51,11 +50,11 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     val particlesDataChannels = ArrayList<IParticleDataChannel<Any?>>()
     val particlesDataChannelsMap = HashMap<String, IParticleDataChannel<Any?>>()
 
-    private val _positions: MutableList<IVec3> = getOrCreateDataChannel<IVec3>(Vertex.INSTANCE_POSITION).data
+    private val _positions: MutableList<IVec3> = getOrCreateDataChannel<IVec3>(Particle.POSITION).data
     override val positions: List<IVec3>
         get() = _positions
 
-    override val uniforms: IUniforms = Uniforms()
+    override val uniforms: IUniformArgs = UniformArgs()
 
     override fun setParticleLifeTime(particle: Int, time: Float) {
         _lifeTimes[particle] = time
@@ -74,14 +73,15 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     }
 
     override fun requestUpdateParticles() {
-        updateParticleSystemRequested = true
+        updateParticlesRequested = true
     }
 
     override fun updateParticles(delta: Float) {
-        if (updateParticleSystemRequested) {
-            updateParticleSystemRequested = false
+        if (updateParticlesRequested) {
+            updateParticlesRequested = false
 
-            mesh.material = particleMaterial.meshMaterial
+            mesh.material = particleMaterial.material
+            mesh.mesh = particleMaterial.mesh
 
             lifeTimesAsAttribute = particleMaterial.lifeTimesAsAttribute
 
@@ -124,7 +124,7 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
             }
 
             vertexBuffer.gpuUploadRequested = visibleParticles > 0
-            mesh.instancesCountToRender = visibleParticles
+            mesh.instancesCount = visibleParticles
         }
     }
 
@@ -159,7 +159,7 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> getOrCreateDataChannel(attribute: IVertexAttribute): IParticleDataChannel<T> {
-        val accessor = vertexBuffer.getOrAddAttribute(attribute)
+        val accessor = vertexBuffer.getOrAddAccessor(attribute)
 
         var channel = particlesDataChannelsMap[attribute.name] as IParticleDataChannel<T>?
         if (channel == null) {

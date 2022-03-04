@@ -19,6 +19,7 @@ package app.thelema.action
 import app.thelema.ecs.Entity
 import app.thelema.ecs.component
 import app.thelema.ecs.componentOrNull
+import app.thelema.ecs.forEachChildEntity
 
 class SwitchAction: ActionAdapter() {
     override val componentName: String

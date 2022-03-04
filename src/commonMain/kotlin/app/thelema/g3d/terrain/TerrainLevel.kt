@@ -75,8 +75,8 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
 //                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
 //                        }
                         tmp.set(tileX, tileZ, tileSize)
-                        terrain.planeInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
-                        terrain.frameInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
+                        terrain.planeInstance.uniformArgs.set(terrain.tilePositionScaleName, tmp)
+                        terrain.frameInstance.uniformArgs.set(terrain.tilePositionScaleName, tmp)
 
                         terrain.plane.mesh.render()
                         terrain.frameMesh.indices = terrain.frameIndexBufferMap6x6[tileIndexZ + zi][tileIndexX + xi]
@@ -147,8 +147,8 @@ class TerrainLevel(val terrain: Terrain, val levelIndex: Int, minTileSize: Float
 //                            terrain.listeners[i].beforeTileRender(this, tileX, tileZ)
 //                        }
                             tmp.set(tileX, tileZ, tileSize)
-                            terrain.planeInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
-                            terrain.frameInstance.uniforms.set(terrain.tilePositionScaleName, tmp)
+                            terrain.planeInstance.uniformArgs.set(terrain.tilePositionScaleName, tmp)
+                            terrain.frameInstance.uniformArgs.set(terrain.tilePositionScaleName, tmp)
 
                             terrain.plane.mesh.render()
                             terrain.frame.mesh.indices = terrain.frameIndexBuffers[4] // center

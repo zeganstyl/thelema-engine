@@ -6,7 +6,8 @@ import app.thelema.ecs.UpdatableComponent
 import app.thelema.ecs.component
 import app.thelema.gl.IRenderable
 
-/** Root object. Holds particles of all types */
+/** Root object. Contains particles of all types on the scene.
+ * System provides access to particles for emitters */
 interface IParticleSystem: IEntityComponent, UpdatableComponent, IRenderable {
     override val componentName: String
         get() = "ParticleSystem"

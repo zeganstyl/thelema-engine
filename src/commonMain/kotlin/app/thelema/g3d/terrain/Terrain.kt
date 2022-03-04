@@ -124,15 +124,15 @@ class Terrain(
         get() = material?.alphaMode ?: Blending.OPAQUE
         set(_) {}
 
-    override var translucencyPriority: Int
-        get() = material?.translucentPriority ?: 0
+    override var renderingOrder: Int
+        get() = material?.renderingOrder ?: 0
         set(_) {}
 
     override val worldPosition: IVec3 = Vec3(0f)
 
     var tilePositionScaleName: String = "tilePositionScale"
 
-    override val uniforms: IUniforms = Uniforms()
+    override val uniformArgs: IUniformArgs = UniformArgs()
 
     override fun visibleInFrustum(frustum: Frustum): Boolean = true
 

@@ -19,7 +19,7 @@ package app.thelema.shader.node
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.GL
 import app.thelema.gl.GL_BACK
 import app.thelema.img.GBuffer
@@ -82,7 +82,7 @@ class GBufferOutputNode(): ShaderNode() {
         out.append("layout (location = 2) out vec4 gPosition;\n")
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         GL.isBlendingEnabled = alphaMode == Blending.BLEND

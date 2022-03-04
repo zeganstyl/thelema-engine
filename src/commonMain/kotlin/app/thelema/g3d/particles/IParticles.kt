@@ -1,7 +1,7 @@
 package app.thelema.g3d.particles
 
-import app.thelema.g3d.IUniforms
-import app.thelema.gl.IMesh
+import app.thelema.g3d.IUniformArgs
+import app.thelema.gl.IInstancedMesh
 import app.thelema.gl.IVertexAttribute
 import app.thelema.gl.IVertexBuffer
 import app.thelema.math.IVec3
@@ -16,7 +16,7 @@ interface IParticles {
 
     val particlesData: MutableMap<String, MutableList<Any>>
 
-    val uniforms: IUniforms
+    val uniforms: IUniformArgs
 
     var bufferReserve: Float
 
@@ -27,7 +27,7 @@ interface IParticles {
     /** Instanced buffer that must be filled with values of particles */
     val vertexBuffer: IVertexBuffer
 
-    val mesh: IMesh
+    val mesh: IInstancedMesh
 
     fun render(shader: IShader) {
         shader.useShader {
@@ -37,8 +37,8 @@ interface IParticles {
     }
 
     fun render(shaderChannel: String?) {
-        val material = particleMaterial.meshMaterial
-        val shader = if (shaderChannel == null) material.shader else material.shaderChannels[shaderChannel]
+        val material = particleMaterial.material
+        val shader = if (shaderChannel == null) material.shader else material.channels[shaderChannel]
         if (shader != null) render(shader)
     }
 

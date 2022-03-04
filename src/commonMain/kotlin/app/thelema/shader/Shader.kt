@@ -20,7 +20,7 @@ import app.thelema.app.APP
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.*
 import app.thelema.shader.node.*
 import app.thelema.shader.post.*
@@ -67,7 +67,7 @@ open class Shader(
 
     override var nodes: Array<IShaderNode> = emptyArray()
 
-    override var listener: ShaderRenderListener? = null
+    override var listener: ShaderListener? = null
 
     override var depthMask: Boolean = true
 
@@ -94,7 +94,7 @@ open class Shader(
             }
         }
 
-    override var uniformArgs: IUniforms? = null
+    override var uniformArgs: IUniformArgs? = null
 
 //    init {
 //        if (compile && vertCode.isNotEmpty() && fragCode.isNotEmpty()) {
@@ -124,11 +124,21 @@ open class Shader(
         return location >= 0
     }
 
-    override fun vertSourceCode(title: String, pad: Int): String =
-        numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vertCode, pad)
+    override fun vertSourceCode(title: String, pad: Int): String {
+        val vert = if (version >= 330 && refineShaderCode) {
+            refineVertexCode(vertCode)
+        } else vertCode
 
-    override fun fragSourceCode(title: String, pad: Int): String =
-        numerateLines(title, getVersionStr() + getFloatPrecisionStr() + fragCode, pad)
+        return numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vert, pad)
+    }
+
+    override fun fragSourceCode(title: String, pad: Int): String {
+        val frag = if (version >= 330 && refineShaderCode) {
+            refineFragmentCode(fragCode)
+        } else fragCode
+
+        return numerateLines(title, getVersionStr() + getFloatPrecisionStr() + frag, pad)
+    }
 
     private fun getFloatPrecisionStr(): String = if (GL.isGLES) "precision $floatPrecision float;\n" else ""
 
@@ -164,6 +174,28 @@ open class Shader(
         }
     }
 
+    private fun refineVertexCode(vertCode: String): String {
+        val vert = vertCode
+            .replace("\nattribute ", "\nin ")
+            .replace("\nvarying ", "\nout ")
+
+        return refineAttributes(vert)
+    }
+
+    private fun refineFragmentCode(fragCode: String): String {
+        var frag = fragCode
+            .replace("\nvarying ", "\nin ")
+            .replace("texture2D(", "texture(")
+            .replace("textureCube(", "texture(")
+
+        if (frag.contains("gl_FragColor")) {
+            frag = frag.replace("gl_FragColor", "FragColor")
+            frag = "out vec4 FragColor;\n$frag"
+        }
+
+        return frag
+    }
+
     override fun load(vertCode: String, fragCode: String) {
         val ver = getVersionStr()
         val floatPrecision = getFloatPrecisionStr()
@@ -171,25 +203,12 @@ open class Shader(
         var vert = vertCode
         var frag = fragCode
         if (version >= 330 && refineShaderCode) {
-            vert = vertCode
-                .replace("\nattribute ", "\nin ")
-                .replace("\nvarying ", "\nout ")
-
-            vert = refineAttributes(vert)
-
-            frag = fragCode
-                .replace("\nvarying ", "\nin ")
-                .replace("texture2D(", "texture(")
-                .replace("textureCube(", "texture(")
-
-            if (frag.contains("gl_FragColor")) {
-                frag = frag.replace("gl_FragColor", "FragColor")
-                frag = "out vec4 FragColor;\n$frag"
-            }
+            vert = refineVertexCode(vert)
+            frag = refineFragmentCode(frag)
         }
 
-        this.vertCode = vert
-        this.fragCode = frag
+//        this.vertCode = vert
+//        this.fragCode = frag
 
         val fullVertCode = ver + floatPrecision + vert
         val fullFragCode = ver + floatPrecision + frag
@@ -241,6 +260,8 @@ open class Shader(
                 LOG.info("You can set \"Shader.showCodeOnError = true\" to see shader code")
             }
         }
+
+        listener?.loaded(this)
     }
 
     /** Loads and compiles the shaders, creates a new program and links the shaders.
@@ -417,6 +438,8 @@ open class Shader(
     override fun bind() {
         if (buildRequested) build()
         GL.glUseProgram(this.programHandle)
+
+        GL.isDepthMaskEnabled = depthMask
 
         GL.resetTextureUnitCounter()
 

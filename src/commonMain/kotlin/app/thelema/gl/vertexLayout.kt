@@ -30,6 +30,12 @@ interface IVertexLayout {
     /** Define float vertex attribute
      * @param size components number */
     fun define(name: String, size: Int): IVertexAttribute
+
+    fun clear()
+}
+
+inline fun IVertexLayout.forEachAttribute(block: (attribute: IVertexAttribute) -> Unit) {
+    attributes.iterate(block)
 }
 
 class VertexLayout: IVertexLayout {
@@ -60,6 +66,11 @@ class VertexLayout: IVertexLayout {
     }
 
     override fun getAttributeByNameOrNull(name: String): IVertexAttribute? = _attributesSet[name]
+
+    override fun clear() {
+        _attributes.clear()
+        _attributesSet.clear()
+    }
 
     companion object {
         private val _layouts = ArrayList<IVertexLayout>()

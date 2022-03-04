@@ -19,7 +19,7 @@ package app.thelema.shader.node
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.g3d.Blending
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 
@@ -69,7 +69,7 @@ class OutputNode(
         this.fragColor = fragColor
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         if (fadeStart in 0f..1f) {
@@ -80,7 +80,7 @@ class OutputNode(
             }
         }
 
-        val alphaMode = uniforms.get(Uniform.AlphaMode) ?: alphaMode
+        val alphaMode = uniforms.get(Uniforms.AlphaMode) ?: alphaMode
         GL.isBlendingEnabled = alphaMode == Blending.BLEND || fadeStart in 0f..1f
         if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
 

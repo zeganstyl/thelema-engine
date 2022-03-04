@@ -20,10 +20,7 @@ import app.thelema.anim.AnimationPlayer
 import app.thelema.ecs.*
 import app.thelema.g3d.*
 import app.thelema.g3d.ITransformNode
-import app.thelema.gl.IMesh
 import app.thelema.gl.IMeshInstance
-import app.thelema.math.Mat3
-import app.thelema.math.Vec3
 import app.thelema.shader.findShaderNode
 import app.thelema.shader.node.VelocityNode
 import app.thelema.shader.node.VertexNode
@@ -98,7 +95,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                                 }
 
                                 if (gltf.conf.setupVelocityShader) {
-                                    material?.shaderChannels?.get(ShaderChannel.Velocity)?.apply {
+                                    material?.channels?.get(ShaderChannel.Velocity)?.apply {
                                         findShaderNode<VertexNode> {
                                             maxBones = max(skin.bones.size, maxBones)
                                         }
@@ -110,7 +107,7 @@ class GLTFScene(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                                 }
 
                                 if (gltf.conf.setupDepthRendering) {
-                                    material?.shaderChannels?.get(ShaderChannel.Depth)?.findShaderNode<VertexNode> {
+                                    material?.channels?.get(ShaderChannel.Depth)?.findShaderNode<VertexNode> {
                                         maxBones = max(skin.bones.size, maxBones)
                                     }
                                 }

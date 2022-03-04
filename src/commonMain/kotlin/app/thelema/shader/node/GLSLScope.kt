@@ -34,10 +34,10 @@ object GLSLScope {
     const val VaryingIn = 5
     const val VaryingOut = 6
 
-    fun getTypeText(type: Int, glslVersion: Int = 110): String = when (type) {
-        Attribute -> if (glslVersion >= 130) "in" else "attribute"
-        VaryingIn -> if (glslVersion >= 130) "in" else "varying"
-        VaryingOut -> if (glslVersion >= 130) "out" else "varying"
+    fun getTypeText(type: Int): String = when (type) {
+        Attribute -> "in"
+        VaryingIn -> "in"
+        VaryingOut -> "out"
         Uniform -> "uniform"
         else -> ""
     }

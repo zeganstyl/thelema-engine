@@ -72,11 +72,13 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
     }
 
     fun buildShaders() {
-        material.shaderChannels.values.forEach { it.requestBuild() }
+        material.channels.values.forEach { it.requestBuild() }
     }
 
     override fun readJson() {
         super.readJson()
+
+        val vertexLayout = gltf.getOrCreateVertexLayout(elementIndex)
 
         material.entity.name = name
 
@@ -86,9 +88,9 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         val shaderEntity = materialEntity.entity("Default")
 
         val shader = shaderEntity.component<Shader>()
+        shader.vertexLayout = vertexLayout
 
         material.shader = shader
-        material.shaderChannels[ShaderChannel.Default] = shader
 
         json.string("alphaMode") { alphaMode = it }
         when (alphaMode) {
@@ -264,8 +266,10 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
         }
 
         if (gltf.conf.setupVelocityShader) {
-            material.shaderChannels[ShaderChannel.Velocity] = Shader {
+            material.setChannel(ShaderChannel.Velocity, Shader {
                 addNode(vertexNode)
+
+                this.vertexLayout = vertexLayout
 
                 val blurCameraDataNode = addNode(CameraDataNode(vertexNode.position))
                 val velocityNode = addNode(VelocityNode {
@@ -299,12 +303,14 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
                 rootNode = outputNode.sibling()
-            }
+            })
         }
 
         if (gltf.conf.setupDepthRendering) {
-            material.shaderChannels[ShaderChannel.Depth] = Shader {
+            material.setChannel(ShaderChannel.Depth, Shader {
                 addNode(vertexNode)
+
+                this.vertexLayout = vertexLayout
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
@@ -318,13 +324,15 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
                 rootNode = outputNode.sibling()
-            }
+            })
         }
 
         val solidColor = gltf.conf.solidColor
         if (solidColor != null) {
-            material.shaderChannels[ShaderChannel.SolidColor] = Shader {
+            material.setChannel(ShaderChannel.SolidColor, Shader {
                 addNode(vertexNode)
+
+                this.vertexLayout = vertexLayout
 
                 val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
 
@@ -339,7 +347,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
-            }
+            })
         }
 
         json.get("occlusionTexture") {

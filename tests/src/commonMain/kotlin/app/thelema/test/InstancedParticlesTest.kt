@@ -1,33 +1,34 @@
 package app.thelema.test
 
-import app.thelema.ecs.Entity
 import app.thelema.ecs.component
+import app.thelema.ecs.mainEntity
 import app.thelema.ecs.sibling
 import app.thelema.g3d.cam.orbitCameraControl
 import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.particles.*
-import app.thelema.g3d.scene
 import app.thelema.g3d.transformNode
+import app.thelema.gl.meshInstance
 import app.thelema.img.Texture2D
-import app.thelema.math.MATH
+import app.thelema.math.Vec3
 import app.thelema.shader.Shader
 import app.thelema.shader.node.*
 
 class InstancedParticlesTest: Test {
     override fun testMain() {
-        Entity {
-            makeCurrent()
-            scene()
+        mainEntity {
             orbitCameraControl()
+
+            particleSystem()
 
             entity("plane") {
                 planeMesh { setSize(10f) }
+                meshInstance()
             }
 
             val particleMaterial = entity("particleMaterial") {
                 planeMesh {
-                    normal = MATH.Z
+                    normal = Vec3(0f, 0f, 1f)
                     setSize(1f)
                 }
                 particleMaterial {
@@ -44,7 +45,6 @@ class InstancedParticlesTest: Test {
 
                         val particleData = ParticleDataNode()
                         particleData.maxLifeTime = 5f
-                        particleData.instanceLifeTimeName = instanceLifeTimeName
 
                         val scaling = ParticleScaleNode().apply {
                             scaling = 5f
@@ -105,7 +105,7 @@ class InstancedParticlesTest: Test {
 
             entity("smoke2") {
                 transformNode {
-                    setPosition(0f, 3f, 0f)
+                    setPosition(3f, 0f, 0f)
                     requestTransformUpdate()
                 }
                 particleEmitter {

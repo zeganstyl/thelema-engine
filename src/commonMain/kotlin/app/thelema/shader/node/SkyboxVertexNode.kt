@@ -16,7 +16,7 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.Vertex
 
@@ -50,7 +50,7 @@ class SkyboxVertexNode(): ShaderNode() {
     val uPreviousViewProjectionMatrix
         get() = "uPreviousViewProjectionMatrix"
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         val pos = ActiveCamera.eye

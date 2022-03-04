@@ -16,7 +16,6 @@
 
 package app.thelema.shader
 
-import app.thelema.g3d.IUniforms
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.IMesh
 import app.thelema.img.ITexture2D

@@ -112,7 +112,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptor({ Material() }) {
             setAliases(app.thelema.g3d.IMaterial::class)
             stringEnum(Material::alphaMode, Blending.items)
-            int(Material::translucentPriority)
+            int(Material::renderingOrder)
             refAbs(Material::shader)
         }
         descriptor({ app.thelema.g3d.Armature() }) {
@@ -194,13 +194,11 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
         descriptor { TextureCube() }
 
         descriptorI<IParticleSystem>({ ParticleSystem() }) {
-            int(IParticleSystem::translucencyPriority, 1)
+            int(IParticleSystem::renderingOrder, 1)
             bool(IParticleSystem::isVisible, true)
             string(IParticleSystem::alphaMode, Blending.BLEND)
 
             descriptorI<IParticleMaterial>({ ParticleMaterial() }) {
-                string(IParticleMaterial::instancePositionName, "INSTANCE_POSITION")
-                string(IParticleMaterial::instanceLifeTimeName, "INSTANCE_LIFE_TIME")
                 bool(IParticleMaterial::lifeTimesAsAttribute, true)
                 ref(IParticleMaterial::mesh)
             }

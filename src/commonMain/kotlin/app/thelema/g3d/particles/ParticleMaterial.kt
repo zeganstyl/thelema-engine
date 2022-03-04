@@ -1,9 +1,6 @@
 package app.thelema.g3d.particles
 
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.component
-import app.thelema.ecs.siblingOrNull
+import app.thelema.ecs.*
 import app.thelema.g3d.IMaterial
 import app.thelema.g3d.Material
 import app.thelema.gl.IMesh
@@ -16,7 +13,7 @@ class ParticleMaterial: IParticleMaterial {
     override var entityOrNull: IEntity? = null
         set(value) {
             field = value
-            meshMaterial = value?.component() ?: Material()
+            material = value?.component() ?: Material()
             if (mesh == null) mesh = siblingOrNull()
             value?.component<IShader>()
             value?.forEachComponent { if (it is IParticleEffect) addParticleEffect(it) }
@@ -25,16 +22,15 @@ class ParticleMaterial: IParticleMaterial {
             }
         }
 
-    override var meshMaterial: IMaterial = Material()
+    /** Material for particles rendering */
+    override var material: IMaterial = Material()
 
     override val emissionEffects = ArrayList<ParticleEmissionEffect>()
     override val processingEffects = ArrayList<ParticleProcessingEffect>()
     override val particleEffects = ArrayList<IParticleEffect>()
 
+    /** Single particle mesh */
     override var mesh: IMesh? = null
-
-    override var instancePositionName: String = "INSTANCE_POSITION"
-    override var instanceLifeTimeName: String = "INSTANCE_LIFE_TIME"
 
     override var lifeTimesAsAttribute = true
 
@@ -71,12 +67,9 @@ interface IParticleMaterial: IEntityComponent {
     override val componentName: String
         get() = "ParticleMaterial"
 
-    var instancePositionName: String
-    var instanceLifeTimeName: String
-
     var lifeTimesAsAttribute: Boolean
 
-    var meshMaterial: IMaterial
+    var material: IMaterial
 
     val emissionEffects: List<ParticleEmissionEffect>
     val processingEffects: List<ParticleProcessingEffect>

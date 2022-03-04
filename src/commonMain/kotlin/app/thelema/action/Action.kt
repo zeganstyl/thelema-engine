@@ -19,6 +19,7 @@ package app.thelema.action
 import app.thelema.ecs.ECS
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
+import app.thelema.ecs.forEachChildEntity
 
 /** Main action of entity. */
 class Action: IAction {

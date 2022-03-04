@@ -7,8 +7,8 @@ class ParticleDataNode: ShaderNode() {
     //var frameSizeU = 1f
     //var frameSizeV = 1f
 
-    var instanceLifeTimeName = "INSTANCE_LIFE_TIME"
-    //var instanceUvStartName = "INSTANCE_UV_START"
+    var instanceLifeTimeName = "PARTICLE_LIFE_TIME"
+    //var instanceUvStartName = "PARTICLE_UV_START"
 
     var maxLifeTime = 1f
 

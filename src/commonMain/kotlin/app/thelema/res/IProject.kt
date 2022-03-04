@@ -34,8 +34,6 @@ interface IProject: IEntityComponent {
 
     var mainScene: EntityLoader?
 
-    val mainCamera: ICamera
-
     var appPackage: String
 
     fun runMainScene()

@@ -82,8 +82,8 @@ class Scene: IScene {
     override var world: IWorld? = null
 
     var translucentSorter: Comparator<IRenderable> = Comparator { o1, o2 ->
-        val mesh1Priority = o1.translucencyPriority
-        val mesh2Priority = o2.translucencyPriority
+        val mesh1Priority = o1.renderingOrder
+        val mesh2Priority = o2.renderingOrder
         when {
             mesh1Priority > mesh2Priority -> 1
             mesh1Priority < mesh2Priority -> -1
@@ -230,7 +230,7 @@ class Scene: IScene {
         for (i in renderables.indices) {
             val renderable = renderables[i]
             if (!frustumCulling || renderable.visibleInFrustum(ActiveCamera.frustum)) {
-                renderable.uniforms.scene = this
+                renderable.uniformArgs.scene = this
                 when (renderable.alphaMode) {
                     Blending.BLEND -> translucent.add(renderable)
                     Blending.MASK -> masked.add(renderable)

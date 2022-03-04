@@ -17,7 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.app.APP
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.ILight
@@ -94,7 +94,7 @@ class PBRNode(): ShaderNode() {
         }
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         dirLightIndex = 0
@@ -713,7 +713,7 @@ ${
 vec3 getIBLRadianceGGX(vec3 n, vec3 v, float roughness, vec3 F0, float specularWeight)
 {
     float NdotV = clampedDot(n, v);
-    float lod = roughness * ${iblMaxMipLevels - 1f};
+    float lod = roughness * ${iblMaxMipLevels - 1}.0;
     vec3 reflection = normalize(reflect(-v, n));
 
     vec2 brdfSamplePoint = clamp(vec2(NdotV, roughness), vec2(0.0, 0.0), vec2(1.0, 1.0));

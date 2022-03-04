@@ -45,7 +45,6 @@ class EmitParticlesByCodeTest: Test {
 
                         val particleData = ParticleDataNode()
                         particleData.maxLifeTime = 5f
-                        particleData.instanceLifeTimeName = instanceLifeTimeName
 
                         val camera = CameraDataNode().apply {
                             vertexPosition = vertex.position

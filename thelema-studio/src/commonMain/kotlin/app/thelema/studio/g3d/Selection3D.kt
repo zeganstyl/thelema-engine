@@ -8,7 +8,7 @@ import app.thelema.ecs.sibling
 import app.thelema.g3d.IScene
 import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ITransformNode
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.*
 import app.thelema.img.*
 import app.thelema.math.IMat4
@@ -198,7 +198,7 @@ class StudioColorUniformNode: ShaderNode() {
         out.append("uniform ${uniform.typedRef};\n")
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         shader[uniform.ref] = color
     }
 }

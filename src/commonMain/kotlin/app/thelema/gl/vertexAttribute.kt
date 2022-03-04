@@ -28,7 +28,7 @@ interface IVertexAttribute {
     val size: Int
 
     /** Name of input for shaders */
-    var name: String
+    val name: String
 
     /** Type of each component, e.g. GL_FLOAT, GL_INTEGER, GL_UNSIGNED_BYTE and etc. */
     val type: Int
@@ -47,22 +47,15 @@ interface IVertexAttribute {
 
     val id: Int
 
-    fun getGlslType(): String {
-        return "vec$size"
-
-//        val pre: Char? = when (type) {
-//            GL_BOOL -> 'b'
-//            GL_INT -> 'i'
-//            GL_UNSIGNED_INT -> 'u'
-//            else -> null
-//        }
-//        return if (pre == null) "vec$size" else "${pre}vec$size"
+    fun getGlslType(): String = when (size) {
+        1 -> "float"
+        else -> "vec$size"
     }
 }
 
 data class VertexAttribute(
     override val size: Int,
-    override var name: String,
+    override val name: String,
     override val type: Int,
     override val normalized: Boolean,
     override val id: Int

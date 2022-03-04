@@ -55,8 +55,6 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         get() = verts
 
     private val mesh = Mesh().apply {
-        vertexLayout = Layout
-
         getOrCreateEntity().name = "Sprite Batch"
         addVertexBuffer(verts)
 
@@ -648,9 +646,10 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
         }
 
         mesh.verticesCount = spritesInBatch * 4
+        mesh.indices?.customCount = count
         shader.useShader {
             shader.listener?.draw(shader)
-            mesh.render(0, count)
+            mesh.render()
         }
         idx = 0
 

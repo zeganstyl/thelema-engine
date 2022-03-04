@@ -35,6 +35,11 @@ interface IIndexBuffer: IGLBuffer {
     val count: Int
         get() = bytes.limit / bytesPerIndex
 
+    var customCount: Int
+
+    val countToRender: Int
+        get() = if (customCount == -1) count else customCount
+
     val bytePosition: Int
 
     val indexPosition: Int

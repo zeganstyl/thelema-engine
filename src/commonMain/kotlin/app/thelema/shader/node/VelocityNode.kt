@@ -17,8 +17,8 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.IArmature
-import app.thelema.g3d.IUniforms
-import app.thelema.gl.Uniform
+import app.thelema.g3d.IUniformArgs
+import app.thelema.gl.Uniforms
 import app.thelema.math.TransformDataType
 import app.thelema.math.MATH
 
@@ -86,11 +86,11 @@ class VelocityNode(): ShaderNode() {
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
-        val armature = uniforms.get<IArmature>(Uniform.Armature)
-        val worldMat = (uniforms.get(Uniform.PreviousWorldMatrix) ?: uniforms.worldMatrix) ?: MATH.IdentityMat4
+        val armature = uniforms.get<IArmature>(Uniforms.Armature)
+        val worldMat = (uniforms.get(Uniforms.PreviousWorldMatrix) ?: uniforms.worldMatrix) ?: MATH.IdentityMat4
         shader[uPrevWorldMatrixName] = worldMat
         shader[uUsePrevBones] = armature?.previousBoneMatrices?.isNotEmpty() == true
 

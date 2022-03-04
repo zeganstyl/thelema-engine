@@ -21,28 +21,28 @@ import app.thelema.math.IVec3
 import app.thelema.math.Vec3
 import app.thelema.phys.*
 
-class OdeWorld: IRigidBodyPhysicsWorld {
-    override var entityOrNull: IEntity? = null
-
-    override var fixedDelta: Float = 0.02f
-
-    override val componentName: String
-        get() = super.componentName
-
-    override var isSimulationRunning: Boolean = false
-
-    override var maxContacts: Int = 40
-    override var gravity: IVec3 = Vec3(0f, -3f, 0f)
-
-    override fun step(delta: Float) {
-        TODO("Not yet implemented")
-    }
-
-    override fun addPhysicsWorldListener(listener: IPhysicsWorldListener) {
-        TODO("Not yet implemented")
-    }
-
-    override fun removePhysicsWorldListener(listener: IPhysicsWorldListener) {
-        TODO("Not yet implemented")
-    }
-}
+//class OdeWorld: IRigidBodyPhysicsWorld {
+//    override var entityOrNull: IEntity? = null
+//
+//    override var fixedDelta: Float = 0.02f
+//
+//    override val componentName: String
+//        get() = super.componentName
+//
+//    override var isSimulationRunning: Boolean = false
+//
+//    override var maxContacts: Int = 40
+//    override var gravity: IVec3 = Vec3(0f, -3f, 0f)
+//
+//    override fun step(delta: Float) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun addPhysicsWorldListener(listener: IPhysicsWorldListener) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun removePhysicsWorldListener(listener: IPhysicsWorldListener) {
+//        TODO("Not yet implemented")
+//    }
+//}

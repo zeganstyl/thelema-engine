@@ -82,11 +82,11 @@ class CascadedShadowMappingTest : Test {
                         //println(printCode())
                     }
 
-                    shaderChannels[ShaderChannel.Depth] = Shader {
+                    setChannel(ShaderChannel.Depth, Shader {
                         rootNode = node<OutputNode> {}
                         build()
                         //println(printCode())
-                    }
+                    })
                 }
             }
         }

@@ -89,7 +89,7 @@ class Skybox: IEntityComponent {
     }
 
     fun setupVelocityShader() {
-        getOrCreateEntity().component<IMaterial>().shaderChannels[ShaderChannel.Velocity] = velocityShader
+        getOrCreateEntity().material().setChannel(ShaderChannel.Velocity, velocityShader)
         velocityShader.build()
     }
 

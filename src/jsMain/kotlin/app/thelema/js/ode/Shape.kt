@@ -21,25 +21,25 @@ import app.thelema.math.IMat4
 import app.thelema.phys.IRigidBody
 import app.thelema.phys.IPhysicalShape
 
-/** @author zeganstyl */
-class Shape: IPhysicalShape {
-    override var shapeOffset: IMat4?
-        get() = TODO("Not yet implemented")
-        set(value) {}
-
-    override var mass: Float
-        get() = TODO("Not yet implemented")
-        set(value) {}
-
-    override val componentName: String
-        get() = "Shape"
-
-    override var entityOrNull: IEntity? = null
-
-    override val sourceObject: Any
-        get() = this
-
-    //var proxy: SpecificShape? = null
-
-    override var body: IRigidBody? = null
-}
+///** @author zeganstyl */
+//class Shape: IPhysicalShape {
+//    override var shapeOffset: IMat4?
+//        get() = TODO("Not yet implemented")
+//        set(value) {}
+//
+//    override var mass: Float
+//        get() = TODO("Not yet implemented")
+//        set(value) {}
+//
+//    override val componentName: String
+//        get() = "Shape"
+//
+//    override var entityOrNull: IEntity? = null
+//
+//    override val sourceObject: Any
+//        get() = this
+//
+//    //var proxy: SpecificShape? = null
+//
+//    override var body: IRigidBody? = null
+//}

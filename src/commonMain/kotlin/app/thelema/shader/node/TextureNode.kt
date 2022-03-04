@@ -16,7 +16,7 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.img.ITexture
 import app.thelema.img.ITexture2D
 import app.thelema.img.TextureCube
@@ -39,7 +39,7 @@ abstract class TextureNode(textureType: String): ShaderNode() {
         texAlpha.inlineCode = "${texColor.ref}.a"
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         val unit = shader.getNextTextureUnit()
@@ -57,7 +57,7 @@ abstract class TextureNode(textureType: String): ShaderNode() {
     protected abstract fun getCoordinates(): String
 
     override fun executionFrag(out: StringBuilder) {
-        out.append("${texColor.ref} = ${if (shader.version >= 130) "texture" else getSamplerAccessCode()}(${sampler.ref}, ${getCoordinates()});\n")
+        out.append("${texColor.ref} = texture(${sampler.ref}, ${getCoordinates()});\n")
         if (sRGB) out.append("${texColor.ref}.xyz = pow(${texColor.ref}.xyz, vec3(2.2));\n")
     }
 }

@@ -16,7 +16,7 @@
 
 package app.thelema.g3d
 
-/** Used in [IMaterial.shaderChannels] as key.
+/** Used in [IMaterial.channels] as a key.
  *
  * @author zeganstyl */
 object ShaderChannel {

@@ -16,8 +16,9 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.cam.ActiveCamera
+import app.thelema.g3d.particles.Particle
 import app.thelema.gl.Vertex
 import app.thelema.math.Mat3
 
@@ -44,10 +45,13 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     /** Position after multiply View * vertex */
     val viewSpacePosition = output(GLSLVec4("viewSpacePosition"))
 
+    // TODO
+    @Deprecated("")
     val instancePositionName: String
-        get() = Vertex.INSTANCE_POSITION.name
-
+        get() = Particle.POSITION.name
+    @Deprecated("")
     var useInstancePosition = false
+    @Deprecated("")
     var alwaysRotateObjectToCamera = false
 
     private val mat3Tmp by lazy { Mat3() }
@@ -56,7 +60,7 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
         this.vertexPosition = vertexPosition
     }
 
-    override fun bind(uniforms: IUniforms) {
+    override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
         val cam = ActiveCamera

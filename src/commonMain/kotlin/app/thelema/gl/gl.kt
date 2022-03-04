@@ -609,6 +609,12 @@ interface IGL {
         throw NotImplementedError()
     }
 
+    fun glGetInteger(pname: Int): Int {
+        val a = IntArray(1)
+        glGetIntegerv(pname, a)
+        return a[0]
+    }
+
     fun glGetString(name: Int): String? {
         throw NotImplementedError()
     }

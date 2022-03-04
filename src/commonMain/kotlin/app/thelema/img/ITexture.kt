@@ -81,15 +81,7 @@ interface ITexture: IEntityComponent {
 
     /** Texture must be bound */
     fun generateMipmapsGPU() {
-        if (GL.isGLES) {
-            GL.glGenerateMipmap(glTarget)
-        } else {
-            if (GL.isExtensionSupported("GL_ARB_framebuffer_object") || GL.isExtensionSupported("GL_EXT_framebuffer_object")) {
-                GL.glGenerateMipmap(glTarget)
-            } else {
-                throw RuntimeException("Can't create mipmaps on GPU")
-            }
-        }
+        GL.glGenerateMipmap(glTarget)
     }
 
     override fun destroy() {

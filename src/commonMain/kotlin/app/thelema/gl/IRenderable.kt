@@ -1,11 +1,8 @@
 package app.thelema.gl
 
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.IScene
-import app.thelema.g3d.IUniforms
-import app.thelema.g3d.Uniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.math.Frustum
-import app.thelema.math.IVec3
 import app.thelema.math.IVec3C
 import app.thelema.shader.IShader
 
@@ -14,15 +11,17 @@ interface IRenderable: IEntityComponent {
 
     var alphaMode: String
 
-    var translucencyPriority: Int
+    var renderingOrder: Int
 
     val worldPosition: IVec3C
 
-    val uniforms: IUniforms
+    val uniformArgs: IUniformArgs
 
     fun visibleInFrustum(frustum: Frustum): Boolean
 
     fun render(shaderChannel: String?)
+
+    fun render() = render(null)
 
     fun render(shader: IShader)
 }

@@ -18,23 +18,13 @@ package app.thelema.test
 
 import app.thelema.app.APP
 import app.thelema.test.g3d.gltf.GLTFDamagedHelmetTest
-import app.thelema.test.g3d.terrain.TerrainLodFrame2to1MeshTest
-import app.thelema.test.g3d.terrain.TerrainMeshWithLoDTest
-import app.thelema.test.gl.AlphaBlendingTest
-import app.thelema.test.gl.InstancingTest
-import app.thelema.test.img.*
-import app.thelema.test.phys.ObjectShotTest
-import app.thelema.test.phys.RayShapeTest
-import app.thelema.test.phys.TrimeshShapeTest
-import app.thelema.test.shader.IBLTest
-import app.thelema.test.shader.LogarithmicDepthBufferTest
-import app.thelema.test.shader.node.SkyboxShaderNodeTest
-import app.thelema.test.ui.*
+import app.thelema.test.gl.InstancedMeshTest
+import app.thelema.test.ui.UITest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        SkyboxShaderNodeTest().testMain()
+        InstancedParticlesTest().testMain()
     }
 }

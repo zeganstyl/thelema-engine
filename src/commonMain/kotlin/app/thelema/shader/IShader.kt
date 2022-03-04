@@ -19,7 +19,7 @@ package app.thelema.shader
 import app.thelema.data.IFloatData
 import app.thelema.ecs.Entity
 import app.thelema.ecs.IEntityComponent
-import app.thelema.g3d.IUniforms
+import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.*
 import app.thelema.math.*
 import app.thelema.shader.node.IRootShaderNode
@@ -66,12 +66,12 @@ interface IShader: IEntityComponent {
 
     var vertexLayout: IVertexLayout
 
-    var uniformArgs: IUniforms?
+    var uniformArgs: IUniformArgs?
 
-    var listener: ShaderRenderListener?
+    var listener: ShaderListener?
 
-    fun onBind(block: IShader.() -> Unit): ShaderRenderListener {
-        listener = object : ShaderRenderListener {
+    fun onBind(block: IShader.() -> Unit): ShaderListener {
+        listener = object : ShaderListener {
             override fun bind(shader: IShader) {
                 block(shader)
             }
@@ -309,11 +309,6 @@ interface IShader: IEntityComponent {
 
     fun requestBuild()
 
-    fun useShader() {
-        bind()
-        GL.isDepthMaskEnabled = depthMask
-    }
-
     fun <T: IShaderNode> addNode(node: T): T {
         entityOrNull?.addEntity(Entity(node.componentName) { addComponent(node) })
         return node
@@ -342,7 +337,7 @@ inline fun <reified T: IShaderNode> IShader.node(block: T.() -> Unit): T {
 inline fun IShader.useShader(block: IShader.() -> Unit) {
     val isDepthMaskEnabled = GL.isDepthMaskEnabled
 
-    useShader()
+    bind()
     block()
 
     GL.isDepthMaskEnabled = isDepthMaskEnabled

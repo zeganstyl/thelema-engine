@@ -25,6 +25,7 @@ import app.thelema.gl.IRenderable
 import app.thelema.math.Vec4
 import app.thelema.shader.IShader
 import app.thelema.shader.SimpleShader3D
+import app.thelema.utils.iterate
 
 /** @author zeganstyl */
 interface IMaterial: IEntityComponent {
@@ -32,18 +33,32 @@ interface IMaterial: IEntityComponent {
     var alphaMode: String
 
     /** The higher value the later the object will be rendered */
-    var translucentPriority: Int
+    var renderingOrder: Int
 
     /** Default shader */
     var shader: IShader?
 
     /** Channels may be used to store additional shaders, like velocity and etc */
-    val shaderChannels: MutableMap<String, IShader>
+    val channels: Map<String, IShader>
+
+    val listeners: List<MaterialListener>
+
+    fun setChannel(channel: String, shader: IShader?)
+
+    fun addListener(material: MaterialListener)
+
+    fun removeListener(material: MaterialListener)
 
     fun render(shaderChannel: String?, renderable: IRenderable) {
-        val shader = if (shaderChannel != null) shaderChannels[shaderChannel] else shader
+        val shader = if (shaderChannel != null) channels[shaderChannel] else shader
         if (shader != null) renderable.render(shader)
     }
+}
+
+interface MaterialListener {
+    fun addedShader(channel: String, shader: IShader) {}
+
+    fun removedShader(channel: String, shader: IShader) {}
 }
 
 fun IEntity.material(block: IMaterial.() -> Unit) = component(block)
@@ -59,27 +74,52 @@ class Material: IMaterial {
             if (shader == null || shader == DEFAULT_SHADER) value?.componentOrNull<IShader>()?.also { shader = it }
         }
 
-    override val shaderChannels: MutableMap<String, IShader> = HashMap()
+    private val _shaderChannels = HashMap<String, IShader>()
+    override val channels: Map<String, IShader>
+        get() = _shaderChannels
 
     override var shader: IShader?
-        get() = shaderChannels[ShaderChannel.Default]
+        get() = channels[ShaderChannel.Default]
         set(value) {
             if (value != null) {
-                shaderChannels[ShaderChannel.Default] = value
+                _shaderChannels[ShaderChannel.Default] = value
             } else {
-                shaderChannels.remove(ShaderChannel.Default)
+                _shaderChannels.remove(ShaderChannel.Default)
             }
         }
 
     override var alphaMode: String = Blending.MASK
 
-    override var translucentPriority: Int = 0
+    override var renderingOrder: Int = 0
 
     override val componentName: String
         get() = "Material"
 
+    private var _listeners: ArrayList<MaterialListener>? = null
+    override val listeners: List<MaterialListener>
+        get() = _listeners ?: emptyList()
+
     init {
         shader = DEFAULT_SHADER
+    }
+
+    override fun setChannel(channel: String, shader: IShader?)  {
+        if (shader != null) {
+            _shaderChannels[channel] = shader
+            _listeners?.iterate { it.addedShader(channel, shader) }
+        } else {
+            val s = _shaderChannels.remove(channel)
+            if (s != null) _listeners?.iterate { it.removedShader(channel, s) }
+        }
+    }
+
+    override fun addListener(material: MaterialListener) {
+        if (_listeners == null) _listeners = ArrayList()
+        _listeners?.add(material)
+    }
+
+    override fun removeListener(material: MaterialListener) {
+        _listeners?.remove(material)
     }
 
     override fun addedSiblingComponent(component: IEntityComponent) {

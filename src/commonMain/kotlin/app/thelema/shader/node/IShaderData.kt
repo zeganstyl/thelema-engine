@@ -84,13 +84,7 @@ interface IShaderData {
     /**
      * example:
      *
-     * if shader version >= 130 then
-     *
      * **in vec3 position;\n**
-     *
-     * else
-     *
-     * **varying vec3 position;\n**
      * */
     val inRefEnd: String
         get() = "in $type $ref;\n"
@@ -98,26 +92,17 @@ interface IShaderData {
     /**
      * example:
      *
-     * if shader version >= 130 then
-     *
      * **out vec3 position;\n**
-     *
-     * else
-     *
-     * **varying vec3 position;\n**
      * */
     val outRefEnd: String
         get() = "out $type $ref;\n"
-
-    private fun varIn(): String = "in"
-    private fun varOut(): String = "out"
 
     fun declaration(): String {
         return if (scope == GLSLScope.Inline) {
             LOG.info("Inline value can't be declared, shader node: ${container?.componentName}")
             ""
         } else {
-            val scope = GLSLScope.getTypeText(scope, container?.shader?.version ?: 110)
+            val scope = GLSLScope.getTypeText(scope)
             if (scope.isNotEmpty()) "$scope $typedRef" else typedRef
         }
     }

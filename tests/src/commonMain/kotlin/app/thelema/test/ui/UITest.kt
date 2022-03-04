@@ -54,7 +54,7 @@ class UITest: Test {
             addActor(Stack {
                 fillParent = true
 
-                val tex = Texture2D("thelema-logo.png")
+                val tex = Texture2D("thelema-logo-64.png")
 
                 addActor(Table {
                     defaults().pad(5f)
