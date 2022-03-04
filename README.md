@@ -4,7 +4,7 @@
 [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 [![Discord](https://img.shields.io/discord/904058648572072038)](https://discord.gg/6j9tBJBE9g)
 
-**Thelema** is multiplatform 3d graphics engine on Kotlin. It was based on libGDX sources and completely redesigned.
+**Thelema** is Kotlin Multiplatform 3D graphics engine. It was based on libGDX sources and completely redesigned.
 
 [![youtube](images/youtube.png)](https://www.youtube.com/playlist?list=PLS4PI9m5p5MmodmfBNVft1_mUges3x35O)
 
@@ -32,7 +32,7 @@
 * JSON
 * Image loading from JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
 * ODE physics
-* Platforms: Desktop JVM, HTML5, Android
+* Platforms: Desktop JVM, Kotlin/Native, Kotlin/JS, Android
 
 ![logo](images/screenshot.png)
 Thelema Studio - 3D Editor
