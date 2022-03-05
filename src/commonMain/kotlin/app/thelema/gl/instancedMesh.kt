@@ -185,7 +185,7 @@ class InstancedMesh: IInstancedMesh {
                 shader.listener?.draw(shader)
 
                 mesh?.apply {
-                    val count = indices?.count ?: verticesCount
+                    val count = indices?.countToRender ?: verticesCount
 
                     if (count == 0) return
                     if (verticesCount == 0) {

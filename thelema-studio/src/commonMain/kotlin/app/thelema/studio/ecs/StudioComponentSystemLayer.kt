@@ -90,7 +90,7 @@ class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer 
 
     override fun render(shaderChannel: String?) {
         GL.glClearColor(0f, 0f, 0f, 1f)
-        GL.glViewport(0, 0, hud.width.toInt(), hud.height.toInt())
+        GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
 
         if (!ECS.entities.contains(scene.entity)) ECS.addEntity(scene.entity)
 

@@ -24,6 +24,7 @@ import app.thelema.math.*
 import app.thelema.shader.IShader
 import app.thelema.shader.Shader
 import app.thelema.img.ITexture2D
+import app.thelema.shader.ShaderListener
 import app.thelema.shader.useShader
 import app.thelema.utils.Color
 
@@ -647,10 +648,9 @@ open class SpriteBatch (size: Int = -1, defaultShader: Shader = createDefaultSha
 
         mesh.verticesCount = spritesInBatch * 4
         mesh.indices?.customCount = count
-        shader.useShader {
-            shader.listener?.draw(shader)
-            mesh.render()
-        }
+        shader.bind()
+        shader.listener?.draw(shader)
+        mesh.render()
         idx = 0
 
         verts.bytes.limit = verts.bytes.capacity

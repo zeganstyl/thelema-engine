@@ -89,7 +89,7 @@ abstract class AbstractApp: IApp {
             cachedWidth = width
 
             for (i in listeners.indices) {
-                GL.glViewport(0, 0, cachedWidth, cachedHeight)
+                GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
                 listeners[i].resized(width, height)
             }
         }
@@ -110,6 +110,7 @@ abstract class AbstractApp: IApp {
         GL.runSingleCalls()
 
         if (clearOnRender) GL.glClear()
+        GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
 
         onRender()
 

@@ -17,6 +17,7 @@ import app.thelema.json.IJsonObjectIO
 import app.thelema.json.JSON
 import app.thelema.res.*
 import app.thelema.ecs.IKotlinScript
+import app.thelema.gl.GL
 import app.thelema.studio.component.ComponentPanelProvider
 import app.thelema.studio.component.IComponentScenePanel
 import app.thelema.studio.component.ProjectPanel
@@ -333,6 +334,7 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     override fun resized(width: Int, height: Int) {
+        GL.mainFrameBufferHeight
         hud.camera.viewportWidth = width.toFloat()
         hud.camera.viewportHeight = height.toFloat()
         hud.camera.updateCamera()

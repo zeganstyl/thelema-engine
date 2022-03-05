@@ -22,12 +22,15 @@ import app.thelema.lwjgl3.JvmApp
 import app.thelema.lwjgl3.Lwjgl3WindowConf
 import app.thelema.studio.ecs.KotlinScripting
 import app.thelema.studio.platform.JvmFileChooser
+import java.awt.EventQueue
 import java.net.URLClassLoader
 import java.util.*
+import javax.swing.JFileChooser
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.host.StringScriptSource
 import kotlin.script.experimental.jvm.JvmDependencyFromClassLoader
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
+
 
 object ThelemaStudioJvm {
     @JvmStatic

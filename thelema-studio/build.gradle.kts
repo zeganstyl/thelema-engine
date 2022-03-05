@@ -43,7 +43,11 @@ kotlin {
 
                 lwjglImplementations.forEach { implementation(it) }
                 implementation("$lwjgl_prefix-assimp:$lwjgl_version")
-                lwjglNatives.forEach { implementation("$lwjgl_prefix-assimp:$lwjgl_version:$it") }
+                implementation("$lwjgl_prefix-tinyfd:$lwjgl_version")
+                lwjglNatives.forEach {
+                    implementation("$lwjgl_prefix-assimp:$lwjgl_version:$it")
+                    implementation("$lwjgl_prefix-tinyfd:$lwjgl_version:$it")
+                }
 
                 // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
                 implementation("ch.qos.logback:logback-classic:1.2.10")

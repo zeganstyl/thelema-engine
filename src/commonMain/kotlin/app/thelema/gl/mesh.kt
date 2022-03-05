@@ -117,8 +117,6 @@ interface IMesh: IEntityComponent {
 
     fun bind()
 
-    fun renderInstances(instances: Int)
-
     fun render()
 
     fun render(shader: IShader) {
@@ -302,33 +300,8 @@ class Mesh(): IMesh {
         }
     }
 
-    override fun renderInstances(instances: Int) {
-        val count = indices?.count ?: verticesCount
-
-        if (count == 0) return
-        if (verticesCount == 0) {
-            LOG.error("$path: mesh can't be rendered, verticesCount = 0")
-            return
-        }
-
-        bind()
-
-        val indices = indices
-        val primitiveType = indices?.primitiveType ?: primitiveType
-
-        GL.glBindVertexArray(vao)
-
-        if (indices != null && indices.bytes.limit > 0) {
-            GL.glDrawElementsInstanced(primitiveType, count, indices.indexType, 0, instances)
-        } else {
-            GL.glDrawArraysInstanced(primitiveType, 0, count, instances)
-        }
-
-        GL.glBindVertexArray(0)
-    }
-
     override fun render() {
-        val count = indices?.count ?: verticesCount
+        val count = indices?.countToRender ?: verticesCount
 
         if (count == 0) return
         if (verticesCount == 0) {

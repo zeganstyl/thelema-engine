@@ -1,42 +1,25 @@
 package app.thelema.studio.platform
 
+import app.thelema.app.APP
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
 import app.thelema.jvm.JvmFile
+import app.thelema.lwjgl3.JvmApp
 import app.thelema.res.APP_ROOT_FILENAME
 import app.thelema.res.RES
-import app.thelema.studio.ecs.KotlinScripting
 import app.thelema.studio.Studio
-import java.awt.Component
+import app.thelema.studio.ecs.KotlinScripting
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.awt.Desktop
 import java.io.File
-import javax.swing.JDialog
 import javax.swing.JFileChooser
-import javax.swing.filechooser.FileFilter
+
 
 class JvmFileChooser: IFileChooser {
     override val userHomeDirectory: String
         get() = System.getProperty("user.home") ?: ""
 
-    private val chooser: JFileChooser by lazy {
-        object : JFileChooser() {
-            override fun createDialog(parent: Component?): JDialog {
-                return super.createDialog(parent).also {
-                    it.isAlwaysOnTop = true
-                }
-            }
-        }
-    }
-
-    private val projectFilter = object : FileFilter() {
-        override fun accept(f: File): Boolean {
-            if (f.isDirectory) return true
-            if (f.name.lowercase() == APP_ROOT_FILENAME) return true
-            return false
-        }
-
-        override fun getDescription(): String = "Thelema Engine project ($APP_ROOT_FILENAME)"
-    }
+    lateinit var chooser: JFileChooser
 
     override fun executeCommandInTerminal(directory: IFile, command: List<String>): (out: StringBuilder) -> Boolean {
         val args = ArrayList<String>()
@@ -68,7 +51,16 @@ class JvmFileChooser: IFileChooser {
 
     override fun openInFileManager(path: String) {
         try {
-            Desktop.getDesktop().open(File(path))
+            if ((APP as JvmApp).isMacOs) {
+                Runtime.getRuntime().exec(
+                    arrayOf(
+                        "/usr/bin/open",
+                        path
+                    )
+                )
+            } else {
+                Desktop.getDesktop().open(File(path))
+            }
         } catch (ex: Exception) {
             ex.printStackTrace()
             Studio.showStatusAlert("Can't open file $path")
@@ -112,23 +104,21 @@ class JvmFileChooser: IFileChooser {
     }
 
     override fun openProject(ready: (uri: String) -> Unit) {
-        chooser.isMultiSelectionEnabled = false
-        chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
-        chooser.dialogType = JFileChooser.OPEN_DIALOG
-        chooser.selectedFile = null
-        chooser.fileFilter = projectFilter
-        chooser.currentDirectory = File("$userHomeDirectory/IdeaProjects")
-        if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
-        val file = chooser.selectedFile
-        if (file != null) ready(file.absolutePath)
+        TinyFileDialogs.tinyfd_openFileDialog(
+            "Open App",
+            "$userHomeDirectory/IdeaProjects/.",
+            null,
+            APP_ROOT_FILENAME,
+            false
+        )?.also(ready)
     }
 
     override fun saveProject(ready: (uri: String) -> Unit) {
-        chooser.isMultiSelectionEnabled = false
-        chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-        chooser.dialogType = JFileChooser.SAVE_DIALOG
-        if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
-        val file = chooser.selectedFile
-        if (file != null) ready(file.absolutePath)
+        TinyFileDialogs.tinyfd_saveFileDialog(
+            "Save App",
+            "$userHomeDirectory/IdeaProjects/thelema.app",
+            null,
+            APP_ROOT_FILENAME
+        )?.also(ready)
     }
 }

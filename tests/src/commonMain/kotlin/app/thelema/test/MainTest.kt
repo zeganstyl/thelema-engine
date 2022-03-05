@@ -24,12 +24,16 @@ import app.thelema.test.img.FrameBufferBlitTest
 import app.thelema.test.shader.ForwardRenderingPipelineTest
 import app.thelema.test.shader.IBLTest
 import app.thelema.test.shader.post.FXAATest
+import app.thelema.test.ui.LabelTest
+import app.thelema.test.ui.NinePatchTest
+import app.thelema.test.ui.SpriteTest
 import app.thelema.test.ui.UITest
+import app.thelema.ui.test.WindowTest
 
 class MainTest {
     init {
         APP.setupPhysicsComponents()
 
-        ForwardRenderingPipelineTest().testMain()
+        UITest().testMain()
     }
 }
