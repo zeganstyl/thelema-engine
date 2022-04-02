@@ -155,6 +155,9 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             GL.glBindFramebuffer(GL_FRAMEBUFFER, GL.mainFrameBufferHandle)
         }
 
+        val isDepthTestEnabled = GL.isDepthTestEnabled
+        GL.isDepthTestEnabled = false
+
         if (bloomEnabled) {
             bloomThreshold.render(swapper.currentTexture, buffer3)
             swapper.render(bloom)
@@ -183,5 +186,7 @@ class ForwardRenderingPipeline: IRenderingPipeline {
         }
 
         ScreenQuad.render(swapper.currentTexture, false, clearMask = null)
+
+        GL.isDepthTestEnabled = isDepthTestEnabled
     }
 }

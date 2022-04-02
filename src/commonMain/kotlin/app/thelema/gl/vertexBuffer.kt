@@ -31,6 +31,9 @@ interface IVertexBuffer: IGLBuffer {
     /** The size of a single vertex in bytes. It is updated only when any vertex input added or removed */
     val bytesPerVertex: Int
 
+    override val target: Int
+        get() = GL_ARRAY_BUFFER
+
     fun addBufferListener(listener: VertexBufferListener)
 
     fun removeBufferListener(listener: VertexBufferListener)
@@ -100,11 +103,9 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
 
     override var verticesCount: Int = 0
 
-    override var gpuUploadRequested = true
+    override var gpuUploadRequested = false
 
     override var usage: Int = GL_STATIC_DRAW
-
-    override var target: Int = GL_ARRAY_BUFFER
 
     override var bufferHandle: Int = 0
 
@@ -184,6 +185,7 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
         bytes = DATA.bytes(count * bytesPerVertex)
         block(bytes)
         bytes.rewind()
+        requestBufferUploading()
     }
 
     override fun resizeVertexBuffer(newVerticesCount: Int) {
@@ -201,6 +203,7 @@ class VertexBuffer(override var bytes: IByteData = DATA.nullBuffer): IVertexBuff
             }
             bytes.rewind()
 
+            requestBufferUploading()
             oldBytes.destroy()
         }
     }

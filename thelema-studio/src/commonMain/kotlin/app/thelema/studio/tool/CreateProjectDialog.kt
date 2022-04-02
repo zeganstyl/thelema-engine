@@ -28,7 +28,7 @@ class CreateProjectDialog: Window("Create project") {
 
     val mainAppLauncher = PlainCheckBox().also { it.isChecked = true }
     val scriptTemplate = PlainCheckBox().also { it.isChecked = true }
-    val openIntellij = PlainCheckBox().also { it.isChecked = true }
+    val openIntellij = PlainCheckBox().also { it.isChecked = false }
 
     init {
         kotlinVersion.text = CreateProjectTool.kotlinVersionDefault

@@ -22,7 +22,6 @@ import app.thelema.gl.GL
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.Attachments
 import app.thelema.img.FrameBuffer
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test

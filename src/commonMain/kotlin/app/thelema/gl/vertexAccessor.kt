@@ -4,7 +4,6 @@ import app.thelema.data.IByteData
 import app.thelema.math.IVec2
 import app.thelema.math.IVec3
 import app.thelema.math.IVec4
-import app.thelema.shader.IShader
 
 interface IVertexAccessor {
     /** The offset of this input in bytes. */

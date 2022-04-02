@@ -199,7 +199,7 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
             string(IParticleSystem::alphaMode, Blending.BLEND)
 
             descriptorI<IParticleMaterial>({ ParticleMaterial() }) {
-                bool(IParticleMaterial::lifeTimesAsAttribute, true)
+                float(IParticleMaterial::maxLifeTime)
                 ref(IParticleMaterial::mesh)
             }
 
@@ -207,7 +207,6 @@ object ECS: IEntityComponentSystem, ComponentDescriptorList("ECS") {
                 ref(IParticleEmitter::particleMaterial)
                 int(IParticleEmitter::maxParticles)
                 float(IParticleEmitter::particleEmissionSpeed)
-                float(IParticleEmitter::maxParticleLifeTime)
             }
 
             descriptor({ MoveParticleEffect() }) {

@@ -20,7 +20,7 @@
   * Motion blur
   * IBL
 * 3D graphics
-  * VBO, VAO, Instancing buffers
+  * VBO, VAO, UBO, Instancing buffers
   * Skinned meshes
   * Particle system
   * Lights: directional, point

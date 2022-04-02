@@ -4,7 +4,7 @@ import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.IInstancedMesh
 import app.thelema.gl.IVertexAttribute
 import app.thelema.gl.IVertexBuffer
-import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 import app.thelema.shader.IShader
 import app.thelema.shader.useShader
 
@@ -20,9 +20,10 @@ interface IParticles {
 
     var bufferReserve: Float
 
-    /** Elapsed lifetime of each particle. If particle has to be born, emitter must reset time to zero */
-    val lifeTimes: List<Float>
-    val positions: List<IVec3>
+    /** Stores vectors (x, y, z, w) for each particle,
+     * where (x, y, z) - position and w - elapsed lifetime.
+     * If particle has to be born, emitter must reset time to zero */
+    val positionLife: List<IVec4>
 
     /** Instanced buffer that must be filled with values of particles */
     val vertexBuffer: IVertexBuffer
@@ -36,13 +37,9 @@ interface IParticles {
         }
     }
 
-    fun render(shaderChannel: String?) {
-        val material = particleMaterial.material
-        val shader = if (shaderChannel == null) material.shader else material.channels[shaderChannel]
-        if (shader != null) render(shader)
-    }
+    fun render(shaderChannel: String?)
 
-    fun emitParticle(emitter: IParticleEmitter, maxLifeTime: Float, initialLifeTime: Float): Int
+    fun emitParticle(emitter: IParticleEmitter): Int
 
     fun shutdownParticle(particle: Int)
 

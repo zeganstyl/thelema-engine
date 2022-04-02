@@ -1,6 +1,7 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.*
+import app.thelema.g3d.light.DirectionalLight
 
 class SceneInstance: ComponentAdapter(), ISceneInstance {
     override var sceneClassEntity: IEntity? = null
@@ -104,3 +105,6 @@ class SceneInstance: ComponentAdapter(), ISceneInstance {
         }
     }
 }
+
+fun IEntity.sceneInstance(block: ISceneInstance.() -> Unit) = component(block)
+fun IEntity.sceneInstance() = component<ISceneInstance>()

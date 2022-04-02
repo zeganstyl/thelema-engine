@@ -63,7 +63,9 @@ class TabScenePanel: Table() {
 
     val translationGizmo = TranslationGizmo()
 
-    val editorCamera = Camera()
+    val editorCamera = Camera {
+        setNearFar(0.01f, 10000f)
+    }
     val cameraControl = OrbitCameraControl {
         this.camera = editorCamera
         rotateButton = BUTTON.MIDDLE

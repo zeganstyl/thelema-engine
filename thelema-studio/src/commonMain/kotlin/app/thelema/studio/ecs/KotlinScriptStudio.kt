@@ -139,7 +139,7 @@ fun <T: IEntityComponent> ComponentDescriptor<T>.kotlinScriptFile(
     property: KMutableProperty1<T, IFile?>
 ) = property(object : IPropertyDescriptor<T, IFile?> {
     override val name: String = property.name
-    override val type = PropertyType.File
+    override val type = ScriptFile
     override fun setValue(component: T, value: IFile?) = property.set(component, value)
     override fun getValue(component: T): IFile? = property.get(component)
     override fun default(): IFile? = null

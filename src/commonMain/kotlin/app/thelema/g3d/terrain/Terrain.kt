@@ -134,6 +134,12 @@ class Terrain(
 
     override val uniformArgs: IUniformArgs = UniformArgs()
 
+    override fun getShaders(shaderChannel: String?, outSet: MutableSet<IShader>, outList: MutableList<IShader>) {
+        material?.getChannel(shaderChannel)?.also {
+            if (outSet.add(it)) outList.add(it)
+        }
+    }
+
     override fun visibleInFrustum(frustum: Frustum): Boolean = true
 
     override fun updateComponent(delta: Float) {

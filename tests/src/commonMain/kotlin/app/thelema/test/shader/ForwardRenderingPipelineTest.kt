@@ -26,16 +26,12 @@ import app.thelema.test.Test
 
 class ForwardRenderingPipelineTest: Test {
     override fun testMain() {
-        Entity {
-            makeCurrent()
-
+        testEntity {
             ActiveCamera {
-                far = 100f
                 enablePreviousMatrix()
             }
 
-            scene()
-                .renderingPipeline = component<ForwardRenderingPipeline> {
+            scene().renderingPipeline = component<ForwardRenderingPipeline> {
                 motionBlurEnabled = true
                 bloomEnabled = true
                 vignetteEnabled = false
@@ -43,8 +39,6 @@ class ForwardRenderingPipelineTest: Test {
                 godRaysEnabled = false
                 bloomThreshold.cutoff = 1.5f
             }
-
-            orbitCameraControl()
 
             entity("light") {
                 directionalLight {

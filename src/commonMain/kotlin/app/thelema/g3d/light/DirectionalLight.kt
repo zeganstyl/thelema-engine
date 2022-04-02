@@ -27,6 +27,7 @@ import app.thelema.math.*
 import app.thelema.utils.iterate
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.native.concurrent.ThreadLocal
 
 /** @author zeganstyl */
 class DirectionalLight: ILight {
@@ -59,15 +60,13 @@ class DirectionalLight: ILight {
 
     private var shadowFrameBuffers: Array<IFrameBuffer> = emptyArray()
 
-    var shadowCascadesNum = 4
+    var shadowCascadesNum = shadowCascadesNumDefault
         set(value) {
             if (field != value) {
                 field = value
                 setupShadowsRequested = true
             }
         }
-
-    var shadowCascadeEnd = arrayOf<Float>()
 
     var shadowMapWidth: Int = 1024
         set(value) {
@@ -84,11 +83,12 @@ class DirectionalLight: ILight {
             }
         }
     var shadowSoftness: Float = 1f
-    private var cameraFar: Float = 0f
-        private set(value) {
+    var cameraFar: Float = 500f
+        set(value) {
             if (field != value) {
                 field = value
-                shadowCascadeEnd = arrayOf(
+                shadowCascadeEnd = floatArrayOf(
+                    value * 0.05f,
                     value * 0.1f,
                     value * 0.2f,
                     value * 0.4f,
@@ -96,6 +96,14 @@ class DirectionalLight: ILight {
                 )
             }
         }
+
+    var shadowCascadeEnd = floatArrayOf(
+        cameraFar * 0.05f,
+        cameraFar * 0.1f,
+        cameraFar * 0.2f,
+        cameraFar * 0.4f,
+        cameraFar
+    )
 
     var lightPositionOffset: Float = 50f
 
@@ -153,20 +161,19 @@ class DirectionalLight: ILight {
         val shadowFrameBuffers = Array<IFrameBuffer>(shadowCascadesNum) {
             FrameBuffer {
                 setResolution(width, height)
-                addAttachment(Attachments.depth().also { it.isShadowMap = true })
+                addAttachment(Attachments.depth())
                 buildAttachments()
 
-                if (GL.isGLES) {
-                    getTexture(0).apply {
-                        bind()
-                        minFilter = GL_NEAREST
-                        magFilter = GL_NEAREST
-                    }
+                getTexture(0).apply {
+                    bind()
+                    minFilter = GL_NEAREST
+                    magFilter = GL_NEAREST
                 }
             }
         }
 
-        cameraFar = ActiveCamera.far
+        //cameraFar = ActiveCamera.far
+        //cameraFar = 1000f
 
         viewProjectionMatrices = Array(shadowCascadesNum) { Mat4() }
 
@@ -179,9 +186,8 @@ class DirectionalLight: ILight {
     override fun renderShadowMaps(scene: IScene) {
         if (setupShadowsRequested) setupShadowMaps(shadowMapWidth, shadowMapHeight)
 
-        val sceneCameraFrustumPoints = ActiveCamera.frustum.points
+        val frustumPoints = ActiveCamera.frustum.points
         val camFarSubNear = ActiveCamera.far
-        cameraFar = ActiveCamera.far
 
         val tmp = ActiveCamera
         ActiveCamera = tmpCam
@@ -198,14 +204,14 @@ class DirectionalLight: ILight {
                 val alphaNear = if (i == 0) 0f else (shadowCascadeEnd[i - 1] / camFarSubNear)
                 for (j in 0 until 4) {
                     val p = subFrustumPoints[j]
-                    p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaNear)
+                    p.set(frustumPoints[j]).lerp(frustumPoints[j + 4], alphaNear)
                     centroid.add(p)
                 }
 
                 val alphaFar = shadowCascadeEnd[i] / camFarSubNear
                 for (j in 0 until 4) {
                     val p = subFrustumPoints[j + 4]
-                    p.set(sceneCameraFrustumPoints[j]).lerp(sceneCameraFrustumPoints[j + 4], alphaFar)
+                    p.set(frustumPoints[j]).lerp(frustumPoints[j + 4], alphaFar)
                     centroid.add(p)
                 }
 
@@ -255,6 +261,11 @@ class DirectionalLight: ILight {
         }
 
         ActiveCamera = tmp
+    }
+
+    @ThreadLocal
+    companion object {
+        var shadowCascadesNumDefault = 5
     }
 }
 

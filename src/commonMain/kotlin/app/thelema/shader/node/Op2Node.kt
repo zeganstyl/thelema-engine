@@ -71,7 +71,7 @@ class Op2Node(
         super.declarationVert(out)
 
         if (isVarying) {
-            out.append("$varOut ${opResult.typedRef};\n")
+            out.append("out ${opResult.typedRef};\n")
         }
     }
 
@@ -79,7 +79,7 @@ class Op2Node(
         super.declarationFrag(out)
 
         if (isVarying) {
-            out.append("$varIn ${opResult.typedRef};\n")
+            out.append("in ${opResult.typedRef};\n")
         }
     }
 

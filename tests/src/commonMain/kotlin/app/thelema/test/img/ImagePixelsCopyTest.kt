@@ -19,7 +19,6 @@ package app.thelema.test.img
 import app.thelema.app.APP
 import app.thelema.gl.ScreenQuad
 import app.thelema.img.Texture2D
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.image
 import app.thelema.res.RES
 import app.thelema.test.Test

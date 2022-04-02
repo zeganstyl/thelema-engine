@@ -16,25 +16,15 @@
 
 package app.thelema.shader.node
 
-import app.thelema.g3d.IArmature
-import app.thelema.g3d.IUniformArgs
-import app.thelema.gl.Uniforms
+import app.thelema.gl.ArmatureUniforms
+import app.thelema.gl.MeshUniforms
 import app.thelema.gl.Vertex
 import app.thelema.math.TransformDataType
-import app.thelema.math.MATH
+import app.thelema.shader.Shader
+import kotlin.native.concurrent.ThreadLocal
 
-/** For static, moving, skinned objects
- * @author zeganstyl */
-class VertexNode(
-    var maxBones: Int = 0,
-
-    /** Use [TransformDataType] */
-    var worldTransformType: String = TransformDataType.TRS,
-
-    var bonesSetsNum: Int = 1
-): ShaderNode() {
-    constructor(block: VertexNode.() -> Unit): this() { block(this) }
-
+/** @author zeganstyl */
+class VertexNode: ShaderNode() {
     override val componentName: String
         get() = "VertexNode"
 
@@ -47,29 +37,27 @@ class VertexNode(
     private val tangentName: String
         get() = Vertex.TANGENT.name
 
+    /** Use [TransformDataType] */
+    // TODO remove it, and make uniform to know if world matrix set or not
+    @Deprecated("")
+    var worldTransformType: String = TransformDataType.TRS
+
+    // TODO add instance position attribute
+
     val position = output(GLSLVec3("position"))
     val normal = output(GLSLVec3("normal"))
 
     /** Tangent, bitangent, normal matrix */
     val tbn = output(GLSLMat3("tbn"))
 
-    private val uBoneMatricesName: String
-        get() = "uBoneMatrices$uid"
-
     private val uWorldMatrix: String
-        get() = "uWorldMatrix$uid"
-
-    private val uUseBones: String
-        get() = "uUseBones$uid"
-
-    private val hasBones
-        get() = maxBones > 0 && bonesSetsNum > 0
+        get() = MeshUniforms.WorldMatrix.uniformName
 
     val uid: Int
         get() = 0
 
     private fun boneInfluenceCode(component: String, bonesName: String, weightsName: String, sumName: String = "skinning"): String {
-        return "    if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * $uBoneMatricesName[int($bonesName.$component)];\n"
+        return "    if ($weightsName.$component > 0.0) $sumName += $weightsName.$component * BoneMatrices[int($bonesName.$component)];\n"
     }
 
     private fun skinningSetCode(out: StringBuilder, bonesName: String, weightsName: String, sumName: String = "skinning") {
@@ -79,32 +67,15 @@ class VertexNode(
         out.append(boneInfluenceCode("w", bonesName, weightsName, sumName))
     }
 
-    override fun bind(uniforms: IUniformArgs) {
-        super.bind(uniforms)
-
-        shader[uWorldMatrix] = uniforms.worldMatrix ?: MATH.IdentityMat4
-
-        val armature = uniforms.get<IArmature>(Uniforms.Armature)
-        shader[uUseBones] = armature?.boneMatrices?.isNotEmpty() == true
-
-        if (armature != null) {
-            val matrices = armature.boneMatrices
-            if (matrices.isNotEmpty()) {
-                shader.setMatrix4(uBoneMatricesName, matrices, 0, armature.bones.size)
-            }
-        }
-    }
-
     private fun mat4ToMat3(mat4: String): String {
         return "mat3($mat4[0].xyz, $mat4[1].xyz, $mat4[2].xyz);"
     }
 
     private fun worldTransformPos(out: StringBuilder, pos: String) {
         when (worldTransformType) {
-            TransformDataType.TRS -> out.append("$pos = $uWorldMatrix * $pos;\n")
-            TransformDataType.Translation -> out.append("$pos.xyz = $pos.xyz + uTransVec4$uid.xyz;\n")
-            TransformDataType.TranslationScale -> out.append("$pos.xyz = $pos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
-            TransformDataType.TranslationRotationY -> out.append("$pos.xyz = rotate_vertex_position(uTransVec4$uid.xyz, uTransVec4$uid.w) + uTransVec4$uid.xyz;\n")
+            TransformDataType.TRS -> out.append("    $pos = $uWorldMatrix * $pos;\n")
+            TransformDataType.Translation -> out.append("    $pos.xyz = $pos.xyz + uTransVec4$uid.xyz;\n")
+            TransformDataType.TranslationScale -> out.append("    $pos.xyz = $pos.xyz * uTransVec4$uid.w + uTransVec4$uid.xyz;\n")
         }
     }
 
@@ -115,8 +86,8 @@ class VertexNode(
 
             val skinningName = "skinning"
 
-            if (hasBones) {
-                out.append("if ($uUseBones) {\n")
+            if (bonesSetsNum > 0) {
+                out.append("if (${MeshUniforms.BonesNum.uniformName} > 0) {\n")
                 val aBonesName = "JOINTS_"
                 val aBoneWeightsName = "WEIGHTS_"
                 for (i in 0 until bonesSetsNum) {
@@ -141,9 +112,18 @@ class VertexNode(
                 val normalRef = normal.ref
                 val tbnRef = tbn.ref
 
-                if (hasBones) {
-                    //out.append("${normal.name} = normalize((transpose(inverse(skinning)) * vec4($attributeNormalName, 1.0)).xyz);\n")
-                    out.append("mat3 normalMat = ${mat4ToMat3(skinningName)};\n")
+                out.append("if (${MeshUniforms.BonesNum.uniformName} > 0) {\n")
+                //out.append("${normal.name} = normalize((transpose(inverse(skinning)) * vec4($attributeNormalName, 1.0)).xyz);\n")
+                out.append("mat3 normalMat = ${mat4ToMat3(skinningName)};\n")
+                out.append("$normalRef = normalize(normalMat * $aNormalName);\n")
+                if (tbn.isUsed) {
+                    out.append("vec3 T = normalize(normalMat * $aTangentName.xyz);\n")
+                    out.append("vec3 B = cross(${normalRef}, T) * $aTangentName.w;\n")
+                    out.append("$tbnRef = mat3(T, B, ${normalRef});\n")
+                }
+                out.append("} else {\n")
+                if (worldTransformType == TransformDataType.TRS) {
+                    out.append("mat3 normalMat = ${mat4ToMat3(uWorldMatrix)};\n")
                     out.append("$normalRef = normalize(normalMat * $aNormalName);\n")
                     if (tbn.isUsed) {
                         out.append("vec3 T = normalize(normalMat * $aTangentName.xyz);\n")
@@ -151,24 +131,17 @@ class VertexNode(
                         out.append("$tbnRef = mat3(T, B, ${normalRef});\n")
                     }
                 } else {
-                    if (worldTransformType == TransformDataType.TRS) {
-                        out.append("mat3 normalMat = ${mat4ToMat3(uWorldMatrix)};\n")
-                        out.append("$normalRef = normalize(normalMat * $aNormalName);\n")
-                        if (tbn.isUsed) {
-                            out.append("vec3 T = normalize(normalMat * $aTangentName.xyz);\n")
-                            out.append("vec3 B = cross(${normalRef}, T) * $aTangentName.w;\n")
-                            out.append("$tbnRef = mat3(T, B, ${normalRef});\n")
-                        }
-                    } else {
-                        out.append("$normalRef = $aNormalName;\n")
-                        if (tbn.isUsed) {
-                            out.append("vec3 T = $aTangentName.xyz;\n")
-                            out.append("vec3 B = cross(${normalRef}, T) * $aTangentName.w;\n")
-                            out.append("$tbnRef = mat3(T, B, ${normalRef});\n")
-                        }
+                    out.append("$normalRef = $aNormalName;\n")
+                    if (tbn.isUsed) {
+                        out.append("vec3 T = $aTangentName.xyz;\n")
+                        out.append("vec3 B = cross(${normalRef}, T) * $aTangentName.w;\n")
+                        out.append("$tbnRef = mat3(T, B, ${normalRef});\n")
                     }
                 }
+                out.append("}\n")
             }
+
+            out.append("${Shader.WORLD_SPACE_POS} = $pos;\n")
         }
     }
 
@@ -184,43 +157,35 @@ class VertexNode(
             out.append("out vec3 ${position.ref};\n")
 
             when (worldTransformType) {
-                TransformDataType.TRS -> out.append("uniform mat4 $uWorldMatrix;\n")
                 TransformDataType.Translation -> out.append("uniform vec4 uTransVec3$uid;\n")
                 TransformDataType.TranslationScale -> out.append("uniform vec4 uTransVec4$uid;\n")
-                TransformDataType.TranslationRotationY -> out.append("""
-                    uniform vec4 uTransVec4$uid;
-
-                    // https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
-                    vec3 rotate_vertex_position(vec3 position, float angle) {
-                        float half_angle = angle * 0.5;
-                        vec4 q = vec4(0.0, sin(half_angle), 0.0, cos(half_angle));
-                        vec3 v = position.xyz;
-                        return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-                    }
-                """)
             }
 
-            if (hasBones) {
-                out.append("uniform mat4 $uBoneMatricesName[$maxBones];\n")
-                out.append("uniform bool $uUseBones;\n")
+            if (bonesSetsNum > 0) {
+                out.append("#uniforms ${ArmatureUniforms.name}\n")
                 out.append("mat4 skinning = mat4(0.0);\n")
+            }
 
-                for (i in 0 until bonesSetsNum) {
-                    out.append("in vec4 JOINTS_$i;\n")
-                    out.append("in vec4 WEIGHTS_$i;\n")
-                }
+            for (i in 0 until bonesSetsNum) {
+                out.append("in vec4 JOINTS_$i;\n")
+                out.append("in vec4 WEIGHTS_$i;\n")
             }
 
             if (normal.isUsed || tbn.isUsed) {
                 out.append("in vec3 $normalName;\n")
-                out.append("out vec3 ${normal.ref};\n")
+                out.append(normal.outRefEnd)
                 out.append("uniform mat3 uNormalMatrix;\n")
 
                 if (tbn.isUsed) {
                     out.append("in vec4 $tangentName;\n")
-                    out.append("out mat3 ${tbn.ref};\n")
+                    out.append(tbn.outRefEnd)
                 }
             }
         }
+    }
+
+    @ThreadLocal
+    companion object {
+        var bonesSetsNum: Int = 1
     }
 }

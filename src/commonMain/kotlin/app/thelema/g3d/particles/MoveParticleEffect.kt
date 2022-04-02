@@ -3,7 +3,6 @@ package app.thelema.g3d.particles
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
 import app.thelema.math.IVec3
-import app.thelema.math.IVec3C
 import app.thelema.math.Vec3
 
 class MoveParticleEffect: IParticleEffect, ParticleProcessingEffect, IEntityComponent {
@@ -22,6 +21,6 @@ class MoveParticleEffect: IParticleEffect, ParticleProcessingEffect, IEntityComp
     }
 
     override fun processParticle(particles: IParticles, particle: Int, delta: Float) {
-        particles.positions[particle].add(tmp)
+        particles.positionLife[particle].addVec3(tmp)
     }
 }

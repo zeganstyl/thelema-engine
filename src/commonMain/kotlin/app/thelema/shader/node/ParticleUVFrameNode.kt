@@ -33,14 +33,14 @@ class ParticleUVFrameNode: ShaderNode() {
 
     override fun declarationVert(out: StringBuilder) {
         if (resultUv.isUsed) {
-            out.append("$attribute vec2 ${Particle.UV_START.name};\n")
-            out.append("$varOut ${resultUv.typedRef};\n")
+            out.append("in vec2 ${Particle.UV_START.name};\n")
+            out.append("out ${resultUv.typedRef};\n")
         }
     }
 
     override fun declarationFrag(out: StringBuilder) {
         if (resultUv.isUsed) {
-            out.append("$varIn ${resultUv.typedRef};\n")
+            out.append("in ${resultUv.typedRef};\n")
         }
     }
 

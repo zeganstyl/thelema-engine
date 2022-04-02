@@ -25,7 +25,6 @@ import app.thelema.img.Attachments
 import app.thelema.img.FrameBuffer
 import app.thelema.math.*
 import app.thelema.g3d.mesh.PlaneMesh
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.test.Test
@@ -248,9 +247,6 @@ void main() {
             targetDistance = 10f
         }
 
-        // create screen quad for debugging
-        val screenQuad = TextureRenderer()
-
         val cubesStartX = -100f
         val cubesEndX = 100f
         val cubesStepX = 20f
@@ -325,12 +321,7 @@ void main() {
                 xi += cubesStepX
             }
 
-            // render light depth maps
-            for (i in 0 until numCascades) {
-                screenQuad.setPosition(-0.75f + i * 0.45f, -0.75f)
-                screenQuad.setScale(0.2f, 0.2f)
-                screenQuad.render(depthBuffers[i].getTexture(0), clearMask = null)
-            }
+            ScreenQuad.render(numCascades) { depthBuffers[it].getTexture(0) }
         }
     }
 }

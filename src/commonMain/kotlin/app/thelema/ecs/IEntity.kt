@@ -262,10 +262,14 @@ interface IEntity: IJsonObjectIO {
         forEachChildEntity { it.forEachComponentInBranch(block) }
     }
 
+    @Deprecated("")
     fun addedEntityNotifyAscending(entity: IEntity)
+    @Deprecated("")
     fun removedEntityNotifyAscending(entity: IEntity)
 
+    @Deprecated("")
     fun addedComponentNotifyAscending(component: IEntityComponent)
+    @Deprecated("")
     fun removedComponentNotifyAscending(component: IEntityComponent)
 
     /** Set data from components of [other] entity to components of this entity.

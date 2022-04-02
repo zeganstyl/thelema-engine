@@ -18,9 +18,6 @@ interface IParticleEmitter: IEntityComponent {
     /** Visible particles (emitted or already alive) */
     val visibleParticles: List<Int>
 
-    /** If max lifetime is zero, particle must never die. */
-    var maxParticleLifeTime: Float
-
     var particleEmissionSpeed: Float
 
     var isPlaying: Boolean

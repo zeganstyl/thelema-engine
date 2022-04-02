@@ -18,25 +18,22 @@ package app.thelema.test.shader.node
 
 import app.thelema.app.APP
 import app.thelema.ecs.ECS
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.GBuffer
-import app.thelema.gl.TextureRenderer
 import app.thelema.gltf.GLTF
 import app.thelema.img.render
+import app.thelema.shader.node.OutputNode
 import app.thelema.test.g3d.gltf.GLTFTestBase
 
 /** @author zeganstyl */
 class GBufferTest: GLTFTestBase("nightshade/nightshade.gltf") {
-    override val name: String
-        get() = "G-Buffer"
-
     override fun testMain() {
+        OutputNode.useLogarithmicDepthByDefault = false
         GLTF.defaultConf {
             setupGBufferShader = true
         }
 
         super.testMain()
-
-        val screenQuad = TextureRenderer(0f, 0f, 0.5f, 0.5f)
 
         val gBuffer = GBuffer()
 
@@ -45,20 +42,8 @@ class GBufferTest: GLTFTestBase("nightshade/nightshade.gltf") {
                 ECS.render()
             }
 
-            screenQuad.render(gBuffer.colorMap, clearMask = null) {
-                screenQuad.setPosition(-0.5f, 0.5f)
-            }
-
-            screenQuad.render(gBuffer.normalMap, clearMask = null) {
-                screenQuad.setPosition(0.5f, 0.5f)
-            }
-
-            screenQuad.render(gBuffer.positionMap, clearMask = null) {
-                screenQuad.setPosition(-0.5f, -0.5f)
-            }
-
-            screenQuad.render(gBuffer.depthMap, clearMask = null) {
-                screenQuad.setPosition(0.5f, -0.5f)
+            ScreenQuad.render(4, flipY = false, maxCellsInRow = 2) {
+                gBuffer.getTexture(it)
             }
         }
     }

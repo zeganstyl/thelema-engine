@@ -17,7 +17,6 @@
 package app.thelema.ecs
 
 import app.thelema.action.IAction
-import app.thelema.g3d.IArmature
 import app.thelema.g3d.IScene
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.ITransformNode
@@ -25,7 +24,6 @@ import app.thelema.phys.IRigidBodyPhysicsWorld
 import app.thelema.utils.iterate
 
 class DefaultComponentSystemLayer: IComponentSystemLayer, RebuildListener {
-    private val armatures = ArrayList<IArmature>()
     private val nodes = ArrayList<ITransformNode>()
     private val scenes = ArrayList<IScene>(1)
     private val physicsWorlds = ArrayList<IRigidBodyPhysicsWorld>(1)
@@ -55,7 +53,6 @@ class DefaultComponentSystemLayer: IComponentSystemLayer, RebuildListener {
         }
 
         override fun addedComponentToBranch(component: IEntityComponent) {
-            if (component is IArmature) armatures.add(component)
             if (component is ITransformNode) nodes.add(component)
             if (component is ComponentCanBeRebuild) {
                 if (component.rebuildComponentRequested) componentsCanBeRebuild.add(component)
@@ -65,7 +62,6 @@ class DefaultComponentSystemLayer: IComponentSystemLayer, RebuildListener {
         }
 
         override fun removedComponentFromBranch(component: IEntityComponent) {
-            if (component is IArmature) armatures.remove(component)
             if (component is ITransformNode) nodes.remove(component)
             if (component is ComponentCanBeRebuild) {
                 if (component.rebuildComponentRequested) componentsCanBeRebuild.remove(component)
@@ -114,11 +110,9 @@ class DefaultComponentSystemLayer: IComponentSystemLayer, RebuildListener {
         ActiveCamera.updatePreviousTransform()
 
         nodes.iterate { it.updatePreviousMatrix() }
-        armatures.iterate { it.updatePreviousBoneMatrices() }
 
         actions.iterate { it.update(delta) }
 
-        armatures.iterate { it.preUpdateBoneMatrices() }
         nodes.iterate { if (it.isTransformUpdateRequested) it.updateTransform() }
 
         updatableComponentsCached.clear()
@@ -126,8 +120,6 @@ class DefaultComponentSystemLayer: IComponentSystemLayer, RebuildListener {
         updatableComponentsCached.iterate { it.updateComponent(delta) }
 
         if (ActiveCamera.isCameraUpdateRequested) ActiveCamera.updateCamera()
-
-        armatures.iterate { it.updateBoneMatrices() }
 
         if (componentsCanBeRebuild.isNotEmpty()) {
             componentsCanBeRebuild.iterate { it.rebuildComponent() }

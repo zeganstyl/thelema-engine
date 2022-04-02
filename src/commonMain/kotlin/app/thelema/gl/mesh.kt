@@ -120,7 +120,8 @@ interface IMesh: IEntityComponent {
     fun render()
 
     fun render(shader: IShader) {
-        shader.useShader { render() }
+        shader.bind()
+        render()
     }
 }
 

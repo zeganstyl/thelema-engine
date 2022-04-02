@@ -102,22 +102,16 @@ class PBRShader(deferredRendering: Boolean = false): Shader() {
 
     val toneMapNode = ToneMapNode(pbrNode.result)
 
-    val outputNode: OutputNode by lazy {
-        addNode(OutputNode {
-            fragColor = toneMapNode.result
-            fadeStart = -1f
-        })
+    val outputNode = OutputNode().apply {
+        fragColor = toneMapNode.result
+        fadeStart = -1f
     }
 
-    val gBufferOutputNode: GBufferOutputNode by lazy {
-        addNode(GBufferOutputNode {
-
-        })
-    }
+    val gBufferOutputNode = GBufferOutputNode()
 
     init {
         if (deferredRendering) version = 330
-        (if (deferredRendering) gBufferOutputNode else outputNode).apply {  }
+        addNode(if (deferredRendering) gBufferOutputNode else outputNode)
     }
 
     private inline fun setTex(uri: String, block: ITexture2D.() -> Unit): ITexture2D =

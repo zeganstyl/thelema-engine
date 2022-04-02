@@ -29,7 +29,7 @@ interface IGLBuffer {
 
     var usage: Int
 
-    var target: Int
+    val target: Int
 
     fun requestBufferUploading() {
         gpuUploadRequested = true

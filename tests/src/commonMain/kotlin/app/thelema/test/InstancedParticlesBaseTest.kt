@@ -44,16 +44,15 @@ class InstancedParticlesBaseTest: Test {
             instancedMesh {
                 mesh = particle.mesh
                 instancesCount = maxParticles
-                addVertexBuffer(maxParticles, Particle.POSITION, Particle.LIFE_TIME, Particle.UV_START)
+                addVertexBuffer(maxParticles, Particle.POSITION_LIFE, Particle.UV_START)
             }
             material {
                 shader = Shader(
                     vertCode = """
 in vec3 POSITION;
 in vec2 TEXCOORD_0;
-in vec3 PARTICLE_POSITION;
+in vec4 PARTICLE_POSITION;
 in vec2 PARTICLE_UV_START;
-in float PARTICLE_LIFE_TIME;
 uniform mat4 viewProj;
 uniform mat3 view;
 uniform vec2 texSize;
@@ -63,8 +62,8 @@ out float life;
 
 void main() {
     uv = TEXCOORD_0 * texSize + PARTICLE_UV_START;
-    life = PARTICLE_LIFE_TIME;
-    gl_Position = viewProj * vec4(view * (1.0 + PARTICLE_LIFE_TIME) * POSITION + PARTICLE_POSITION, 1.0);
+    life = PARTICLE_POSITION.w;
+    gl_Position = viewProj * vec4(view * (1.0 + life) * POSITION + PARTICLE_POSITION.xyz, 1.0);
 }""",
                     fragCode = """
 in vec2 uv;
@@ -91,8 +90,8 @@ void main() {
                         smokeTexture.bind(0)
                         shader["viewProj"] = ActiveCamera.viewProjectionMatrix
 
-                        mat3Tmp.set(ActiveCamera.viewMatrix)
-                        shader.set("view", mat3Tmp, true)
+                        mat3Tmp.set(ActiveCamera.viewMatrix).transpose()
+                        shader["view"] = mat3Tmp
                     }
                 }
             }
@@ -100,8 +99,7 @@ void main() {
 
         val particleInstances = particles.instancedMesh()
 
-        val particlesPositions = particleInstances.getAccessor(Particle.POSITION)
-        val particlesLifeTimes = particleInstances.getAccessor(Particle.LIFE_TIME)
+        val particlesPositions = particleInstances.getAccessor(Particle.POSITION_LIFE)
         val particlesStartUvs = particleInstances.getAccessor(Particle.UV_START)
 
         val startPoint = Vec3(0f, 0.5f, 0f)
@@ -148,17 +146,15 @@ void main() {
 //                    visibleParticles.sortBy { positions[it].dst2(camPos) }
 
                 particlesPositions.prepare()
-                particlesLifeTimes.prepare()
                 particlesStartUvs.prepare()
 
                 for (i in visibleParticles.indices) {
                     val index = visibleParticles[i]
                     particlesPositions.setVec3(positions[index])
-                    particlesLifeTimes.setFloat(lifeTimes[index])
+                    particlesPositions.setFloat(12, lifeTimes[index])
                     particlesStartUvs.setVec2(uvs[index])
 
                     particlesPositions.nextVertex()
-                    particlesLifeTimes.nextVertex()
                     particlesStartUvs.nextVertex()
                 }
 

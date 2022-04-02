@@ -22,9 +22,8 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.ILight
 import app.thelema.g3d.light.LightType
-import app.thelema.gl.GL
 import app.thelema.math.MATH
-import app.thelema.math.Vec3
+import app.thelema.shader.Shader
 import kotlin.random.Random
 
 // TODO https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
@@ -44,13 +43,12 @@ class PBRNode(): ShaderNode() {
     var roughness by inputOrNull()
     var metallic by inputOrNull()
     var emissive by inputOrNull()
-    var clipSpacePosition by input(GLSLNode.camera.clipSpacePosition)
 
     val result: IShaderData = output(GLSLVec4("result"))
 
     var maxNumDirectionLights: Int = 1
-    var shadowCascadesNum = 4
-    var maxLights: Int = 2
+    var shadowCascadesNum = DirectionalLight.shadowCascadesNumDefault
+    var maxLights: Int = 50
         set(value) {
             if (value < 1) throw IllegalStateException("PBRNode: maxLights can't be < 1")
             field = value
@@ -79,7 +77,6 @@ class PBRNode(): ShaderNode() {
 
     init {
         worldPosition = GLSLNode.vertex.position
-        clipSpacePosition = GLSLNode.camera.clipSpacePosition
     }
 
     override fun shaderCompiled() {
@@ -104,18 +101,17 @@ class PBRNode(): ShaderNode() {
         if (scene != null) {
             val lights = scene.lights
             for (i in lights.indices) {
-                setLight(lights[i], i)
+                setLight(lights[i])
             }
 
             if (APP.isEditorMode && dirLightIndex == 0) {
-                tmp.set(ActiveCamera.node.worldPosition).add(defaultLight.node.worldPosition).sub(defaultLight.node.position)
                 defaultLight.direction.set(ActiveCamera.node.worldPosition).scl(-1f).nor()
-                setLight(defaultLight, 0)
+                setLight(defaultLight)
             }
         }
 
-        shader["lightsNum"] = lightsNum
-        shader["uDirLightsNum"] = dirLightIndex
+        //shader["lightsNum"] = lightsNum
+        //shader["uDirLightsNum"] = dirLightIndex
         shader[camPosUniform] = ActiveCamera.node.worldPosition
 
         val world = scene?.world
@@ -132,23 +128,9 @@ class PBRNode(): ShaderNode() {
         }
     }
 
-    private fun setLight(light: ILight, i: Int) {
+    private fun setLight(light: ILight) {
         if (light.isLightEnabled) {
             lightsNum++
-            light.color.also { shader.set("u_Lights[$i].color", it.r, it.g, it.b) }
-
-            shader["u_Lights[$i].intensity"] = light.intensity
-            shader["u_Lights[$i].direction"] = light.direction
-            shader["u_Lights[$i].position"] = light.node.worldPosition
-            shader["u_Lights[$i].range"] = light.range
-            shader["u_Lights[$i].innerConeCos"] = light.innerConeCos
-            shader["u_Lights[$i].outerConeCos"] = light.outerConeCos
-            shader["u_Lights[$i].type"] = when (light.lightType) {
-                LightType.Directional -> 0
-                LightType.Point -> 1
-                LightType.Spot -> 2
-                else -> -1
-            }
 
             when (light.lightType) {
                 LightType.Directional -> {
@@ -171,7 +153,10 @@ class PBRNode(): ShaderNode() {
 
                 val unit = shader.getNextTextureUnit()
                 shader["uDirLightShadowMap[$cascadeIndex]"] = unit
-                light.shadowMaps[j].bind(unit)
+                light.shadowMaps[j].also { tex ->
+                    shader.set("uDirLightShadowMapSize[$cascadeIndex]", tex.width.toFloat(), tex.height.toFloat())
+                    tex.bind(unit)
+                }
             }
         }
     }
@@ -195,13 +180,10 @@ class PBRNode(): ShaderNode() {
 
             if (receiveShadows) {
                 val num = maxNumDirectionLights * shadowCascadesNum
-                if (GL.glesMajVer < 3 || shader.version < 130) {
-                    out.append("uniform sampler2D uDirLightShadowMap[$num];\n")
-                } else {
-                    out.append("uniform sampler2DShadow uDirLightShadowMap[$num];\n")
-                }
+                out.append("uniform sampler2D uDirLightShadowMap[$num];\n")
+                out.append("uniform vec2 uDirLightShadowMapSize[$num];\n")
                 out.append("uniform float uDirLightCascadeEnd[$num];\n")
-                out.append("$varIn vec4 vDirLightClipSpacePos[$num];\n")
+                out.append("in vec4 vDirLightClipSpacePos[$num];\n")
             }
 
             if (iblEnabled) {
@@ -211,11 +193,7 @@ class PBRNode(): ShaderNode() {
             }
 
             out.append("${result.typedRef} = ${result.typeStr}(0.0);\n")
-            if (receiveShadows) {
-                out.append(pbrCode((clipSpacePosition).ref))
-            } else {
-                out.append(pbrCode(""))
-            }
+            out.append(pbrCode())
         }
     }
 
@@ -224,7 +202,7 @@ class PBRNode(): ShaderNode() {
             if (receiveShadows) {
                 val num = maxNumDirectionLights * shadowCascadesNum
                 out.append("uniform mat4 uDirLightViewProj[$num];\n")
-                out.append("$varOut vec4 vDirLightClipSpacePos[$num];\n")
+                out.append("out vec4 vDirLightClipSpacePos[$num];\n")
             }
         }
     }
@@ -271,17 +249,78 @@ class PBRNode(): ShaderNode() {
  }
  */
 
+    private fun cascadedShadowDecl(): String = if (receiveShadows) """
+${
+        if (softShadowSamples > 0) {
+            """
+#define SAMPLES_COUNT $softShadowSamples
+#define INV_SAMPLES_COUNT (1.0f / SAMPLES_COUNT)
+uniform float invTexSize;
+uniform vec2 offsets[SAMPLES_COUNT];
+"""
+        } else ""
+    }
+
+float shadowFactor(float currentDepth, float closestDepth) {
+    float bias = 0.001;
+    if (currentDepth - bias > closestDepth)
+        return 1.0;
+    else
+        return 0.0;
+}
+
+// improved bilinear interpolated texture fetch
+float textureGoodF( sampler2D sam, vec2 uv, vec2 res, float currentDepth ) {
+    vec2 st = uv * res;
+
+    ivec2 iuv = ivec2(floor( st ));
+    vec2 fuv = fract( st );
+
+    float a = shadowFactor(currentDepth, texelFetch( sam, iuv, 0 ).x);
+    float b = shadowFactor(currentDepth, texelFetch( sam, iuv + ivec2(1, 0), 0 ).x);
+    float c = shadowFactor(currentDepth, texelFetch( sam, iuv + ivec2(0, 1), 0 ).x);
+    float d = shadowFactor(currentDepth, texelFetch( sam, iuv + ivec2(1, 1), 0 ).x);
+
+    return mix( mix( a, b, fuv.x), mix( c, d, fuv.x), fuv.y );
+}
+
+float getShadow(const int shadowIndex) {
+    vec4 lightSpacePos = vDirLightClipSpacePos[shadowIndex];
+    vec3 projCoords = (lightSpacePos.xyz / lightSpacePos.w) * 0.5 + 0.5;
+    float shadow = 0.0;
+    vec2 res = uDirLightShadowMapSize[shadowIndex];
+${
+        if (softShadowSamples > 0) {
+            """
+        float fsize = lightSpacePos.w * invTexSize;
+        vec3 smCoord = projCoords;
+        for (int s = 0; s<SAMPLES_COUNT; s++) {
+            smCoord.xy = offsets[s] * fsize + projCoords.xy;
+            
+            shadow += textureGoodF(uDirLightShadowMap[shadowIndex], smCoord.xy, res, projCoords.z);
+        }
+        
+        shadow *= INV_SAMPLES_COUNT;
+    """
+        } else {
+            """
+        shadow += textureGoodF(uDirLightShadowMap[shadowIndex], projCoords.xy, res, projCoords.z);
+    """
+        }
+}
+    return shadow;
+}
+""" else ""
+
     private fun cascadedShadowsExe(
-        clipSpacePos: String,
         visualizeCascadeFields: Boolean = false
-    ): String {
-        return if (receiveShadows) """
+    ): String = if (receiveShadows) """
 // cascaded shadow
 ${if (visualizeCascadeFields) "vec3 cascadeColor = vec3(0.0);" else ""}
 int lightIndex = dirLightIndex * $shadowCascadesNum;
 for (int j = 0; j < ${shadowCascadesNum * maxNumDirectionLights}; j++) {
     // this index comparison is for webgl
-    if ($clipSpacePos.z < uDirLightCascadeEnd[j] && j >= lightIndex && j < lightIndex + $shadowCascadesNum) {
+    if (${Shader.CLIP_SPACE_POS}.z < uDirLightCascadeEnd[j] && j >= lightIndex && j < lightIndex + $shadowCascadesNum) {
         ${if (visualizeCascadeFields) """
         if (j == 0) {
             cascadeColor = vec3(1.0, 0.0, 0.0);
@@ -294,77 +333,25 @@ for (int j = 0; j < ${shadowCascadesNum * maxNumDirectionLights}; j++) {
         }
         """ else ""}
         
-        vec4 lightSpacePos = vDirLightClipSpacePos[j];
-        vec3 projCoords = (lightSpacePos.xyz / lightSpacePos.w) * 0.5 + 0.5;
+        //float closestDepth = texture2D(uDirLightShadowMap[j], projCoords.xy).x;
+        shadow -= getShadow(j);
         
-        //float closestDepth = texture2D(uDirLightShadowMap[j], projCoords.xy).x;        
-        ${
-            if (shader.version < 130) {
-                """
-                    float closestDepth = texture2D(uDirLightShadowMap[j], projCoords.xy).x;
-                    shadow = 1.0 - shadowFactor(projCoords.z, closestDepth);
-                """
-            } else {
-                // "shadow = texture(uDirLightShadowMap[j], projCoords);"
-                if (softShadowSamples > 0) {
-                    """
-                    shadow = 0.0;
-                    float fsize = lightSpacePos.w * invTexSize;
-                    vec3 smCoord = projCoords;
-                    for (int s = 0; s<SAMPLES_COUNT; s++) {
-                        smCoord.xy = offsets[s] * invTexSize + projCoords.xy;
-                        shadow += texture(uDirLightShadowMap[j], smCoord) * INV_SAMPLES_COUNT;
-                    }
-                """
-                } else {
-                    "shadow = texture(uDirLightShadowMap[j], projCoords) * INV_SAMPLES_COUNT;"
-                }
-            }
-        }
         ${if (visualizeCascadeFields) "shadowColor += cascadeColor * 0.5;" else ""}
         
         break;
     }
+    
+    shadow = clamp(shadow, 0.0, 1.0);
 }
 """ else ""
-    }
 
-    private fun pbrCode(clipSpacePos: String): String {
+    private fun pbrCode(): String {
         return """
-//float CalcShadowFactor(int index, vec4 lightSpacePos) {
-//    vec3 projCoords = (lightSpacePos.xyz / lightSpacePos.w) * 0.5 + 0.5;
-//
-//    float currentDepth = projCoords.z;
-//    float closestDepth = texture2D(shadowMap[index], projCoords).x;
-//
-//    float bias = 0.001;
-//    if (currentDepth - bias > closestDepth)
-//        return 0.5;
-//    else
-//        return 0.0;
-//}
 
-float shadowFactor(float currentDepth, float closestDepth) {
-    float bias = 0.001;
-    if (currentDepth - bias > closestDepth)
-        return 1.0;
-    else
-        return 0.0;
-}
+${cascadedShadowDecl()}
 
-${
-    if (softShadowSamples > 0) {
-"""
-#define SAMPLES_COUNT $softShadowSamples
-#define INV_SAMPLES_COUNT (1.0f / SAMPLES_COUNT)
-uniform float invTexSize;
-uniform vec2 offsets[SAMPLES_COUNT];
-"""
-    } else ""
-}
-
-uniform int uDirLightsNum;
-uniform int lightsNum;
+//uniform int uDirLightsNum;
+//uniform int lightsNum;
 
 uniform vec3 uAmbientColor;
 
@@ -565,30 +552,6 @@ vec3 BRDF_specularSheen(vec3 sheenColor, float sheenRoughness, float NdotL, floa
 // <punctual.glsl> =====================================================================================================
 // KHR_lights_punctual extension.
 // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual
-struct Light
-{
-    vec3 direction;
-    float range;
-
-    vec3 color;
-    float intensity;
-
-    vec3 position;
-    float innerConeCos;
-
-    float outerConeCos;
-    int type;
-};
-
-
-const int LightType_Directional = 0;
-const int LightType_Point = 1;
-const int LightType_Spot = 2;
-
-
-//#ifdef USE_PUNCTUAL
-uniform Light u_Lights[$maxLights]; //Array [0] is not allowed
-//#endif
 
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
@@ -840,17 +803,19 @@ f_diffuse += getIBLRadianceLambertian(n, v, materialInfo.perceptualRoughness, ma
     int dirLightIndex = 0;
     // https://stackoverflow.com/questions/38986208/webgl-loop-index-cannot-be-compared-with-non-constant-expression
     for (int i=0; i<$maxLights; i++) {
-        if (i >= lightsNum) { break; }
+        if (i >= LightsNum) { break; }
         
         float shadow = 1.0;
         
-        Light light = u_Lights[i];
+        Light light = Lights[i];
         vec3 pointToLight;
         if (light.type != LightType_Directional) {
             pointToLight = light.position - worldPosition;
         } else {
-            pointToLight = -light.direction;            
-            ${cascadedShadowsExe(clipSpacePos)}
+            pointToLight = -light.direction;
+            if (light.shadowEnabled) {
+                ${cascadedShadowsExe()}
+            }
             dirLightIndex++;
         }
         
@@ -874,7 +839,7 @@ f_diffuse += getIBLRadianceLambertian(n, v, materialInfo.perceptualRoughness, ma
         // ...
     }
     
-    if (lightsNum == 0) f_diffuse += materialInfo.c_diff;
+    if (LightsNum == 0) f_diffuse += materialInfo.c_diff;
     
     f_emissive = emissive;
     
@@ -906,6 +871,5 @@ f_diffuse += getIBLRadianceLambertian(n, v, materialInfo.perceptualRoughness, ma
 
     companion object {
         val defaultLight = DirectionalLight()
-        val tmp = Vec3()
     }
 }

@@ -3,22 +3,13 @@ package app.thelema.g3d.particles
 import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.UniformArgs
 import app.thelema.gl.*
-import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
 /** See [IParticles] */
 class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     private var updateParticlesRequested = false
-
-    private var lifeTimesAsAttribute = false
-        set(value) {
-            if (field != value) {
-                field = value
-                _lifeTimes = if (value) getOrCreateDataChannel<Float>(Particle.LIFE_TIME).data else ArrayList()
-                rebuildDataRequested = true
-            }
-        }
 
     private val _aliveParticles = ArrayList<Int>()
     private val freeParticles = ArrayList<Int>()
@@ -27,12 +18,6 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     private val _emitters = ArrayList<IParticleEmitter>()
     override val emitters: List<IParticleEmitter>
         get() = _emitters
-
-    private var _lifeTimes: MutableList<Float> = ArrayList()
-    override val lifeTimes: List<Float>
-        get() = _lifeTimes
-
-    // TODO add max life times array
 
     override val vertexBuffer: IVertexBuffer = VertexBuffer()
 
@@ -50,18 +35,22 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
     val particlesDataChannels = ArrayList<IParticleDataChannel<Any?>>()
     val particlesDataChannelsMap = HashMap<String, IParticleDataChannel<Any?>>()
 
-    private val _positions: MutableList<IVec3> = getOrCreateDataChannel<IVec3>(Particle.POSITION).data
-    override val positions: List<IVec3>
-        get() = _positions
+    private val _positionLife: MutableList<IVec4> = getOrCreateDataChannel<IVec4>(Particle.POSITION_LIFE).data
+    override val positionLife: List<IVec4>
+        get() = _positionLife
 
     override val uniforms: IUniformArgs = UniformArgs()
 
+    val meshUbo = MeshUniformBuffer()
+
+    val particlesUbo = ParticleUniformBuffer()
+
     override fun setParticleLifeTime(particle: Int, time: Float) {
-        _lifeTimes[particle] = time
+        _positionLife[particle].w = time
     }
 
     override fun addParticleLifeTime(particle: Int, time: Float) {
-        _lifeTimes[particle] += time
+        _positionLife[particle].w += time
     }
 
     override fun addEmitter(emitter: IParticleEmitter) {
@@ -83,7 +72,8 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
             mesh.material = particleMaterial.material
             mesh.mesh = particleMaterial.mesh
 
-            lifeTimesAsAttribute = particleMaterial.lifeTimesAsAttribute
+            meshUbo.bonesNum(0)
+            particlesUbo.maxLifeTime(particleMaterial.maxLifeTime)
 
             var visibleParticles = 0
 
@@ -128,20 +118,20 @@ class Particles(override val particleMaterial: IParticleMaterial): IParticles {
         }
     }
 
-    override fun emitParticle(
-        emitter: IParticleEmitter,
-        maxLifeTime: Float,
-        initialLifeTime: Float
-    ): Int = if (freeParticles.isEmpty()) {
-        _lifeTimes.size.also {
-            if (!lifeTimesAsAttribute) _lifeTimes.add(initialLifeTime)
+    override fun render(shaderChannel: String?) {
+        particleMaterial.material.getChannel(shaderChannel)?.also {
+            it.bindUniformBuffer(meshUbo)
+            it.bindUniformBuffer(particlesUbo)
+            render(it)
+        }
+    }
+
+    override fun emitParticle(emitter: IParticleEmitter): Int = if (freeParticles.isEmpty()) {
+        _positionLife.size.also {
             particlesDataChannels.iterate { it.data.add(it.newDataElement()) }
         }
     } else {
-        freeParticles.removeLast().also { i ->
-            _lifeTimes[i] = initialLifeTime
-            freeParticlesSet.remove(i)
-        }
+        freeParticles.removeLast().also { freeParticlesSet.remove(it) }
     }.also { particle ->
         _aliveParticles.add(particle)
         particleMaterial.emissionEffects.iterate { it.emitParticle(this, emitter, particle) }

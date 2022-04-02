@@ -52,20 +52,16 @@ class Skybox: IEntityComponent {
         }
     }
 
-    val velocityOutputNode: OutputNode by lazy {
-        OutputNode {
-            vertPosition = vertexNode.clipSpacePosition
-            fragColor = vertexNode.velocity
-            fadeStart = -1f
-        }
-    }
-
     val vertexNode = shader.addNode(SkyboxVertexNode())
 
-    val cameraDataNode = shader.addNode(CameraDataNode(vertexNode.worldSpacePosition))
+    val velocityOutputNode = OutputNode().apply {
+        vertPosition = vertexNode.clipSpacePosition
+        fragColor = vertexNode.velocity
+        fadeStart = -1f
+    }
 
-    val outputNode = shader.addNode(OutputNode {
-        vertPosition = cameraDataNode.clipSpacePosition
+    val outputNode = shader.addNode(OutputNode().apply {
+        vertPosition = vertexNode.worldSpacePosition
         fadeStart = -1f
         cullFaceMode = 0
     })

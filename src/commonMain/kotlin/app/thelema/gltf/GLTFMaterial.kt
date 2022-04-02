@@ -113,8 +113,6 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         var tbnValue = vertexNode.tbn
 
-        val cameraDataNode = shader.addNode(CameraDataNode(vertexNode.position))
-
         var normalValue: IShaderData = vertexNode.normal
         json.get("normalTexture") {
             float("scale") { normalScale = it }
@@ -227,6 +225,8 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             }
         }
 
+        val alpha = SplitVec4Node(baseColorValue)
+
         val pbrNode = shader.addNode(PBRNode {
             normal = normalValue
             worldPosition = vertexNode.position
@@ -235,7 +235,6 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             roughness = roughnessValue
             metallic = metallicValue
             receiveShadows = gltf.conf.receiveShadows
-            clipSpacePosition = cameraDataNode.clipSpacePosition
             iblEnabled = gltf.conf.ibl
             iblMaxMipLevels = gltf.conf.iblMaxMipLevels
         })
@@ -244,10 +243,9 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         if (gltf.conf.setupGBufferShader) {
             val outputNode = shader.sibling<GBufferOutputNode>().apply {
-                vertPosition = cameraDataNode.clipSpacePosition
+                vertPosition = vertexNode.position
                 fragColor = toneMapNode.result
                 fragNormal = normalValue
-                fragPosition = cameraDataNode.viewSpacePosition
             }
 
             outputNode.alphaCutoff = alphaCutoff
@@ -256,7 +254,7 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
             shader.rootNode = outputNode.sibling()
         } else {
             val outputNode = shader.sibling<OutputNode>().apply {
-                vertPosition = cameraDataNode.clipSpacePosition
+                vertPosition = vertexNode.position
                 fragColor = toneMapNode.result
             }
             outputNode.alphaCutoff = alphaCutoff
@@ -271,38 +269,14 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 this.vertexLayout = vertexLayout
 
-                val blurCameraDataNode = addNode(CameraDataNode(vertexNode.position))
-                val velocityNode = addNode(VelocityNode {
-                    worldSpacePosition = vertexNode.position
-                    clipSpacePosition = blurCameraDataNode.clipSpacePosition
-                    previousViewProjectionMatrix = blurCameraDataNode.previousViewProjectionMatrix
-                    viewProjectionMatrix = blurCameraDataNode.viewProjectionMatrix
-                    normal = vertexNode.normal
-                    aBonesName = "JOINTS_"
-                    aBoneWeightsName = "WEIGHTS_"
-                    aPositionName = "POSITION"
-                })
-
-                val alphaOp = addNode(
-                    Op2Node(
-                        velocityNode.velocity, baseColorValue,
-                        "vec4(in1.xy, 0.0, in2.a)",
-                        GLSLType.Vec4
-                    )
-                )
-                alphaOp.isVarying = false
-                alphaOp.isFragment = true
-
-                //nodes.addAll(alphaNodes)
-
-                val outputNode = node<OutputNode> {
-                    vertPosition = velocityNode.stretchedClipSpacePosition
-                    fragColor = alphaOp.opResult
-                }
+                val outputNode = node<VelocityOutputNode> {}
+                outputNode.vertPosition = vertexNode.position
+                outputNode.alpha = alpha.w
+                outputNode.normal = vertexNode.normal
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
-                rootNode = outputNode.sibling()
+                rootNode = outputNode
             })
         }
 
@@ -312,17 +286,16 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 this.vertexLayout = vertexLayout
 
-                val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
-
                 //nodes.addAll(alphaNodes)
 
                 val outputNode = node<OutputNode> {
-                    vertPosition = depthCameraDataNode.clipSpacePosition
+                    vertPosition = vertexNode.position
                     fragColor = baseColorValue
                 }
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode
+                outputNode.useLogarithmicDepth = false
                 rootNode = outputNode.sibling()
             })
         }
@@ -334,8 +307,6 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
                 this.vertexLayout = vertexLayout
 
-                val depthCameraDataNode = addNode(CameraDataNode(vertexNode.position))
-
                 //nodes.addAll(alphaNodes)
 
                 val color = shader.addNode(GLSLVec3Literal(solidColor.x, solidColor.y, solidColor.z))
@@ -343,7 +314,9 @@ class GLTFMaterial(array: IGLTFArray): GLTFArrayElementAdapter(array) {
                 alphaCombineOp.isFragment = true
                 alphaCombineOp.isVarying = false
 
-                val outputNode = addNode(OutputNode(depthCameraDataNode.clipSpacePosition, alphaCombineOp.opResult))
+                val outputNode = addNode(OutputNode())
+                outputNode.vertPosition = vertexNode.position
+                outputNode.fragColor = alphaCombineOp.opResult
                 outputNode.alphaCutoff = alphaCutoff
                 outputNode.alphaMode = material.alphaMode
                 outputNode.cullFaceMode = cullFaceMode

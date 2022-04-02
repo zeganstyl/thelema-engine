@@ -26,7 +26,6 @@ import app.thelema.img.Texture2D
 import app.thelema.math.Vec3
 import app.thelema.shader.Shader
 import app.thelema.shader.node
-import app.thelema.shader.node.CameraDataNode
 import app.thelema.shader.node.HeightMapNode
 import app.thelema.shader.node.OutputNode
 import app.thelema.shader.node.TerrainTileNode
@@ -62,12 +61,8 @@ class TerrainMeshWithLoDNodesTest: Test {
                             texture = Texture2D("terrain/heightmap.png")
                         }
 
-                        val cam = node<CameraDataNode> {
-                            vertexPosition = height.outputPosition
-                        }
-
                         rootNode = node<OutputNode> {
-                            vertPosition = cam.clipSpacePosition
+                            vertPosition = height.outputPosition
                             fragColor = height.texColor
 
                             // FIXME TerrainLodFrame2to1Mesh

@@ -5,6 +5,7 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
 import app.thelema.img.Texture2D
 import app.thelema.shader.Shader
+import app.thelema.shader.node.OutputNode
 import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.pow
@@ -16,8 +17,8 @@ out vec3 vPosition;
 uniform mat4 uViewProjectionTrans;
 uniform vec4 uCameraPositionFar;
 
-out float depthForFade;
-out float depth;
+out float flogz;
+const float Fcoef = 2.0 / log2(${OutputNode.LogarithmicDepthFar} + 1.0);
 
 void main() {
     vPosition = POSITION;
@@ -25,8 +26,9 @@ void main() {
     vPosition.x += uCameraPositionFar.x;
     vPosition.z += uCameraPositionFar.z;
     gl_Position = uViewProjectionTrans * vec4(vPosition, 1.0);
-    depth = gl_Position.z;
-    depthForFade = gl_Position.w;
+    
+    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * Fcoef - ${OutputNode.LogarithmicDepthNear};
+    flogz = 1.0 + gl_Position.w;
 }"""
 
     private val gridFrag = """
@@ -39,8 +41,8 @@ uniform vec4 uCameraPositionFar;
 uniform float coordMul;
 uniform float coordMulF;
 
-in float depthForFade;
-in float depth;
+in float flogz;
+const float Fcoef_half = 1.0 / log2(${OutputNode.LogarithmicDepthFar} + 1.0);
 
 vec4 texSample(float mul, float alpha) {
     vec4 color = texture2D(cellTexture, vPosition.xz * mul);
@@ -87,6 +89,8 @@ void main() {
     gl_FragColor.a *= max(gl_FragColor.r, gl_FragColor.b);
     gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
     gl_FragColor.a *= 0.5;
+    
+    gl_FragDepth = log2(flogz) * Fcoef_half;
 }"""
 
     var fadeRadius = 0.7f

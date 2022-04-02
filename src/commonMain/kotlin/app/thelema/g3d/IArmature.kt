@@ -17,24 +17,19 @@
 package app.thelema.g3d
 
 import app.thelema.ecs.IEntityComponent
+import app.thelema.gl.IUniformBuffer
 import app.thelema.math.IMat4
 
 /** @author zeganstyl */
 interface IArmature: IEntityComponent {
     val inverseBindMatrices: List<IMat4>
 
-    /** Current bones transformations. It must be passed to shader */
-    val boneMatrices: FloatArray
-
-    /** May be used for motion blur.
-     * If previous transform data is not used, it must be linked to some global empty array. */
-    var previousBoneMatrices: FloatArray
-
     val bones: List<ITransformNode?>
 
-    var isPreviousBoneMatricesEnabled: Boolean
-
+    /** Gives ability to reuse data, such as inverse bind matrices */
     var inheritedArmature: IArmature?
+
+    val uniformBuffer: IUniformBuffer
 
     fun addBone(bone: ITransformNode?, inverseBindMatrix: IMat4)
 
@@ -47,10 +42,4 @@ interface IArmature: IEntityComponent {
     fun removeBone(index: Int)
 
     fun initBones(bonesNum: Int)
-
-    fun preUpdateBoneMatrices()
-
-    fun updatePreviousBoneMatrices()
-
-    fun updateBoneMatrices()
 }

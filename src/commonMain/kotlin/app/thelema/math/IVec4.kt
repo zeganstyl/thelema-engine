@@ -113,6 +113,18 @@ interface IVec4: IVec4C, IVec {
         return this
     }
 
+    fun setVec3(other: IVec3C) {
+        x = other.x
+        y = other.y
+        z = other.z
+    }
+
+    fun addVec3(other: IVec3C) {
+        x += other.x
+        y += other.y
+        z += other.z
+    }
+
     /** Adds the given vector to this component
      * @return This vector for chaining. */
     fun add(other: IVec4C) = add(other.x, other.y, other.z, other.w)
@@ -319,7 +331,7 @@ interface IVec4: IVec4C, IVec {
 
     /** Sets the Quaternion from the given rotation matrix, which must not contain scaling.  */
     fun setQuaternion(mat: IMat4): IVec4 {
-        return setQuaternion(false, mat)
+        return setQuaternion(true, mat)
     }
 
     /** Sets the Quaternion from the given matrix, optionally removing any scaling.  */
@@ -329,8 +341,15 @@ interface IVec4: IVec4C, IVec {
         mat.m20, mat.m21, mat.m22
     )
 
+    /** Sets the Quaternion from the given matrix, optionally removing any scaling.  */
+    fun setQuaternion(normalizeAxes: Boolean, mat: IMat34C): IVec4 = setQuaternionByAxes(normalizeAxes,
+        mat.m00, mat.m01, mat.m02,
+        mat.m10, mat.m11, mat.m12,
+        mat.m20, mat.m21, mat.m22
+    )
+
     /** Sets the Quaternion from the given rotation matrix, which must not contain scaling.  */
-    fun setQuaternion(mat: IMat3C): IVec4 = setQuaternion(false, mat)
+    fun setQuaternion(mat: IMat3C): IVec4 = setQuaternion(true, mat)
 
     /**
      * Sets the Quaternion from the given x-, y- and z-axis which have to be orthonormal.

@@ -25,14 +25,14 @@ class ParticleMaterial: IParticleMaterial {
     /** Material for particles rendering */
     override var material: IMaterial = Material()
 
+    override var maxLifeTime: Float = 1f
+
     override val emissionEffects = ArrayList<ParticleEmissionEffect>()
     override val processingEffects = ArrayList<ParticleProcessingEffect>()
     override val particleEffects = ArrayList<IParticleEffect>()
 
     /** Single particle mesh */
     override var mesh: IMesh? = null
-
-    override var lifeTimesAsAttribute = true
 
     override fun addParticleEffect(effect: IParticleEffect) {
         if (effect is ParticleProcessingEffect) processingEffects.add(effect)
@@ -67,9 +67,9 @@ interface IParticleMaterial: IEntityComponent {
     override val componentName: String
         get() = "ParticleMaterial"
 
-    var lifeTimesAsAttribute: Boolean
-
     var material: IMaterial
+
+    var maxLifeTime: Float
 
     val emissionEffects: List<ParticleEmissionEffect>
     val processingEffects: List<ParticleProcessingEffect>

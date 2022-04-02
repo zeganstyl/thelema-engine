@@ -33,15 +33,6 @@ abstract class ShaderNode: IShaderNode {
 
     protected open val _output: MutableList<IShaderData> = ArrayList(0)
 
-    val attribute: String
-        get() = "in"
-
-    val varOut: String
-        get() = "out"
-
-    val varIn: String
-        get() = "in"
-
     override fun forEachOutput(block: (output: IShaderData) -> Unit) {
         _output.iterate(block)
     }

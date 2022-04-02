@@ -139,6 +139,16 @@ interface IByteData: IDataArray {
         }
     }
 
+    fun put(toIndex: Int, from: IByteData, fromOffset: Int, length: Int) {
+        var iother = fromOffset
+        var ithis = toIndex
+        for (i in 0 until length) {
+            put(ithis, from[iother])
+            iother++
+            ithis++
+        }
+    }
+
     /** Integer will be converted to byte */
     fun putByte(value: Int) {
         put(value.toByte())
@@ -207,23 +217,6 @@ interface IByteData: IDataArray {
     }
     fun putRGBA(rgba: Long) = putRGBA(rgba.toInt())
 
-    fun putRGBAWithOffset(byteIndex: Int, vararg colors: Int) {
-        var i = byteIndex
-        val num = colors.size * 4
-        while (i < num) {
-            putRGBA(i, colors[i])
-            i += 4
-        }
-    }
-    fun putRGBAWithOffset(byteIndex: Int, vararg colors: Long) {
-        var i = byteIndex
-        val num = colors.size * 4
-        while (i < num) {
-            putRGBA(i, colors[i])
-            i += 4
-        }
-    }
-
     fun putRGBAs(vararg colors: Int) {
         for (i in colors.indices) {
             putRGBA(colors[i])
@@ -240,6 +233,27 @@ interface IByteData: IDataArray {
         position += 4
     }
 
+    fun putVec2(x: Float, y: Float) {
+        putFloat(position, x)
+        putFloat(position + 4, y)
+        position += 8
+    }
+
+    fun putVec3(x: Float, y: Float, z: Float) {
+        putFloat(position, x)
+        putFloat(position + 4, y)
+        putFloat(position + 8, z)
+        position += 12
+    }
+
+    fun putVec4(x: Float, y: Float, z: Float, w: Float) {
+        putFloat(position, x)
+        putFloat(position + 4, y)
+        putFloat(position + 8, z)
+        putFloat(position + 12, w)
+        position += 16
+    }
+
     fun putFloats(byteStartIndex: Int, vararg values: Float) {
         var bi = byteStartIndex
         for (i in values.indices) {
@@ -250,6 +264,18 @@ interface IByteData: IDataArray {
 
     fun putFloats(vararg values: Float) {
         for (i in values.indices) {
+            putFloat(values[i])
+        }
+    }
+
+    fun putFloatsArray(values: FloatArray) {
+        for (i in values.indices) {
+            putFloat(values[i])
+        }
+    }
+
+    fun putFloatsArray(values: FloatArray, length: Int) {
+        for (i in 0 until length) {
             putFloat(values[i])
         }
     }

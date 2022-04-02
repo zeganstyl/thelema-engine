@@ -16,15 +16,11 @@
 
 package app.thelema.test.shader.node
 
-import app.thelema.ecs.Entity
-import app.thelema.ecs.component
-import app.thelema.g3d.IMaterial
-import app.thelema.g3d.IScene
-import app.thelema.g3d.ITransformNode
-import app.thelema.g3d.mesh.BoxMesh
+import app.thelema.g3d.*
+import app.thelema.g3d.mesh.boxMesh
+import app.thelema.gl.meshInstance
 import app.thelema.shader.Shader
-import app.thelema.shader.node.CameraDataNode
-import app.thelema.shader.node.GLSLNode
+import app.thelema.shader.node
 import app.thelema.shader.node.OutputNode
 import app.thelema.shader.node.VertexNode
 import app.thelema.test.Test
@@ -32,25 +28,18 @@ import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 class VertexNodeTest: Test {
-    override val name: String
-        get() = "Vertex Node"
-
     override fun testMain() {
-        Entity {
-            makeCurrent()
-            component<IScene>()
-            component<BoxMesh> { setSize(2f) }
-            component<ITransformNode> {
-                setPosition(-2f, 0f, 0f)
-                requestTransformUpdate()
-            }
-            component<IMaterial> {
+        testEntity {
+            boxMesh { setSize(2f) }
+            meshInstance()
+            material {
                 shader = Shader().apply {
                     val vertexNode = VertexNode()
-                    val cameraDataNode = CameraDataNode(vertexNode.position)
 
-                    //addNode(OutputNode(cameraDataNode.clipSpacePosition, vertexNode.position))
-                    addNode(OutputNode(fragColor = GLSLNode.vertex.position))
+                    rootNode = node<OutputNode> {
+                        vertPosition = vertexNode.position
+                        fragColor = vertexNode.position
+                    }
 
                     build()
                     LOG.info(printCode())

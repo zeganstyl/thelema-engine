@@ -26,7 +26,6 @@ import app.thelema.gl.ScreenQuad
 import app.thelema.img.SimpleFrameBuffer
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.render
 import app.thelema.shader.Shader
 import app.thelema.shader.post.PostShader
@@ -89,7 +88,7 @@ vec3 godrays(
 uniform sampler2D occlusionTexture;
 uniform sampler2D sceneTexture;
 uniform vec2 screenSpaceLightPos;
-varying vec2 uv;
+in vec2 uv;
 
 void main() {
     vec3 rays = godrays(1.0, 0.01, 1.0, 1.0, 100, occlusionTexture, screenSpaceLightPos, uv);
@@ -106,26 +105,29 @@ void main() {
 
         val meshShader = Shader(
             vertCode = """
-attribute vec3 POSITION;
-attribute vec2 UV;
-varying vec2 uv;
+in vec3 POSITION;
+in vec2 TEXCOORD_0;
+out vec2 uv;
+
 uniform mat4 viewProj;
 uniform vec3 pos;
 
 void main() {
-    uv = UV;
+    uv = TEXCOORD_0;
     gl_Position = viewProj * vec4(POSITION + pos, 1.0);
 }""",
             fragCode = """
-varying vec2 uv;
+in vec2 uv;
+out vec4 FragColor;
+
 uniform vec4 color;
 uniform bool useColor;
 
 void main() {
     if (useColor) {
-        gl_FragColor = color;
+        FragColor = color;
     } else {
-        gl_FragColor = vec4(uv, 0.0, 1.0);
+        FragColor = vec4(uv, 0.0, 1.0);
     }
 }""")
 
@@ -149,7 +151,7 @@ void main() {
 
         val control = OrbitCameraControl()
 
-        GL.render {
+        APP.onRender = {
             control.update(APP.deltaTime)
             ActiveCamera.updateCamera()
 

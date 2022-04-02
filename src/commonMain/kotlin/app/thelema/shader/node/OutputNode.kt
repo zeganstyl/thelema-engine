@@ -22,22 +22,15 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.IUniformArgs
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
+import app.thelema.shader.Shader
+import kotlin.native.concurrent.ThreadLocal
 
-/**
- * @param vertPosition screen space vertex position (clip space)
- * @author zeganstyl
- * */
-class OutputNode(
-    /** Clip space vertex position */
-    vertPosition: IShaderData = GLSLNode.camera.clipSpacePosition,
-    fragColor: IShaderData = GLSL.oneFloat
-): ShaderNode(), IRootShaderNode {
-    constructor(block: OutputNode.() -> Unit): this() { block(this) }
-
+/** @author zeganstyl */
+class OutputNode: ShaderNode(), IRootShaderNode {
     override val componentName: String
         get() = "OutputNode"
 
-    /** Clip space vertex position */
+    /** World space vertex position */
     var vertPosition by input(GLSLNode.vertex.position)
 
     var fragColor by input(GLSL.oneFloat)
@@ -50,7 +43,7 @@ class OutputNode(
      * will fade out with transparency transition to zero.
      * Possible values are ranged from 0.0 to 1.0.
      * If it is not in range from 0.0 to 1.0, no transition will be applied. */
-    var fadeStart = 0.8f
+    var fadeStart = -1f
     private var cameraFarCached = -1f
 
     override var entityOrNull: IEntity?
@@ -64,10 +57,7 @@ class OutputNode(
         get() = this
         set(_) {}
 
-    init {
-        this.vertPosition = vertPosition
-        this.fragColor = fragColor
-    }
+    var useLogarithmicDepth: Boolean = useLogarithmicDepthByDefault
 
     override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
@@ -80,7 +70,6 @@ class OutputNode(
             }
         }
 
-        val alphaMode = uniforms.get(Uniforms.AlphaMode) ?: alphaMode
         GL.isBlendingEnabled = alphaMode == Blending.BLEND || fadeStart in 0f..1f
         if (GL.isBlendingEnabled) GL.setupSimpleAlphaBlending()
 
@@ -91,36 +80,65 @@ class OutputNode(
 
     override fun declarationVert(out: StringBuilder) {
         if (fadeStart in 0f..1f) {
-            out.append("varying float depthForFade;")
+            out.append("out float depthForFade;")
+        }
+
+        if (useLogarithmicDepth) {
+            out.append("out float flogz;\n")
+            out.append("const float Fcoef = 2.0 / log2($LogarithmicDepthFar + 1.0);\n")
         }
     }
 
     override fun declarationFrag(out: StringBuilder) {
+        out.append("out vec4 FragColor;\n")
+
         if (fadeStart in 0f..1f) {
             out.append("uniform float fadeStart;\n")
             out.append("uniform float fadeMul;\n")
-            out.append("varying float depthForFade;\n")
+            out.append("in float depthForFade;\n")
+        }
+
+        if (useLogarithmicDepth) {
+            out.append("in float flogz;\n")
+            out.append("const float Fcoef_half = 1.0 / log2($LogarithmicDepthFar + 1.0);\n")
         }
     }
 
     override fun executionVert(out: StringBuilder) {
-        out.append("gl_Position = ${vertPosition.asVec4()};")
+        out.append("${Shader.CLIP_SPACE_POS} = ${SceneUniforms.ViewProjMatrix.uniformName} * ${vertPosition.asVec4()};\n")
+        out.append("gl_Position = ${Shader.CLIP_SPACE_POS};\n")
 
         if (fadeStart in 0f..1f) {
             out.append("\ndepthForFade = gl_Position.w;")
         }
+
+        if (useLogarithmicDepth) {
+            out.append("gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * Fcoef - $LogarithmicDepthNear;\n")
+            out.append("flogz = 1.0 + gl_Position.w;\n")
+        }
     }
 
     override fun executionFrag(out: StringBuilder) {
-        out.append("gl_FragColor = ${fragColor.asVec4()};")
+        out.append("FragColor = ${fragColor.asVec4()};\n")
 
         if (alphaMode == Blending.MASK) {
-            out.append("\nif (gl_FragColor.a < 0.001 || gl_FragColor.a < $alphaCutoff) { discard; }")
-            out.append("\ngl_FragColor.a = 1.0;")
+            out.append("\nif (FragColor.a < 0.001 || FragColor.a < $alphaCutoff) { discard; }")
+            out.append("\nFragColor.a = 1.0;")
         }
 
         if (fadeStart in 0f..1f) {
-            out.append("\ngl_FragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);")
+            out.append("\nFragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);")
         }
+
+        if (useLogarithmicDepth) {
+            out.append("gl_FragDepth = log2(flogz) * Fcoef_half;\n")
+        }
+    }
+
+    @ThreadLocal
+    companion object {
+        var LogarithmicDepthNear = 0.000_001
+        var LogarithmicDepthFar = 1e+9f
+        var useLogarithmicDepthByDefault = true
     }
 }

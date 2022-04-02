@@ -16,53 +16,33 @@
 
 package app.thelema.test.shader.node
 
-import app.thelema.ecs.Entity
-import app.thelema.ecs.component
-import app.thelema.g3d.Material
-import app.thelema.g3d.Scene
-import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.mesh.BoxMesh
-import app.thelema.math.MATH
-import app.thelema.math.Vec3
+import app.thelema.g3d.material
+import app.thelema.g3d.mesh.boxMesh
+import app.thelema.gl.meshInstance
 import app.thelema.shader.Shader
-import app.thelema.shader.node.CameraDataNode
-import app.thelema.shader.node.OutputNode
-import app.thelema.shader.node.VelocityNode
+import app.thelema.shader.node
+import app.thelema.shader.node.VelocityOutputNode
 import app.thelema.shader.node.VertexNode
 import app.thelema.test.Test
+import app.thelema.utils.LOG
 
 /** @author zeganstyl */
 class VelocityNodeTest: Test {
-    override val name: String
-        get() = "Velocity Node"
+    override fun testMain() = testEntity {
+        entity("obj") {
+            boxMesh { setSize(2f) }
+            meshInstance()
+            material {
+                shader = Shader {
+                    val vertexNode = VertexNode()
 
-    override fun testMain() {
-        ActiveCamera {
-            enablePreviousMatrix()
-            lookAt(Vec3(5f, 5f, 5f), MATH.Zero3)
-        }
-
-        Entity {
-            makeCurrent()
-            component<Scene>()
-
-            entity("obj") {
-                component<BoxMesh> { setSize(2f) }
-                component<Material> {
-                    shader = Shader {
-                        val vertexNode = VertexNode()
-                        val cameraDataNode = CameraDataNode(vertexNode.position)
-                        val velocityNode = VelocityNode {
-                            worldSpacePosition = vertexNode.position
-                            clipSpacePosition = cameraDataNode.clipSpacePosition
-                            previousViewProjectionMatrix = cameraDataNode.previousViewProjectionMatrix
-                            normal = vertexNode.normal
-                        }
-
-                        addNode(OutputNode(velocityNode.stretchedClipSpacePosition, velocityNode.velocity))
-
-                        build()
+                    rootNode = node<VelocityOutputNode> {
+                        vertPosition = vertexNode.position
+                        normal = vertexNode.normal
                     }
+
+                    build()
+                    LOG.info(printCode())
                 }
             }
         }

@@ -5,6 +5,7 @@ import app.thelema.g3d.*
 import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.mesh.MeshBuilder
 import app.thelema.g3d.mesh.MeshVisualizer
+import app.thelema.g3d.mesh.SkyboxMesh
 import app.thelema.gl.GL
 import app.thelema.gl.IMesh
 import app.thelema.gl.IMeshInstance
@@ -15,9 +16,11 @@ import app.thelema.phys.ICylinderShape
 import app.thelema.phys.IRayShape
 import app.thelema.phys.ISphereShape
 import app.thelema.res.AID
+import app.thelema.shader.Shader
 import app.thelema.shader.node.GLSL
 import app.thelema.shader.node.GLSLType
 import app.thelema.shader.node.Op2Node
+import app.thelema.shader.node.SkyboxOutputNode
 import app.thelema.studio.Studio
 import app.thelema.studio.g3d.*
 import app.thelema.ui.HeadUpDisplay
@@ -97,10 +100,13 @@ class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer 
         shapeRenderTool.color.setColor(0x008000FF)
         shapeRenderTool.setupShaderCommonData()
 
+        val isDepthTestEnabled = GL.isDepthTestEnabled
+        GL.isDepthTestEnabled = false
         boxShapes.iterate { shapeRenderTool.renderBox(it) }
         sphereShapes.iterate { shapeRenderTool.renderSphere(it) }
         cylinderShapes.iterate { shapeRenderTool.renderCylinder(it) }
         rayShapes.iterate { lines.renderRay(it.position, tmp.set(it.direction).add(it.directionOffset), it.length) }
+        GL.isDepthTestEnabled = isDepthTestEnabled
 
         meshVisualizers.iterate { it.render() }
 

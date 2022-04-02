@@ -24,7 +24,7 @@ import app.thelema.gltf.GLTF
 import app.thelema.res.load
 
 /** @author zeganstyl */
-class GLTFDamagedHelmetTest: GLTFTestBase("gltf/DamagedHelmet.glb") {
+class GLTFDamagedHelmetTest: GLTFTestBase("nightshade/nightshade.gltf") {
     override fun loaded(mainScene: IEntity, gltf: GLTF) {
         super.loaded(mainScene, gltf)
         mainScene.orbitCameraControl()

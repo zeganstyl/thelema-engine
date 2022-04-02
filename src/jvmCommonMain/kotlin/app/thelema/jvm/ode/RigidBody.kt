@@ -43,6 +43,8 @@ class RigidBody: IRigidBody {
         override fun worldMatrixChanged(node: ITransformNode) {
             updateStaticKinematic()
         }
+
+        override fun previousWorldMatrixChanged(node: ITransformNode) {}
     }
 
     override var node: ITransformNode = TransformNode().apply { addListener(nodeListener) }

@@ -16,6 +16,7 @@
 
 package app.thelema.math
 
+import kotlin.math.min
 import kotlin.math.sqrt
 
 /** Base vector functions
@@ -25,7 +26,8 @@ interface IVec: IVecC {
 
     /** Vectors must be same length */
     fun add(other: IVecC): IVec {
-        for (i in 0 until numComponents) {
+        val num = min(other.numComponents, numComponents)
+        for (i in 0 until num) {
             setComponent(i, getComponent(i) + other.getComponent(i))
         }
         return this
@@ -33,7 +35,8 @@ interface IVec: IVecC {
 
     /** Vectors must be same length */
     fun sub(other: IVecC): IVec {
-        for (i in 0 until numComponents) {
+        val num = min(other.numComponents, numComponents)
+        for (i in 0 until num) {
             setComponent(i, getComponent(i) - other.getComponent(i))
         }
         return this
@@ -61,7 +64,8 @@ interface IVec: IVecC {
     }
 
     fun set(other: IVecC): IVec {
-        for (i in 0 until numComponents) {
+        val num = min(other.numComponents, numComponents)
+        for (i in 0 until num) {
             setComponent(i, other.getComponent(i))
         }
         return this

@@ -18,15 +18,11 @@ package app.thelema.test.shader.node
 
 import app.thelema.app.APP
 import app.thelema.ecs.ECS
-import app.thelema.ecs.Entity
-import app.thelema.ecs.component
 import app.thelema.g3d.*
-import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.cam.orbitCameraControl
-import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.planeMesh
-import app.thelema.gl.TextureRenderer
+import app.thelema.gl.ScreenQuad
+import app.thelema.gl.meshInstance
 import app.thelema.gltf.gltf
 import app.thelema.res.RES
 import app.thelema.shader.Shader
@@ -36,25 +32,11 @@ import app.thelema.test.Test
 
 /** @author zeganstyl */
 class CascadedShadowMappingTest : Test {
-    override val name: String
-        get() = "Cascaded shadow mapping"
-
     override fun testMain() {
-        ActiveCamera {
-            setNearFar(0.1f, 100f)
-        }
-
-        val mainScene = Entity {
-            makeCurrent()
-            scene()
-            orbitCameraControl()
-
-            entity("light1") {
-                directionalLight {
-                    color.set(1f, 1f, 1f)
-                    setDirectionFromPosition(1f, 1f, 1f)
-                    isShadowEnabled = true
-                }
+        testEntity {
+            val light = entity("light1").directionalLight {
+                setDirectionFromPosition(1f, 1f, 1f)
+                isShadowEnabled = true
             }
 
 //            entity("light2") {
@@ -68,6 +50,7 @@ class CascadedShadowMappingTest : Test {
 
             entity("plane") {
                 planeMesh { setSize(100f) }
+                meshInstance()
                 material {
                     shader = Shader {
                         val pbrNode = PBRNode {
@@ -77,43 +60,21 @@ class CascadedShadowMappingTest : Test {
                         rootNode = node<OutputNode> {
                             fragColor = pbrNode.result
                         }
-
-                        build()
-                        //println(printCode())
                     }
-
-                    setChannel(ShaderChannel.Depth, Shader {
-                        rootNode = node<OutputNode> {}
-                        build()
-                        //println(printCode())
-                    })
                 }
             }
-        }
 
-        RES.gltf("nightshade/nightshade.gltf") {
-            gltfSettings {
-                setupDepthRendering = true
-            }
-
-            onLoaded {
-                mainScene.addEntity(scene.copyDeep("model"))
-            }
-        }
-
-        val screenQuad = TextureRenderer()
-
-        APP.onRender = {
-            ECS.render()
-
-            val light = mainScene.entity("light1").component<DirectionalLight>()
-            for (i in 0 until light.shadowCascadesNum) {
-                val map = light.shadowMaps.getOrNull(i)
-                if (map != null) {
-                    screenQuad.setPosition(-0.75f + i * 0.45f, -0.75f)
-                    screenQuad.setScale(0.2f, 0.2f)
-                    screenQuad.render(map, clearMask = null)
+            entity("nightshade") {
+                sceneInstance().provider = RES.gltf("nightshade/nightshade.gltf") {
+                    gltfSettings {
+                        setupDepthRendering = true
+                    }
                 }
+            }
+
+            APP.onRender = {
+                ECS.render()
+                ScreenQuad.render(4, padding = 0.01f, maxCellSize = 0.1f, flipY = false) { light.shadowMaps[it] }
             }
         }
     }

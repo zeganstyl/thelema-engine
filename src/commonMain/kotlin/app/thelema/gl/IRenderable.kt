@@ -17,6 +17,8 @@ interface IRenderable: IEntityComponent {
 
     val uniformArgs: IUniformArgs
 
+    fun getShaders(shaderChannel: String?, outSet: MutableSet<IShader>, outList: MutableList<IShader>)
+
     fun visibleInFrustum(frustum: Frustum): Boolean
 
     fun render(shaderChannel: String?)

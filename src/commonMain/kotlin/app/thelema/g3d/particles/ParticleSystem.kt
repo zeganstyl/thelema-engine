@@ -31,6 +31,14 @@ class ParticleSystem: IParticleSystem {
 
     override val uniformArgs: IUniformArgs = UniformArgs()
 
+    override fun getShaders(shaderChannel: String?, outSet: MutableSet<IShader>, outList: MutableList<IShader>) {
+        particles.iterate { particles ->
+            particles.particleMaterial.material.getChannel(shaderChannel)?.also {
+                if (outSet.add(it)) outList.add(it)
+            }
+        }
+    }
+
     override fun getOrCreateParticles(material: IParticleMaterial): IParticles {
         var particlesData = particlesMap[material]
         if (particlesData == null) {

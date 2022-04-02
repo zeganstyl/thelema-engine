@@ -1,13 +1,12 @@
 package app.thelema.gl
 
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
-import app.thelema.ecs.component
-import app.thelema.ecs.componentOrNull
+import app.thelema.ecs.*
 import app.thelema.g3d.*
+import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.math.*
 import app.thelema.shader.IShader
-import app.thelema.shader.useShader
+import app.thelema.shader.getOrCreateUniformBuffer
+import app.thelema.utils.iterate
 
 interface IMeshInstance: IRenderable {
     override val componentName: String
@@ -42,7 +41,7 @@ interface IMeshInstance: IRenderable {
     }
 }
 
-class MeshInstance(): IMeshInstance {
+class MeshInstance(): IMeshInstance, UpdatableComponent {
     constructor(mesh: IMesh): this() {
         this.mesh = mesh
     }
@@ -69,17 +68,40 @@ class MeshInstance(): IMeshInstance {
     override var worldMatrix: IMat4? = null
         get() = field ?: node?.worldMatrix
 
+    private val transformMatrix = Mat4()
+
     private val _worldPosition = Vec3Mat4Translation(MATH.IdentityMat4)
     override val worldPosition: IVec3C
         get() = _worldPosition.also { it.mat = worldMatrix ?: MATH.IdentityMat4 }
 
     override var armature: IArmature? = null
-        set(value) {
-            field = value
-            uniformArgs[Uniforms.Armature] = value
-        }
 
     override var isVisible: Boolean = true
+
+    override fun getShaders(shaderChannel: String?, outSet: MutableSet<IShader>, outList: MutableList<IShader>) {
+        material?.getChannel(shaderChannel)?.also {
+            if (outSet.add(it)) outList.add(it)
+        }
+    }
+
+    override fun updateComponent(delta: Float) {
+//        if (isVisible) {
+//            val worldMatrix = worldMatrix
+//
+//            val wvp = if (worldMatrix != null) {
+//                transformMatrix.set(worldMatrix).mulLeft(ActiveCamera.viewProjectionMatrix)
+//            } else {
+//                ActiveCamera.viewProjectionMatrix
+//            }
+//
+//            ubo.apply {
+//                worldMatrix(worldMatrix)
+//                worldViewProjMatrix(wvp)
+//                prevWorldMatrix(previousWorldMatrix)
+//                bonesNum(armature?.bones?.size ?: 0)
+//            }
+//        }
+    }
 
     override fun addedSiblingComponent(component: IEntityComponent) {
         if (mesh == null && component is IMesh) mesh = component
@@ -87,24 +109,47 @@ class MeshInstance(): IMeshInstance {
 
     override fun render(shader: IShader) {
         if (isVisible) {
-            uniformArgs.worldMatrix = worldMatrix
-            uniformArgs[Uniforms.PreviousWorldMatrix] = previousWorldMatrix
-            shader.uniformArgs = uniformArgs
-
-            shader.useShader {
-                shader.listener?.draw(shader)
-                mesh?.render()
-            }
+            renderBase(shader)
         }
+    }
+
+    private fun renderBase(shader: IShader) {
+        shader.uniformArgs = uniformArgs
+
+        uniformArgs[UniformNames.Armature] = armature
+        uniformArgs.worldMatrix = worldMatrix
+
+        if (UserUniforms.useUserUniforms) {
+            val userBuffer = shader.getOrCreateUniformBuffer(UserUniforms)
+            UserUniforms.uniforms.iterate { it.writeToBuffer(uniformArgs.values[it.uniformName], userBuffer) }
+        }
+
+        val ubo = shader.getOrCreateUniformBufferTyped<MeshUniformBuffer>(MeshUniforms)
+        val worldMatrix = worldMatrix
+        val wvp = if (worldMatrix != null) {
+            transformMatrix.set(worldMatrix).mulLeft(ActiveCamera.viewProjectionMatrix)
+        } else {
+            ActiveCamera.viewProjectionMatrix
+        }
+        ubo.apply {
+            worldMatrix(worldMatrix)
+            worldViewProjMatrix(wvp)
+            prevWorldMatrix(previousWorldMatrix)
+            bonesNum(armature?.bones?.size ?: 0)
+        }
+        shader.bindUniformBuffer(ubo)
+
+        armature?.also { shader.bindUniformBuffer(it.uniformBuffer) }
+        shader.bindOwnUniformBuffers()
+
+        shader.bind()
+        shader.listener?.draw(shader)
+        mesh?.render()
     }
 
     override fun render(shaderChannel: String?) {
         if (isVisible) {
-            val material = material ?: DEFAULT_MATERIAL
-            val shader = if (shaderChannel == null) material?.shader else material?.channels?.get(shaderChannel)
-            if (shader != null) {
-                render(shader)
-            }
+            (material ?: DEFAULT_MATERIAL)?.getChannel(shaderChannel)?.also { renderBase(it) }
         }
     }
 }

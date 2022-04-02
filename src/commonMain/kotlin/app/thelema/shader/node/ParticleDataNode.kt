@@ -1,47 +1,38 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.particles.Particle
+import app.thelema.gl.ParticleUniforms
 
 class ParticleDataNode: ShaderNode() {
     override val componentName: String
         get() = "ParticleDataNode"
 
-    //var frameSizeU = 1f
-    //var frameSizeV = 1f
+    private val particlePositionLifeName
+        get() = Particle.POSITION_LIFE.name
 
-    private val instanceLifeTimeName
-        get() = Particle.LIFE_TIME.name
-    //var instanceUvStartName = "PARTICLE_UV_START"
-
-    var maxLifeTime = 1f
-
-    @Deprecated("")
-    var inputUv by input()
-
-    val lifeTime = output(GLSLFloat("lifeTime"))
     val lifeTimePercent = output(GLSLFloat("lifeTimePercent"))
 
     override fun declarationVert(out: StringBuilder) {
-        if (lifeTime.isUsed || lifeTimePercent.isUsed) {
-            out.append("$attribute float $instanceLifeTimeName;\n")
-            out.append("$varOut ${lifeTime.typedRef};\n")
-            if (lifeTimePercent.isUsed) out.append("$varOut ${lifeTimePercent.typedRef};\n")
+        if (lifeTimePercent.isUsed) {
+            if (!out.contains("in vec4 $particlePositionLifeName")) {
+                out.append("in vec4 $particlePositionLifeName;\n")
+            }
+
+            out.append(lifeTimePercent.outRefEnd)
+        }
+
+        if (!out.contains("#uniforms ${ParticleUniforms.name}")) {
+            out.append("#uniforms ${ParticleUniforms.name}\n")
         }
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        if (lifeTime.isUsed || lifeTimePercent.isUsed) {
-            out.append("$varIn ${lifeTime.typedRef};\n")
-            if (lifeTimePercent.isUsed) out.append("$varIn ${lifeTimePercent.typedRef};\n")
-        }
+        if (lifeTimePercent.isUsed) out.append(lifeTimePercent.inRefEnd)
     }
 
     override fun executionVert(out: StringBuilder) {
-        if (lifeTime.isUsed) {
-            out.append("${lifeTime.ref} = $instanceLifeTimeName;\n")
-        }
         if (lifeTimePercent.isUsed) {
-            out.append("${lifeTimePercent.ref} = $instanceLifeTimeName / $maxLifeTime;\n")
+            out.append("${lifeTimePercent.ref} = $particlePositionLifeName.w / ${ParticleUniforms.MaxLifeTime.uniformName};\n")
         }
     }
 }

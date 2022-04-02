@@ -20,8 +20,11 @@ import app.thelema.img.IFrameBuffer
 import app.thelema.img.ITexture
 import app.thelema.img.renderNoClear
 import app.thelema.shader.IShader
+import app.thelema.shader.Shader
 import app.thelema.shader.post.PostShader
 import app.thelema.shader.useShader
+import kotlin.math.ceil
+import kotlin.math.min
 import kotlin.native.concurrent.ThreadLocal
 
 /** Default screen quad, that may be used for post processing shaders.
@@ -42,43 +45,72 @@ object ScreenQuad {
         Mesh {
             primitiveType = GL_TRIANGLE_FAN
 
-            addVertexBuffer {
-                addAttribute(POSITION)
-                addAttribute(UV)
-                initVertexBuffer(4) {
-                    putFloats(-1f, -1f,  0f, 0f)
-                    putFloats(1f, -1f,  1f, 0f)
-                    putFloats(1f, 1f,  1f, 1f)
-                    putFloats(-1f, 1f,  0f, 1f)
-                }
+            addVertexBuffer(4, POSITION, UV) {
+                putFloats(-1f, -1f,  0f, 0f)
+                putFloats(1f, -1f,  1f, 0f)
+                putFloats(1f, 1f,  1f, 1f)
+                putFloats(-1f, 1f,  0f, 1f)
             }
         }
     }
 
-    val textureRenderShader: IShader by lazy {
-        PostShader(
-            flipY = false,
-            fragCode = """            
-varying vec2 uv;
+    val textureRenderShader = PostShader(
+        flipY = false,
+        fragCode = """            
+in vec2 uv;
+out vec4 FragColor;
 uniform sampler2D tex;
 
 void main() {
-    gl_FragColor = texture2D(tex, uv);
+    FragColor = texture(tex, uv);
 }"""
-        ).also { it.depthMask = false }
+    ).also {
+        it.depthMask = false
     }
 
-    val flippedTextureRenderShader: IShader by lazy {
-        PostShader(
-            flipY = true,
-            fragCode = """            
-varying vec2 uv;
+    val flippedTextureRenderShader = PostShader(
+        flipY = true,
+        fragCode = """            
+in vec2 uv;
+out vec4 FragColor;
 uniform sampler2D tex;
 
 void main() {
-    gl_FragColor = texture2D(tex, uv);
+    FragColor = texture(tex, uv);
 }"""
-        ).also { it.depthMask = false }
+    ).also {
+        it.depthMask = false
+    }
+
+    val texturesRenderShader = Shader(
+        vertCode = """
+in vec2 POSITION;
+in vec2 UV;
+
+uniform vec2 translation;
+uniform vec2 scale;
+out vec2 uv;
+
+void main() {
+    uv = UV;
+    gl_Position = vec4(translation + POSITION * scale, 0.0, 1.0);
+}""",
+        fragCode = """            
+in vec2 uv;
+out vec4 FragColor;
+uniform sampler2D tex;
+uniform bool flipY;
+uniform vec2 uvScale;
+
+void main() {
+    vec2 uv2 = uv;
+    if (flipY) uv2.y = 1.0 - uv2.y;
+    FragColor = texture(tex, uv2);
+    //FragColor = vec4(1.0);
+}"""
+    ).also {
+        it.depthMask = false
+        it.vertexLayout = Layout
     }
 
     fun render(
@@ -89,6 +121,43 @@ void main() {
     ) {
         texture.bind(0)
         render(if (flipY) flippedTextureRenderShader else textureRenderShader, out, clearMask)
+    }
+
+    inline fun render(
+        numTextures: Int,
+        maxCellsInRow: Int = 4,
+        maxCellSize: Float = 1f,
+        padding: Float = 0f,
+        flipY: Boolean = true,
+        out: IFrameBuffer? = null,
+        getTexture: (i: Int) -> ITexture
+    ) {
+        val inRow = min(maxCellsInRow, numTextures)
+        val rows = ceil(numTextures.toFloat() / inRow).toInt()
+        val cell = min(1f / inRow, maxCellSize)
+        val size = cell - padding * 2f
+        val xOffset = cell - 1f
+        val yOffset = cell * rows - 1f + cell
+        val step = cell * 2f
+
+        texturesRenderShader.bind()
+        texturesRenderShader["flipY"] = flipY
+        texturesRenderShader.set("scale", size, size)
+
+        var i = 0
+        var y = yOffset
+        for (yi in 0 until rows) {
+            var x = xOffset
+            for (xi in 0 until inRow) {
+                if (i >= numTextures) break
+                getTexture(i).bind(0)
+                texturesRenderShader.set("translation", x, y)
+                render(texturesRenderShader, out, null)
+                x += step
+                i++
+            }
+            y -= step
+        }
     }
 
     /** Render 2D texture on screen */
@@ -114,6 +183,9 @@ void main() {
         clearMask: Int? = defaultClearMask
     ) {
         shader.useShader {
+            val isDepthTestEnabled = GL.isDepthTestEnabled
+            GL.isDepthTestEnabled = false
+
             if (out != null) {
                 out.renderNoClear {
                     if (clearMask != null) GL.glClear(clearMask)
@@ -123,6 +195,8 @@ void main() {
                 if (clearMask != null) GL.glClear(clearMask)
                 mesh.render()
             }
+
+            GL.isDepthTestEnabled = isDepthTestEnabled
         }
     }
 }

@@ -33,9 +33,8 @@ open class Shader(
     vertCode: String = "",
     fragCode: String = "",
 
-    /** Precision will be added as first line */
     override var floatPrecision: String = "highp",
-    override var version: Int = if (GL.glesMajVer < 3) 110 else 330,
+    override var version: Int = 330,
     override var profile: String = ""
 ): IShader {
     constructor(block: Shader.() -> Unit): this() {
@@ -55,11 +54,6 @@ open class Shader(
         get() = _isCompiled
 
     override val uniforms = HashMap<String, Int>()
-    override val attributes = HashMap<String, Int>()
-
-    protected val enabledAttributesInternal = ArrayList<IVertexAccessor>()
-    override val enabledAttributes: List<IVertexAccessor>
-        get() = enabledAttributesInternal
 
     var vertexShaderHandle: Int = 0
     var fragmentShaderHandle: Int = 0
@@ -102,6 +96,37 @@ open class Shader(
 //        }
 //    }
 
+    val uniformBuffersMap = HashMap<String, IUniformBuffer>(1)
+    val uniformBuffers = ArrayList<IUniformBuffer>(1)
+
+    override fun getOrCreateUniformBuffer(layout: IUniformLayout): IUniformBuffer {
+        var b = uniformBuffersMap[layout.name]
+        if (b == null) {
+            b = when (layout.name) {
+                MeshUniforms.name -> MeshUniformBuffer()
+                else -> UniformBuffer(layout)
+            }
+            uniformBuffersMap[layout.name] = b
+            uniformBuffers.add(b)
+        }
+        return b
+    }
+
+    override fun bindUniformBuffer(buffer: IUniformBuffer) {
+        if (buffer.gpuUploadRequested) {
+            buffer.bytes.rewind()
+            buffer.uploadBufferToGpu()
+        }
+
+        val index = GL.glGetUniformBlockIndex(programHandle, buffer.layout.name)
+        GL.glUniformBlockBinding(programHandle, index, buffer.layout.bindingPoint)
+        GL.glBindBufferBase(GL_UNIFORM_BUFFER, buffer.layout.bindingPoint, buffer.bufferHandle)
+    }
+
+    override fun bindOwnUniformBuffers() {
+        uniformBuffers.iterate { bindUniformBuffer(it) }
+    }
+
     override fun get(uniformName: String): Int = GL.glGetUniformLocation(programHandle, uniformName)
 
     override fun getUniformLocation(name: String, pedantic: Boolean): Int {
@@ -115,29 +140,72 @@ open class Shader(
         return location
     }
 
-    override fun hasUniform(name: String): Boolean {
-        var location = uniforms[name]
-        if (location == null) {
-            location = GL.glGetUniformLocation(this.programHandle, name)
-            uniforms[name] = location
+    /** Every line will be numerated */
+    fun fragFullCode(): String {
+        val ver = getVersionStr()
+        val floatPrecision = getFloatPrecisionStr()
+
+        var vert = if (version >= 330 && refineShaderCode) refineFragmentCode(fragCode) else fragCode
+
+        vert = "#uniforms\\s+\\w+".toRegex().replace(vert) {
+            val str = it.value.trimEnd()
+            var i = str.length
+            val builder = StringBuilder(str.length)
+            while (i > 0) {
+                i--
+                val c = str[i]
+                if (c.isWhitespace()) break
+                builder.append(c)
+            }
+            builder.reverse()
+            val name = builder.toString()
+            val ub = UniformLayouts[name]
+            if (ub == null) {
+                throw IllegalStateException("Uniform block is not found: $name")
+            } else {
+                builder.clear()
+                ub.layoutDefinition(builder)
+                builder.toString()
+            }
         }
-        return location >= 0
+
+        return ver + floatPrecision + vert
     }
 
-    override fun vertSourceCode(title: String, pad: Int): String {
-        val vert = if (version >= 330 && refineShaderCode) {
-            refineVertexCode(vertCode)
-        } else vertCode
-
-        return numerateLines(title, getVersionStr() + getFloatPrecisionStr() + vert, pad)
+    override fun printCode(pad: Int): String {
+        return numerateLines("=== VERTEX ===\n", vertFullCode(), pad) +
+                numerateLines("=== FRAGMENT ===\n", fragFullCode(), pad)
     }
 
-    override fun fragSourceCode(title: String, pad: Int): String {
-        val frag = if (version >= 330 && refineShaderCode) {
-            refineFragmentCode(fragCode)
-        } else fragCode
+    fun vertFullCode(): String {
+        val ver = getVersionStr()
+        val floatPrecision = getFloatPrecisionStr()
 
-        return numerateLines(title, getVersionStr() + getFloatPrecisionStr() + frag, pad)
+        var vert = if (version >= 330 && refineShaderCode) refineVertexCode(vertCode) else vertCode
+
+        vert = "#uniforms\\s+\\w+".toRegex().replace(vert) {
+            val str = it.value.trimEnd()
+            var i = str.length
+            val builder = StringBuilder(str.length)
+            while (i > 0) {
+                i--
+                val c = str[i]
+                if (c.isWhitespace()) break
+                builder.append(c)
+            }
+            builder.reverse()
+            val name = builder.toString()
+            val ub = UniformLayouts[name]
+            if (ub == null) {
+                throw IllegalStateException("Uniform block is not found: $name")
+            } else {
+                builder.clear()
+                ub.layoutDefinition(builder)
+                builder.toString()
+            }
+        }
+
+        return ver + floatPrecision + vert
     }
 
     private fun getFloatPrecisionStr(): String = if (GL.isGLES) "precision $floatPrecision float;\n" else ""
@@ -197,38 +265,10 @@ open class Shader(
     }
 
     override fun load(vertCode: String, fragCode: String) {
-        val ver = getVersionStr()
-        val floatPrecision = getFloatPrecisionStr()
-
-        var vert = vertCode
-        var frag = fragCode
-        if (version >= 330 && refineShaderCode) {
-            vert = refineVertexCode(vert)
-            frag = refineFragmentCode(frag)
-        }
-
-//        this.vertCode = vert
-//        this.fragCode = frag
-
-        val fullVertCode = ver + floatPrecision + vert
-        val fullFragCode = ver + floatPrecision + frag
-
-        compileShaders(fullVertCode, fullFragCode)
+        compileShaders(vertFullCode(), fragFullCode())
         if (isCompiled) {
             val params = IntArray(1)
             val type = IntArray(1)
-
-            // attributes
-            GL.glGetProgramiv(this.programHandle, GL_ACTIVE_ATTRIBUTES, params)
-            val numAttributes = params[0]
-
-            for (i in 0 until numAttributes) {
-                params[0] = 1
-                type[0] = 0
-                val name = GL.glGetActiveAttrib(this.programHandle, i, params, type)
-                val location = GL.glGetAttribLocation(this.programHandle, name)
-                attributes[name] = location
-            }
 
             // uniforms
             params[0] = 0
@@ -342,13 +382,6 @@ open class Shader(
         return program
     }
 
-    override fun disableAllAttributes() {
-        attributes.values.forEach {
-            GL.glDisableVertexAttribArray(it)
-        }
-        enabledAttributesInternal.clear()
-    }
-
     private fun collectNodes(root: IShaderNode, out: MutableSet<IShaderNode>) {
         if (out.add(root)) {
             root.inputs.iterate { input ->
@@ -399,6 +432,16 @@ open class Shader(
         val vertExe = StringBuilder()
         val fragDecl = StringBuilder()
         val fragExe = StringBuilder()
+
+        vertDecl.append("out vec4 $WORLD_SPACE_POS;\n")
+        vertDecl.append("out vec4 $CLIP_SPACE_POS;\n")
+        fragDecl.append("in vec4 $WORLD_SPACE_POS;\n")
+        fragDecl.append("in vec4 $CLIP_SPACE_POS;\n")
+
+        SceneUniforms.layoutDefinition(vertDecl)
+        MeshUniforms.layoutDefinition(vertDecl)
+        SceneUniforms.layoutDefinition(fragDecl)
+        MeshUniforms.layoutDefinition(fragDecl)
 
         nodes.iterate {
             it.declarationVert(vertDecl)
@@ -464,7 +507,6 @@ open class Shader(
         GL.glDeleteShader(fragmentShaderHandle)
         GL.glDeleteProgram(this.programHandle)
 
-        attributes.clear()
         uniforms.clear()
 
         _isCompiled = false
@@ -478,6 +520,9 @@ open class Shader(
     companion object {
         var refineShaderCode: Boolean = true
         var showCodeOnError: Boolean = true
+
+        const val CLIP_SPACE_POS = "CLIP_SPACE_POS"
+        const val WORLD_SPACE_POS = "WORLD_SPACE_POS"
 
         /** Sort nodes with order:
          * less depth - node will be first,
@@ -546,20 +591,10 @@ open class Shader(
                 }
 
                 descriptor({ VertexNode() }) {
-                    int(VertexNode::maxBones)
-                    int(VertexNode::bonesSetsNum)
                     string(VertexNode::worldTransformType)
                     shaderNodeOutput(VertexNode::position)
                     shaderNodeOutput(VertexNode::normal)
                     shaderNodeOutput(VertexNode::tbn)
-                }
-
-                descriptor({ CameraDataNode() }) {
-                    bool(CameraDataNode::alwaysRotateObjectToCamera)
-                    bool(CameraDataNode::useInstancePosition)
-                    shaderNodeInput(CameraDataNode::vertexPosition)
-                    shaderNodeOutput(CameraDataNode::clipSpacePosition)
-                    shaderNodeOutput(CameraDataNode::viewZDepth)
                 }
 
                 descriptor({ UVNode() }) {
@@ -643,7 +678,6 @@ open class Shader(
                     shaderNodeInputOrNull(PBRNode::roughness)
                     shaderNodeInputOrNull(PBRNode::emissive)
                     shaderNodeInput(PBRNode::worldPosition)
-                    shaderNodeInput(PBRNode::clipSpacePosition)
                     shaderNodeOutput(PBRNode::result)
                 }
 
@@ -672,10 +706,13 @@ open class Shader(
                 }
 
                 descriptor({ ParticleDataNode() }) {
-                    float(ParticleDataNode::maxLifeTime, 1f)
-                    shaderNodeInput(ParticleDataNode::inputUv)
-                    shaderNodeOutput(ParticleDataNode::lifeTime)
                     shaderNodeOutput(ParticleDataNode::lifeTimePercent)
+                }
+
+                descriptor({ ParticlePositionNode() }) {
+                    bool(ParticlePositionNode::alwaysRotateToCamera)
+                    shaderNodeInput(ParticlePositionNode::vertexPosition)
+                    shaderNodeOutput(ParticlePositionNode::particlePosition)
                 }
 
                 descriptor({ ParticleScaleNode() }) {
@@ -748,11 +785,9 @@ open class Shader(
                     shaderNodeOutput(HeightMapNode::outputPosition)
                 }
 
-                descriptor({ SkyboxVertexNode() }) {
-                    shaderNodeOutput(SkyboxVertexNode::clipSpacePosition)
-                    shaderNodeOutput(SkyboxVertexNode::worldSpacePosition)
-                    shaderNodeOutput(SkyboxVertexNode::textureCoordinates)
-                    shaderNodeOutput(SkyboxVertexNode::velocity)
+                descriptor({ SkyboxOutputNode() }) {
+                    shaderNodeInput(SkyboxOutputNode::fragColor)
+                    shaderNodeOutput(SkyboxOutputNode::textureCoordinates)
                 }
 
                 descriptor({ ToneMapNode() }) {
@@ -760,7 +795,7 @@ open class Shader(
                     shaderNodeOutput(ToneMapNode::result)
                 }
 
-                descriptor({ VelocityNode() }) {
+                descriptor({ VelocityOutputNode() }) {
 
                 }
 

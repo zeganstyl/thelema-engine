@@ -45,46 +45,9 @@ object GLSL {
 object GLSLNode {
     val vertex = VertexNode()
 
-    val camera = CameraDataNode(vertex.position)
-
-    val uv = UVNode()
+    val particlePosition = ParticlePositionNode()
 
     val particleData = ParticleDataNode()
+
+    val uv = UVNode()
 }
-
-
-val q = """
-=== VERTEX SHADER ===
-in vec3 POSITION;
-out vec3 vPosition;
-out vec3 textureCoordinates39;
-out vec3 worldSpacePosition38;
-out vec4 clipSpacePosition37;
-out vec4 prevClipSpacePos;
-uniform vec4 uSkyboxVertexTransform;
-uniform mat4 uViewProjectionMatrix;
-uniform mat4 uPreviousViewProjectionMatrix;
-varying float depthForFade;
-void main() {
-vPosition = POSITION.xyz;
-worldSpacePosition38 = uSkyboxVertexTransform.xyz + POSITION.xyz * uSkyboxVertexTransform.w;
-clipSpacePosition37 = uViewProjectionMatrix * vec4(worldSpacePosition38, 1.0);
-gl_Position = clipSpacePosition37;
-depthForFade = gl_Position.w;
-}
-
-=== FRAGMENT SHADER ===
-out vec3 vPosition;
-vec3 textureCoordinates39;
-in vec3 worldSpacePosition38;
-in vec4 clipSpacePosition37;
-uniform float fadeStart;
-uniform float fadeMul;
-varying float depthForFade;
-void main() {
-textureCoordinates39 = normalize(vPosition);
-gl_FragColor = vec4(textureCoordinates39, 1.0);
-gl_FragColor.a *= clamp(1.0 - (depthForFade - fadeStart) * fadeMul, 0.0, 1.0);
-}
-
-"""

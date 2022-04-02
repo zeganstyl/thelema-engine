@@ -20,16 +20,12 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.*
 import app.thelema.img.Texture2D
-import app.thelema.gl.TextureRenderer
 import app.thelema.math.MATH
 import app.thelema.math.Vec3
 import app.thelema.shader.SimpleShader3D
 import app.thelema.test.Test
 
 class FrameBufferBaseTest: Test {
-    override val name: String
-        get() = "Frame buffer base"
-
     override fun testMain() {
         ActiveCamera {
             lookAt(Vec3(0f, 3f, -3f), MATH.Zero3)

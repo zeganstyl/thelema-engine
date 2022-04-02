@@ -5,7 +5,7 @@ import app.thelema.ecs.UpdatableComponent
 import app.thelema.ecs.component
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
-import app.thelema.math.IVec3
+import app.thelema.math.IVec4
 import app.thelema.utils.iterate
 
 class ParticleEmitter: IParticleEmitter, UpdatableComponent {
@@ -29,8 +29,8 @@ class ParticleEmitter: IParticleEmitter, UpdatableComponent {
             setupParticles()
         }
 
-    var placeParticle: (index: Int, out: IVec3) -> Unit = { _, out ->
-        out.set(node.worldPosition)
+    var placeParticle: (index: Int, out: IVec4) -> Unit = { _, out ->
+        out.setVec3(node.worldPosition)
     }
 
     private var _node: ITransformNode = TransformNode()
@@ -44,8 +44,6 @@ class ParticleEmitter: IParticleEmitter, UpdatableComponent {
             field = value
             particlesEmissionSpeedInv = if (particleEmissionSpeed != 0f) 1 / particleEmissionSpeed else 0f
         }
-
-    override var maxParticleLifeTime = 1f
 
     var particlesEmissionSpeedInv = if (particleEmissionSpeed != 0f) 1 / particleEmissionSpeed else 0f
         private set
@@ -67,9 +65,9 @@ class ParticleEmitter: IParticleEmitter, UpdatableComponent {
 
     override fun emitParticle(x: Float, y: Float, z: Float) {
         particles?.also { particleSystem ->
-            val particle = particleSystem.emitParticle(this, this.maxParticleLifeTime, 0f)
+            val particle = particleSystem.emitParticle(this)
             _visibleParticles.add(particle)
-            particleSystem.positions[particle].set(x, y, z)
+            particleSystem.positionLife[particle].set(x, y, z, 0f)
         }
     }
 
@@ -88,14 +86,15 @@ class ParticleEmitter: IParticleEmitter, UpdatableComponent {
                 }
 
                 toShutdown.clear()
+                val maxLife = particles.particleMaterial.maxLifeTime
                 for (i in _visibleParticles.indices) {
                     val particle = _visibleParticles[i]
-                    val time = particles.lifeTimes[particle]
-                    if (time <= this.maxParticleLifeTime) {
+                    val time = particles.positionLife[particle].w
+                    if (time <= maxLife) {
                         particles.addParticleLifeTime(particle, delta)
                     }
-                    if (time > this.maxParticleLifeTime) {
-                        particles.setParticleLifeTime(particle, this.maxParticleLifeTime)
+                    if (time > maxLife) {
+                        particles.setParticleLifeTime(particle, maxLife)
                         toShutdown.add(i)
                     }
                 }
@@ -110,9 +109,10 @@ class ParticleEmitter: IParticleEmitter, UpdatableComponent {
                     for (i in 0 until maxParticles) {
                         if (emissionTime <= delta) {
                             emissionTime += particlesEmissionSpeedInv
-                            val particle = particles.emitParticle(this, this.maxParticleLifeTime, if (emissionTime < delta) emissionTime else 0f)
+                            val particle = particles.emitParticle(this)
+                            particles.positionLife[particle].w = if (emissionTime < delta) emissionTime else 0f
                             _visibleParticles.add(particle)
-                            placeParticle(particle, particles.positions[particle])
+                            placeParticle(particle, particles.positionLife[particle])
                         }
                     }
                 }

@@ -33,10 +33,4 @@ object TransformDataType {
 
     /** 3d position data and quaternion (vec4). */
     const val TranslationRotation = "TranslationRotation"
-
-    /** 3d position data and angle around Y-axis */
-    const val TranslationRotationY = "TranslationRotationY"
-
-    /** 3d position data and single scaling value. */
-    const val TranslationScaleProportional = "TranslationScaleProportional"
 }

@@ -39,19 +39,15 @@ void main() {
 
     val mesh: IMesh = Mesh {
         primitiveType = GL_LINES
-        addVertexBuffer {
-            addAttribute(Vertex.POSITION)
-            addAttribute(Vertex.COLOR)
-            initVertexBuffer(6) {
-                putFloats(0f, 0f, 0f,   1f, 0f, 0f, 1f)
-                putFloats(1f, 0f, 0f,   1f, 0f, 0f, 1f)
+        addVertexBuffer(6, Vertex.POSITION, Vertex.COLOR) {
+            putFloats(0f, 0f, 0f,   1f, 0f, 0f, 1f)
+            putFloats(1f, 0f, 0f,   1f, 0f, 0f, 1f)
 
-                putFloats(0f, 0f, 0f,   0f, 1f, 0f, 1f)
-                putFloats(0f, 1f, 0f,   0f, 1f, 0f, 1f)
+            putFloats(0f, 0f, 0f,   0f, 1f, 0f, 1f)
+            putFloats(0f, 1f, 0f,   0f, 1f, 0f, 1f)
 
-                putFloats(0f, 0f, 0f,   0f, 0f, 1f, 1f)
-                putFloats(0f, 0f, 1f,   0f, 0f, 1f, 1f)
-            }
+            putFloats(0f, 0f, 0f,   0f, 0f, 1f, 1f)
+            putFloats(0f, 0f, 1f,   0f, 0f, 1f, 1f)
         }
     }
 

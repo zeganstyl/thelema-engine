@@ -73,7 +73,7 @@ import kotlin.math.tan
  *
  * =====
  *
- * (Xx, Xy, Xz) - right vector (column 0 or row 0)
+ * (Xx, Xy, Xz) - left vector (column 0 or row 0)
  *
  * (Yx, Yy, Yz) - up vector (column 1 or row 1)
  *

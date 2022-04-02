@@ -28,7 +28,7 @@ class UVNode() : ShaderNode() {
     val uv = output(GLSLVec2("uv"))
 
     override fun declarationFrag(out: StringBuilder) {
-        if (uv.isUsed) out.append("$varIn ${uv.typedRef};\n")
+        if (uv.isUsed) out.append("in ${uv.typedRef};\n")
     }
 
     override fun executionVert(out: StringBuilder) {
@@ -37,8 +37,8 @@ class UVNode() : ShaderNode() {
 
     override fun declarationVert(out: StringBuilder) {
         if (uv.isUsed) {
-            out.append("$attribute ${uv.typeStr} $uvName;\n")
-            out.append("$varOut ${uv.typedRef};\n")
+            out.append("in ${uv.typeStr} $uvName;\n")
+            out.append("out ${uv.typedRef};\n")
         }
     }
 }

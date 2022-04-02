@@ -17,10 +17,7 @@
 package app.thelema.shader.node
 
 import app.thelema.g3d.IUniformArgs
-import app.thelema.g3d.cam.ActiveCamera
-import app.thelema.g3d.particles.Particle
-import app.thelema.gl.Vertex
-import app.thelema.math.Mat3
+import app.thelema.gl.SceneUniforms
 
 /** @author zeganstyl */
 class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): ShaderNode() {
@@ -29,12 +26,6 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
 
     /** World space vertex position */
     var vertexPosition: IShaderData by input()
-
-    val viewProjectionMatrix = GLSLMat4("viewProjectionMatrix")
-    val rotateToCameraMatrix = GLSLMat3("rotateToCameraMatrix")
-    @Deprecated("use your own uniform")
-    val previousViewProjectionMatrix = output(GLSLMat4("prevViewProjectionMatrix"))
-    val viewMatrix = GLSLMat4("viewMatrix")
 
     /** Non-normalized depth */
     val viewZDepth = output(GLSLFloat("viewZDepth"))
@@ -45,16 +36,8 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     /** Position after multiply View * vertex */
     val viewSpacePosition = output(GLSLVec4("viewSpacePosition"))
 
-    // TODO
-    @Deprecated("")
-    val instancePositionName: String
-        get() = Particle.POSITION.name
-    @Deprecated("")
-    var useInstancePosition = false
-    @Deprecated("")
-    var alwaysRotateObjectToCamera = false
-
-    private val mat3Tmp by lazy { Mat3() }
+    private val viewProjectionMatrixName: String
+        get() = SceneUniforms.ViewProjMatrix.uniformName
 
     init {
         this.vertexPosition = vertexPosition
@@ -63,51 +46,30 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
     override fun bind(uniforms: IUniformArgs) {
         super.bind(uniforms)
 
-        val cam = ActiveCamera
-        shader[viewProjectionMatrix.ref] = cam.viewProjectionMatrix
-        previousViewProjectionMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.previousViewProjectMatrix ?: cam.viewProjectionMatrix }
-        viewMatrix.ref.also { if (shader.hasUniform(it)) shader[it] = cam.viewMatrix }
-
-        if (alwaysRotateObjectToCamera) {
-            mat3Tmp.set(ActiveCamera.viewMatrix)
-            mat3Tmp.m10 = -mat3Tmp.m10
-            mat3Tmp.m11 = -mat3Tmp.m11
-            mat3Tmp.m12 = -mat3Tmp.m12
-            shader.set(rotateToCameraMatrix.ref, mat3Tmp, true)
-        }
+//        if (alwaysRotateObjectToCamera) {
+//            mat3Tmp.set(ActiveCamera.viewMatrix)
+//            mat3Tmp.m10 = -mat3Tmp.m10
+//            mat3Tmp.m11 = -mat3Tmp.m11
+//            mat3Tmp.m12 = -mat3Tmp.m12
+//            shader.set(rotateToCameraMatrix.ref, mat3Tmp, true)
+//        }
     }
 
     override fun executionVert(out: StringBuilder) {
         if (clipSpacePosition.isUsed || viewZDepth.isUsed) {
-            out.append("${clipSpacePosition.ref} = ${viewProjectionMatrix.ref} * ${getPositionRefVec4()};\n")
+            out.append("${clipSpacePosition.ref} = $viewProjectionMatrixName * ${getPositionRefVec4()};\n")
             if (viewZDepth.isUsed) {
                 out.append("${viewZDepth.ref} = ${clipSpacePosition.ref}.z;\n")
             }
         }
         if (viewSpacePosition.isUsed) {
-            out.append("${viewSpacePosition.ref} = ${viewMatrix.ref} * ${getPositionRefVec4()};\n")
+            out.append("${viewSpacePosition.ref} = ${SceneUniforms.ViewProjMatrix.uniformName} * ${getPositionRefVec4()};\n")
         }
     }
 
-    private fun getPositionRef(): String = if (useInstancePosition) {
-        "${if (alwaysRotateObjectToCamera) "${rotateToCameraMatrix.ref} * " else ""}${vertexPosition.asVec3()} + $instancePositionName"
-    } else {
-        "${if (alwaysRotateObjectToCamera) "${rotateToCameraMatrix.ref} * " else ""}${vertexPosition.asVec3()}"
-    }
-
-    private fun getPositionRefVec4(): String = "vec4(${getPositionRef()}, 1.0)"
+    private fun getPositionRefVec4(): String = "vec4(${vertexPosition.asVec3()}, 1.0)"
 
     override fun declarationVert(out: StringBuilder) {
-        if (clipSpacePosition.isUsed || viewProjectionMatrix.isUsed) {
-            out.append("uniform ${viewProjectionMatrix.typedRef};\n")
-        }
-        if (previousViewProjectionMatrix.isUsed) {
-            out.append("uniform ${previousViewProjectionMatrix.typedRef};\n")
-        }
-        if (alwaysRotateObjectToCamera) {
-            out.append("uniform ${rotateToCameraMatrix.typedRef};\n")
-        }
-        if (viewSpacePosition.isUsed || viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
         if (clipSpacePosition.isUsed || viewZDepth.isUsed) {
             out.append("out ${clipSpacePosition.typedRef};\n")
             if (viewZDepth.isUsed) {
@@ -115,13 +77,11 @@ class CameraDataNode(vertexPosition: IShaderData = GLSLNode.vertex.position): Sh
             }
         }
         if (viewSpacePosition.isUsed) out.append("out ${viewSpacePosition.typedRef};\n")
-        if (useInstancePosition) out.append("in vec3 $instancePositionName;\n")
     }
 
     override fun declarationFrag(out: StringBuilder) {
         if (clipSpacePosition.isUsed) out.append("in ${clipSpacePosition.typedRef};\n")
         if (viewSpacePosition.isUsed) out.append("in ${viewSpacePosition.typedRef};\n")
         if (viewZDepth.isUsed) out.append("in ${viewZDepth.typedRef};\n")
-        if (viewMatrix.isUsed) out.append("uniform ${viewMatrix.typedRef};\n")
     }
 }

@@ -55,8 +55,8 @@ class SkyboxShaderNodeTest: Test {
                             )
                         }
 
-                        rootNode = OutputNode {
-                            vertPosition = vertexNode.clipSpacePosition
+                        rootNode = OutputNode().apply {
+                            vertPosition = vertexNode.worldSpacePosition
                             fragColor = textureNode.texColor
                             fadeStart = -1f
                             alphaMode = Blending.OPAQUE

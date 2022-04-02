@@ -31,7 +31,7 @@ class TriangleBaseTest: Test {
 
         val glslVer = if (GL.isGLES) "300 es" else "330"
 
-        val positionLocation = 50
+        val positionLocation = 0
 
         val vertexShaderCode = """
 #version $glslVer

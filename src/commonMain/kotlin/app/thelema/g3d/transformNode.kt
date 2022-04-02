@@ -22,7 +22,6 @@ import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.g3d.light.DirectionalLight
 import app.thelema.g3d.light.PointLight
-import app.thelema.gl.IMesh
 import app.thelema.json.IJsonObject
 import app.thelema.math.*
 import app.thelema.utils.iterate
@@ -44,7 +43,7 @@ interface ITransformNode: IEntityComponent {
     /** Global world transform, product of multiply local and parent transform data, calculated via [updateTransform]. */
     val worldMatrix: IMat4
 
-    val previousWorldMatrix: IMat4?
+    val previousWorldMatrix: IMat4
 
     /** Global position */
     val worldPosition: IVec3C
@@ -160,9 +159,9 @@ class TransformNode: ITransformNode {
 
     override val worldPosition: IVec3 = Vec3Mat4Translation(worldMatrix)
 
-    private var previousWorldMatrixInternal: IMat4? = if (isPreviousMatrixEnabled) Mat4() else null
-    override val previousWorldMatrix: IMat4?
-        get() = previousWorldMatrixInternal
+    private var _previousWorldMatrix: IMat4? = if (isPreviousMatrixEnabled) Mat4() else null
+    override val previousWorldMatrix: IMat4
+        get() = _previousWorldMatrix ?: worldMatrix
 
     var listeners: ArrayList<TransformNodeListener>? = null
 
@@ -266,14 +265,17 @@ class TransformNode: ITransformNode {
 
     override fun enablePreviousMatrix(enable: Boolean) {
         if (enable) {
-            if (previousWorldMatrixInternal == null) previousWorldMatrixInternal = Mat4()
+            if (_previousWorldMatrix == null) _previousWorldMatrix = Mat4()
         } else {
-            previousWorldMatrixInternal = null
+            _previousWorldMatrix = null
         }
     }
 
     override fun updatePreviousMatrix() {
-        previousWorldMatrixInternal?.set(worldMatrix)
+        _previousWorldMatrix?.also { matrix ->
+            matrix.set(worldMatrix)
+            listeners?.iterate { it.previousWorldMatrixChanged(this) }
+        }
     }
 
     override fun updateTransform() {
@@ -366,7 +368,8 @@ class TransformNode: ITransformNode {
 }
 
 interface TransformNodeListener {
-    fun worldMatrixChanged(node: ITransformNode)
+    fun worldMatrixChanged(node: ITransformNode) {}
+    fun previousWorldMatrixChanged(node: ITransformNode) {}
 }
 
 fun TransformNodeListener(block: ITransformNode.() -> Unit): TransformNodeListener = object : TransformNodeListener {

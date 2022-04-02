@@ -23,6 +23,7 @@ import app.thelema.res.RES
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
+// TODO do not notify all parent entities, but only direct parent and root entity
 class Entity() : IEntity {
     constructor(name: String): this() {
         this.name = name

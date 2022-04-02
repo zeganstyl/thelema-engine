@@ -43,6 +43,9 @@ interface IMaterial: IEntityComponent {
 
     val listeners: List<MaterialListener>
 
+    fun getChannel(channel: String?): IShader? =
+        if (channel == null) shader else channels[channel]
+
     fun setChannel(channel: String, shader: IShader?)
 
     fun addListener(material: MaterialListener)

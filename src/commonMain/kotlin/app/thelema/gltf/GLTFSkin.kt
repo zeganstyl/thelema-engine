@@ -44,8 +44,6 @@ class GLTFSkin(array: IGLTFArray): GLTFArrayElementAdapter(array) {
 
         skin.initBones(joints.size)
 
-        skin.isPreviousBoneMatricesEnabled = gltf.conf.setupVelocityShader
-
         for (i in joints.indices) {
             val node = nodes[joints[i]]!!
             skin.setBone(i, node)

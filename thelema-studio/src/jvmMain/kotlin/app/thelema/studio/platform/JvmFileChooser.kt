@@ -9,17 +9,14 @@ import app.thelema.res.APP_ROOT_FILENAME
 import app.thelema.res.RES
 import app.thelema.studio.Studio
 import app.thelema.studio.ecs.KotlinScripting
+import org.lwjgl.system.MemoryStack.stackPush
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.awt.Desktop
 import java.io.File
-import javax.swing.JFileChooser
-
 
 class JvmFileChooser: IFileChooser {
     override val userHomeDirectory: String
         get() = System.getProperty("user.home") ?: ""
-
-    lateinit var chooser: JFileChooser
 
     override fun executeCommandInTerminal(directory: IFile, command: List<String>): (out: StringBuilder) -> Boolean {
         val args = ArrayList<String>()
@@ -72,33 +69,47 @@ class JvmFileChooser: IFileChooser {
         if (dir == null) {
             ready(null)
         } else {
-            chooser.isMultiSelectionEnabled = false
-            chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
-            chooser.dialogType = JFileChooser.OPEN_DIALOG
-            chooser.currentDirectory = File(dir.platformPath)
-            chooser.selectedFile = if (selectedFile != null) File(selectedFile.platformPath) else null
-            chooser.fileFilter = null
-            chooser.requestFocus()
-            if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
-            val file = chooser.selectedFile
-            if (file != null) {
+            val pack = RES.appPackage.replace('.', '/')
+            val dir2 = if (pack.isEmpty()) "${dir.platformPath}/." else "${dir.platformPath}/$pack/some_name"
+
+            val stack = stackPush()
+            val aFilterPatterns = stack.mallocPointer(1)
+            aFilterPatterns.put(stack.UTF8("*.kt"))
+            aFilterPatterns.flip()
+            TinyFileDialogs.tinyfd_openFileDialog(
+                "Open Script",
+                selectedFile?.platformPath ?: dir2,
+                aFilterPatterns,
+                "Kotlin Script (.kt)",
+                false
+            )?.also {
+                val file = File(it)
                 ready(JvmFile(file, file.relativeTo(File(dir.path)).path, FileLocation.Relative))
             }
+
+//            chooser.isMultiSelectionEnabled = false
+//            chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
+//            chooser.dialogType = JFileChooser.OPEN_DIALOG
+//            chooser.currentDirectory = File(dir.platformPath)
+//            chooser.selectedFile = if (selectedFile != null) File(selectedFile.platformPath) else null
+//            chooser.fileFilter = null
+//            chooser.requestFocus()
+//            if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
         }
     }
 
     override fun openProjectFile(selectedFile: IFile?, ready: (uri: String) -> Unit) {
         val projectFile = RES.file
         val dir = RES.absoluteDirectory.platformPath
-        chooser.isMultiSelectionEnabled = false
-        chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
-        chooser.dialogType = JFileChooser.OPEN_DIALOG
-        chooser.currentDirectory = File(dir)
-        chooser.selectedFile = if (selectedFile != null) File(selectedFile.platformPath) else null
-        chooser.fileFilter = null
-        if (chooser.showDialog(null, null) != JFileChooser.APPROVE_OPTION) return
-        val file = chooser.selectedFile
-        if (file != null) {
+
+        TinyFileDialogs.tinyfd_openFileDialog(
+            "Open Script",
+            selectedFile?.platformPath ?: dir,
+            null,
+            "project file",
+            false
+        )?.also {
+            val file = File(it)
             ready(file.relativeTo(File(projectFile.parent().path)).path)
         }
     }

@@ -21,7 +21,7 @@ import app.thelema.app.APP
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.mesh.BoxMesh
 import app.thelema.gl.GL
-import app.thelema.gl.TextureRenderer
+import app.thelema.gl.ScreenQuad
 import app.thelema.img.GBuffer
 import app.thelema.img.render
 import app.thelema.math.MATH
@@ -36,8 +36,6 @@ class GBufferBaseTest: Test {
         get() = "G-Buffer base"
 
     override fun testMain() {
-        val screenQuad = TextureRenderer(0f, 0f, 0.5f, 0.5f)
-
         val gBuffer = GBuffer()
 
         ActiveCamera {
@@ -50,7 +48,7 @@ class GBufferBaseTest: Test {
         val shader = Shader(version = 330,
             vertCode = """
 in vec3 POSITION;
-in vec2 UV;
+in vec2 TEXCOORD_0;
 in vec3 NORMAL;
 
 uniform mat4 world;
@@ -61,10 +59,10 @@ out vec3 vNormal;
 out vec3 vPosition;
 
 void main() {
-vUV = UV;
-vNormal = (world * vec4(NORMAL, 1.0)).xyz; // our cube is not translating, only rotating, so we can multiply normals with world matrix
-vPosition = (world * vec4(POSITION, 1.0)).xyz;
-gl_Position = viewProj * vec4(vPosition, 1.0);
+    vUV = TEXCOORD_0;
+    vNormal = (world * vec4(NORMAL, 1.0)).xyz;
+    vPosition = (world * vec4(POSITION, 1.0)).xyz;
+    gl_Position = viewProj * vec4(vPosition, 1.0);
 }""",
             fragCode = """
 in vec2 vUV;
@@ -76,9 +74,9 @@ layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gPosition;
 
 void main() {
-gColor = vec4(vUV, 0.0, 1.0);
-gNormal = vec4(vNormal, 1.0);
-gPosition = vec4(vPosition, 1.0);
+    gColor = vec4(vUV, 0.0, 1.0);
+    gNormal = vec4(vNormal, 1.0);
+    gPosition = vec4(vPosition, 1.0);
 }""")
 
         val cube = BoxMesh { setSize(2f) }
@@ -98,20 +96,14 @@ gPosition = vec4(vPosition, 1.0);
                 cube.render(shader)
             }
 
-            screenQuad.render(gBuffer.colorMap, clearMask = null) {
-                screenQuad.setPosition(-0.5f, 0.5f)
-            }
-
-            screenQuad.render(gBuffer.normalMap, clearMask = null) {
-                screenQuad.setPosition(0.5f, 0.5f)
-            }
-
-            screenQuad.render(gBuffer.positionMap, clearMask = null) {
-                screenQuad.setPosition(-0.5f, -0.5f)
-            }
-
-            screenQuad.render(gBuffer.depthMap, clearMask = null) {
-                screenQuad.setPosition(0.5f, -0.5f)
+            ScreenQuad.render(4, flipY = false, maxCellsInRow = 2) {
+                when (it) {
+                    0 -> gBuffer.colorMap
+                    1 -> gBuffer.normalMap
+                    2 -> gBuffer.positionMap
+                    3 -> gBuffer.depthMap
+                    else -> gBuffer.getTexture(it)
+                }
             }
         }
     }

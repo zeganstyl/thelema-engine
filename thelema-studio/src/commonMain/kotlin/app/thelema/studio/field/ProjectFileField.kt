@@ -1,5 +1,6 @@
 package app.thelema.studio.field
 
+import app.thelema.fs.DefaultProjectFile
 import app.thelema.fs.FS
 import app.thelema.fs.FileLocation
 import app.thelema.fs.IFile
@@ -13,7 +14,7 @@ class ProjectFileField: Table(), PropertyProvider<IFile?> {
     val textField = TextField()
     val chooseButton = TextButton("...") {
         onClick {
-            if (RES.file != null) {
+            if (RES.file != DefaultProjectFile && RES.file.exists()) {
                 Studio.fileChooser.openProjectFile(get()) {
                     value = it
                     set(FS.file(it, FileLocation.Project))

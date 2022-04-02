@@ -147,6 +147,12 @@ class InstancedMesh: IInstancedMesh {
     private var vao = 0
     private var updateVaoRequest = true
 
+    override fun getShaders(shaderChannel: String?, outSet: MutableSet<IShader>, outList: MutableList<IShader>) {
+        material?.getChannel(shaderChannel)?.also {
+            if (outSet.add(it)) outList.add(it)
+        }
+    }
+
     override fun addVertexBuffer(buffer: IVertexBuffer) {
         _vertexBuffers.add(buffer)
         _vertexBuffers.trimToSize()

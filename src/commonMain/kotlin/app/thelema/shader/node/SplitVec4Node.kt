@@ -65,8 +65,4 @@ class SplitVec4Node(vector: IShaderData = GLSL.zeroFloat): ShaderNode() {
             }
         }
     }
-
-    companion object {
-        const val Vector = "vector"
-    }
 }

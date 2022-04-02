@@ -48,11 +48,11 @@ class LogarithmicDepthBufferTest: Test {
 
         val shader = Shader(
             vertCode = """
-attribute vec3 POSITION;
-attribute vec2 TEXCOORD_0;
+in vec3 POSITION;
+in vec2 TEXCOORD_0;
 
-varying vec2 uv;
-varying float flogz;
+out vec2 uv;
+out float flogz;
 
 const float Fcoef = 2.0 / log2(${ActiveCamera.far} + 1.0);
 
@@ -66,14 +66,15 @@ void main() {
     flogz = 1.0 + gl_Position.w;
 }""",
             fragCode = """
-varying vec2 uv;
-varying float flogz;
+in vec2 uv;
+in float flogz;
+out vec4 FragColor;
 
 const float Fcoef_half = 1.0 / log2(${ActiveCamera.far} + 1.0);
 
 void main() {
     gl_FragDepth = log2(flogz) * Fcoef_half;
-    gl_FragColor = vec4(uv, 0.0, 1.0);
+    FragColor = vec4(uv, 0.0, 1.0);
 }""")
 
         val plane = PlaneMesh { setSize(10f) }

@@ -24,7 +24,6 @@ import app.thelema.gl.*
 import app.thelema.math.Mat4
 import app.thelema.math.Vec3
 import app.thelema.math.Vec4
-import app.thelema.gl.TextureRenderer
 import app.thelema.img.DepthFrameBuffer
 import app.thelema.img.render
 import app.thelema.shader.Shader
@@ -141,9 +140,6 @@ void main() {
             targetDistance = 10f
         }
 
-        // create screen quad for debugging
-        val screenQuad = TextureRenderer()
-
         val cubesStartX = -100f
         val cubesEndX = 100f
         val cubesStepX = 20f
@@ -214,9 +210,7 @@ void main() {
             lightFrustumMesh.render(shader)
 
             // render light depth map
-            screenQuad.setPosition(-0.7f, -0.7f)
-            screenQuad.setScale(0.2f, 0.2f)
-            screenQuad.render(depthBuffer.getTexture(0), clearMask = null)
+            ScreenQuad.render(1, maxCellSize = 0.2f, padding = 0.01f) { depthBuffer.getTexture(0) }
         }
     }
 }

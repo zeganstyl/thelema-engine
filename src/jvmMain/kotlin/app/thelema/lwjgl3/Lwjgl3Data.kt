@@ -24,15 +24,13 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
+import java.util.concurrent.ConcurrentHashMap
 
 class Lwjgl3Data: IData {
     override val nullBuffer: IByteData = JvmByteBuffer(ByteBuffer.allocate(0))
 
-    val allocatedBuffers = HashMap<IByteData, ByteBuffer>()
+    val allocatedBuffers = ConcurrentHashMap<IByteData, ByteBuffer>()
 
     override fun decodeURI(uri: String): String = URLDecoder.decode(uri, "UTF-8")
     override fun encodeURI(uri: String): String = URLEncoder.encode(uri, "UTF-8")

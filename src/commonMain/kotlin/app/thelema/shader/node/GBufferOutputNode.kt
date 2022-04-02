@@ -22,14 +22,13 @@ import app.thelema.g3d.Blending
 import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.GL
 import app.thelema.gl.GL_BACK
+import app.thelema.gl.SceneUniforms
 import app.thelema.img.GBuffer
 import app.thelema.json.IJsonObject
 
 /** For using with [GBuffer]
  * @author zeganstyl */
-class GBufferOutputNode(): ShaderNode() {
-    constructor(block: GBufferOutputNode.() -> Unit): this() { block(this) }
-
+class GBufferOutputNode: ShaderNode() {
     override val componentName: String
         get() = "GBufferOutputNode"
 
@@ -39,8 +38,6 @@ class GBufferOutputNode(): ShaderNode() {
     var fragColor by input(GLSL.oneFloat)
 
     var fragNormal by input(GLSL.defaultNormal)
-
-    var fragPosition by input(GLSL.zeroFloat)
 
     var alphaMode: String = Blending.OPAQUE
     var alphaCutoff: Float = 0.5f
@@ -54,8 +51,7 @@ class GBufferOutputNode(): ShaderNode() {
         }
 
     init {
-        fragPosition = GLSLNode.camera.viewSpacePosition
-        vertPosition = GLSLNode.camera.clipSpacePosition
+        vertPosition = GLSLNode.vertex.position
         fragColor = GLSL.oneFloat
         fragNormal = GLSLNode.vertex.normal
     }
@@ -92,13 +88,13 @@ class GBufferOutputNode(): ShaderNode() {
     }
 
     override fun executionVert(out: StringBuilder) {
-        out.append("gl_Position = ${vertPosition.asVec4()};\n")
+        out.append("gl_Position = ${SceneUniforms.ViewProjMatrix.uniformName} * ${vertPosition.asVec4()};\n")
     }
 
     override fun executionFrag(out: StringBuilder) {
         out.append("gColor = ${fragColor.asVec4()};\n")
         out.append("gNormal = ${fragNormal.asVec4()};\n")
-        out.append("gPosition = ${fragPosition.asVec4()};\n")
+        out.append("gPosition = ${SceneUniforms.ViewMatrix.uniformName} * ${vertPosition.asVec4()};\n")
 
         if (alphaMode == Blending.MASK) {
             out.append("if (gColor.a < $alphaCutoff) { discard; }\n")

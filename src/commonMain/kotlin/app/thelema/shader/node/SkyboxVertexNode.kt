@@ -61,11 +61,11 @@ class SkyboxVertexNode(): ShaderNode() {
     }
 
     override fun declarationVert(out: StringBuilder) {
-        out.append("$attribute vec3 $positionsName;\n")
-        out.append("$varOut vec3 vPosition;\n")
-        out.append("$varOut ${worldSpacePosition.typedRef};\n")
-        out.append("$varOut ${clipSpacePosition.typedRef};\n")
-        out.append("$varOut vec4 prevClipSpacePos;\n")
+        out.append("in vec3 $positionsName;\n")
+        out.append("out vec3 vPosition;\n")
+        out.append("out ${worldSpacePosition.typedRef};\n")
+        out.append("out ${clipSpacePosition.typedRef};\n")
+        out.append("out vec4 prevClipSpacePos;\n")
         out.append("uniform vec4 $uSkyboxVertexTransformName;\n")
         if (clipSpacePosition.isUsed || velocity.isUsed) {
             out.append("uniform mat4 $uViewProjectionMatrix;\n")
@@ -89,16 +89,16 @@ class SkyboxVertexNode(): ShaderNode() {
     }
 
     override fun declarationFrag(out: StringBuilder) {
-        out.append("$varIn vec3 vPosition;\n")
+        out.append("in vec3 vPosition;\n")
         out.append("${textureCoordinates.typedRef};\n")
         if (worldSpacePosition.isUsed || clipSpacePosition.isUsed || velocity.isUsed) {
-            out.append("$varIn ${worldSpacePosition.typedRef};\n")
+            out.append("in ${worldSpacePosition.typedRef};\n")
 
             if (clipSpacePosition.isUsed || velocity.isUsed) {
-                out.append("$varIn ${clipSpacePosition.typedRef};\n")
+                out.append("in ${clipSpacePosition.typedRef};\n")
 
                 if (velocity.isUsed) {
-                    out.append("$varIn vec4 prevClipSpacePos;\n")
+                    out.append("in vec4 prevClipSpacePos;\n")
                     out.append("vec2 ${velocity.ref};\n")
                 }
             }

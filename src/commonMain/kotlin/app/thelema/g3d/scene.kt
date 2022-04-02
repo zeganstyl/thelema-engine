@@ -21,8 +21,11 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.g3d.cam.ICamera
 import app.thelema.g3d.light.ILight
 import app.thelema.gl.IRenderable
+import app.thelema.gl.SceneUniformBuffer
 import app.thelema.input.*
+import app.thelema.math.Mat4
 import app.thelema.shader.IRenderingPipeline
+import app.thelema.shader.IShader
 import app.thelema.utils.iterate
 
 /** Root object. Main purpose - render all contained objects as one whole
@@ -104,6 +107,13 @@ class Scene: IScene {
 
     override val lights = ArrayList<ILight>()
 
+    val uniformArgs: IUniformArgs = UniformArgs()
+
+    val uniformBuffer = SceneUniformBuffer()
+
+    val shadersSet = HashSet<IShader>()
+    val shaders = ArrayList<IShader>()
+
     private val opaque = ArrayList<IRenderable>()
     private val masked = ArrayList<IRenderable>()
     private val translucent = ArrayList<IRenderable>()
@@ -111,6 +121,8 @@ class Scene: IScene {
     override var renderingPipeline: IRenderingPipeline? = null
 
     override var frustumCulling: Boolean = true
+
+    private val rotateToCameraMatrix = Mat4()
 
     private val renderBlock: (channel: String?) -> Unit = { render(it) }
 
@@ -203,13 +215,14 @@ class Scene: IScene {
     }
 
     override fun render() {
+        ActiveScene = this
+
         val oldCamera = ActiveCamera
         val activeCamera = activeCamera
         if (activeCamera != null) ActiveCamera = activeCamera
 
-        for (i in lights.indices) {
-            val light = lights[i]
-            if (light.isShadowEnabled) light.renderShadowMaps(this)
+        lights.iterate {
+            if (it.isShadowEnabled) it.renderShadowMaps(this)
         }
 
         val renderingPipeline = renderingPipeline
@@ -223,12 +236,29 @@ class Scene: IScene {
     }
 
     override fun render(shaderChannel: String?) {
+        ActiveScene = this
+
+        uniformBuffer.lights(lights)
+        var lightsNum = 0
+        lights.iterate { if (it.isLightEnabled) lightsNum++ }
+        uniformBuffer.lightsNum(lightsNum)
+        uniformBuffer.viewProjMatrix(ActiveCamera.viewProjectionMatrix)
+        uniformBuffer.viewMatrix(ActiveCamera.viewMatrix)
+        uniformBuffer.prevViewProjMatrix(ActiveCamera.previousViewProjectMatrix)
+        rotateToCameraMatrix.setTransposed3x3From(ActiveCamera.viewMatrix)
+        uniformBuffer.rotateToCameraMatrix(rotateToCameraMatrix)
+        uniformBuffer.bytes.rewind()
+        uniformBuffer.uploadBufferToGpu()
+
         opaque.clear()
         masked.clear()
         translucent.clear()
+        shaders.clear()
+        shadersSet.clear()
 
         for (i in renderables.indices) {
             val renderable = renderables[i]
+            renderable.getShaders(shaderChannel, shadersSet, shaders)
             if (!frustumCulling || renderable.visibleInFrustum(ActiveCamera.frustum)) {
                 renderable.uniformArgs.scene = this
                 when (renderable.alphaMode) {
@@ -238,6 +268,11 @@ class Scene: IScene {
                 }
             }
         }
+
+        shaders.iterate { it.bindUniformBuffer(uniformBuffer) }
+
+        shaders.clear()
+        shadersSet.clear()
 
         if (opaque.size > 0) {
             // render near objects first, so that far objects can discarded with depth test
@@ -271,3 +306,5 @@ class Scene: IScene {
         activeCamera = null
     }
 }
+
+var ActiveScene: IScene? = null

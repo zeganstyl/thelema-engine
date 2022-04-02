@@ -51,11 +51,6 @@ interface IShader: IEntityComponent {
     /** Uniform lookup. Key - uniform name, value - location */
     val uniforms: MutableMap<String, Int>
 
-    /** Attribute lookup. Key - vertex attribute name, value - location */
-    val attributes: MutableMap<String, Int>
-
-    val enabledAttributes: List<IVertexAccessor>
-
     val nodes: Array<IShaderNode>
 
     var depthMask: Boolean
@@ -70,6 +65,20 @@ interface IShader: IEntityComponent {
 
     var listener: ShaderListener?
 
+    fun getOrCreateUniformBuffer(layout: IUniformLayout): IUniformBuffer
+
+    fun <T: IUniformBuffer> getOrCreateUniformBufferTyped(layout: IUniformLayout): T =
+        getOrCreateUniformBuffer(layout) as T
+
+    fun bindUniformBuffer(buffer: IUniformBuffer)
+
+    /** Bind own uniform buffer */
+    fun bindUniformBuffer(layout: IUniformLayout) {
+        bindUniformBuffer(getOrCreateUniformBuffer(layout))
+    }
+
+    fun bindOwnUniformBuffers()
+
     fun onBind(block: IShader.() -> Unit): ShaderListener {
         listener = object : ShaderListener {
             override fun bind(shader: IShader) {
@@ -82,8 +91,6 @@ interface IShader: IEntityComponent {
     fun findShaderNode(componentName: String): IShaderNode?
 
     fun load(vertCode: String, fragCode: String)
-
-    fun disableAllAttributes()
 
     fun numerateLines(title: String, text: String, pad: Int = 5): String {
         val lines = text.split('\n')
@@ -98,13 +105,7 @@ interface IShader: IEntityComponent {
     }
 
     /** Every line will be numerated */
-    fun vertSourceCode(title: String = "=== VERTEX ===\n", pad: Int = 5): String = numerateLines(title, vertCode, pad)
-
-    /** Every line will be numerated */
-    fun fragSourceCode(title: String = "=== FRAGMENT ===\n", pad: Int = 5): String = numerateLines(title, fragCode, pad)
-
-    /** Every line will be numerated */
-    fun printCode(pad: Int = 5): String = vertSourceCode(pad = pad) + fragSourceCode(pad = pad)
+    fun printCode(pad: Int = 5): String
 
     /** Makes this shader as current. */
     fun bind()
@@ -184,8 +185,6 @@ interface IShader: IEntityComponent {
     /** @param pedantic flag indicating whether attributes & uniforms must be present at all times */
     fun getUniformLocation(name: String, pedantic: Boolean = false): Int
 
-    fun hasUniform(name: String): Boolean
-
     /** Sets the uniform with the given name. Shader must be bound. */
     fun setUniformi(name: String, value: Int) {
         GL.glUniform1i(getUniformLocation(name), value)
@@ -198,8 +197,7 @@ interface IShader: IEntityComponent {
 
     /** Sets the uniform with the given name. Shader must be bound. */
     fun set(name: String, value1: Int, value2: Int, value3: Int) {
-        val location = getUniformLocation(name)
-        GL.glUniform3i(location, value1, value2, value3)
+        GL.glUniform3i(getUniformLocation(name), value1, value2, value3)
     }
 
     /** Sets the uniform with the given name. Shader must be bound. */
@@ -246,15 +244,13 @@ interface IShader: IEntityComponent {
     /** Sets an array of uniform matrices with the given name. Shader must be bound. */
     fun setUniformMatrix3fv(name: String, buffer: IFloatData, count: Int, transpose: Boolean) {
         buffer.position = 0
-        val location = getUniformLocation(name)
-        GL.glUniformMatrix3fv(location, count, transpose, buffer)
+        GL.glUniformMatrix3fv(getUniformLocation(name), count, transpose, buffer)
     }
 
     /** Sets an array of uniform matrices with the given name. Shader must be bound. */
     fun set(name: String, buffer: IFloatData, count: Int, transpose: Boolean) {
         buffer.position = 0
-        val location = getUniformLocation(name)
-        GL.glUniformMatrix4fv(location, count, transpose, buffer)
+        GL.glUniformMatrix4fv(getUniformLocation(name), count, transpose, buffer)
     }
 
     fun setMatrix3(name: String, values: FloatArray, offset: Int, count: Int, transpose: Boolean = false) =
@@ -290,19 +286,6 @@ interface IShader: IEntityComponent {
 
     operator fun set(name: String, value: IMat4) = set(name, value, false)
 
-    /** Sets the given attribute
-     *
-     * @param name the name of the attribute
-     * @param value1 the first value
-     * @param value2 the second value
-     * @param value3 the third value
-     * @param value4 the fourth value
-     */
-    fun setAttributef(name: String, value1: Float, value2: Float, value3: Float, value4: Float) =
-        GL.glVertexAttrib4f(getAttributeLocation(name), value1, value2, value3, value4)
-
-    fun getAttributeLocation(name: String) = attributes[name] ?: -1
-
 
     /** Generate source code from nodes and compile shader */
     fun build()
@@ -337,4 +320,8 @@ inline fun <reified T: IShaderNode> IShader.node(block: T.() -> Unit): T {
 inline fun IShader.useShader(block: IShader.() -> Unit) {
     bind()
     block()
+}
+
+fun <T: IUniformBuffer> IShader.getOrCreateUniformBuffer(layout: IUniformLayout, block: T.() -> Unit) {
+    getOrCreateUniformBufferTyped<T>(layout).apply(block)
 }

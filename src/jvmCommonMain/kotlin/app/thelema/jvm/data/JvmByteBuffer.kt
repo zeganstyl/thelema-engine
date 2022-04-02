@@ -107,6 +107,10 @@ class JvmByteBuffer(var byteBuffer: ByteBuffer): IByteData, JvmBuffer() {
 //        }
 //    }
 
+    override fun put(bytes: IByteData) {
+        byteBuffer.put(bytes.sourceObject as ByteBuffer)
+    }
+
     override fun putFloat(byteIndex: Int, value: Float) {
         byteBuffer.putFloat(byteIndex, value)
     }

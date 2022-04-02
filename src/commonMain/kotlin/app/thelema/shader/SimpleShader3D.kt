@@ -20,6 +20,7 @@ import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.IMesh
 import app.thelema.img.ITexture2D
 import app.thelema.math.*
+import app.thelema.shader.node.OutputNode
 
 /** Can be used for debugging purpose */
 // TODO add skinning
@@ -85,6 +86,8 @@ out vec3 normal;
 uniform mat4 viewProj;
 uniform mat4 worldMatrix;
 
+${if (OutputNode.useLogarithmicDepthByDefault) "out float flogz;\nconst float Fcoef = 2.0 / log2(1.0E9 + 1.0);" else ""}
+
 void main() {
     pos = POSITION;
     ${if (useUvs) "uv = TEXCOORD_0;" else "uv = vec2(1.0);" }
@@ -92,6 +95,11 @@ void main() {
     normal = mat3(worldMatrix[0].xyz, worldMatrix[1].xyz, worldMatrix[2].xyz) * normal; // get normal matrix from world matrix
     normal = normalize(normal);
     gl_Position = viewProj * worldMatrix * vec4(POSITION, 1.0);
+    ${
+        if (OutputNode.useLogarithmicDepthByDefault) {
+            "gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * Fcoef - 1.0E-6;\nflogz = 1.0 + gl_Position.w;"
+        } else ""
+    }
 }
 """
         if (fragCode.isEmpty()) fragCode = """
@@ -109,6 +117,8 @@ uniform float maxLightIntensity;
 ${if (color != null) "uniform vec4 color;" else "" }
 ${if (colorTexture != null) "uniform sampler2D tex;" else ""}
 
+${if (OutputNode.useLogarithmicDepthByDefault) "in float flogz;\nconst float Fcoef_half = 1.0 / log2(1.0E9 + 1.0);" else ""}
+
 void main() {
     vec4 fragColor = vec4(${when (renderAttributeName) {
             "TEXCOORD_0" -> "uv, 0.0, 1.0"
@@ -122,6 +132,7 @@ void main() {
     ${if (lightDirection != null) "fragColor.rgb *= clamp(dot(lightDirection, normal) * lightIntensity, minLightIntensity, maxLightIntensity);" else ""}
     FragColor = fragColor;
     ${if (alphaCutoff > 0f) "if (FragColor.a < $alphaCutoff) discard; // alphaCutoff" else ""}
+    ${if (OutputNode.useLogarithmicDepthByDefault) "gl_FragDepth = log2(flogz) * Fcoef_half;" else ""}
 }
 """
     }

@@ -9,7 +9,6 @@ import app.thelema.g3d.material
 import app.thelema.g3d.mesh.planeMesh
 import app.thelema.g3d.particles.*
 import app.thelema.g3d.scene
-import app.thelema.gl.meshInstance
 import app.thelema.img.Texture2D
 import app.thelema.math.MATH
 import app.thelema.shader.Shader
@@ -33,24 +32,17 @@ class EmitParticlesByCodeTest: Test {
                     setSize(1f)
                 }
                 particleMaterial {
-                    lifeTimesAsAttribute = true
-
                     component<MoveParticleEffect>()
                     val shader = Shader()
                     val material = material()
                     material.shader = shader
 
+                    maxLifeTime = 5f
+
                     shader.apply {
                         val vertex = VertexNode()
 
                         val particleData = ParticleDataNode()
-                        particleData.maxLifeTime = 5f
-
-                        val camera = CameraDataNode().apply {
-                            vertexPosition = vertex.position
-                            useInstancePosition = true
-                            alwaysRotateObjectToCamera = true
-                        }
 
                         val texture = Texture2DNode {
                             texture = Texture2D("thelema-logo-256.png")
@@ -63,7 +55,7 @@ class EmitParticlesByCodeTest: Test {
                         }
 
                         val output = component<OutputNode> {
-                            vertPosition = camera.clipSpacePosition
+                            vertPosition = vertex.position
                             fragColor = particleColor.result
                         }
                         rootNode = output.sibling()
@@ -76,7 +68,6 @@ class EmitParticlesByCodeTest: Test {
             entity("emitter") {
                 val emitter = particleEmitter {
                     maxParticles = 100
-                    maxParticleLifeTime = 5f
                     particleEmissionSpeed = 0f
                     this.particleMaterial = particleMaterial.component()
                 }

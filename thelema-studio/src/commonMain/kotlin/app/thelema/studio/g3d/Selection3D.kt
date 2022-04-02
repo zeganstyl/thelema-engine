@@ -55,12 +55,7 @@ void main() {
     val colorUniform = StudioColorUniformNode()
     val selectionRenderShader = Shader {
         getOrCreateEntity()
-        val vertex = VertexNode()
-        vertex.maxBones = 100
-        val camera = CameraDataNode()
-        camera.vertexPosition = vertex.position
         val output = sibling<OutputNode>()
-        output.vertPosition = camera.clipSpacePosition
         output.fragColor = colorUniform.uniform
         output.fadeStart = -1f
         rootNode = output.sibling()
