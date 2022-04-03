@@ -23,8 +23,8 @@ void main(void)
 {
 	vec3 n[9];
 
-    float w = 1.0 / width;
-	float h = 1.0 / height;
+    float w = width;
+	float h = height;
 
 	n[0] = texture2D(tex, uv + vec2( -w, -h)).xyz;
 	n[1] = texture2D(tex, uv + vec2(0.0, -h)).xyz;
@@ -47,6 +47,8 @@ void main(void)
 
     val edgeColor = Vec3(1f, 1f, 1f)
 
+    var width = 1f
+
     init {
         bind()
         set("tex", 0)
@@ -56,8 +58,8 @@ void main(void)
         bind()
         inputMap.bind(0)
         set("edgeColor", edgeColor)
-        this["width"] = (out?.width ?: GL.mainFrameBufferWidth).toFloat()
-        this["height"] = (out?.height ?: GL.mainFrameBufferHeight).toFloat()
+        this["width"] = width / (out?.width ?: GL.mainFrameBufferWidth).toFloat()
+        this["height"] = width / (out?.height ?: GL.mainFrameBufferHeight).toFloat()
         ScreenQuad.render(this, out)
     }
 }

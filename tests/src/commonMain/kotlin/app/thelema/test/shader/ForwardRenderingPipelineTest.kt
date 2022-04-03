@@ -65,7 +65,7 @@ class ForwardRenderingPipelineTest: Test {
                         setupVelocityShader = true
                         setupDepthRendering = true
                     }
-                }
+                }.sibling()
 
                 entity("Scene").animationPlayer().setAnimation(
                     AnimationAction {

@@ -3,6 +3,7 @@ package app.thelema.studio.ecs
 import app.thelema.ecs.EntityListener
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.forEachChildEntity
+import app.thelema.ecs.forEachComponent
 import app.thelema.studio.Studio
 import app.thelema.ui.Label
 import app.thelema.ui.TreeNode
@@ -75,17 +76,17 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
     }
 
     fun addNodeIfExpandedAndNotAdded(entity: IEntity) {
-        if (isExpanded) {
-            var node = cache[entity]
-            if (node == null) {
-                node = EntityTreeNode(entity)
-                cache[entity] = node
+        var node = cache[entity]
+        if (node == null) {
+            node = EntityTreeNode(entity)
+            cache[entity] = node
+            add(node)
+        } else {
+            if (!children.contains(node)) {
                 add(node)
-            } else {
-                if (!children.contains(node)) {
-                    add(node)
-                }
             }
+        }
+        if (filterNameTemplate.isNotEmpty() || filterComponentNameTemplates.isNotEmpty()) {
             node.filter(filterNameTemplate, filterComponentNameTemplates, filterMatch)
         }
     }
@@ -127,6 +128,10 @@ class EntityTreeNode(val entity: IEntity): TreeNode(Label().apply { textProvider
         checkName(entity) && checkEntityContainsComponent(entity)
 
     private fun checkDeep(entity: IEntity): Boolean {
+        if (filterNameTemplate.isNotEmpty() || filterComponentNameTemplates.isNotEmpty()) {
+            return true
+        }
+
         if (check(entity)) {
             return true
         } else {

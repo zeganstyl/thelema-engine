@@ -19,12 +19,13 @@ package app.thelema.gltf
 import app.thelema.ecs.IEntity
 import app.thelema.fs.IFile
 import app.thelema.g3d.ISceneProvider
+import app.thelema.g3d.SceneProviderProxy
 import app.thelema.gl.IVertexLayout
 import app.thelema.gl.VertexLayout
 import app.thelema.res.ILoader
 
 /** @author zeganstyl */
-interface IGLTF: ILoader, ISceneProvider {
+interface IGLTF: ILoader, SceneProviderProxy {
     var generator: String
     var version: String
     var copyright: String

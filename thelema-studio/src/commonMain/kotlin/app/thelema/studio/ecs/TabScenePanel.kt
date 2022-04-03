@@ -10,6 +10,8 @@ import app.thelema.g3d.cam.OrbitCameraControl
 import app.thelema.input.BUTTON
 import app.thelema.input.KEY
 import app.thelema.input.MOUSE
+import app.thelema.studio.SKIN
+import app.thelema.studio.Studio
 import app.thelema.studio.component.ComponentsPanel
 import app.thelema.studio.g3d.Selection3D
 import app.thelema.studio.g3d.TranslationGizmo
@@ -53,13 +55,20 @@ class TabScenePanel: Table() {
         })
     }
 
-    val split = MultiSplitPane(false) {
-        setWidgets(entityTree, sceneOverlay, componentsPanel)
+    val entityTreeProjectSplit = SplitPane(entityTree, Studio.projectTree, true, style = SKIN.split)
+    val split = MultiSplitPane(false, style = SKIN.split) {
+        setWidgets(
+            Table().apply {
+                fillParent = true
+                background = SKIN.background
+                add(entityTreeProjectSplit).grow()
+            },
+            sceneOverlay,
+            componentsPanel
+        )
         setSplit(0, 0.2f)
         setSplit(1, 0.8f)
     }
-
-    val selection = Selection<IEntity>()
 
     val translationGizmo = TranslationGizmo()
 
@@ -75,61 +84,43 @@ class TabScenePanel: Table() {
         stopListenMouse()
     }
 
+    val selection: Selection<ITreeNode>
+        get() = entityTree.tree.selection
+
+    private val projectSelectionListener = object : ClickListener() {
+        override fun clicked(event: InputEvent, x: Float, y: Float) {
+            componentsPanel.entity = Studio.projectTree.selected?.entity
+        }
+    }
+
     init {
         fillParent = true
 
+        componentsPanel.background = SKIN.background
+
         selection.isMultiple = true
-        selection.addSelectionListener(object : SelectionListener<IEntity> {
-            override fun added(item: IEntity) {
-                entityTree.tree.findNode { (it as EntityTreeNode).entity == item }?.also {
-                    it.expandTo()
-                    entityTree.tree.selection.add(it)
-                }
-            }
+        entityTree.tree.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent, x: Float, y: Float) {
+                val selected = selection.lastSelected as EntityTreeNode?
 
-            override fun removed(item: IEntity) {
-                entityTree.tree.findNode { (it as EntityTreeNode).entity == item }?.also {
-                    entityTree.tree.selection.remove(it)
-                }
-            }
+                componentsPanel.entity = selected?.entity
 
-            override fun lastSelectedChanged(newValue: IEntity?) {
-                if (newValue != null) {
-                    componentsPanel.clearComponents()
-                    newValue.forEachComponent { componentsPanel.setComponent(it) }
-
-                    entityTree.tree.findNode { (it as EntityTreeNode).entity == newValue }?.also {
-                        if (entityTree.tree.selection.lastSelected != it) {
-                            it.expandTo()
-                            entityTree.tree.selection.setSelected(it)
-                        }
-                    }
-                } else {
-                    entityTree.tree.selection.clear()
-                }
-
-                componentsPanel.entity = newValue
-
-                translationGizmo.node = newValue?.componentOrNull()
+                translationGizmo.node = selected?.entity?.componentOrNull()
                 translationGizmo.node?.also { translationGizmo.worldMatrix.setToTranslation(it.worldPosition) }
-
-                return super.lastSelectedChanged(newValue)
             }
         })
-
-        entityTree.tree.selection.addSelectionListener(object : SelectionListener<ITreeNode> {
-            override fun lastSelectedChanged(newValue: ITreeNode?) {
-                if (selection.lastSelected != newValue) selection.setSelected((newValue as EntityTreeNode?)?.entity)
-            }
-
-            override fun removed(item: ITreeNode) {
-                item as EntityTreeNode
-                if (selection.contains(item.entity)) selection.remove(item.entity)
-            }
-
+        selection.addSelectionListener(object : SelectionListener<ITreeNode> {
             override fun added(item: ITreeNode) {
-                item as EntityTreeNode
-                if (!selection.contains(item.entity)) selection.add(item.entity)
+                entityTree.tree.findNode { (it as EntityTreeNode).entity == item }?.also { it.expandTo() }
+            }
+
+            override fun lastSelectedChanged(newValue: ITreeNode?) {
+                val selected = newValue as EntityTreeNode?
+
+                componentsPanel.entity = selected?.entity
+
+                translationGizmo.node = selected?.entity?.componentOrNull()
+                translationGizmo.node?.also { translationGizmo.worldMatrix.setToTranslation(it.worldPosition) }
             }
         })
 
@@ -160,7 +151,7 @@ class TabScenePanel: Table() {
 
             override fun touchUp(event: InputEvent, x: Float, y: Float, pointer: Int, button: Int) {
                 if (button == BUTTON.LEFT) {
-                    if (!translationGizmo.isVisible || selection.isEmpty()) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
+                    if (!translationGizmo.isVisible || entityTree.tree.selection.isEmpty()) Selection3D.select(MOUSE.x, APP.height - MOUSE.y)
                     translationGizmo.onMouseUp(MOUSE.x.toFloat(), MOUSE.y.toFloat())
                 }
 
@@ -193,10 +184,16 @@ class TabScenePanel: Table() {
 
     fun setActive(active: Boolean) {
         if (active) {
+            entityTreeProjectSplit.setSecondWidget(Studio.projectTree)
             ActiveCamera = editorCamera
             ECS.currentEntity = entity
+
+            Studio.projectTree.tree.addListener(projectSelectionListener)
+
         } else {
             if (ECS.currentEntity == entity) ECS.currentEntity = null
+
+            Studio.projectTree.tree.removeListener(projectSelectionListener)
         }
     }
 }

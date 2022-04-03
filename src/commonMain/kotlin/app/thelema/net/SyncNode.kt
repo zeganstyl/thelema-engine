@@ -16,10 +16,7 @@
 
 package app.thelema.net
 
-import app.thelema.ecs.DefaultComponentSystemLayer
-import app.thelema.ecs.ECS
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.*
 import app.thelema.json.IJsonObject
 
 class SyncNode: IEntityComponent {

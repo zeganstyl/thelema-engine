@@ -47,7 +47,8 @@ class EntityWindow: Window("Entity") {
 
     val split = SplitPane(
         firstWidget = availableComponents,
-        secondWidget = addedComponentsListScroll
+        secondWidget = addedComponentsListScroll,
+        style = SKIN.split
     )
 
     val componentSearchString = TextField()

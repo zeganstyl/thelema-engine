@@ -17,12 +17,16 @@
 package app.thelema.ui
 
 import app.thelema.g2d.Batch
+import app.thelema.g2d.Sprite
+import app.thelema.img.Texture2D
 
 /** Displays a [Drawable], scaled various way within the widgets bounds. The preferred size is the min size of the drawable.
  * @author Nathan Sweet, zeganstyl
  */
 class UIImage (drawable: Drawable? = null) : Widget() {
     constructor(block: UIImage.() -> Unit): this() { block(this) }
+
+    constructor(imagePath: String): this(Sprite(Texture2D(imagePath)))
 
     var scaling: Scaling = Scaling.stretch
         set(value) {

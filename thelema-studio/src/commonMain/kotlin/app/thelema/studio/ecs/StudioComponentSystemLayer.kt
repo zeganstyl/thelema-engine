@@ -1,13 +1,10 @@
 package app.thelema.studio.ecs;
 
 import app.thelema.ecs.*
-import app.thelema.g3d.*
+import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.light.DirectionalLight
-import app.thelema.g3d.mesh.MeshBuilder
 import app.thelema.g3d.mesh.MeshVisualizer
-import app.thelema.g3d.mesh.SkyboxMesh
 import app.thelema.gl.GL
-import app.thelema.gl.IMesh
 import app.thelema.gl.IMeshInstance
 import app.thelema.img.texture2D
 import app.thelema.math.Vec3
@@ -16,39 +13,12 @@ import app.thelema.phys.ICylinderShape
 import app.thelema.phys.IRayShape
 import app.thelema.phys.ISphereShape
 import app.thelema.res.AID
-import app.thelema.shader.Shader
-import app.thelema.shader.node.GLSL
-import app.thelema.shader.node.GLSLType
-import app.thelema.shader.node.Op2Node
-import app.thelema.shader.node.SkyboxOutputNode
 import app.thelema.studio.Studio
 import app.thelema.studio.g3d.*
 import app.thelema.ui.HeadUpDisplay
 import app.thelema.utils.iterate
 
 class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer {
-    val scene = Entity {
-        skybox {
-            //val sky = "vec4(vec3(clamp(in1.y * 0.5 + 0.5, 0.0, 1.0)), 1.0)"
-            //val sky = "vec4(mix(vec3(0.03, 0.08, 0.1), vec3(1.0), clamp(asin(in1.y) * 0.318 + 0.5, 0.0, 1.0)), 1.0)"
-            //val sky = "vec4(vec3(clamp(0.75 - in1.y, 0.0, 0.75)), 1.0)"
-            val sky = "vec4(vec3(0.0, clamp(0.1 - in1.y * 2.0, 0.0, 0.1), 0.0), 1.0)"
-            //val sky = "vec4(vec3(0.0), 1.0)"
-
-            val op = shader.addNode(
-                Op2Node(
-                    vertexNode.textureCoordinates,
-                    GLSL.oneFloat,
-                    function = sky,
-                    resultType = GLSLType.Vec4
-                )
-            )
-            outputNode.fragColor = op.opResult
-            shader.build()
-        }
-        component<MeshBuilder> { updateMesh() }
-    }.scene()
-
     val grid = SceneGrid()
 
     val shapeRenderTool = ShapeRenderTool()
@@ -95,8 +65,6 @@ class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer 
         GL.glClearColor(0f, 0f, 0f, 1f)
         GL.glViewport(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight)
 
-        if (!ECS.entities.contains(scene.entity)) ECS.addEntity(scene.entity)
-
         shapeRenderTool.color.setColor(0x008000FF)
         shapeRenderTool.setupShaderCommonData()
 
@@ -118,13 +86,14 @@ class StudioComponentSystemLayer(val hud: HeadUpDisplay): IComponentSystemLayer 
             iconTool.render(sun, pos.x, pos.y, pos.z)
         }
 
-        Studio.tabsPane.activeTab?.scene?.apply {
+        Studio.activeEntityTab?.scene?.apply {
             if (translationGizmo.isEnabled) {
                 translationGizmo.render()
             } else {
                 selection.iterate {
-                    val matrix = it.componentOrNull<ITransformNode>()?.worldMatrix
-                        ?: it.componentOrNull<IMeshInstance>()?.worldMatrix
+                    it as EntityTreeNode
+                    val matrix = it.entity.componentOrNull<ITransformNode>()?.worldMatrix
+                        ?: it.entity.componentOrNull<IMeshInstance>()?.worldMatrix
 
                     matrix?.also { basis.render(it) }
                 }

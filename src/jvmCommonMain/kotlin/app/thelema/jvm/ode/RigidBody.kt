@@ -16,10 +16,7 @@
 
 package app.thelema.jvm.ode
 
-import app.thelema.ecs.IEntity
-import app.thelema.ecs.component
-import app.thelema.ecs.componentOrNull
-import app.thelema.ecs.forEachChildEntity
+import app.thelema.ecs.*
 import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.TransformNode
 import app.thelema.g3d.TransformNodeListener

@@ -1074,7 +1074,7 @@ interface IGL {
         GL_INVALID_OPERATION -> "GL_INVALID_OPERATION"
         GL_INVALID_FRAMEBUFFER_OPERATION -> "GL_INVALID_FRAMEBUFFER_OPERATION"
         GL_OUT_OF_MEMORY -> "GL_OUT_OF_MEMORY"
-        else -> "Unknown GL error"
+        else -> "Unknown GL error $error"
     }
 
     fun printLastError() {

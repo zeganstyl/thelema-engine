@@ -18,6 +18,7 @@ package app.thelema.test.shader.node
 
 import app.thelema.app.APP
 import app.thelema.ecs.ECS
+import app.thelema.ecs.sibling
 import app.thelema.g3d.*
 import app.thelema.g3d.light.directionalLight
 import app.thelema.g3d.mesh.planeMesh
@@ -69,7 +70,7 @@ class CascadedShadowMappingTest : Test {
                     gltfSettings {
                         setupDepthRendering = true
                     }
-                }
+                }.sibling()
             }
 
             APP.onRender = {

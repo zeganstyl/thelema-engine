@@ -49,6 +49,12 @@ object SKIN {
         background = this@SKIN.background
     }
 
+    val listEmpty = UIListStyle().apply {
+        background = null
+    }
+
+    val split = SplitPaneStyle(DSKIN.darkGrey5x5)
+
     val solidFrameTextureSelected by lazy {
         Texture2D {
             minFilter = GL_NEAREST

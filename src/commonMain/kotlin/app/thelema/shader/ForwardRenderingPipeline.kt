@@ -17,6 +17,7 @@
 package app.thelema.shader
 
 import app.thelema.app.APP
+import app.thelema.app.AppListener
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.component
 import app.thelema.ecs.sibling
@@ -26,6 +27,7 @@ import app.thelema.img.*
 import app.thelema.shader.post.*
 import app.thelema.utils.Color
 
+// FIXME problem with changing window size
 class ForwardRenderingPipeline: IRenderingPipeline {
     override val componentName: String
         get() = "ForwardRenderingPipeline"
@@ -117,6 +119,15 @@ class ForwardRenderingPipeline: IRenderingPipeline {
             field = value
         }
 
+    init {
+        APP.addListener(object : AppListener {
+            override fun resized(width: Int, height: Int) {
+                setResolution(width, height)
+                updateResolution()
+            }
+        })
+    }
+
     override fun setResolution(width: Int, height: Int) {
         this.width = width
         this.height = height
@@ -124,6 +135,8 @@ class ForwardRenderingPipeline: IRenderingPipeline {
 
     fun updateResolution() {
         buffer1.setResolution(width, height)
+        buffer2.setResolution(width, height)
+        buffer3.setResolution(width, height)
     }
 
     override fun render(block: (shaderChannel: String?) -> Unit) {

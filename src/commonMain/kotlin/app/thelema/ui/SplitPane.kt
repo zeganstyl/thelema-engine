@@ -298,12 +298,16 @@ class SplitPane(
         throw UnsupportedOperationException("Use SplitPane#setWidget.")
     }
 
-    override fun removeActor(actor: Actor): Boolean {
-        throw NotImplementedError("cannot do this")
+    override fun removeActor(actor: Actor): Boolean = when (actor) {
+        firstWidget -> { firstWidget = Actor(); true }
+        secondWidget -> { secondWidget = Actor(); true }
+        else -> false
     }
 
-    override fun removeActorAt(index: Int, unfocus: Boolean): Actor {
-        throw NotImplementedError("cannot do this")
+    override fun removeActorAt(index: Int, unfocus: Boolean): Actor = when (index) {
+        0 -> firstWidget.also { firstWidget = Actor() }
+        1 -> secondWidget.also { secondWidget = Actor() }
+        else -> throw IllegalStateException("Index out of bounds: $index")
     }
 
     init {

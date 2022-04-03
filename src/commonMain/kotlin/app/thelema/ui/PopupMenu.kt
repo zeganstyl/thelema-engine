@@ -232,8 +232,8 @@ open class PopupMenu() : Table() {
         headUpDisplay.removeActor(this)
         this.contextObject = contextObject
         //if (headUpDisplay.height - this.y > headUpDisplay.height) this.y = this.y + height
-        ActorUtils.keepWithinStage(headUpDisplay, this)
         headUpDisplay.addActor(this)
+        ActorUtils.keepWithinStage(this)
         setPosition(x, y - height)
         toFront()
     }

@@ -59,6 +59,8 @@ open class EntityTab(entity: IEntity, tabCloseButton: TextButton? = TextButton("
 
         tabTitle.background = if (activated) SKIN.titleBackground else null
 
-        Selection3D.selection = (newTab as EntityTab?)?.scene?.selection
+        if (newTab is EntityTab) {
+            Selection3D.selection = newTab.scene.selection
+        }
     }
 }

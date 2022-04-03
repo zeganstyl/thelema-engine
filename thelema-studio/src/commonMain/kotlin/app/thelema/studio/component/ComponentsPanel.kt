@@ -19,6 +19,7 @@ package app.thelema.studio.component
 import app.thelema.ecs.EntityListener
 import app.thelema.ecs.IEntity
 import app.thelema.ecs.IEntityComponent
+import app.thelema.ecs.forEachComponent
 import app.thelema.g2d.Batch
 import app.thelema.studio.SKIN
 import app.thelema.studio.Studio
@@ -27,7 +28,7 @@ import app.thelema.ui.*
 /** Contains all components that exists in entity */
 class ComponentsPanel: Table() {
     val componentsListPanel = VBox { align = Align.topLeft }
-    val componentsListScroll = ScrollPane(componentsListPanel, style = SKIN.scroll)
+    val componentsListScroll = ScrollPane(componentsListPanel, style = SKIN.scrollEmpty)
 
     var entity: IEntity? = null
         set(value) {
@@ -52,16 +53,21 @@ class ComponentsPanel: Table() {
 
     var updateComponentsListRequest = false
 
+    val entityPathLabel = Label()
+
+    val editEntity = TextButton("Edit Entity") {
+        onClick {
+            Studio.entityWindow.entity = entity
+            hud?.also { Studio.entityWindow.show(it) }
+        }
+    }
+
     init {
-        add(HBox {
-            background = SKIN.background
-            add(TextButton("Add/Remove") {
-                onClick {
-                    Studio.entityWindow.entity = entity
-                    hud?.also { Studio.entityWindow.show(it) }
-                }
-            })
-        }).growX().newRow()
+        editEntity.isVisible = false
+
+        entityPathLabel.setWrap(true)
+        add(entityPathLabel).pad(10f).growX().newRow()
+        add(HBox { add(editEntity) }).growX().newRow()
         add(componentsListScroll).grow()
         componentsListScroll.fadeScrollBars = false
     }
@@ -71,6 +77,8 @@ class ComponentsPanel: Table() {
             updateComponentsListRequest = false
             clearComponents()
             entity?.forEachComponent { setComponent(it) }
+            entityPathLabel.text = entity?.path ?: ""
+            editEntity.isVisible = entity != null
         }
 
         super.draw(batch, parentAlpha)

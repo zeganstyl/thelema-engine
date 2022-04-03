@@ -50,11 +50,13 @@ class Entity() : IEntity {
             listeners?.apply { for (i in indices) { get(i).parentChanged(oldValue, value) } }
         }
 
-    private val childrenInternal = ATOM.list<IEntity>()
+    private val _children = ATOM.list<IEntity>()
     override val children: List<IEntity>
-        get() = childrenInternal
+        get() = _children
 
-    private val componentsInternal = ATOM.list<IEntityComponent>()
+    private val _components = ATOM.list<IEntityComponent>()
+    override val components: List<IEntityComponent>
+        get() = _components
 
     private var listeners: ArrayList<EntityListener>? = null
 
@@ -69,13 +71,13 @@ class Entity() : IEntity {
         listeners?.trimToSize()
     }
 
-    override fun getComponentsCount(): Int = componentsInternal.size
+    override fun getComponentsCount(): Int = _components.size
 
-    override fun containsComponent(component: IEntityComponent): Boolean = componentsInternal.contains(component)
+    override fun containsComponent(component: IEntityComponent): Boolean = _components.contains(component)
 
-    override fun getComponent(index: Int): IEntityComponent = componentsInternal[index]
+    override fun getComponent(index: Int): IEntityComponent = _components[index]
 
-    override fun indexOfComponent(component: IEntityComponent): Int = componentsInternal.indexOf(component)
+    override fun indexOfComponent(component: IEntityComponent): Int = _components.indexOf(component)
 
     override fun readJson(json: IJsonObject) {
         name = json.string("name", "")
@@ -99,27 +101,23 @@ class Entity() : IEntity {
     override fun writeJson(json: IJsonObject) {
         json["name"] = name
 
-        if (componentsInternal.isNotEmpty()) {
+        if (_components.isNotEmpty()) {
             json.setObj("components") {
                 forEachComponent { set(it.componentName, it) }
             }
         }
 
-        if (childrenInternal.isNotEmpty()) {
+        if (_children.isNotEmpty()) {
             json.setObj("children") {
-                for (i in childrenInternal.indices) {
-                    val entity = childrenInternal[i]
+                for (i in _children.indices) {
+                    val entity = _children[i]
                     if (entity.serializeEntity) set(entity.name, entity)
                 }
             }
         }
     }
 
-    override fun forEachComponent(block: (component: IEntityComponent) -> Unit) {
-        componentsInternal.forEach(block)
-    }
-
-    override fun getEntityByName(name: String): IEntity? = childrenInternal.firstOrNull { it.name == name }
+    override fun getEntityByName(name: String): IEntity? = _children.firstOrNull { it.name == name }
 
     override fun findEntityByNameOrNull(name: String): IEntity? {
         val item = getEntityByName(name)
@@ -155,7 +153,7 @@ class Entity() : IEntity {
         }
 
         entity.parentEntity = this
-        childrenInternal.add(entity)
+        _children.add(entity)
         forEachComponent { it.addedEntity(entity) }
         addedEntityNotifyAscending(entity)
         listeners?.apply { for (i in indices) { get(i).addedEntity(entity) } }
@@ -163,7 +161,7 @@ class Entity() : IEntity {
 
     override fun removeEntity(entity: IEntity) {
         entity.parentEntity = null
-        childrenInternal.remove(entity)
+        _children.remove(entity)
         forEachComponent { it.removedEntity(entity) }
         removedEntityNotifyAscending(entity)
         listeners?.apply { for (i in indices) { get(i).removedEntity(entity) } }
@@ -174,8 +172,8 @@ class Entity() : IEntity {
     }
 
     override fun clearChildren() {
-        val tmp = childrenInternal.toTypedArray()
-        childrenInternal.clear()
+        val tmp = _children.toTypedArray()
+        _children.clear()
         tmp.iterate { entity ->
             forEachComponent { it.removedEntity(entity) }
             removedEntityNotifyAscending(entity)
@@ -212,9 +210,9 @@ class Entity() : IEntity {
             throw IllegalStateException("Component ${component.componentName} already exists in entity $path")
         }
         component.entityOrNull = this
-        componentsInternal.add(component)
-        for (i in componentsInternal.indices) {
-            componentsInternal[i].addedSiblingComponent(component)
+        _components.add(component)
+        for (i in _components.indices) {
+            _components[i].addedSiblingComponent(component)
         }
         parentEntity?.forEachComponent { it.addedChildComponent(component) }
         addedComponentNotifyAscending(component)
@@ -230,18 +228,18 @@ class Entity() : IEntity {
     }
 
     override fun removeComponent(component: IEntityComponent) {
-        if (componentsInternal.remove(component)) component.entityOrNull = null
+        if (_components.remove(component)) component.entityOrNull = null
         listeners?.iterate { it.removedComponent(component) }
     }
 
     override fun clearComponents() {
         val tmp = ArrayList<IEntityComponent>()
-        tmp.addAll(componentsInternal)
-        componentsInternal.clear()
+        tmp.addAll(_components)
+        _components.clear()
     }
 
     override fun componentOrNull(typeName: String): IEntityComponent? =
-        componentsInternal.firstOrNull { it.isComponentNameAlias(typeName) }
+        _components.firstOrNull { it.isComponentNameAlias(typeName) }
 
     override fun component(typeName: String): IEntityComponent {
         var component = componentOrNull(typeName)
@@ -288,8 +286,8 @@ class Entity() : IEntity {
         if (fullReplace) {
             val entitiesToRemove = ArrayList<IEntity>()
 
-            for (i in childrenInternal.indices) {
-                val childEntity = childrenInternal[i]
+            for (i in _children.indices) {
+                val childEntity = _children[i]
                 if (other.getEntityByName(childEntity.name) == null) {
                     entitiesToRemove.add(childEntity)
                 }
@@ -320,8 +318,8 @@ class Entity() : IEntity {
             newEntity.addEntity(it.copyDeep(null, false))
         }
 
-        for (i in componentsInternal.indices) {
-            newEntity.component(componentsInternal[i].componentName)
+        forEachComponent {
+            newEntity.component(it.componentName)
         }
 
         if (setupComponents) {
@@ -382,17 +380,17 @@ class Entity() : IEntity {
     }
 
     override fun destroy() {
-        for (i in componentsInternal.indices) {
-            componentsInternal[i].destroy()
+        for (i in _components.indices) {
+            _components[i].destroy()
         }
 
-        for (i in childrenInternal.indices) {
-            childrenInternal[i].destroy()
-            childrenInternal[i].parentEntity = null
+        for (i in _children.indices) {
+            _children[i].destroy()
+            _children[i].parentEntity = null
         }
 
-        componentsInternal.clear()
-        childrenInternal.clear()
+        _components.clear()
+        _children.clear()
     }
 
     override fun makeCurrent() {

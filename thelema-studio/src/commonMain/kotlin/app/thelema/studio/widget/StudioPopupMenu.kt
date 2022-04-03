@@ -1,6 +1,7 @@
 package app.thelema.studio.widget
 
 import app.thelema.ecs.Entity
+import app.thelema.ecs.forEachComponent
 import app.thelema.studio.ecs.EntityTreeNode
 import app.thelema.studio.component.ComponentPanelProvider
 import app.thelema.ui.MenuItem

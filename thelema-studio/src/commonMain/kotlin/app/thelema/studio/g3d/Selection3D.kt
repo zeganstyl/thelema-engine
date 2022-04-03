@@ -2,30 +2,27 @@ package app.thelema.studio.g3d
 
 import app.thelema.data.DATA
 import app.thelema.data.IByteData
-import app.thelema.ecs.IEntity
 import app.thelema.ecs.componentOrNull
-import app.thelema.ecs.forEachChildEntity
+import app.thelema.ecs.forEachComponent
 import app.thelema.ecs.sibling
-import app.thelema.g3d.IScene
 import app.thelema.g3d.ISceneInstance
-import app.thelema.g3d.ITransformNode
 import app.thelema.g3d.IUniformArgs
 import app.thelema.gl.*
 import app.thelema.img.*
-import app.thelema.math.IMat4
 import app.thelema.math.Vec4
 import app.thelema.shader.Shader
 import app.thelema.shader.node.*
-import app.thelema.shader.post.FXAA
 import app.thelema.shader.post.PostShader
 import app.thelema.shader.post.SobelFilter
 import app.thelema.studio.Studio
+import app.thelema.studio.ecs.EntityTreeNode
+import app.thelema.ui.ITreeNode
 import app.thelema.ui.Selection
 import app.thelema.utils.Color
 import app.thelema.utils.iterate
 
 object Selection3D {
-    var selection: Selection<IEntity>? = null
+    var selection: Selection<ITreeNode>? = null
 
     val selectionTransparencyShader: PostShader by lazy {
         PostShader(
@@ -41,16 +38,21 @@ void main() {
         )
     }
 
-    val frameBuffer: IFrameBuffer by lazy { SimpleFrameBuffer() }
+    val frameBuffer: IFrameBuffer by lazy { SimpleFrameBuffer(pixelFormat = GL_RGB, internalFormat = GL_RGB8) }
     val frameBuffer2: IFrameBuffer by lazy { SimpleFrameBuffer() }
 
-    val sobel: SobelFilter by lazy { SobelFilter().apply { edgeColor.set(1f, 0.7f, 0.2f) } }
+    val sobel: SobelFilter by lazy { SobelFilter().apply {
+        width = 1.25f
+        edgeColor.set(1f, 0.7f, 0.2f) }
+    }
 
-    val pixels: IByteData by lazy { DATA.bytes(GL.mainFrameBufferWidth * GL.mainFrameBufferHeight * 4) }
+    private var pixels: IByteData = DATA.bytes(GL.mainFrameBufferWidth * GL.mainFrameBufferHeight * 3)
+        set(value) {
+            field.destroy()
+            field = value
+        }
 
-    val colorMap = HashMap<Int, IEntity>()
-
-    val fxaa: FXAA by lazy { FXAA() }
+    val colorMap = HashMap<Int, EntityTreeNode>()
 
     val colorUniform = StudioColorUniformNode()
     val selectionRenderShader = Shader {
@@ -61,30 +63,39 @@ void main() {
         rootNode = output.sibling()
     }
 
-    val meshes = ArrayList<IMesh>()
-    val scenes = ArrayList<ISceneInstance>()
+    val nodes = ArrayList<EntityTreeNode>()
 
     var selectRequest = false
     var pixelStart = 0
 
+    fun resizeScreen(width: Int, height: Int) {
+        frameBuffer.setResolution(width, height)
+        frameBuffer2.setResolution(width, height)
+        pixels = DATA.bytes(frameBuffer.width * frameBuffer.height * 3)
+    }
+
     fun select(x: Int, y: Int) {
-        pixelStart = (y * GL.mainFrameBufferWidth + x) * 4
+        pixelStart = (y * frameBuffer.width + x) * 3
         selectRequest = true
     }
 
-    private fun traverseSelection(entity: IEntity) {
-        val scene = entity.componentOrNull<ISceneInstance>()?.also { scenes.add(it) }
-        if (scene == null) entity.forEachChildEntity { traverseSelection(it) }
-        entity.componentOrNull<IMesh>()?.also { meshes.add(it) }
+    private fun traverseSelection(entity: EntityTreeNode) {
+        val scene = entity.entity.componentOrNull<ISceneInstance>()?.also { nodes.add(entity) }
+        if (scene == null) {
+            entity.entity.forEachComponent { if (it is IRenderable) nodes.add(entity) }
+            entity.children.iterate {
+                it as EntityTreeNode
+                traverseSelection(it)
+            }
+        }
     }
 
     fun prepareSelection() {
-        meshes.clear()
-        scenes.clear()
+        nodes.clear()
 
         val selection = selection
         if (selection?.isDisabled == false) {
-            Studio.tabsPane.activeTab?.scene?.entity?.forEachChildEntity {
+            Studio.activeEntityTab?.scene?.entityTree?.rootNode?.also {
                 traverseSelection(it)
             }
 
@@ -103,33 +114,40 @@ void main() {
                     var color = 0x000001FFL
                     var colorId = 1
 
-                    meshes.iterate { mesh ->
-                        colorMap[colorId] = mesh.entity
-                        Color.rgba8888ToColor(colorUniform.color, color.toInt())
-                        mesh.render(selectionRenderShader)
-                        color += 256
-                        colorId++
-                    }
+                    nodes.iterate { node ->
+                        node.entity.forEachComponent { obj ->
+                            if (obj is ISceneInstance) {
+                                colorMap[colorId] = node
+                                Color.rgba8888ToColor(colorUniform.color, color.toInt())
+                                obj.sceneInstance?.forEachComponentInBranch {
+                                    if (it is IRenderable) {
+                                        it.render(selectionRenderShader)
+                                    }
+                                }
+                                color += 256
+                                colorId++
 
-                    scenes.iterate { scene ->
-                        colorMap[colorId] = scene.entity
-                        Color.rgba8888ToColor(colorUniform.color, color.toInt())
-                        scene.sceneInstance?.componentOrNull<IScene>()?.also { instance ->
-                            for (j in instance.renderables.indices) {
-                                instance.renderables[j].render(selectionRenderShader)
+                            } else if (obj is IRenderable) {
+                                colorMap[colorId] = node
+                                Color.rgba8888ToColor(colorUniform.color, color.toInt())
+                                obj.render(selectionRenderShader)
+                                color += 256
+                                colorId++
                             }
                         }
-                        color += 256
-                        colorId++
                     }
 
-                    GL.glReadPixels(0, 0, GL.mainFrameBufferWidth, GL.mainFrameBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+                    GL.glReadPixels(0, 0, frameBuffer.width, frameBuffer.height, GL_RGB, GL_UNSIGNED_BYTE, pixels)
                     GL.glClearColor(Color.BLACK)
                     GL.glClear()
 
                     val selectedColor = pixels[pixelStart].toInt() * 65025 + pixels[pixelStart + 1].toInt() * 255 + pixels[pixelStart + 2].toInt()
 
-                    selection.choose(colorMap[selectedColor])
+                    val entity = colorMap[selectedColor]
+                    selection.choose(entity)
+
+                    colorMap.clear()
+                    nodes.clear()
                 }
             }
         }
@@ -139,24 +157,24 @@ void main() {
         val selected = selection
         if (selected?.isDisabled == false) {
             if (selected.isNotEmpty()) {
-                var worldMatrix: IMat4? = null
-
                 var selection = false
                 frameBuffer.render {
                     colorUniform.color.set(1f, 1f, 1f, 1f)
                     selected.iterate { selected ->
-                        selected.componentOrNull<IMeshInstance>()?.also {
-                            worldMatrix = it.worldMatrix
-                            it.render(selectionRenderShader)
-                            selection = true
-                        }
-                        selected.componentOrNull<ISceneInstance>()?.also { instance ->
-                            instance.sceneInstance?.componentOrNull<IScene>()?.also { scene ->
-                                scene.renderables.iterate { it.render(selectionRenderShader) }
-                                if (scene.renderables.isNotEmpty()) selection = true
+                        selected as EntityTreeNode
+                        selected.entity.forEachComponent {
+                            if (it is ISceneInstance) {
+                                it.sceneInstance?.forEachComponentInBranch {
+                                    if (it is IRenderable) {
+                                        it.render(selectionRenderShader)
+                                        selection = true
+                                    }
+                                }
+                            } else if (it is IRenderable) {
+                                it.render(selectionRenderShader)
+                                selection = true
                             }
                         }
-                        if (worldMatrix == null) worldMatrix = selected.componentOrNull<ITransformNode>()?.worldMatrix
                     }
                 }
 
@@ -172,8 +190,7 @@ void main() {
                     val mask = ScreenQuad.defaultClearMask
                     ScreenQuad.defaultClearMask = null
 
-                    fxaa.render(frameBuffer2.getTexture(0), frameBuffer)
-                    selectionTransparencyShader.render(frameBuffer.getTexture(0))
+                    selectionTransparencyShader.render(frameBuffer2.getTexture(0))
 
                     ScreenQuad.defaultClearMask = mask
                 }

@@ -41,19 +41,17 @@ class EntityTreePanel: Table() {
             tree.selection.setSelected(value)
         }
 
-    val searchString = TextField()
+    //val searchString = TextField()
 
     init {
-        background = SKIN.background
-
         tree.setPadding(5f, 5f)
-        add(searchString).growX().pad(5f).newRow()
+        //add(searchString).growX().pad(5f).newRow()
         add(scroll).grow()
 
-        searchString.hintText = "Entity name..."
-        searchString.onChanged {
-            rootNode.filter(it, emptyList(), false)
-        }
+//        searchString.hintText = "Entity name..."
+//        searchString.onChanged {
+//            rootNode.filter(it, emptyList(), false)
+//        }
 
         tree.addListener(object : ClickListener(BUTTON.RIGHT) {
             override fun clicked(event: InputEvent, x: Float, y: Float) {

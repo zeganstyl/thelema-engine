@@ -22,6 +22,7 @@ import app.thelema.studio.component.ComponentPanelProvider
 import app.thelema.studio.component.IComponentScenePanel
 import app.thelema.studio.component.ProjectPanel
 import app.thelema.studio.ecs.*
+import app.thelema.studio.g3d.Selection3D
 import app.thelema.studio.platform.IFileChooser
 import app.thelema.studio.widget.TabsPane
 import app.thelema.studio.tool.*
@@ -35,6 +36,10 @@ import kotlinx.coroutines.launch
 object Studio: AppListener, IJsonObjectIO {
     lateinit var fileChooser: IFileChooser
 
+    val projectTree = EntityTreePanel().apply {
+        rootEntity = RES.entity
+    }
+
     var projectTab = createProjectTab()
 
     val menuBar = StudioMenuBar()
@@ -46,7 +51,7 @@ object Studio: AppListener, IJsonObjectIO {
         align = Align.left
     }
 
-    val tabsPane = TabsPane<EntityTab>().apply {
+    val tabsPane = TabsPane<app.thelema.studio.widget.Tab>().apply {
         addTab(projectTab)
     }
 
@@ -135,6 +140,9 @@ object Studio: AppListener, IJsonObjectIO {
         }
     }
 
+    val activeEntityTab: EntityTab?
+        get() = tabsPane.activeTab?.let { if (it is EntityTab) it else null }
+
     fun showStatus(text: String, color: Int = Color.WHITE) {
         statusLabel.text = text
         statusLabel.color = color
@@ -165,9 +173,7 @@ object Studio: AppListener, IJsonObjectIO {
         openProjectTab()
     }
 
-    private fun createProjectTab(): EntityTab = EntityTab(RES.entity, null).also {
-        it.scene.selection.isDisabled = true
-    }
+    private fun createProjectTab(): MainTab = MainTab()
 
     fun startSimulation(source: IEntity) {
         val tab = SimulationEntityTab(source)
@@ -192,7 +198,9 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     fun startSimulation() {
-        tabsPane.activeTab?.also { startSimulation(it.scene.entity) }
+        tabsPane.activeTab?.also {
+            if (it is EntityTab) startSimulation(it.scene.entity)
+        }
     }
 
     fun openProjectDialog() {
@@ -252,12 +260,12 @@ object Studio: AppListener, IJsonObjectIO {
 
     fun openEntity(loader: EntityLoader) {
         loader.load()
-        tabsPane.activeTab = tabsPane.tabs.firstOrNull { it.loader == loader } ?: EntityTab(loader.targetEntity).also {
+        tabsPane.activeTab = tabsPane.tabs.firstOrNull { it is EntityTab && it.loader == loader } ?: EntityTab(loader.targetEntity).also {
             if (loader.targetEntity.name.isEmpty()) loader.targetEntity.name = loader.entityOrNull?.name ?: ""
             it.loader = loader
             tabsPane.addTab(it, false)
         }
-        tabsPane.activeTab?.loader?.also {
+        activeEntityTab?.loader?.also {
             sceneEntities.add(it)
             it.saveTargetEntityOnWrite = true
         }
@@ -295,7 +303,7 @@ object Studio: AppListener, IJsonObjectIO {
     }
 
     fun saveEntity() {
-        tabsPane.activeTab?.loader?.also {
+        activeEntityTab?.loader?.also {
             it.saveTargetEntity()
             showStatus("${it.file?.name} Saved")
         }
@@ -342,6 +350,8 @@ object Studio: AppListener, IJsonObjectIO {
         ActiveCamera.viewportHeight = height.toFloat()
         ActiveCamera.aspectRatio = width.toFloat() / height.toFloat()
         ActiveCamera.updateCamera()
+
+        Selection3D.resizeScreen(width, height)
     }
 
     override fun filesDropped(files: List<IFile>) {

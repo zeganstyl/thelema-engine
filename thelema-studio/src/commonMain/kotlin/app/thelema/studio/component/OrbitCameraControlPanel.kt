@@ -9,7 +9,7 @@ class OrbitCameraControlPanel: ComponentPanel<OrbitCameraControl>(OrbitCameraCon
         content.add(TextButton("Position from active camera") {
             onClick {
                 component?.also { component ->
-                    Studio.tabsPane.activeTab?.scene?.cameraControl?.also { other ->
+                    Studio.activeEntityTab?.scene?.cameraControl?.also { other ->
                         component.zenith = other.zenith
                         component.azimuth = other.azimuth
                         component.targetDistance = other.targetDistance

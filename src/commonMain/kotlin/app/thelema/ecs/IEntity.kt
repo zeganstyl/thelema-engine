@@ -25,6 +25,8 @@ import app.thelema.utils.iterate
 interface IEntity: IJsonObjectIO {
     val children: List<IEntity>
 
+    val components: List<IEntityComponent>
+
     var parentEntity: IEntity?
 
     var name: String
@@ -32,7 +34,7 @@ interface IEntity: IJsonObjectIO {
     /** If true, components and children entities will be serialized to json */
     var serializeEntity: Boolean
 
-    /** It is relative path from root */
+    /** Absolute entity path */
     val path: String
         get() {
             val parentPath = parentEntity ?: return ""
@@ -250,8 +252,6 @@ interface IEntity: IJsonObjectIO {
     /** Remove all children entities */
     fun clearChildren()
 
-    fun forEachComponent(block: (component: IEntityComponent) -> Unit)
-
     fun forEachEntityInBranch(block: (entity: IEntity) -> Unit) {
         block(this)
         forEachChildEntity { it.forEachEntityInBranch(block) }
@@ -306,6 +306,10 @@ interface IEntity: IJsonObjectIO {
 
 inline fun IEntity.forEachChildEntity(block: (entity: IEntity) -> Unit) {
     children.iterate(block)
+}
+
+inline fun IEntity.forEachComponent(block: (component: IEntityComponent) -> Unit) {
+    components.iterate(block)
 }
 
 /** Get or create component with [T] type. */

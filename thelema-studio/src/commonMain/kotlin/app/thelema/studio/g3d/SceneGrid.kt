@@ -3,7 +3,9 @@ package app.thelema.studio.g3d;
 import app.thelema.data.DATA
 import app.thelema.g3d.cam.ActiveCamera
 import app.thelema.gl.*
+import app.thelema.img.Image
 import app.thelema.img.Texture2D
+import app.thelema.res.AID
 import app.thelema.shader.Shader
 import app.thelema.shader.node.OutputNode
 import kotlin.math.abs
@@ -117,7 +119,7 @@ void main() {
         val size = 100
         val edge = 0xFFFFFFFF.toInt()
         val bytesNum = size * size * 4
-        val bytes = DATA.bytes(bytesNum).apply {
+        image = Image(size, size) {
             val rowStride = size * 4
             var b = 0
             while (b < rowStride) {
@@ -140,13 +142,8 @@ void main() {
                 b += 4
             }
         }
-        load(size, size, bytes)
         minFilter = GL_LINEAR_MIPMAP_LINEAR
         magFilter = GL_LINEAR
-        bind()
-        generateMipmapsGPU()
-
-        bytes.destroy()
     }
 
     fun render() {

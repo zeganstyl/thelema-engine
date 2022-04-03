@@ -20,17 +20,20 @@ import app.thelema.fs.IFile
 import app.thelema.fs.projectFile
 import app.thelema.g3d.ISceneInstance
 import app.thelema.g3d.ISceneProvider
+import app.thelema.g3d.SceneProvider
+import app.thelema.g3d.SceneProviderProxy
 import app.thelema.json.IJsonObject
 import app.thelema.json.JSON
 import app.thelema.res.IProject
 import app.thelema.res.LoaderAdapter
+import app.thelema.res.RES
 import app.thelema.res.load
 import app.thelema.utils.LOG
 import app.thelema.utils.iterate
 
 /** Loads entity from file.
  * Loaded entity will be [targetEntity]. */
-class EntityLoader: LoaderAdapter(), ISceneProvider {
+class EntityLoader: LoaderAdapter(), SceneProviderProxy {
     /** Root scene entity. You can load it with [load] */
     val targetEntity: IEntity = Entity()
 
@@ -42,6 +45,15 @@ class EntityLoader: LoaderAdapter(), ISceneProvider {
     private val _sceneInstances = ArrayList<ISceneInstance>()
     override val sceneInstances: List<ISceneInstance>
         get() =_sceneInstances
+
+    var provider: ISceneProvider = SceneProvider().also { it.proxy = this }
+
+    override var entityOrNull: IEntity?
+        get() = super.entityOrNull
+        set(value) {
+            super.entityOrNull = value
+            provider = (value?.component() ?: SceneProvider()).also { it.proxy = this }
+        }
 
     override fun cancelProviding(instance: ISceneInstance) {
         _sceneInstances.remove(instance)
