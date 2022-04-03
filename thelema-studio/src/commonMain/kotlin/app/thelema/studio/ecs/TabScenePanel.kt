@@ -111,7 +111,7 @@ class TabScenePanel: Table() {
         })
         selection.addSelectionListener(object : SelectionListener<ITreeNode> {
             override fun added(item: ITreeNode) {
-                entityTree.tree.findNode { (it as EntityTreeNode).entity == item }?.also { it.expandTo() }
+                item.expandTo()
             }
 
             override fun lastSelectedChanged(newValue: ITreeNode?) {
@@ -121,6 +121,8 @@ class TabScenePanel: Table() {
 
                 translationGizmo.node = selected?.entity?.componentOrNull()
                 translationGizmo.node?.also { translationGizmo.worldMatrix.setToTranslation(it.worldPosition) }
+
+                selected?.expandTo()
             }
         })
 
