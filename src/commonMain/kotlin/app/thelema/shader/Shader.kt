@@ -785,11 +785,6 @@ open class Shader(
                     shaderNodeOutput(HeightMapNode::outputPosition)
                 }
 
-                descriptor({ SkyboxOutputNode() }) {
-                    shaderNodeInput(SkyboxOutputNode::fragColor)
-                    shaderNodeOutput(SkyboxOutputNode::textureCoordinates)
-                }
-
                 descriptor({ ToneMapNode() }) {
                     shaderNodeInput(ToneMapNode::inputColor)
                     shaderNodeOutput(ToneMapNode::result)
